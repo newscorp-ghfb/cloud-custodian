@@ -556,6 +556,9 @@ class ValueFilter(BaseValueFilter):
         return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'))
 
     def match(self, i):
+        if i is None:
+            return False
+
         if self.v is None and len(self.data) == 1:
             [(self.k, self.v)] = self.data.items()
         elif self.v is None and not hasattr(self, 'content_initialized'):
@@ -563,14 +566,20 @@ class ValueFilter(BaseValueFilter):
             self.op = self.data.get('op')
             if 'value_from' in self.data:
                 values = ValuesFrom(self.data['value_from'], self.manager)
+                # TODO to find an better way to enhance the filter, e.g. a new filter
+                # enable variables in expr
+                if "expr" in values.data:
+                    expr = values.data.get("expr")
+                    if isinstance(expr, str) and expr.find("{") != -1:
+                        # TODO support more than 1 var_key
+                        var_key = expr[expr.find("{") + 1: expr.find("}")]
+                        var_value = self.get_resource_value(var_key, i)
+                        values.data["expr"] = expr.replace("{" + var_key + "}", var_value)
                 self.v = values.get_values()
             else:
                 self.v = self.data.get('value')
             self.content_initialized = True
             self.vtype = self.data.get('value_type')
-
-        if i is None:
-            return False
 
         # value extract
         r = self.get_resource_value(self.k, i)
