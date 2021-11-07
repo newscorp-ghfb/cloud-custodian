@@ -80,6 +80,7 @@ class Webhook(EventAction):
             'execution_id': self.manager.ctx.execution_id,
             'execution_start': self.manager.ctx.start_time,
             'policy': self.manager.data,
+            'environ': self.manager.environ,
             'event': event
         }
 
