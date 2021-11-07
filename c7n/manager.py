@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections import deque
 import logging
+import os
 
 from c7n import cache, deprecated
 from c7n.executor import ThreadPoolExecutor
@@ -45,6 +46,7 @@ class ResourceManager:
         self.session_factory = ctx.session_factory
         self.config = ctx.options
         self.data = data
+        self.environ = {k: v for k, v in os.environ.items()}
         self._cache = cache.factory(self.ctx.options)
         self.log = logging.getLogger('custodian.resources.%s' % (
             self.__class__.__name__.lower()))

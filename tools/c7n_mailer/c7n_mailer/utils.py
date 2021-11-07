@@ -325,8 +325,8 @@ def resource_format(resource, resource_type):
             resource['FileSystemId'],
             resource['LifeCycleState']
         )
-    elif resource_type == "network-addr":
-        return "ip: %s  id: %s  scope: %s" % (
+    elif resource_type == "network-addr" or resource_type == "elastic-ip":
+        return "ip: %s  id: %s  domain: %s" % (
             resource['PublicIp'],
             resource['AllocationId'],
             resource['Domain']
