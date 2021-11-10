@@ -579,7 +579,7 @@ class ValueFilter(BaseValueFilter):
         # annotation resource by borrowing the capability of value_filter
         if self.op and self.op == 'annotation':
             if self.v:
-                set_annotation(resource, self.k, self.v)
+                resource[self.k] = self.v
             return True
 
         # value extract
@@ -625,6 +625,11 @@ class ValueFilter(BaseValueFilter):
     def _replace_var_placeholders(self, expr, i):
         var_key = expr[expr.find("{") + 1: expr.find("}")]
         var_value = self.get_resource_value(var_key, i)
+
+        if var_value == None:
+            var_value = "default"
+            self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
+
         expr_var = expr.replace("{" + var_key + "}", var_value)
         if expr_var.find("{") != -1:
             # NOTE support more than 1 var_key
