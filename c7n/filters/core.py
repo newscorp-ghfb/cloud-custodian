@@ -88,6 +88,7 @@ OPERATORS = {
     'glob': glob_match,
     'regex': regex_match,
     'regex-case': regex_case_sensitive_match,
+    'annotation': None,
     'in': operator_in,
     'ni': operator_ni,
     'not-in': operator_ni,
@@ -555,41 +556,41 @@ class ValueFilter(BaseValueFilter):
     def get_resource_value(self, k, i):
         return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'))
 
-    def match(self, i):
-        if i is None:
+    def match(self, resource):
+        if resource is None:
             return False
-
+        
         if self.v is None and len(self.data) == 1:
             [(self.k, self.v)] = self.data.items()
-        elif self.v is None and not hasattr(self, 'content_initialized'):
+        elif self.v is None and not hasattr(self, 'content_initialized') or hasattr(self, 'content_need_reinit'):
             self.k = self.data.get('key')
             self.op = self.data.get('op')
             if 'value_from' in self.data:
                 values = ValuesFrom(self.data['value_from'], self.manager)
-                # TODO to find an better way to enhance the filter, e.g. a new filter
-                # enable variables in expr
-                if "expr" in values.data:
-                    expr = values.data.get("expr")
-                    if isinstance(expr, str) and expr.find("{") != -1:
-                        # TODO support more than 1 var_key
-                        var_key = expr[expr.find("{") + 1: expr.find("}")]
-                        var_value = self.get_resource_value(var_key, i)
-                        values.data["expr"] = expr.replace("{" + var_key + "}", var_value)
+                self.resolveExprVariables(values, resource)
                 self.v = values.get_values()
+                if self.recoverOriginExpr(values):
+                    self.content_need_reinit = True
             else:
                 self.v = self.data.get('value')
             self.content_initialized = True
             self.vtype = self.data.get('value_type')
 
+        # annotation resource by borrowing the capability of value_filter
+        if self.op and self.op == 'annotation':
+            if self.v:
+                set_annotation(resource, self.k, self.v)
+            return True
+
         # value extract
-        r = self.get_resource_value(self.k, i)
+        r = self.get_resource_value(self.k, resource)
 
         if self.op in ('in', 'not-in') and r is None:
             r = ()
 
         # value type conversion
         if self.vtype is not None:
-            v, r = self.process_value_type(self.v, r, i)
+            v, r = self.process_value_type(self.v, r, resource)
         else:
             v = self.v
 
@@ -611,6 +612,30 @@ class ValueFilter(BaseValueFilter):
         elif r == v:
             return True
 
+        return False
+
+    def resolveExprVariables(self, values, i):
+        # TODO to find an better way to enhance the filter, e.g. a new filter
+        if "expr" in values.data:
+            expr = values.data.get("expr")
+            if isinstance(expr, str) and expr.find("{") != -1:
+                values.data["origin_expr"] = expr
+                values.data["expr"] = self._replace_var_placeholders(expr, i)
+
+    def _replace_var_placeholders(self, expr, i):
+        var_key = expr[expr.find("{") + 1: expr.find("}")]
+        var_value = self.get_resource_value(var_key, i)
+        expr_var = expr.replace("{" + var_key + "}", var_value)
+        if expr_var.find("{") != -1:
+            # NOTE support more than 1 var_key
+            return self._replace_var_placeholders(expr_var, i)
+        else:
+            return expr_var
+
+    def recoverOriginExpr(self, values) -> bool:
+        if "origin_expr" in values.data:
+            values.data["expr"] = values.data["origin_expr"]
+            return True
         return False
 
     def process_value_type(self, sentinel, value, resource):
