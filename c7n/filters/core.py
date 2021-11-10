@@ -565,7 +565,7 @@ class ValueFilter(BaseValueFilter):
     def match(self, resource):
         if resource is None:
             return False
-
+        
         if self.v is None and len(self.data) == 1:
             [(self.k, self.v)] = self.data.items()
         elif (self.v is None and not hasattr(self, 'content_initialized')
