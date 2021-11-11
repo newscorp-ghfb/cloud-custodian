@@ -164,6 +164,9 @@ CONFIG_SCHEMA = {
         'http_proxy': {'type': 'string'},
         'https_proxy': {'type': 'string'},
 
+        # ServiceNow email address for creating tickets
+        'servicenow_address':{'type': 'string'},
+
         # Mapping account / emails
         'account_emails': {'type': 'object'}
     }
