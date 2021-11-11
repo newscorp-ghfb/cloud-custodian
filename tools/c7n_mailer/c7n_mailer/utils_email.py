@@ -103,15 +103,19 @@ def set_mimetext_headers(
     return message
 
 
-def get_mimetext_message(config, logger, message, resources, to_addrs):
+def get_mimetext_message(config, logger, message, resources, to_addrs, template='template'):
     body = get_rendered_jinja(
         to_addrs, message, resources, logger,
-        'template', 'default', config['templates_folders'])
+        template, 'default', config['templates_folders'])
 
     email_format = message['action'].get('template_format', None)
     if not email_format:
         email_format = message['action'].get(
-            'template', 'default').endswith('html') and 'html' or 'plain'
+            template, 'default').endswith('html') and 'html' or 'plain'
+
+    additional_headers=config.get('additional_email_headers', {})
+    additional_headers['resource_count'] = str(len(resources))
+    additional_headers['email_template'] = message['action'].get(template, 'default')
 
     return set_mimetext_headers(
         message=MIMEText(body, email_format, 'utf-8'),
@@ -119,7 +123,7 @@ def get_mimetext_message(config, logger, message, resources, to_addrs):
         from_addr=message['action'].get('from', config['from_address']),
         to_addrs=to_addrs,
         cc_addrs=message['action'].get('cc', []),
-        additional_headers=config.get('additional_email_headers', {}),
+        additional_headers=additional_headers,
         priority=message['action'].get('priority_header', None),
         logger=logger
     )
