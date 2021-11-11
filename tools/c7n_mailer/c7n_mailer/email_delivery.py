@@ -1,5 +1,6 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+import jmespath
 from itertools import chain
 
 from c7n_mailer.smtp_delivery import SmtpDelivery
@@ -194,6 +195,36 @@ class EmailDelivery:
         # eg: { ('milton@initech.com', 'peter@initech.com'): mimetext_message }
         return to_addrs_to_mimetext_map
 
+    def get_groupby_to_resources_map(self, sqs_message):
+        jp_str = sqs_message['action'].get('servicenow_groupby')
+        if jp_str == None:
+            return {'default', sqs_message['resources']}
+        
+        groupby_to_resources_map = {}
+        jp = jmespath.compile(jp_str)
+
+        for resource in sqs_message['resources']:
+            groupby = jp.search(resource) or 'default'
+            groupby_to_resources_map.setdefault(groupby, []).append(resource)
+        # eg: { 'Jira': [resource1, resource2, etc] }
+        return groupby_to_resources_map
+
+    def get_group_email_messages_map(self, sqs_message, servicenow_address):
+        groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
+        groupby_to_mimetext_map = {}
+        for groupby, resources in groupby_to_resources_map.items():
+            # print(f"{groupby}: {[r['PublicIp'] for r in resources]}")
+            groupby_to_mimetext_map[groupby] = get_mimetext_message(
+                self.config,
+                self.logger,
+                sqs_message,
+                resources,
+                [servicenow_address],
+                "servicenow_template"
+            )
+        # eg: { 'Jira': mimetext_message }
+        return groupby_to_mimetext_map
+
     def send_c7n_email(self, sqs_message, email_to_addrs, mimetext_msg):
         try:
             # if smtp_server is set in mailer.yml, send through smtp
@@ -202,6 +233,7 @@ class EmailDelivery:
                                              session=self.session,
                                              logger=self.logger)
                 smtp_delivery.send_message(message=mimetext_msg, to_addrs=email_to_addrs)
+            # TODO this looks like a bug, should be push up a level to sqs_queue_processor.py
             elif 'sendgrid_api_key' in self.config:
                 sendgrid_delivery = sendgrid.SendGridDelivery(config=self.config,
                                                              session=self.session,
@@ -227,6 +259,6 @@ class EmailDelivery:
             sqs_message.get('account', ''),
             sqs_message['policy']['name'],
             sqs_message['policy']['resource'],
-            str(len(sqs_message['resources'])),
-            sqs_message['action'].get('template', 'default'),
+            mimetext_msg.get('resource_count', str(len(sqs_message['resources']))),
+            mimetext_msg.get('email_template', sqs_message['action'].get('template', 'default')),
             email_to_addrs))
