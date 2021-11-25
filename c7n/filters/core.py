@@ -629,7 +629,7 @@ class ValueFilter(BaseValueFilter):
 
     def _replace_var_placeholders(self, expr, i):
         var_key = expr[expr.find("{") + 1: expr.find("}")]
-        var_value = self.get_resource_value(var_key, i)
+        var_value = self.get_resource_value(var_key, i, self.data.get('key_type'))
 
         if var_value == None:
             var_value = "default"
