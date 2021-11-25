@@ -228,13 +228,16 @@ class BaseValueFilter(Filter):
         super(BaseValueFilter, self).__init__(data, manager)
         self.expr = {}
 
-    def get_resource_value(self, k, i, regex=None):
+    def get_resource_value(self, k, i, regex=None, ktype=None):
         r = None
         if k.startswith('tag:'):
             tk = k.split(':', 1)[1]
             if 'Tags' in i:
                 for t in i.get("Tags", []):
                     if t.get('Key') == tk:
+                        r = t.get('Value')
+                        break
+                    if ktype == 'normalize' and t.get('Key').lower() == tk.lower():
                         r = t.get('Value')
                         break
             # GCP schema: 'labels': {'key': 'value'}
@@ -553,8 +556,8 @@ class ValueFilter(BaseValueFilter):
 
         return super(ValueFilter, self).process(resources, event)
 
-    def get_resource_value(self, k, i):
-        return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'))
+    def get_resource_value(self, k, i, ktype=None):
+        return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'), ktype)
 
     def match(self, resource):
         if resource is None:
@@ -575,7 +578,9 @@ class ValueFilter(BaseValueFilter):
                 self.v = self.data.get('value')
             self.content_initialized = True
             self.vtype = self.data.get('value_type')
+            self.ktype = self.data.get('key_type')
 
+        # TODO move the annotation logic to action
         # annotation resource by borrowing the capability of value_filter
         if self.op and self.op == 'annotation':
             if self.v:
@@ -583,7 +588,7 @@ class ValueFilter(BaseValueFilter):
             return True
 
         # value extract
-        r = self.get_resource_value(self.k, resource)
+        r = self.get_resource_value(self.k, resource, self.ktype)
 
         if self.op in ('in', 'not-in') and r is None:
             r = ()
