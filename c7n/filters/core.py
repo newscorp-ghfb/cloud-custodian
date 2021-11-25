@@ -461,6 +461,7 @@ class ValueFilter(BaseValueFilter):
             # Doesn't mix well as enum with inherits that extend
             'type': {'enum': ['value']},
             'key': {'type': 'string'},
+            'key_type': {'type': 'string'},
             'value_type': {'$ref': '#/definitions/filters_common/value_types'},
             'default': {'type': 'object'},
             'value_regex': {'type': 'string'},
@@ -578,7 +579,6 @@ class ValueFilter(BaseValueFilter):
                 self.v = self.data.get('value')
             self.content_initialized = True
             self.vtype = self.data.get('value_type')
-            self.ktype = self.data.get('key_type')
 
         # TODO move the annotation logic to action
         # annotation resource by borrowing the capability of value_filter
@@ -588,7 +588,7 @@ class ValueFilter(BaseValueFilter):
             return True
 
         # value extract
-        r = self.get_resource_value(self.k, resource, self.ktype)
+        r = self.get_resource_value(self.k, resource, self.data.get('key_type'))
 
         if self.op in ('in', 'not-in') and r is None:
             r = ()
