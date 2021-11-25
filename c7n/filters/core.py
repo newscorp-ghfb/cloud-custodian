@@ -583,6 +583,7 @@ class ValueFilter(BaseValueFilter):
                 self.v = self.data.get('value')
             self.content_initialized = True
             self.vtype = self.data.get('value_type')
+            self.ktype = self.data.get('key_type')
 
         # TODO move the annotation logic to action
         # NOTE news corp customization: annotation resouce to support further actions
