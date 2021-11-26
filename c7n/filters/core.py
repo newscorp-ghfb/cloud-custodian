@@ -633,11 +633,14 @@ class ValueFilter(BaseValueFilter):
 
         if var_value == None:
             var_value = "default"
-            self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
+            # self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
+
+        if self.data.get('value_type') == 'normalize':
+            var_value = var_value.strip().lower()
 
         expr_var = expr.replace("{" + var_key + "}", var_value)
         if expr_var.find("{") != -1:
-            # NOTE support more than 1 var_key
+            # NOTE to support more than 1 var_key
             return self._replace_var_placeholders(expr_var, i)
         else:
             return expr_var
