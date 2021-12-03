@@ -1,4 +1,7 @@
 import copy
+import jmespath
+import re
+
 from c7n.filters.core import Filter, ValueFilter
 
 from c7n.utils import local_session, type_schema
@@ -23,10 +26,23 @@ class IamPolicyFilter(Filter):
         }
     }
 
+    extract_schema = {
+        'type': 'object',
+        'additionalProperties': False,
+        'required': ['key', 'expr'],
+        'properties': {
+            'key': {'type': 'string'},
+            'expr': {'type': 'string'},
+            'regex': {'type': 'string'},
+            'value_type': {'enum': ['gcp.label']},
+        }
+    }
+
     schema = type_schema(
         'iam-policy',
         **{'doc': value_filter_schema,
-        'user-role': user_role_schema})
+        'user-role': user_role_schema,
+        'extract': extract_schema})
 
     def get_client(self, session, model):
         return session.client(
@@ -50,7 +66,41 @@ class IamPolicyFilter(Filter):
             'op': op, 'value_type': value_type}, self.manager)
             resources = userRolePairFilter.process(resources)
 
+        # NOTE news corp customisation to extract values from binding iam policies
+        if "extract" in self.data:
+            extract = self.data["extract"]
+            for r in resources:
+                if "c7n:iamPolicy" not in r:
+                    continue
+                iam_policy = r["c7n:iamPolicy"]
+                v = jmespath.search(extract["expr"], iam_policy)
+                if "regex" in extract:
+                    # regex example: 'user:(.*)@news.com.au'
+                    p = re.compile(extract["regex"])
+                    v = self.extractString(v, p)
+                if "value_type" in extract:
+                    if extract["value_type"] == "gcp.label":
+                        v = self.gcpLabelaise(v)
+                # print(f"extracted {v}")
+                r[extract["key"]] = v
+
         return resources
+
+    def gcpLabelaise(self, value):
+        if isinstance(value, str):
+            return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "_").replace(":", "_").replace("/", "_")
+        elif isinstance(value, list):
+            return [self.gcpLabelaise(i) for i in value]
+        return value
+
+    def extractString(self, value, pattern):
+        if isinstance(value, str):
+            # NOTE group(1) will return the 1st capture (stuff within the brackets)
+            result = pattern.search(value)
+            return result.group(1) if result else None
+        elif isinstance(value, list):
+            return list(filter(None, [self.extractString(i, pattern) for i in value]))
+        return value
 
 
 class IamPolicyValueFilter(ValueFilter):

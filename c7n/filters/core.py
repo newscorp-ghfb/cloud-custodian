@@ -237,6 +237,7 @@ class BaseValueFilter(Filter):
                     if t.get('Key') == tk:
                         r = t.get('Value')
                         break
+                    # NOTE news corp customization: normalize key
                     if ktype == 'normalize' and t.get('Key').lower() == tk.lower():
                         r = t.get('Value')
                         break
@@ -461,7 +462,7 @@ class ValueFilter(BaseValueFilter):
             # Doesn't mix well as enum with inherits that extend
             'type': {'enum': ['value']},
             'key': {'type': 'string'},
-            'key_type': {'type': 'string'},
+            'key_type': {'enum': ['normalize']},
             'value_type': {'$ref': '#/definitions/filters_common/value_types'},
             'default': {'type': 'object'},
             'value_regex': {'type': 'string'},
@@ -571,6 +572,7 @@ class ValueFilter(BaseValueFilter):
             self.op = self.data.get('op')
             if 'value_from' in self.data:
                 values = ValuesFrom(self.data['value_from'], self.manager)
+                # NOTE news corp customization: support vars in expr
                 self.resolveExprVariables(values, resource)
                 self.v = values.get_values()
                 if self.recoverOriginExpr(values):
@@ -581,6 +583,7 @@ class ValueFilter(BaseValueFilter):
             self.vtype = self.data.get('value_type')
 
         # TODO move the annotation logic to action
+        # NOTE news corp customization: annotation resouce to support further actions
         # annotation resource by borrowing the capability of value_filter
         if self.op and self.op == 'annotation':
             if self.v:
