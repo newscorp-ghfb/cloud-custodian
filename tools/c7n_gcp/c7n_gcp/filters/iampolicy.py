@@ -88,7 +88,7 @@ class IamPolicyFilter(Filter):
 
     def gcpLabelaise(self, value):
         if isinstance(value, str):
-            return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "_").replace(":", "_").replace("/", "_")
+            return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "-").replace(":", "_").replace("/", "_")
         elif isinstance(value, list):
             return [self.gcpLabelaise(i) for i in value]
         return value
