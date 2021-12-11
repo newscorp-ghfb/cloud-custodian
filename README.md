@@ -1,10 +1,6 @@
 Cloud Custodian
 =================
 
-<p align="center"><img src="https://cloudcustodian.io/img/logo_capone_devex_cloud_custodian.svg" alt="Cloud Custodian Logo" width="200px" height="200px" /></p>
-
----
-
 [![](https://badges.gitter.im/cloud-custodian/cloud-custodian.svg)](https://gitter.im/cloud-custodian/cloud-custodian?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CI](https://github.com/cloud-custodian/cloud-custodian/workflows/CI/badge.svg?event=push)](https://github.com/cloud-custodian/cloud-custodian/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush)
 [![](https://dev.azure.com/cloud-custodian/cloud-custodian/_apis/build/status/Custodian%20-%20CI?branchName=master)](https://dev.azure.com/cloud-custodian/cloud-custodian/_build)
@@ -172,8 +168,8 @@ The best getting started guides are the cloud provider specific tutorials.
 As a quick walk through, below are some sample policies for AWS resources.
 
   1. will enforce that no S3 buckets have cross-account access enabled.
-  1. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
-  1. will tag any EC2 instance that does not have the follow tags
+  2. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
+  3. will tag any EC2 instance that does not have the follow tags
      "Environment", "AppId", and either "OwnerContact" or "DeptID" to
      be stopped in four days.
 
