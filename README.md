@@ -13,9 +13,9 @@ Cloud Custodian
 
 ### c7n
 
+- normalise value_type apply to keys in value_from.expr
 - add key_type to enable key normalization
-  - normalise value_type for keys in value_from.expr
-  - make key_type impact value_from.expr as well
+  - make key_type apply to value_from.expr as well
   - support key_type in value_filter
 - add ServiceNow notification
 - add annotation op to value filter
