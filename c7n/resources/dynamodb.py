@@ -33,9 +33,10 @@ class ConfigTable(query.ConfigSource):
 class DescribeTable(query.DescribeSource):
 
     def augment(self, resources):
-        return universal_augment(
-            self.manager,
-            super(DescribeTable, self).augment(resources))
+        # return universal_augment(
+        #     self.manager,
+        #     super(DescribeTable, self).augment(resources))
+        return super(DescribeTable, self).augment(resources)
 
 
 @resources.register('dynamodb-table')

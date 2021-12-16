@@ -13,6 +13,7 @@ Cloud Custodian
 
 ### c7n
 
+- TEMPORARY remove tags support when loading ddb tables
 - normalise value_type apply to keys in value_from.expr
 - add key_type to enable key normalization
   - make key_type apply to value_from.expr as well
@@ -21,6 +22,10 @@ Cloud Custodian
 - add annotation op to value filter
 - webhook action supports os env variables
 - enable variables in expr of value_from
+
+### c7n_org
+
+- c7n-org supports the argument not-accounts
 
 ### c7n_gcp
 
