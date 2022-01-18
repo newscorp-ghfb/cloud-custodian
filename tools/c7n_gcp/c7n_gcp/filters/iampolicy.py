@@ -70,10 +70,8 @@ class IamPolicyFilter(Filter):
         if "extract" in self.data:
             extract = self.data["extract"]
             for r in resources:
-                if "c7n:iamPolicy" not in r:
-                    continue
-                iam_policy = r["c7n:iamPolicy"]
-                v = jmespath.search(extract["expr"], iam_policy)
+                expr = ".".join(f'"{e}"' if ":" in e else e for e in extract["expr"].split("."))
+                v = jmespath.search(expr, r) or []
                 if "regex" in extract:
                     # regex example: 'user:(.*)@news.com.au'
                     p = re.compile(extract["regex"])
@@ -204,6 +202,8 @@ class IamPolicyUserRolePairFilter(ValueFilter):
                         userToRolesMap[user] = [role]
             for user, roles in userToRolesMap.items():
                 r["c7n:iamPolicyUserRolePair"][user] = roles
+                # if user.startswith("user:"):
+                #     print(f'{r["projectNumber"]};{r["projectId"]};{r["lifecycleState"]};{user[5:]};{",".join([i[6:] if i.startswith("roles/") else i for i in roles])}')
 
         return super(IamPolicyUserRolePairFilter, self).process(resources)
 
