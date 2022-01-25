@@ -8,8 +8,8 @@ import c7n_mailer.azure_mailer.sendgrid_delivery as sendgrid
 
 from .ldap_lookup import LdapLookup
 from .utils import (
-    get_resource_tag_targets,
-    kms_decrypt, get_aws_username_from_event)
+    decrypt, get_resource_tag_targets, get_provider,
+    kms_decrypt, get_aws_username_from_event, Providers)
 
 
 class EmailDelivery:
@@ -18,13 +18,18 @@ class EmailDelivery:
         self.config = config
         self.logger = logger
         self.session = session
-        self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
+        self.provider = get_provider(self.config)
+        if self.provider == Providers.AWS:
+            self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
 
     def get_ldap_connection(self):
         if self.config.get('ldap_uri'):
-            self.config['ldap_bind_password'] = kms_decrypt(self.config, self.logger,
-                                                            self.session, 'ldap_bind_password')
+            if self.provider == Providers.AWS:
+                self.config['ldap_bind_password'] = kms_decrypt(self.config, self.logger,
+                                                                self.session, 'ldap_bind_password')
+            else:
+                self.config['ldap_bind_password'] = decrypt(self.config, self.logger, self.session, 'ldap_bind_password')
             return LdapLookup(self.config, self.logger)
         return None
 

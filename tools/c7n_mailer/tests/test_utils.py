@@ -28,6 +28,7 @@ class StripPrefix(unittest.TestCase):
         self.assertEqual(utils.strip_prefix('aws.webserver', 'aws.'), 'webserver')
         self.assertEqual(utils.strip_prefix('nothing', 'aws.'), 'nothing')
         self.assertEqual(utils.strip_prefix('azure.azserver', 'azure.'), 'azserver')
+        self.assertEqual(utils.strip_prefix('gcp.instance', 'gcp.'), 'instance')
         self.assertEqual(utils.strip_prefix('', 'aws.'), '')
 
 
@@ -323,6 +324,7 @@ class ProviderSelector(unittest.TestCase):
     def test_get_providers(self):
         self.assertEqual(utils.get_provider({'queue_url': 'asq://'}), utils.Providers.Azure)
         self.assertEqual(utils.get_provider({'queue_url': 'sqs://'}), utils.Providers.AWS)
+        self.assertEqual(utils.get_provider({'queue_url': 'project'}), utils.Providers.GCP)
 
 
 class DecryptTests(unittest.TestCase):
@@ -337,9 +339,15 @@ class DecryptTests(unittest.TestCase):
         utils.decrypt({'queue_url': 'asq://', 'test': 'test'}, Mock(), Mock(), 'test')
         azure_decrypt_mock.assert_called_once()
 
+    @patch('c7n_mailer.gcp_mailer.utils.gcp_decrypt')
+    def test_gcp_decrypt(self, gcp_decrypt_mock):
+        utils.decrypt({'queue_url': 'projects', 'test': 'test'}, Mock(), Mock(), 'test')
+        gcp_decrypt_mock.assert_called_once()
+
     def test_decrypt_none(self):
         self.assertEqual(utils.decrypt({'queue_url': 'aws'}, Mock(), Mock(), 'test'), None)
         self.assertEqual(utils.decrypt({'queue_url': 'asq://'}, Mock(), Mock(), 'test'), None)
+        self.assertEqual(utils.decrypt({'queue_url': 'projects'}, Mock(), Mock(), 'test'), None)
 
 
 class OtherTests(unittest.TestCase):
