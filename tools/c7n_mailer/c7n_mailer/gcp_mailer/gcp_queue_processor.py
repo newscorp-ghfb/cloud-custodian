@@ -14,7 +14,7 @@ from c7n_mailer.email_delivery import EmailDelivery
 try:
     from c7n_gcp.client import Session
 except ImportError:
-    raise Exception("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.") 
+    raise Exception("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
 
 MAX_MESSAGES = 1000
 
@@ -63,9 +63,9 @@ class MailerGcpQueueProcessor(object):
         if any(e.startswith('datadog') for e in pubsub_message.get('action', ()).get('to')):
             self._deliver_datadog_message(pubsub_message)
         # Process Slack
-        if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
-            for e in pubsub_message.get('action', ()).get('to')):
-                self._deliver_slack_message(pubsub_message, delivery)
+        if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/') for e in
+        pubsub_message.get('action', ()).get('to')):
+            self._deliver_slack_message(pubsub_message, delivery)
 
     def _deliver_datadog_message(self, pubsub_message):
         from c7n_mailer.datadog_delivery import DataDogDelivery

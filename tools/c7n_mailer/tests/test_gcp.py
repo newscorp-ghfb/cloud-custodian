@@ -18,22 +18,22 @@ class GcpTest(unittest.TestCase):
     @patch.object(EmailDelivery, 'send_c7n_email')
     def test_process_message(self, mock_email):
         mock_email.return_value = True
-        processor = MailerGcpQueueProcessor(MAILER_CONFIG_1, logger)
+        processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
         self.assertIsNone(processor.process_message(GCP_MESSAGES['receivedMessages'][0]))
 
     def test_receive(self):
-        processor = MailerGcpQueueProcessor(MAILER_CONFIG_1, logger)
+        processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
         messages = processor.receive_messages()
         self.assertEqual(messages, {})
 
     def test_ack(self):
-        processor = MailerGcpQueueProcessor(MAILER_CONFIG_1, logger)
+        processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
         self.assertEqual(processor.ack_messages('2019-05-13T18:31:17.926Z'), {})
 
     @patch.object(MailerGcpQueueProcessor, 'receive_messages')
     def test_run(self, mock_receive):
         mock_receive.return_value = []
-        processor = MailerGcpQueueProcessor(MAILER_CONFIG_1, logger)
+        processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
         processor.run()
 
     def test_is_gcp_cloud(self):

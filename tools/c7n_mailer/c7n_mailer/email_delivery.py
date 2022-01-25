@@ -29,7 +29,8 @@ class EmailDelivery:
                 self.config['ldap_bind_password'] = kms_decrypt(self.config, self.logger,
                                                                 self.session, 'ldap_bind_password')
             else:
-                self.config['ldap_bind_password'] = decrypt(self.config, self.logger, self.session, 'ldap_bind_password')
+                self.config['ldap_bind_password'] = decrypt(self.config, self.logger,
+                                                            self.session, 'ldap_bind_password')
             return LdapLookup(self.config, self.logger)
         return None
 
