@@ -28,7 +28,7 @@ entry_points = \
 
 setup_kwargs = {
     'name': 'c7n-mailer',
-    'version': '0.7.1',
+    'version': '0.7.0',
     'description': 'Cloud Custodian - Reference Mailer',
     'license': 'Apache-2.0',
     'classifiers': [
