@@ -324,7 +324,7 @@ class ProviderSelector(unittest.TestCase):
     def test_get_providers(self):
         self.assertEqual(utils.get_provider({'queue_url': 'asq://'}), utils.Providers.Azure)
         self.assertEqual(utils.get_provider({'queue_url': 'sqs://'}), utils.Providers.AWS)
-        self.assertEqual(utils.get_provider({'queue_url': 'project'}), utils.Providers.GCP)
+        self.assertEqual(utils.get_provider({'queue_url': 'projects'}), utils.Providers.GCP)
 
 
 class DecryptTests(unittest.TestCase):
