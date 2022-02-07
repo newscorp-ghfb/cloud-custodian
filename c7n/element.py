@@ -48,7 +48,7 @@ class Element:
             jmespath.search(search_expr, resources), resources)
             if value in allowed_values]
         if resource_count != len(results):
-            self.log.info(
+            self.log.debug(
                 "%s implicitly filtered %d of %d resources key:%s on %s",
                 self.type, len(results), resource_count, key_expr,
                 (', '.join(allowed_values)))
