@@ -157,7 +157,6 @@ class UsageFilter(MetricsFilter):
         start_time = end_time - timedelta(1)
 
         limit = self.data.get('limit', 80)
-        metric_scale = 1.0
 
         result = []
 
