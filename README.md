@@ -13,7 +13,7 @@ Cloud Custodian
 
 ### c7n
 
-- TEMPORARY remove tags support when loading ddb tables
+- fix service quota usage-metric sometimes requested up to 86400 data points, which exceeds the limit of 1440
 - normalise value_type apply to keys in value_from.expr
 - add key_type to enable key normalization
   - make key_type apply to value_from.expr as well
