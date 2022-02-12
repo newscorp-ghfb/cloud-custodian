@@ -191,7 +191,6 @@ class UsageFilter(MetricsFilter):
                 EndTime=end_time,
                 Period=period,
             )
-            print(res)
             if res['Datapoints']:
                 if self.percentile_regex.match(stat):
                     # AWS CloudWatch supports percentile statistic as a statistic but
