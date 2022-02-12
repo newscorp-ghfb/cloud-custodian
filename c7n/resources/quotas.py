@@ -165,6 +165,10 @@ class UsageFilter(MetricsFilter):
             if stat not in self.metric_map and self.percentile_regex.match(stat) is None:
                 continue
 
+            # NOTE Hot fix for "QuotaName": "Concurrently executing Automations"
+            if r.get("QuotaCode") == "L-09101E66" and "Period" not in r:
+                r["Period"] = { "PeriodValue": 1, "PeriodUnit": "SECOND"}
+
             metric_scale = 1
             if 'Period' in r:
                 period_unit = self.time_delta_map[r['Period']['PeriodUnit']]
@@ -183,6 +187,7 @@ class UsageFilter(MetricsFilter):
                 EndTime=end_time,
                 Period=period,
             )
+            print(res)
             if res['Datapoints']:
                 if self.percentile_regex.match(stat):
                     # AWS CloudWatch supports percentile statistic as a statistic but
