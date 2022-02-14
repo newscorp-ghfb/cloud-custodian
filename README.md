@@ -11,6 +11,13 @@ Cloud Custodian
 
 ## News Corp customizations
 
+To avoid any unnecessary code conflict while merging upstream changes, we must follow the rule `Do NOT change the code unless necessary`.
+
+- if things can be done without customizing Custodian, please do not customize it. e.g. You may leverage features like `invoke-lambda`, `webhook`, `value_from` of value filter etc. to integrate with your app
+- add new lines of code over revising existing code/logic
+- do NOT format existing code (keep it as it is please)
+- please spare some time to create a PR for upstream if you've completed a bug fix (to return to the community)
+
 ### c7n
 
 - fix service quota usage-metric sometimes requested up to 86400 data points, which exceeds the limit of 1440
