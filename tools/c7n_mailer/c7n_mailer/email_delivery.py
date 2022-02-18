@@ -22,6 +22,7 @@ class EmailDelivery:
         if self.provider == Providers.AWS:
             self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
+        self.provider = get_provider(self.config)
 
     def get_ldap_connection(self):
         if self.config.get('ldap_uri'):
@@ -42,7 +43,7 @@ class EmailDelivery:
                     emails.append(target)
         return emails
 
-    def get_event_owner_email(self, targets, event):
+    def get_event_owner_email(self, targets, event):  # TODO: GCP-friendly
         if 'event-owner' in targets:
             aws_username = get_aws_username_from_event(self.logger, event)
             if aws_username:
@@ -114,7 +115,7 @@ class EmailDelivery:
 
         return list(chain(explicit_emails, ldap_emails, org_emails))
 
-    def get_account_emails(self, sqs_message):
+    def get_account_emails(self, sqs_message):  # TODO: GCP-friendly
         email_list = []
 
         if 'account-emails' not in sqs_message['action']['to']:
