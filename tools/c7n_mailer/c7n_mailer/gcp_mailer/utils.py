@@ -4,7 +4,10 @@
 try:
     from google.cloud import secretmanager
 except ImportError:
-    print("GCP secret manager SDK required to decrypt secured string: " "pip install google-cloud-secret-manager")
+    print(
+        "GCP secret manager SDK required to decrypt secured string: "
+        "pip install google-cloud-secret-manager"
+    )
 
 
 def gcp_decrypt(config, logger, encrypted_field, client=secretmanager.SecretManagerServiceClient()):

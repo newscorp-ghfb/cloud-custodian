@@ -48,4 +48,6 @@ class GcpTest(unittest.TestCase):
         mock_receive.return_value = []
         processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
         processor.run()
-        mock_log.assert_called_with("No messages left in the gcp topic subscription," " now exiting c7n_mailer.")
+        mock_log.assert_called_with(
+            "No messages left in the gcp topic subscription," " now exiting c7n_mailer."
+        )

@@ -97,7 +97,10 @@ class MailerGcpQueueProcessor(object):
         """Receive messsage(s) from subscribed topic"""
         return self.client.execute_command(
             "pull",
-            {"subscription": self.subscription, "body": {"returnImmediately": True, "max_messages": MAX_MESSAGES}},
+            {
+                "subscription": self.subscription,
+                "body": {"returnImmediately": True, "max_messages": MAX_MESSAGES},
+            },
         )
 
     def ack_messages(self, discard_datetime):
