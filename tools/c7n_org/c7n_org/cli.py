@@ -619,13 +619,13 @@ def run_account(account, region, policies_config, output_path,
                     return policy_counts, success
                 log.error(
                     "Exception running policy:%s account:%s region:%s error:%s",
-                    p.name, account['name'], region, e)
+                    p.name, account['name'], region, repr(e))
                 continue
             except Exception as e:
                 success = False
                 log.error(
                     "Exception running policy:%s account:%s region:%s error:%s",
-                    p.name, account['name'], region, e)
+                    p.name, account['name'], region, repr(e))
                 if not debug:
                     continue
                 import traceback, pdb, sys
