@@ -20,7 +20,8 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 ### c7n
 
-- fix service quota usage-metric sometimes requested up to 86400 data points, which exceeds the limit of 1440
+- bugfix service quota - TooManyRequestsException when calling the ListServices in us-east-1
+- bugfix service quota - usage-metric requests more than 1440 data points
 - normalise value_type apply to keys in value_from.expr
 - add key_type to enable key normalization
   - make key_type apply to value_from.expr as well
