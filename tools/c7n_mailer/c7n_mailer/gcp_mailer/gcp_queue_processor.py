@@ -67,6 +67,7 @@ class MailerGcpQueueProcessor(object):
             for e in pubsub_message.get("action", ()).get("to")
         ):
             self._deliver_slack_message(pubsub_message, delivery)
+        return True
 
     def _deliver_datadog_message(self, pubsub_message):
         from c7n_mailer.datadog_delivery import DataDogDelivery
@@ -77,6 +78,7 @@ class MailerGcpQueueProcessor(object):
         try:
             self.logger.info("Sending message to Datadog.")
             datadog_delivery.deliver_datadog_messages(datadog_message_packages, pubsub_message)
+            return True
         except Exception as error:
             self.logger.exception(error)
             pass
@@ -89,6 +91,7 @@ class MailerGcpQueueProcessor(object):
         try:
             self.logger.info("Sending message to Slack.")
             slack_delivery.slack_handler(pubsub_message, slack_messages)
+            return True
         except Exception as error:
             self.logger.exception(error)
             pass

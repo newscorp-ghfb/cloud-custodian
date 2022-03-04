@@ -1,13 +1,7 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
 
-try:
-    from google.cloud import secretmanager
-except ImportError:
-    print(
-        "GCP secret manager SDK required to decrypt secured string: "
-        "pip install google-cloud-secret-manager"
-    )
+from google.cloud import secretmanager
 
 
 def gcp_decrypt(config, logger, encrypted_field, client=secretmanager.SecretManagerServiceClient()):
@@ -18,7 +12,7 @@ def gcp_decrypt(config, logger, encrypted_field, client=secretmanager.SecretMana
             secret = f"{data['secret']}/versions/latest"
         else:
             secret = data["secret"]
-        secret_value = client.access_secret_version(name=secret)
-        return secret_value.payload.data.decode("UTF-8")
+        secret_value = client.access_secret_version(name=secret).payload.data.decode("UTF-8")
+        return secret_value
 
     return data

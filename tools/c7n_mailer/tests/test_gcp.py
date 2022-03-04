@@ -1,12 +1,23 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+import base64
 import json
+import os
 import unittest
-from common import logger, MAILER_CONFIG_GCP, GCP_MESSAGE, GCP_MESSAGES
+import zlib
+
+from common import (
+    logger,
+    MAILER_CONFIG_GCP,
+    GCP_MESSAGE,
+    GCP_MESSAGES,
+    PUBSUB_MESSAGE_DATADOG,
+    PUBSUB_MESSAGE_SLACK,
+)
 from c7n_mailer.gcp_mailer.gcp_queue_processor import MailerGcpQueueProcessor
 from c7n_mailer.email_delivery import EmailDelivery
 from c7n_mailer.utils import get_provider
-from mock import patch
+from mock import call, MagicMock, patch
 
 
 class GcpTest(unittest.TestCase):
@@ -18,7 +29,7 @@ class GcpTest(unittest.TestCase):
     def test_process_message(self, mock_email):
         mock_email.return_value = True
         processor = MailerGcpQueueProcessor(MAILER_CONFIG_GCP, logger)
-        self.assertIsNone(processor.process_message(GCP_MESSAGES["receivedMessages"][0]))
+        self.assertTrue(processor.process_message(GCP_MESSAGES["receivedMessages"][0]))
 
     @patch.object(MailerGcpQueueProcessor, "receive_messages")
     def test_receive(self, mock_receive):
@@ -50,4 +61,30 @@ class GcpTest(unittest.TestCase):
         processor.run()
         mock_log.assert_called_with(
             "No messages left in the gcp topic subscription," " now exiting c7n_mailer."
+        )
+
+    @patch("c7n_mailer.datadog_delivery.DataDogDelivery")
+    def test_datadog_delivery(self, mock_datadog):
+        datadog_mailer_config = {
+            "queue_url": "projects/c7n-dev/subscriptions/getnotify",
+            "datadog_api_key": "mock_api_key",
+            "datadog_application_key": "mock_application_key",
+        }
+
+        datadog_compressed_message = MagicMock()
+        datadog_compressed_message.content = base64.b64encode(
+            zlib.compress(PUBSUB_MESSAGE_DATADOG.encode("utf8"))
+        )
+        datadog_loaded_message = json.loads(PUBSUB_MESSAGE_DATADOG)
+
+        mock_datadog.return_value.get_datadog_message_packages.return_value = (
+            "mock_datadog_message_map"
+        )
+
+        pubsub_message = {"message": {"data": datadog_compressed_message.content}}
+        gcp_processor = MailerGcpQueueProcessor(datadog_mailer_config, logger)
+        gcp_processor.process_message(pubsub_message)
+
+        mock_datadog.assert_has_calls(
+            [call().deliver_datadog_messages("mock_datadog_message_map", datadog_loaded_message)]
         )
