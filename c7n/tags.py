@@ -485,7 +485,8 @@ class RenameTag(Action):
     schema = utils.type_schema(
         'rename-tag',
         old_key={'type': 'string'},
-        new_key={'type': 'string'})
+        new_key={'type': 'string'},
+        delete={'type': 'boolean'})
     schema_alias = True
 
     permissions = ('ec2:CreateTags', 'ec2:DeleteTags')
@@ -513,6 +514,7 @@ class RenameTag(Action):
         self.log.info("Renaming tag on %s instances" % (len(resource_set)))
         old_key = self.data.get('old_key')
         new_key = self.data.get('new_key')
+        delete = self.data.get('delete', True)
 
         # We have a preference to creating the new tag when possible first
         resource_ids = [r[self.id_key] for r in resource_set if len(
@@ -520,8 +522,10 @@ class RenameTag(Action):
         if resource_ids:
             self.create_tag(client, resource_ids, new_key, tag_value)
 
-        self.delete_tag(
-            client, [r[self.id_key] for r in resource_set], old_key, tag_value)
+        # NOTE News customisation. Exception could be raised when create if with 50 tags
+        if delete:
+            self.delete_tag(
+                client, [r[self.id_key] for r in resource_set], old_key, tag_value)
 
         # For resources with 50 tags, we need to delete first and then create.
         resource_ids = [r[self.id_key] for r in resource_set if len(
