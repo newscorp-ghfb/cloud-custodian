@@ -20,6 +20,8 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 ### c7n
 
+- filter value - support gcp labelisation when extracting content from value_from
+- aws - ec2 - add property 'delete' to rename-tag
 - bugfix service quota - TooManyRequestsException when calling the ListServices in us-east-1
 - bugfix service quota - usage-metric requests more than 1440 data points
 - normalise value_type apply to keys in value_from.expr
