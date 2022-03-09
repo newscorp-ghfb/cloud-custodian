@@ -803,3 +803,10 @@ def get_support_region(manager):
     elif partition == "aws-cn":
         support_region = "cn-north-1"
     return support_region
+
+def gcpLabelaise(value):
+    if isinstance(value, str):
+        return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "-").replace(":", "_").replace("/", "_")
+    elif isinstance(value, list):
+        return [gcpLabelaise(i) for i in value]
+    return value
