@@ -12,7 +12,7 @@ from urllib.parse import parse_qsl, urlparse
 import zlib
 from contextlib import closing
 
-from c7n.utils import format_string_values
+from c7n.utils import format_string_values, gcpLabelaise
 
 log = logging.getLogger('custodian.resolver')
 
@@ -151,6 +151,12 @@ class ValuesFrom:
                 return contents
 
         contents = self._get_values()
+
+        # NOTE News customisation, normalise the value for gcp label
+        log.debug(self.data.get("expr"), contents)
+        if self.data.get("value_type") == "gcp_label":
+            contents = gcpLabelaise(contents)
+
         if self.cache:
             self.cache.save(("value-from", key), contents)
         return contents
