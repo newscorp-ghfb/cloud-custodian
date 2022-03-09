@@ -4,7 +4,7 @@ import re
 
 from c7n.filters.core import Filter, ValueFilter
 
-from c7n.utils import local_session, type_schema
+from c7n.utils import local_session, type_schema, gcpLabelaise
 
 
 class IamPolicyFilter(Filter):
@@ -34,7 +34,7 @@ class IamPolicyFilter(Filter):
             'key': {'type': 'string'},
             'expr': {'type': 'string'},
             'regex': {'type': 'string'},
-            'value_type': {'enum': ['gcp.label']},
+            'value_type': {'enum': ['gcp_label']},
         }
     }
 
@@ -76,20 +76,12 @@ class IamPolicyFilter(Filter):
                     # regex example: 'user:(.*)@news.com.au'
                     p = re.compile(extract["regex"])
                     v = self.extractString(v, p)
-                if "value_type" in extract:
-                    if extract["value_type"] == "gcp.label":
-                        v = self.gcpLabelaise(v)
+                if extract.get("value_type") == "gcp_label":
+                    v = gcpLabelaise(v)
                 # print(f"extracted {v}")
                 r[extract["key"]] = v
 
         return resources
-
-    def gcpLabelaise(self, value):
-        if isinstance(value, str):
-            return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "-").replace(":", "_").replace("/", "_")
-        elif isinstance(value, list):
-            return [self.gcpLabelaise(i) for i in value]
-        return value
 
     def extractString(self, value, pattern):
         if isinstance(value, str):
