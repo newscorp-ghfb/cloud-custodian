@@ -525,11 +525,13 @@ def run_script(config, output_dir, accounts, tags, region, echo, serial, script_
 
 
 def accounts_iterator(config):
+    org_vars = config.get("vars", {})
     for a in config.get('accounts', ()):
         if 'role' in a:
             if isinstance(a['role'], str) and not a['role'].startswith('arn'):
                 a['role'] = "arn:aws:iam::{}:role/{}".format(
                     a['account_id'], a['role'])
+        a['vars'] = org_vars.update(a.get('vars', {}))
         yield {**a, **{'provider': 'aws'}}
     for a in config.get('subscriptions', ()):
         d = {'account_id': a['subscription_id'],
@@ -538,6 +540,7 @@ def accounts_iterator(config):
              'provider': 'azure',
              'tags': a.get('tags', ()),
              'vars': a.get('vars', {})}
+        d['vars'] = org_vars.update(d.get('vars', {}))
         yield d
     for a in config.get('projects', ()):
         d = {'account_id': a['project_id'],
@@ -546,6 +549,7 @@ def accounts_iterator(config):
              'provider': 'gcp',
              'tags': a.get('tags', ()),
              'vars': a.get('vars', {})}
+        d['vars'] = org_vars.update(d.get('vars', {}))
         yield d
 
 
