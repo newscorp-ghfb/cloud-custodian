@@ -1,5 +1,4 @@
-Cloud Custodian
-=================
+# Cloud Custodian
 
 [![](https://badges.gitter.im/cloud-custodian/cloud-custodian.svg)](https://gitter.im/cloud-custodian/cloud-custodian?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CI](https://github.com/cloud-custodian/cloud-custodian/workflows/CI/badge.svg?event=push)](https://github.com/cloud-custodian/cloud-custodian/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush)
@@ -13,25 +12,44 @@ Cloud Custodian
 
 To avoid any unnecessary code conflict while merging upstream changes, we must follow the rule `Do NOT change the code unless necessary`.
 
-- if things can be done without customizing Custodian, please do not customize it. e.g. You may leverage features like `invoke-lambda`, `webhook`, `value_from` of value filter etc. to integrate with your app
-- add new lines of code over revising existing code/logic
-- do NOT format existing code (keep it as it is please)
-- please spare some time to create a PR for upstream if you've completed a bug fix (to return to the community)
+- If things can be done without customizing Custodian, please do not customize it. e.g. You may leverage features like `invoke-lambda`, `webhook`, `value_from` of value filter etc. to integrate with your app
+- Add new lines of code over revising existing code/logic
+- Do NOT format existing code (keep it as it is please)
+- Please spare some time to create a PR for upstream if you've completed a bug fix (to return to the community)
 
 ### c7n
 
-- filter value - support gcp labelisation when extracting content from value_from
-- aws - ec2 - add property 'delete' to rename-tag
-- bugfix service quota - TooManyRequestsException when calling the ListServices in us-east-1
-- bugfix service quota - usage-metric requests more than 1440 data points
-- normalise value_type apply to keys in value_from.expr
-- add key_type to enable key normalization
-  - make key_type apply to value_from.expr as well
-  - support key_type in value_filter
+1. ebs resource
+
+   - aws - devide into small batch when get ebs resource
+
+2. service quota resource
+
+   - service quota - bugfix TooManyRequestsException when calling the ListServices in us-east-1
+   - service quota - bugfix usage-metric requests more than 1440 data points
+
+3. tag action
+
+   - aws - support marking missing resource when copy related tag
+   - aws - ec2 - add property 'delete' to rename-tag to achieve copy-tag effect
+
+4. value filter
+
+   - filter value - support gcp labelisation when extracting content from value_from
+   - normalise value_type apply to keys in value_from.expr
+   - add key_type to enable key normalization
+     - make key_type apply to value_from.expr as well
+     - support key_type in value_filter
+   - add annotation op to value filter
+   - enable variables in expr of value_from
+
+5. webhook action
+
+   - webhook action supports os env variables
+
+### c7n-mailer
+
 - add ServiceNow notification
-- add annotation op to value filter
-- webhook action supports os env variables
-- enable variables in expr of value_from
 
 ### c7n_org
 
@@ -39,9 +57,11 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 ### c7n_gcp
 
-- enable annotation op for IAM policy in gcp.project
-  - extract values from gcp.project iam policy
-  - convert values to gcp lable
+1. gcp.project
+
+   - enable annotation op for IAM policy in gcp.project
+     - extract values from gcp.project iam policy
+     - convert values to gcp lable
 
 ---
 
@@ -69,35 +89,32 @@ execute against large existing fleets.
 Cloud Custodian is a CNCF Sandbox project, lead by a community of hundreds
 of contributors.
 
-Features
---------
+## Features
 
--   Comprehensive support for public cloud services and resources with a
-    rich library of actions and filters to build policies with.
--   Supports arbitrary filtering on resources with nested boolean
-    conditions.
--   Dry run any policy to see what it would do.
--   Automatically provisions serverless functions and event sources (
-    AWS CloudWatchEvents, AWS Config Rules, Azure EventGrid, GCP
-    AuditLog & Pub/Sub, etc)
--   Cloud provider native metrics outputs on resources that matched a
-    policy
--   Structured outputs into cloud native object storage of which
-    resources matched a policy.
--   Intelligent cache usage to minimize api calls.
--   Supports multi-account/subscription/project usage.
--   Battle-tested - in production on some very large cloud environments.
+- Comprehensive support for public cloud services and resources with a
+  rich library of actions and filters to build policies with.
+- Supports arbitrary filtering on resources with nested boolean
+  conditions.
+- Dry run any policy to see what it would do.
+- Automatically provisions serverless functions and event sources (
+  AWS CloudWatchEvents, AWS Config Rules, Azure EventGrid, GCP
+  AuditLog & Pub/Sub, etc)
+- Cloud provider native metrics outputs on resources that matched a
+  policy
+- Structured outputs into cloud native object storage of which
+  resources matched a policy.
+- Intelligent cache usage to minimize api calls.
+- Supports multi-account/subscription/project usage.
+- Battle-tested - in production on some very large cloud environments.
 
-Links
------
+## Links
 
--   [Homepage](http://cloudcustodian.io)
--   [Docs](http://cloudcustodian.io/docs/index.html)
--   [Developer Install](https://cloudcustodian.io/docs/developer/installing.html)
--   [Presentations](https://www.google.com/search?q=cloud+custodian&source=lnms&tbm=vid)
+- [Homepage](http://cloudcustodian.io)
+- [Docs](http://cloudcustodian.io/docs/index.html)
+- [Developer Install](https://cloudcustodian.io/docs/developer/installing.html)
+- [Presentations](https://www.google.com/search?q=cloud+custodian&source=lnms&tbm=vid)
 
-Quick Install
--------------
+## Quick Install
 
 ```shell
 $ python3 -m venv custodian
@@ -105,9 +122,7 @@ $ source custodian/bin/activate
 (custodian) $ pip install c7n
 ```
 
-
-Usage
------
+## Usage
 
 The first step to using Cloud Custodian is writing a YAML file
 containing the policies that you want to run. Each policy specifies
@@ -118,65 +133,65 @@ how the policy will execute.
 
 The best getting started guides are the cloud provider specific tutorials.
 
- - [AWS Getting Started](https://cloudcustodian.io/docs/aws/gettingstarted.html)
- - [Azure Getting Started](https://cloudcustodian.io/docs/azure/gettingstarted.html)
- - [GCP Getting Started](https://cloudcustodian.io/docs/gcp/gettingstarted.html)
+- [AWS Getting Started](https://cloudcustodian.io/docs/aws/gettingstarted.html)
+- [Azure Getting Started](https://cloudcustodian.io/docs/azure/gettingstarted.html)
+- [GCP Getting Started](https://cloudcustodian.io/docs/gcp/gettingstarted.html)
 
 As a quick walk through, below are some sample policies for AWS resources.
 
-  1. will enforce that no S3 buckets have cross-account access enabled.
-  2. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
-  3. will tag any EC2 instance that does not have the follow tags
-     "Environment", "AppId", and either "OwnerContact" or "DeptID" to
-     be stopped in four days.
+1. will enforce that no S3 buckets have cross-account access enabled.
+2. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
+3. will tag any EC2 instance that does not have the follow tags
+   "Environment", "AppId", and either "OwnerContact" or "DeptID" to
+   be stopped in four days.
 
 ```yaml
 policies:
- - name: s3-cross-account
-   description: |
-     Checks S3 for buckets with cross-account access and
-     removes the cross-account access.
-   resource: aws.s3
-   region: us-east-1
-   filters:
-     - type: cross-account
-   actions:
-     - type: remove-statements
-       statement_ids: matched
+  - name: s3-cross-account
+    description: |
+      Checks S3 for buckets with cross-account access and
+      removes the cross-account access.
+    resource: aws.s3
+    region: us-east-1
+    filters:
+      - type: cross-account
+    actions:
+      - type: remove-statements
+        statement_ids: matched
 
- - name: ec2-require-non-public-and-encrypted-volumes
-   resource: aws.ec2
-   description: |
-    Provision a lambda and cloud watch event target
-    that looks at all new instances and terminates those with
-    unencrypted volumes.
-   mode:
-    type: cloudtrail
-    role: CloudCustodian-QuickStart
-    events:
-      - RunInstances
-   filters:
-    - type: ebs
-      key: Encrypted
-      value: false
-   actions:
-    - terminate
+  - name: ec2-require-non-public-and-encrypted-volumes
+    resource: aws.ec2
+    description: |
+      Provision a lambda and cloud watch event target
+      that looks at all new instances and terminates those with
+      unencrypted volumes.
+    mode:
+      type: cloudtrail
+      role: CloudCustodian-QuickStart
+      events:
+        - RunInstances
+    filters:
+      - type: ebs
+        key: Encrypted
+        value: false
+    actions:
+      - terminate
 
- - name: tag-compliance
-   resource: aws.ec2
-   description: |
-     Schedule a resource that does not meet tag compliance policies to be stopped in four days. Note a separate policy using the`marked-for-op` filter is required to actually stop the instances after four days.
-   filters:
-    - State.Name: running
-    - "tag:Environment": absent
-    - "tag:AppId": absent
-    - or:
-      - "tag:OwnerContact": absent
-      - "tag:DeptID": absent
-   actions:
-    - type: mark-for-op
-      op: stop
-      days: 4
+  - name: tag-compliance
+    resource: aws.ec2
+    description: |
+      Schedule a resource that does not meet tag compliance policies to be stopped in four days. Note a separate policy using the`marked-for-op` filter is required to actually stop the instances after four days.
+    filters:
+      - State.Name: running
+      - "tag:Environment": absent
+      - "tag:AppId": absent
+      - or:
+          - "tag:OwnerContact": absent
+          - "tag:DeptID": absent
+    actions:
+      - type: mark-for-op
+        op: stop
+        days: 4
 ```
 
 You can validate, test, and run Cloud Custodian with the example policy with these commands:
@@ -231,8 +246,7 @@ custodian cli, but automatically takes care of mounting volumes.
 
 Consult the documentation for additional information, or reach out on gitter.
 
-Cloud Provider Specific Help
-----------------------------
+## Cloud Provider Specific Help
 
 For specific instructions for AWS, Azure, and GCP, visit the relevant getting started page.
 
@@ -240,31 +254,27 @@ For specific instructions for AWS, Azure, and GCP, visit the relevant getting st
 - [Azure](https://cloudcustodian.io/docs/azure/gettingstarted.html)
 - [GCP](https://cloudcustodian.io/docs/gcp/gettingstarted.html)
 
-Get Involved
-------------
+## Get Involved
 
--   [GitHub](https://github.com/cloud-custodian/cloud-custodian) - (This page)
--   [Gitter](https://gitter.im/cloud-custodian/cloud-custodian) - Real time chat if you're looking for help
--   [Mailing List](https://groups.google.com/forum/#!forum/cloud-custodian) - Our project mailing list, subscribe here for important project announcements, feel free to ask questions
--   [Reddit](https://reddit.com/r/cloudcustodian) - Our subreddit
--   [StackOverflow](https://stackoverflow.com/questions/tagged/cloudcustodian) - Q&A site for developers, we keep an eye on the `cloudcustodian` tag
--   [YouTube Channel](https://www.youtube.com/channel/UCdeXCdFLluylWnFfS0-jbDA/) - We're working on adding tutorials and other useful information, as well as meeting videos
+- [GitHub](https://github.com/cloud-custodian/cloud-custodian) - (This page)
+- [Gitter](https://gitter.im/cloud-custodian/cloud-custodian) - Real time chat if you're looking for help
+- [Mailing List](https://groups.google.com/forum/#!forum/cloud-custodian) - Our project mailing list, subscribe here for important project announcements, feel free to ask questions
+- [Reddit](https://reddit.com/r/cloudcustodian) - Our subreddit
+- [StackOverflow](https://stackoverflow.com/questions/tagged/cloudcustodian) - Q&A site for developers, we keep an eye on the `cloudcustodian` tag
+- [YouTube Channel](https://www.youtube.com/channel/UCdeXCdFLluylWnFfS0-jbDA/) - We're working on adding tutorials and other useful information, as well as meeting videos
 
-Community Resources
--------------------
+## Community Resources
 
 We have a regular community meeting that is open to all users and developers of every skill level.
-Joining the [mailing list](https://groups.google.com/forum/#!forum/cloud-custodian) will automatically send you a meeting invite. 
-See the notes below for more technical information on joining the meeting. 
+Joining the [mailing list](https://groups.google.com/forum/#!forum/cloud-custodian) will automatically send you a meeting invite.
+See the notes below for more technical information on joining the meeting.
 
 - [Community Meeting Videos](https://www.youtube.com/watch?v=qy250y0UT-4&list=PLJ2Un8H_N5uBeAAWK95SnWvm_AuNJ8q2x)
 - [Community Meeting Notes Archive](https://github.com/cloud-custodian/community/discussions)
 - [Upcoming Community Events](https://cloudcustodian.io/events/)
 - [Cloud Custodian Annual Report 2021](https://github.com/cncf/toc/blob/main/reviews/2021-cloud-custodian-annual.md) - Annual health check provided to the CNCF outlining the health of the project
 
-
-Additional Tools
-----------------
+## Additional Tools
 
 The Custodian project also develops and maintains a suite of additional
 tools here
@@ -292,13 +302,11 @@ tools here
 
 - [**_Mugc_:**](https://github.com/cloud-custodian/cloud-custodian/tree/master/tools/ops#mugc) A utility used to clean up Cloud Custodian Lambda policies that are deployed in an AWS environment.
 
-Contributing
-------------
+## Contributing
 
 See <https://cloudcustodian.io/docs/contribute.html>
 
-Security
---------
+## Security
 
 If you've found a security related issue, a vulnerability, or a
 potential vulnerability in Cloud Custodian please let the Cloud
@@ -307,10 +315,8 @@ the details of the vulnerability. We'll send a confirmation email to
 acknowledge your report, and we'll send an additional email when we've
 identified the issue positively or negatively.
 
-Code of Conduct
----------------
+## Code of Conduct
 
 This project adheres to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md)
 
 By participating, you are expected to honor this code.
-
