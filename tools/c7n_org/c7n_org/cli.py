@@ -531,7 +531,7 @@ def accounts_iterator(config):
             if isinstance(a['role'], str) and not a['role'].startswith('arn'):
                 a['role'] = "arn:aws:iam::{}:role/{}".format(
                     a['account_id'], a['role'])
-        a['vars'] = org_vars.update(a.get('vars', {}))
+        a['vars'] = _update(a.get('vars', {}), org_vars)
         yield {**a, **{'provider': 'aws'}}
     for a in config.get('subscriptions', ()):
         d = {'account_id': a['subscription_id'],
@@ -539,8 +539,7 @@ def accounts_iterator(config):
              'regions': [a.get('region', 'global')],
              'provider': 'azure',
              'tags': a.get('tags', ()),
-             'vars': a.get('vars', {})}
-        d['vars'] = org_vars.update(d.get('vars', {}))
+             'vars': _update(a.get('vars', {}), org_vars)}
         yield d
     for a in config.get('projects', ()):
         d = {'account_id': a['project_id'],
@@ -548,10 +547,14 @@ def accounts_iterator(config):
              'regions': ['global'],
              'provider': 'gcp',
              'tags': a.get('tags', ()),
-             'vars': a.get('vars', {})}
-        d['vars'] = org_vars.update(d.get('vars', {}))
+             'vars': _update(a.get('vars', {}), org_vars)}
         yield d
 
+def _update(origin, new):
+    for k in new:
+        if k not in origin:
+            origin[k] = new[k]
+    return origin
 
 def run_account(account, region, policies_config, output_path,
                 cache_period, cache_path, metrics, dryrun, debug):
