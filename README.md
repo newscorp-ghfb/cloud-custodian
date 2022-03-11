@@ -1,6 +1,10 @@
 Cloud Custodian
 =================
 
+<p align="center"><img src="https://cloudcustodian.io/img/logo_capone_devex_cloud_custodian.svg" alt="Cloud Custodian Logo" width="200px" height="200px" /></p>
+
+---
+
 [![](https://badges.gitter.im/cloud-custodian/cloud-custodian.svg)](https://gitter.im/cloud-custodian/cloud-custodian?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CI](https://github.com/cloud-custodian/cloud-custodian/workflows/CI/badge.svg?event=push)](https://github.com/cloud-custodian/cloud-custodian/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush)
 [![](https://dev.azure.com/cloud-custodian/cloud-custodian/_apis/build/status/Custodian%20-%20CI?branchName=master)](https://dev.azure.com/cloud-custodian/cloud-custodian/_build)
@@ -13,35 +17,57 @@ Cloud Custodian
 
 To avoid any unnecessary code conflict while merging upstream changes, we must follow the rule `Do NOT change the code unless necessary`.
 
-- if things can be done without customizing Custodian, please do not customize it. e.g. You may leverage features like `invoke-lambda`, `webhook`, `value_from` of value filter etc. to integrate with your app
-- add new lines of code over revising existing code/logic
-- do NOT format existing code (keep it as it is please)
-- please spare some time to create a PR for upstream if you've completed a bug fix (to return to the community)
+- If things can be done without customizing Custodian, please do not customize it. e.g. You may leverage features like `invoke-lambda`, `webhook`, `value_from` of value filter etc. to integrate with your app
+- Add new lines of code over revising existing code/logic
+- Do NOT format existing code (keep it as it is please)
+- Please spare some time to create a PR for upstream if you've completed a bug fix (to return to the community)
 
 ### c7n
 
-- filter value - support gcp labelisation when extracting content from value_from
-- aws - ec2 - add property 'delete' to rename-tag
-- bugfix service quota - TooManyRequestsException when calling the ListServices in us-east-1
-- bugfix service quota - usage-metric requests more than 1440 data points
-- normalise value_type apply to keys in value_from.expr
-- add key_type to enable key normalization
-  - make key_type apply to value_from.expr as well
-  - support key_type in value_filter
+1. ebs resource
+
+   - aws - devide into small batch when get ebs resource
+
+2. service quota resource
+
+   - service quota - bugfix TooManyRequestsException when calling the ListServices in us-east-1
+   - service quota - bugfix usage-metric requests more than 1440 data points
+
+3. tag action
+
+   - aws - support marking missing resource when copy related tag
+   - aws - ec2 - add property 'delete' to rename-tag to achieve copy-tag effect
+
+4. value filter
+
+   - filter value - support gcp labelisation when extracting content from value_from
+   - normalise value_type apply to keys in value_from.expr
+   - add key_type to enable key normalization
+     - make key_type apply to value_from.expr as well
+     - support key_type in value_filter
+   - add annotation op to value filter
+   - enable variables in expr of value_from
+
+5. webhook action
+
+   - webhook action supports os env variables
+
+### c7n-mailer
+
 - add ServiceNow notification
-- add annotation op to value filter
-- webhook action supports os env variables
-- enable variables in expr of value_from
 
 ### c7n_org
 
+- support org level vars in config file
 - c7n-org supports the argument not-accounts
 
 ### c7n_gcp
 
-- enable annotation op for IAM policy in gcp.project
-  - extract values from gcp.project iam policy
-  - convert values to gcp lable
+1. gcp.project
+
+   - enable annotation op for IAM policy in gcp.project
+     - extract values from gcp.project iam policy
+     - convert values to gcp lable
 
 ---
 
@@ -125,8 +151,8 @@ The best getting started guides are the cloud provider specific tutorials.
 As a quick walk through, below are some sample policies for AWS resources.
 
   1. will enforce that no S3 buckets have cross-account access enabled.
-  2. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
-  3. will tag any EC2 instance that does not have the follow tags
+  1. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
+  1. will tag any EC2 instance that does not have the follow tags
      "Environment", "AppId", and either "OwnerContact" or "DeptID" to
      be stopped in four days.
 
@@ -313,4 +339,3 @@ Code of Conduct
 This project adheres to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md)
 
 By participating, you are expected to honor this code.
-

@@ -522,7 +522,7 @@ class RenameTag(Action):
         if resource_ids:
             self.create_tag(client, resource_ids, new_key, tag_value)
 
-        # NOTE News customisation. Exception could be raised when create if with 50 tags
+        # NOTE exception could be raised when create if with 50 tags
         if delete:
             self.delete_tag(
                 client, [r[self.id_key] for r in resource_set], old_key, tag_value)
@@ -1066,7 +1066,7 @@ class CopyRelatedResourceTag(Tag):
                 related in missing_related_tags or
                     not related_tag_map[related]):
                 stats['missing'] += 1
-                # News customisation: mark those missing so that next time can filter out
+                # NOTE mark those missing so that next time can filter out
                 status_tag = self.data.get("status_tag")
                 if status_tag:
                     self.process_resource(client, r, {status_tag: f"Related resource not found: {related}"}, [status_tag], tag_action)

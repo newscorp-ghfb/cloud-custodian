@@ -152,7 +152,7 @@ class ValuesFrom:
 
         contents = self._get_values()
 
-        # NOTE News customisation, normalise the value for gcp label
+        # NOTE normalise the value for gcp label
         log.debug(self.data.get("expr"), contents)
         if self.data.get("value_type") == "gcp_label":
             contents = gcpLabelaise(contents)
