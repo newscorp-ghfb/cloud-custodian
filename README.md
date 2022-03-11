@@ -53,6 +53,7 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 ### c7n_org
 
+- support org level vars in config file
 - c7n-org supports the argument not-accounts
 
 ### c7n_gcp
