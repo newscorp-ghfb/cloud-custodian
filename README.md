@@ -26,19 +26,23 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 1. ebs resource
 
-   - aws - devide into small batch when get ebs resource
+   - aws - divide into small batches when get ebs resource
 
-2. service quota resource
+2. policy
+   
+   - aws - introduce tag:custodian-policy as version to avoid massive re-deployments
+
+3. service quota resource
 
    - service quota - bugfix TooManyRequestsException when calling the ListServices in us-east-1
    - service quota - bugfix usage-metric requests more than 1440 data points
 
-3. tag action
+4. tag action
 
    - aws - support marking missing resource when copy related tag
    - aws - ec2 - add property 'delete' to rename-tag to achieve copy-tag effect
 
-4. value filter
+5. value filter
 
    - filter value - support gcp labelisation when extracting content from value_from
    - normalise value_type apply to keys in value_from.expr
@@ -48,7 +52,7 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
    - add annotation op to value filter
    - enable variables in expr of value_from
 
-5. webhook action
+6. webhook action
 
    - webhook action supports os env variables
 
