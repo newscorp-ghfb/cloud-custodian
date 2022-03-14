@@ -61,7 +61,7 @@ except ImportError:
 _profile_session = None
 
 
-DEFAULT_NAMESPACE = "CloudMaid"
+DEFAULT_NAMESPACE = "CloudCustodian"
 
 
 def get_profile_session(options):
@@ -259,6 +259,12 @@ class MetricsOutput(Metrics):
         else:
             watch = utils.local_session(
                 self.ctx.session_factory).client('cloudwatch', region_name=self.region)
+
+        # NOTE filter metrics data by the metric name configured in the policy
+        metrics = [m for m in metrics if m["MetricName"] in self.ctx.policy.data.get("metrics") and m["Value"] > 0]
+        if not metrics:
+            return
+
         return self.retry(
             watch.put_metric_data, Namespace=ns, MetricData=metrics)
 
