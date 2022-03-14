@@ -268,6 +268,9 @@ def generate(resource_types=()):
                 'filters': {
                     'type': 'array'
                 },
+                'metrics': {
+                    'type': 'array'
+                },
                 #
                 # TODO: source queries should really move under
                 # source. This was initially used for describe sources

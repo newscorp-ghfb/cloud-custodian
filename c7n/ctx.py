@@ -37,6 +37,12 @@ class ExecutionContext:
         # A few tests patch on metrics flush
         # For backward compatibility, accept both 'metrics' and 'metrics_enabled' params (PR #4361)
         metrics = self.options.metrics or self.options.metrics_enabled
+
+        # NOTE enable metrics control at policy level to reduce cost
+        if metrics and not policy.data.get("metrics"):
+            # print(f'Metrics are not configured in the policy {self.policy.data["name"]}')
+            metrics = False
+        
         self.metrics = metrics_outputs.select(metrics, self)
 
         # Tracer is wired into core filtering code / which is getting
