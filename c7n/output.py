@@ -32,7 +32,7 @@ log = logging.getLogger('custodian.output')
 
 
 # TODO remove
-DEFAULT_NAMESPACE = "CloudMaid"
+DEFAULT_NAMESPACE = "CloudCustodian"
 
 
 class OutputRegistry(PluginRegistry):
