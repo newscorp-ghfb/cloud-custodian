@@ -7,6 +7,7 @@ import json
 import os.path
 import logging
 import itertools
+from urllib.error import URLError
 from urllib.request import Request, urlopen
 from urllib.parse import parse_qsl, urlparse
 import zlib
@@ -109,6 +110,7 @@ class ValuesFrom:
         'properties': {
             'url': {'type': 'string'},
             'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
+            'default_value': {'type': 'string'},
             'expr': {'oneOf': [
                 {'type': 'integer'},
                 {'type': 'string'}]}
@@ -117,6 +119,7 @@ class ValuesFrom:
 
     def __init__(self, data, manager):
         config_args = {
+            'output_dir': manager.config.output_dir,
             'account_id': manager.config.account_id,
             'region': manager.config.region
         }
@@ -137,7 +140,12 @@ class ValuesFrom:
             raise ValueError(
                 "Unsupported format %s for url %s",
                 format, self.data['url'])
-        contents = str(self.resolver.resolve(self.data['url']))
+        try:
+            contents = str(self.resolver.resolve(self.data['url']))
+        except URLError as e:
+            if not self.data.get("default_value"):
+                raise e
+            contents = self.data.get("default_value")
         return contents, format
 
     def get_values(self):
