@@ -572,7 +572,7 @@ class ValueFilter(BaseValueFilter):
             self.op = self.data.get('op')
             if 'value_from' in self.data:
                 values = ValuesFrom(self.data['value_from'], self.manager)
-                # NOTE news corp customization: support vars in expr
+                # NOTE support vars in expr
                 self.resolveExprVariables(values, resource)
                 self.v = values.get_values()
                 if self.recoverOriginExpr(values):
@@ -626,17 +626,21 @@ class ValueFilter(BaseValueFilter):
         # TODO to find an better way to enhance the filter, e.g. a new filter
         if "expr" in values.data:
             expr = values.data.get("expr")
+            default_value = values.data.get("default_value")
             if isinstance(expr, str) and expr.find("{") != -1:
                 values.data["origin_expr"] = expr
-                values.data["expr"] = self._replace_var_placeholders(expr, i)
+                values.data["expr"] = self._replace_var_placeholders(expr, default_value, i)
 
-    def _replace_var_placeholders(self, expr, i):
+    def _replace_var_placeholders(self, expr, default_value, i):
         var_key = expr[expr.find("{") + 1: expr.find("}")]
         var_value = self.get_resource_value(var_key, i, self.data.get('key_type'))
 
         if var_value == None:
-            var_value = "default"
             # self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
+            if default_value:
+                var_value = default_value
+            else:
+                raise AttributeError(f"Value not found for key '{var_key}' in {expr}")
 
         if self.data.get('value_type') == 'normalize':
             var_value = var_value.strip().lower()
@@ -644,7 +648,7 @@ class ValueFilter(BaseValueFilter):
         expr_var = expr.replace("{" + var_key + "}", var_value)
         if expr_var.find("{") != -1:
             # NOTE to support more than 1 var_key
-            return self._replace_var_placeholders(expr_var, i)
+            return self._replace_var_placeholders(expr_var, default_value, i)
         else:
             return expr_var
 
