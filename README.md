@@ -24,35 +24,41 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
 ### c7n
 
-1. ebs resource
+1. c7n
 
-   - aws - divide into small batches when get ebs resource
+   - c7n - enable --vars option to load vars file
 
-2. policy
+2. ebs resource
+
+   - aws - divide into small batches when getting EBS resource
+
+3. policy
    
-   - aws - introduce tag:custodian-policy as version to avoid massive re-deployments
+   - aws - introduce tag:custodian-policy as a version to avoid massive re-deployments
+   - aws - support `metrics` keyword in policy to reduce the cost of custom metrics
 
-3. service quota resource
+4. service quota resource
 
    - service quota - bugfix TooManyRequestsException when calling the ListServices in us-east-1
    - service quota - bugfix usage-metric requests more than 1440 data points
 
-4. tag action
+5. tag action
 
    - aws - support marking missing resource when copy related tag
    - aws - ec2 - add property 'delete' to rename-tag to achieve copy-tag effect
 
-5. value filter
+6. value filter
 
-   - filter value - support gcp labelisation when extracting content from value_from
+   - filter value - support GCP labelisation when extracting content from value_from
    - normalise value_type apply to keys in value_from.expr
    - add key_type to enable key normalization
      - make key_type apply to value_from.expr as well
      - support key_type in value_filter
    - add annotation op to value filter
    - enable variables in expr of value_from
+   - aws - value filter value_from support default_value so that can load resources.json from other policies result
 
-6. webhook action
+7. webhook action
 
    - webhook action supports os env variables
 
