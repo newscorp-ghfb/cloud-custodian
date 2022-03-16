@@ -257,12 +257,13 @@ SQS_MESSAGE_5 = {
 GCP_MESSAGES = {
     "receivedMessages": [
         {
-            "ackId": "TgQhIT4wPkVTRFAGFixdRkhRNxkIaFEOT14jPzUgKEURCAgUBXx9cURLdV9bGgdRDRlyfGckOFgUBwtC"
+            "ackId": "TgQhIT4wPkVTRFAGFixdRkhRNxkIaFEOT14jPzUgKEURCAgUBXx9cURLd"
+            "V9bGgdRDRlyfGckOFgUBwtC"
             "UXZVWxENem1cVzhUCRB1eWF8algbAwVAVH53_pGKmvCVOR1tNcH7qrdASszD_492Zho9XxJLLD5-Ki1F"
             "QV5AEkwhGERJUytDCypYEQ",
             "message": {
-                "data": "eJzVUrtuwzAM3PUVhuY6GQNk6tStX1AUgULTrgqZFCQqgBHk36tHHm6nolsHDbrDHe9EnZXGE5Lof"
-                "UfJuSelDQAnkoMdMqZhR/2AJ/0gfqABJ8tUQONcATw7C0sGzkqTmbFQglF6YrHj0jSRU4BKTeA3Ph"
+                "data": "eJzVUrtuwzAM3PUVhuY6GQNk6tStX1AUgULTrgqZFCQqgBHk36tHHm6nolsHDbrDHe9EnZXGE"
+                "5LofUfJuSelDQAnkoMdMqZhR/2AJ/0gfqABJ8tUQONcATw7C0sGzkqTmbFQglF6YrHj0jSRU4BKTeA3Ph"
                 "1jOvbC3kLhR+sEQ8z0m1q5+MCfCBK31/HbKqjXw9VcXdR7jSo51N1AFl8NHgkEZ++MVHTA0SQnBc4"
                 "pyoRbZEtT1zRdc6xSrrY6RQzPA8/G0gZ41nWwBEPRc5DW/za4FWzq0vHXZXIddbkX+m76D9usdv+X"
                 "7WZ5vu1fjcAHDi+rX9JcymOV8wVn/efe",
@@ -594,33 +595,32 @@ PUBSUB_MESSAGE_SLACK = """{
 GCP_SMTP_MESSAGE = {
     "account": "c7n-dev",
     "account_id": "c7n-dev",
-        "action": {
+    "action": {
         "subject": "testing notify action",
         "template": "default",
         "to": ["user@domain.com"],
-        "transport": {
-            "topic": "projects/c7n-dev/topics/c7n_notify",
-            "type": "pubsub"},
-        "type": "notify"},
+        "transport": {"topic": "projects/c7n-dev/topics/c7n_notify", "type": "pubsub"},
+        "type": "notify",
+    },
     "event": None,
     "policy": {
-        "actions": [{
-            "subject": "testing notify action",
-            "template": "default",
-            "to": ["resource-owner", "ldap_uid_tags"],
-            "email_ldap_username_manager": True,
-            "transport": {
-                "topic": "projects/c7n-dev/topics/c7n_notify",
-                "type": "pubsub"},
-            "type": "notify"}],
-        "filters": [{
-            "name": "projects/c7n-dev/topics/c7n_notify"}],
+        "actions": [
+            {
+                "subject": "testing notify action",
+                "template": "default",
+                "to": ["resource-owner", "ldap_uid_tags"],
+                "email_ldap_username_manager": True,
+                "transport": {"topic": "projects/c7n-dev/topics/c7n_notify", "type": "pubsub"},
+                "type": "notify",
+            }
+        ],
+        "filters": [{"name": "projects/c7n-dev/topics/c7n_notify"}],
         "name": "test-notify",
-        "resource": "gcp.pubsub-topic"},
+        "resource": "gcp.pubsub-topic",
+    },
     "region": "all",
-    "resources": [{
-        "c7n:MatchedFilters": ["name"],
-        "name": "projects/c7n-dev/topics/c7n_notify"}]}
+    "resources": [{"c7n:MatchedFilters": ["name"], "name": "projects/c7n-dev/topics/c7n_notify"}],
+}
 
 PUBSUB_MESSAGE_DATADOG = """{
     "account": "c7n-dev",

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import base64
 import json
-import os
 import unittest
 import zlib
 
@@ -12,7 +11,6 @@ from common import (
     GCP_MESSAGE,
     GCP_MESSAGES,
     PUBSUB_MESSAGE_DATADOG,
-    PUBSUB_MESSAGE_SLACK,
 )
 from c7n_mailer.gcp_mailer.gcp_queue_processor import MailerGcpQueueProcessor
 from c7n_mailer.email_delivery import EmailDelivery
