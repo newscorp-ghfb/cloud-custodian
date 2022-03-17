@@ -7,6 +7,7 @@ import csv
 from collections import Counter
 import logging
 import os
+import random
 import time
 import subprocess  # nosec
 import sys
@@ -289,6 +290,7 @@ def filter_policies(policies_config, tags, policies, resource, not_policies=None
 
 
 def report_account(account, region, policies_config, output_path, cache_path, debug):
+    time.sleep(random.random())
     output_path = os.path.join(output_path, account['name'], region)
     cache_path = os.path.join(cache_path, "%s-%s.cache" % (account['name'], region))
 
@@ -445,7 +447,7 @@ def _get_env_creds(account, session, region, env=None):
 
 
 def run_account_script(account, region, output_dir, debug, script_args):
-
+    time.sleep(random.random())
     try:
         session = get_session(account, "org-script", region)
     except ClientError:
@@ -560,6 +562,7 @@ def run_account(account, region, policies_config, output_path,
                 cache_period, cache_path, metrics, dryrun, debug):
     """Execute a set of policies on an account.
     """
+    time.sleep(random.random())
     logging.getLogger('custodian.output').setLevel(logging.ERROR + 1)
     CONN_CACHE.session = None
     CONN_CACHE.time = None
