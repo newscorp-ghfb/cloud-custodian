@@ -11,7 +11,9 @@ from c7n_gcp.client import Session
 @click.option(
     '-f', '--output', type=click.File('w'), default='-',
     help="File to store the generated config (default stdout)")
-def main(output):
+@click.option('-i', '--ignore', multiple=True,
+  help="list of folders that won't be added to the config file")
+def main(output, ignore):
     """
     Generate a c7n-org gcp projects config file
     """
@@ -25,8 +27,12 @@ def main(output):
             if project['lifecycleState'] != 'ACTIVE':
                 continue
 
+            if project["parent"]["id"] in ignore:
+                continue
+
             project_info = {
                 'project_id': project['projectId'],
+                'project_number': project['projectNumber'],
                 'name': project['name'],
             }
 
