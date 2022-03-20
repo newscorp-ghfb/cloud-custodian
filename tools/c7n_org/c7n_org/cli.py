@@ -552,6 +552,7 @@ def accounts_iterator(config):
              'vars': _update(a.get('vars', {}), org_vars)}
         yield d
 
+
 def _update(origin, new):
     for k in new:
         if k not in origin:
