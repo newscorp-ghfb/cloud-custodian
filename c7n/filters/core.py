@@ -635,7 +635,7 @@ class ValueFilter(BaseValueFilter):
         var_key = expr[expr.find("{") + 1: expr.find("}")]
         var_value = self.get_resource_value(var_key, i, self.data.get('key_type'))
 
-        if var_value == None:
+        if var_value is None:
             # self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
             if default_value:
                 var_value = default_value
