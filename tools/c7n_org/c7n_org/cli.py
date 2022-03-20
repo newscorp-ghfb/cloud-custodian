@@ -552,11 +552,13 @@ def accounts_iterator(config):
              'vars': _update(a.get('vars', {}), org_vars)}
         yield d
 
+
 def _update(origin, new):
     for k in new:
         if k not in origin:
             origin[k] = new[k]
     return origin
+
 
 def run_account(account, region, policies_config, output_path,
                 cache_period, cache_path, metrics, dryrun, debug):
