@@ -197,7 +197,7 @@ class EmailDelivery:
 
     def get_groupby_to_resources_map(self, sqs_message):
         jp_str = sqs_message['action'].get('servicenow_groupby')
-        if jp_str == None:
+        if not jp_str:
             return {'default': sqs_message['resources']}
         
         groupby_to_resources_map = {}
