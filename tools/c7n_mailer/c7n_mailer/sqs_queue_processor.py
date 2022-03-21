@@ -152,7 +152,7 @@ class MailerSqsQueueProcessor:
             email_delivery.send_c7n_email(sqs_message, list(email_to_addrs), mimetext_msg)
 
         # NOTE this section sends email to ServiceNow to create tickets
-        self.send_snow_email(sqs_message, email_delivery)
+        self.send_snow_email(self.config, self.logger, sqs_message, email_delivery)
 
         # this sections gets the map of sns_to_addresses to rendered_jinja messages
         # (with resources baked in) and delivers the message to each sns topic
