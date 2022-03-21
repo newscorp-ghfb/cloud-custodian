@@ -34,18 +34,18 @@ class MailerGcpQueueProcessor(object):
         # Get first set of messages to process
         messages = self.receive_messages()
 
-        while len(messages) > 0:
+        if len(messages) > 0:
             # Discard_date is the timestamp of the last published message in the messages list
             # and will be the date we need to seek to when we ack_messages
             discard_date = messages["receivedMessages"][-1]["message"]["publishTime"]
 
             # Process received messages
+            self.logger.info(f'Received {len(messages["receivedMessages"])} messages')
             for message in messages["receivedMessages"]:
                 self.process_message(message)
 
             # Acknowledge and purge processed messages then get next set of messages
             self.ack_messages(discard_date)
-            messages = self.receive_messages()
 
         self.logger.info("No messages left in the gcp topic subscription, now exiting c7n_mailer.")
 
@@ -58,9 +58,15 @@ class MailerGcpQueueProcessor(object):
         to_email_messages_map = delivery.get_to_addrs_email_messages_map(pubsub_message)
         for email_to_addrs, mimetext_msg in six.iteritems(to_email_messages_map):
             delivery.send_c7n_email(pubsub_message, list(email_to_addrs), mimetext_msg)
+
+        # NOTE this section sends email to ServiceNow to create tickets
+        from c7n_mailer.sqs_queue_processor import MailerSqsQueueProcessor
+        MailerSqsQueueProcessor.send_snow_email(self.config, self.logger, pubsub_message, delivery)
+      
         # Process Datadog
         if any(e.startswith("datadog") for e in pubsub_message.get("action", ()).get("to")):
             self._deliver_datadog_message(pubsub_message)
+
         # Process Slack
         if any(
             e.startswith("slack") or e.startswith("https://hooks.slack.com/")

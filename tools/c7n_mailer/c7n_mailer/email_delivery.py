@@ -1,8 +1,8 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+import boto3
 import jmespath
 from itertools import chain
-
 from c7n_mailer.smtp_delivery import SmtpDelivery
 from c7n_mailer.utils_email import is_email, get_mimetext_message
 import c7n_mailer.azure_mailer.sendgrid_delivery as sendgrid
@@ -22,8 +22,9 @@ class EmailDelivery:
         self.provider = get_provider(self.config)
         if self.provider == Providers.AWS:
             self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
+        elif self.provider == Providers.GCP:
+            self.aws_ses = boto3.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
-        self.provider = get_provider(self.config)
 
     def get_ldap_connection(self):
         if self.config.get('ldap_uri'):
