@@ -29,7 +29,7 @@ class MailerGcpQueueProcessor(object):
         self.client = self.session.client("pubsub", "v1", "projects.subscriptions")
 
     def run(self):
-        self.logger.info("Downloading messages from the GCP PubSub Subscription.")
+        # self.logger.info("Downloading messages from the GCP PubSub Subscription.")
 
         # Get first set of messages to process
         messages = self.receive_messages()
@@ -47,7 +47,7 @@ class MailerGcpQueueProcessor(object):
             # Acknowledge and purge processed messages then get next set of messages
             self.ack_messages(discard_date)
 
-        self.logger.info("No messages left in the gcp topic subscription, now exiting c7n_mailer.")
+        self.logger.info("No messages left in the GCP topic subscription.")
 
     # This function, when processing gcp pubsub messages, will deliver messages over email.
     # Also support for Datadog and Slack
