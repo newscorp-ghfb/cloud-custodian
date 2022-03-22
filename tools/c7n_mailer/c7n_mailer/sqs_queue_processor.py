@@ -157,10 +157,11 @@ class MailerSqsQueueProcessor:
             if not servicenow_address:
                 self.logger.warning("servicenow_address not found in mailer config")
             else:
-                group_to_email_messages_map = email_delivery.get_group_email_messages_map(sqs_message, servicenow_address)
+                group_to_email_messages_map = email_delivery.get_group_email_messages_map(
+                    sqs_message, servicenow_address)
                 for mimetext_msg in group_to_email_messages_map.values():
                     email_delivery.send_c7n_email(sqs_message, [servicenow_address], mimetext_msg)
-      
+
         # this sections gets the map of sns_to_addresses to rendered_jinja messages
         # (with resources baked in) and delivers the message to each sns topic
         sns_delivery = SnsDelivery(self.config, self.session, self.logger)

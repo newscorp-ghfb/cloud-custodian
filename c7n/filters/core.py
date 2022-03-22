@@ -559,15 +559,17 @@ class ValueFilter(BaseValueFilter):
         return super(ValueFilter, self).process(resources, event)
 
     def get_resource_value(self, k, i, ktype=None):
-        return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'), ktype)
+        value_regex = self.data.get('value_regex')
+        return super(ValueFilter, self).get_resource_value(k, i, value_regex, ktype)
 
     def match(self, resource):
         if resource is None:
             return False
-        
+
         if self.v is None and len(self.data) == 1:
             [(self.k, self.v)] = self.data.items()
-        elif self.v is None and not hasattr(self, 'content_initialized') or hasattr(self, 'content_need_reinit'):
+        elif (self.v is None and not hasattr(self, 'content_initialized')
+                or hasattr(self, 'content_need_reinit')):
             self.k = self.data.get('key')
             self.op = self.data.get('op')
             if 'value_from' in self.data:
