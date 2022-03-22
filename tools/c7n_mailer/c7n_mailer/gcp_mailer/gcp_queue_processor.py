@@ -62,7 +62,7 @@ class MailerGcpQueueProcessor(object):
         # NOTE this section sends email to ServiceNow to create tickets
         from c7n_mailer.sqs_queue_processor import MailerSqsQueueProcessor
         MailerSqsQueueProcessor.send_snow_email(self.config, self.logger, pubsub_message, delivery)
-      
+
         # Process Datadog
         if any(e.startswith("datadog") for e in pubsub_message.get("action", ()).get("to")):
             self._deliver_datadog_message(pubsub_message)
