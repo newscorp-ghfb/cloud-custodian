@@ -154,7 +154,8 @@ class LogFilter:
         return 0
 
 
-def init(config, use, debug, verbose, accounts, tags, policies, resource=None, policy_tags=(), not_accounts=None):
+def init(config, use, debug, verbose, accounts, tags, policies,
+        resource=None, policy_tags=(), not_accounts=None):
     level = verbose and logging.DEBUG or logging.INFO
     logging.basicConfig(
         level=level,
@@ -675,8 +676,8 @@ def run(config, use, output_dir, accounts, not_accounts, tags, region,
         policy, policy_tags, cache_period, cache_path, metrics,
         dryrun, debug, verbose, metrics_uri):
     """run a custodian policy across accounts"""
-    accounts_config, custodian_config, executor = init(
-        config, use, debug, verbose, accounts, tags, policy, policy_tags=policy_tags, not_accounts=not_accounts)
+    accounts_config, custodian_config, executor = init(config, use, debug, verbose,
+        accounts, tags, policy, policy_tags=policy_tags, not_accounts=not_accounts)
     policy_counts = Counter()
     success = True
 

@@ -261,7 +261,8 @@ class MetricsOutput(Metrics):
                 self.ctx.session_factory).client('cloudwatch', region_name=self.region)
 
         # NOTE filter metrics data by the metric name configured in the policy
-        metrics = [m for m in metrics if m["MetricName"] in self.ctx.policy.data.get("metrics") and m["Value"] > 0]
+        metrics = [m for m in metrics
+            if m["MetricName"] in self.ctx.policy.data.get("metrics") and m["Value"] > 0]
         if not metrics:
             return
 

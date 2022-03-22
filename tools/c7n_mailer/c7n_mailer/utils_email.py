@@ -113,7 +113,7 @@ def get_mimetext_message(config, logger, message, resources, to_addrs, template=
         email_format = message['action'].get(
             template, 'default').endswith('html') and 'html' or 'plain'
 
-    additional_headers=config.get('additional_email_headers', {})
+    additional_headers = config.get('additional_email_headers', {})
     additional_headers['resource_count'] = str(len(resources))
     additional_headers['email_template'] = message['action'].get(template, 'default')
 

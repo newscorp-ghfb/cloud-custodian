@@ -194,8 +194,6 @@ class IamPolicyUserRolePairFilter(ValueFilter):
                         userToRolesMap[user] = [role]
             for user, roles in userToRolesMap.items():
                 r["c7n:iamPolicyUserRolePair"][user] = roles
-                # if user.startswith("user:"):
-                #     print(f'{r["projectNumber"]};{r["projectId"]};{r["lifecycleState"]};{user[5:]};{",".join([i[6:] if i.startswith("roles/") else i for i in roles])}')
 
         return super(IamPolicyUserRolePairFilter, self).process(resources)
 
