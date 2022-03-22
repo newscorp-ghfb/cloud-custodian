@@ -376,7 +376,8 @@ class LambdaMode(ServerlessExecutionMode):
         tags = self.policy.data['mode'].get('tags')
         if not tags:
             return
-        reserved_overlap = [t for t in tags if t.startswith('custodian-') and not t == 'custodian-policy']
+        reserved_overlap = [t for t in tags
+            if t.startswith('custodian-') and t != 'custodian-policy']
         if reserved_overlap:
             log.warning((
                 'Custodian reserves policy lambda '
@@ -515,10 +516,11 @@ class LambdaMode(ServerlessExecutionMode):
                 # it for the lambda
                 manager = mu.LambdaManager(
                     lambda assume=False: self.policy.session_factory(assume))
-            
+
             # NOTE introduce tag:custodian-policy as version to avoid massive re-deployments
             deployed = manager.get(self.policy_lambda(self.policy).name)
-            if tags.get("custodian-policy") and deployed and tags.get("custodian-policy") == deployed.get("Tags", {}).get("custodian-policy"):
+            tagCp = tags.get("custodian-policy")
+            if tagCp and deployed and tagCp == deployed.get("Tags", {}).get("custodian-policy"):
                 self.policy.log.info("Skipped due to no changes to tag:custodian-policy")
                 return
 
