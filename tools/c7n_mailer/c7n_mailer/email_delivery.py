@@ -207,7 +207,7 @@ class EmailDelivery:
         jp_str = sqs_message['action'].get('servicenow_groupby')
         if not jp_str:
             return {'default': sqs_message['resources']}
-        
+
         groupby_to_resources_map = {}
         jp = jmespath.compile(jp_str)
 

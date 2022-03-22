@@ -214,6 +214,7 @@ class MailerSqsQueueProcessor:
             if not servicenow_address:
                 logger.warning("servicenow_address not found in mailer config")
             else:
-                group_to_email_messages_map = email_delivery.get_group_email_messages_map(sqs_message, servicenow_address)
+                group_to_email_messages_map = email_delivery.get_group_email_messages_map(
+                    sqs_message, servicenow_address)
                 for mimetext_msg in group_to_email_messages_map.values():
                     email_delivery.send_c7n_email(sqs_message, [servicenow_address], mimetext_msg)

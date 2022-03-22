@@ -1067,9 +1067,10 @@ class CopyRelatedResourceTag(Tag):
                     not related_tag_map[related]):
                 stats['missing'] += 1
                 # NOTE mark those missing so that next time can filter out
-                status_tag = self.data.get("status_tag")
-                if status_tag:
-                    self.process_resource(client, r, {status_tag: f"Related resource not found: {related}"}, [status_tag], tag_action)
+                stag = self.data.get("status_tag")
+                sval = f"Related resource not found: {related}"
+                if stag:
+                    self.process_resource(client, r, {stag: sval}, [stag], tag_action)
             elif self.process_resource(
                     client, r, related_tag_map[related], self.data['tags'], tag_action):
                 stats['tagged'] += 1
