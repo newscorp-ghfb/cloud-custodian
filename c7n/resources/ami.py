@@ -278,6 +278,39 @@ class ImageAgeFilter(AgeFilter):
         days={'type': 'number', 'minimum': 0})
 
 
+@AMI.filter_registry.register('last-launched-time')
+class ImageLastLaunchedTimeFilter(AgeFilter):
+    """Filters images based on the lastLaunchedTime attribute (in days)
+
+    :example:
+
+    .. code-block:: yaml
+
+            policies:
+              - name: ami-unuse-recently
+                resource: ami
+                filters:
+                  - type: last-launched-time
+                    days: 30
+    """
+
+    date_attribute = "LastLaunchedTime"
+    schema = type_schema(
+        'last-launched-time',
+        op={'$ref': '#/definitions/filters_common/comparison_operators'},
+        days={'type': 'number', 'minimum': 0})
+
+    def get_resource_date(self, i):
+        if not i.get(self.date_attribute):
+            client = local_session(self.manager.session_factory).client('ec2')
+            attr = self.manager.retry(
+                client.describe_image_attribute,
+                ImageId=i['ImageId'],
+                Attribute='lastLaunchedTime')
+            i[self.date_attribute] = attr.get('LastLaunchedTime', {}).get("Value") or '2000/01/01'
+        return super(ImageLastLaunchedTimeFilter, self).get_resource_date(i)
+
+
 @AMI.filter_registry.register('unused')
 class ImageUnusedFilter(Filter):
     """Filters images based on usage

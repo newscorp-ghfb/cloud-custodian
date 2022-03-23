@@ -787,7 +787,15 @@ def get_human_size(size, precision=2):
 
 def gcpLabelaise(value):
     if isinstance(value, str):
-        return value.strip().lower().replace(" ", "_").replace(".", "_").replace("@", "-").replace(":", "_").replace("/", "_")
+        return (
+            value.strip()
+            .lower()
+            .replace(" ", "_")
+            .replace(".", "_")
+            .replace("@", "-")
+            .replace(":", "_")
+            .replace("/", "_")
+        )
     elif isinstance(value, list):
         return [gcpLabelaise(i) for i in value]
     return value
