@@ -12,13 +12,13 @@ class TagHelper:
 
     @staticmethod
     def update_resource_tags(tag_action, resource, tags):
-        client = tag_action.session.client('azure.mgmt.resource.ResourceManagementClient')
+        client = tag_action.session.client(
+            'azure.mgmt.resource.ResourceManagementClient'
+        )
 
         # resource group type
         if is_resource_group(resource):
-            params_patch = ResourceGroupPatchable(
-                tags=tags
-            )
+            params_patch = ResourceGroupPatchable(tags=tags)
             client.resource_groups.update(
                 resource['name'],
                 params_patch,
@@ -29,8 +29,9 @@ class TagHelper:
             az_resource = GenericResource.deserialize(resource)
 
             if not tag_action.manager.tag_operation_enabled(az_resource.type):
-                raise NotImplementedError('Cannot tag resource with type {0}'
-                                          .format(az_resource.type))
+                raise NotImplementedError(
+                    'Cannot tag resource with type {0}'.format(az_resource.type)
+                )
             api_version = tag_action.session.resource_api_version(resource['id'])
 
             # create a PATCH object with only updates to tags
@@ -52,7 +53,9 @@ class TagHelper:
 
         # only call the resource update if there are tags to delete tags
         if tags_exist:
-            resource_tags = {key: tags[key] for key in tags if key not in tags_to_delete}
+            resource_tags = {
+                key: tags[key] for key in tags if key not in tags_to_delete
+            }
             TagHelper.update_resource_tags(tag_action, resource, resource_tags)
             return list(tags_to_delete)
 

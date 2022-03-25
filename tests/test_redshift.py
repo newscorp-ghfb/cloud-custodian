@@ -6,15 +6,17 @@ import time
 
 
 class TestRedshift(BaseTest):
-
     def test_redshift_pause(self):
         factory = self.replay_flight_data('test_redshift_pause')
-        p = self.load_policy({
-            'name': 'redshift-pause',
-            'resource': 'redshift',
-            'filters': [{'ClusterStatus': 'available'}],
-            'actions': ['pause']},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'redshift-pause',
+                'resource': 'redshift',
+                'filters': [{'ClusterStatus': 'available'}],
+                'actions': ['pause'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         assert len(resources) == 1
         assert resources[0]['ClusterIdentifier'] == 'redshift-cluster-1'
@@ -22,17 +24,21 @@ class TestRedshift(BaseTest):
             time.sleep(2)
         client = factory().client('redshift')
         cluster = client.describe_clusters(
-            ClusterIdentifier=resources[0]['ClusterIdentifier']).get('Clusters')[0]
+            ClusterIdentifier=resources[0]['ClusterIdentifier']
+        ).get('Clusters')[0]
         assert cluster['ClusterStatus'] == 'pausing'
 
     def test_redshift_resume(self):
         factory = self.replay_flight_data('test_redshift_resume')
-        p = self.load_policy({
-            'name': 'redshift-pause',
-            'resource': 'redshift',
-            'filters': [{'ClusterStatus': 'paused'}],
-            'actions': ['resume']},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'redshift-pause',
+                'resource': 'redshift',
+                'filters': [{'ClusterStatus': 'paused'}],
+                'actions': ['resume'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         assert len(resources) == 1
         assert resources[0]['ClusterIdentifier'] == 'redshift-cluster-1'
@@ -40,7 +46,8 @@ class TestRedshift(BaseTest):
             time.sleep(2)
         client = factory().client('redshift')
         cluster = client.describe_clusters(
-            ClusterIdentifier=resources[0]['ClusterIdentifier']).get('Clusters')[0]
+            ClusterIdentifier=resources[0]['ClusterIdentifier']
+        ).get('Clusters')[0]
         assert cluster['ClusterStatus'] == 'resuming'
 
     def test_redshift_security_group_filter(self):
@@ -304,9 +311,9 @@ class TestRedshift(BaseTest):
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "^(alias/aws/)",
-                        "op": "regex"
+                        "op": "regex",
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -314,7 +321,8 @@ class TestRedshift(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(
             resources[0]['KmsKeyId'],
-            'arn:aws:kms:us-east-1:644160558196:key/8785aeb9-a616-4e2b-bbd3-df3cde76bcc5') # NOQA
+            'arn:aws:kms:us-east-1:644160558196:key/8785aeb9-a616-4e2b-bbd3-df3cde76bcc5',
+        )  # NOQA
 
     def test_redshift_set_attributes(self):
         factory = self.replay_flight_data("test_redshift_set_attributes")
@@ -330,13 +338,15 @@ class TestRedshift(BaseTest):
                         "value": False,
                     }
                 ],
-                "actions": [{
-                    "type": "set-attributes",
-                    "attributes": {
-                        "AllowVersionUpgrade": True,
-                        "MaintenanceTrackName": "current"
+                "actions": [
+                    {
+                        "type": "set-attributes",
+                        "attributes": {
+                            "AllowVersionUpgrade": True,
+                            "MaintenanceTrackName": "current",
+                        },
                     }
-                }]
+                ],
             },
             session_factory=factory,
         )
@@ -356,12 +366,14 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-allow-version-upgrade",
                 "resource": "redshift",
-                "actions": [{
-                    "type": "set-attributes",
-                    "attributes": {
-                        "PubliclyAccessible": False,
+                "actions": [
+                    {
+                        "type": "set-attributes",
+                        "attributes": {
+                            "PubliclyAccessible": False,
+                        },
                     }
-                }]
+                ],
             },
             session_factory=factory,
         )
@@ -380,37 +392,38 @@ class TestRedshift(BaseTest):
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
-            'redshift').exceptions.ClusterNotFoundFault = (
-                client.exceptions.ClusterNotFoundFault)
+            'redshift'
+        ).exceptions.ClusterNotFoundFault = client.exceptions.ClusterNotFoundFault
 
-        mock_factory().client('redshift').modify_cluster.side_effect = (
-            client.exceptions.ClusterNotFoundFault(
-                {'Error': {'Code': 'xyz'}},
-                operation_name='modify_cluster'))
+        mock_factory().client(
+            'redshift'
+        ).modify_cluster.side_effect = client.exceptions.ClusterNotFoundFault(
+            {'Error': {'Code': 'xyz'}}, operation_name='modify_cluster'
+        )
         p = self.load_policy(
             {
                 "name": "redshift-allow-version-upgrade",
                 "resource": "redshift",
-                "actions": [{
-                    "type": "set-attributes",
-                    "attributes": {
-                        "AllowVersionUpgrade": True,
+                "actions": [
+                    {
+                        "type": "set-attributes",
+                        "attributes": {
+                            "AllowVersionUpgrade": True,
+                        },
                     }
-                }]
+                ],
             },
             session_factory=mock_factory,
         )
 
         try:
-            p.resource_manager.actions[0].process(
-                [{'Id': 'abc'}])
+            p.resource_manager.actions[0].process([{'Id': 'abc'}])
         except client.exceptions.ClusterNotFoundFault:
             self.fail('should not raise')
         mock_factory().client('redshift').modify_cluster.assert_called_once()
 
 
 class TestRedshiftSnapshot(BaseTest):
-
     def test_redshift_snapshot_simple(self):
         session_factory = self.replay_flight_data("test_redshift_snapshot_simple")
         p = self.load_policy(
@@ -475,7 +488,8 @@ class TestRedshiftSnapshot(BaseTest):
                 ],
                 "actions": [{"type": "mark-for-op", "days": 30, "op": "delete"}],
             },
-            session_factory=factory, config={'account_id': '644160558196'}
+            session_factory=factory,
+            config={'account_id': '644160558196'},
         )
 
         resources = p.run()
@@ -501,7 +515,8 @@ class TestRedshiftSnapshot(BaseTest):
                 ],
                 "actions": [{"type": "unmark"}],
             },
-            session_factory=factory, config={'account_id': '644160558196'}
+            session_factory=factory,
+            config={'account_id': '644160558196'},
         )
 
         resources = p.run()
@@ -531,14 +546,11 @@ class TestRedshiftSnapshot(BaseTest):
         client = session_factory().client("redshift")
         ss = client.describe_cluster_snapshots(
             SnapshotIdentifier=resources[0]["SnapshotIdentifier"]
-        )[
-            "Snapshots"
-        ]
+        )["Snapshots"]
         self.assertFalse(ss[0].get("AccountsWithRestoreAccess"))
 
 
 class TestModifyVpcSecurityGroupsAction(BaseTest):
-
     def test_redshift_remove_matched_security_groups(self):
         # Test conditions:
         # - running 2 Redshift clusters in default VPC
@@ -664,7 +676,7 @@ class TestRedshiftLogging(BaseTest):
                 "resource": "redshift",
                 "filters": [
                     {"type": "logging", "key": "LoggingEnabled", "value": False},
-                    {"ClusterIdentifier": "test-logging-disabled"}
+                    {"ClusterIdentifier": "test-logging-disabled"},
                 ],
                 "actions": [
                     {
@@ -685,17 +697,12 @@ class TestRedshiftLogging(BaseTest):
         client = session_factory().client("redshift")
 
         redshift_id = resources[0]['ClusterIdentifier']
-        result = client.describe_logging_status(
-            ClusterIdentifier=redshift_id)
+        result = client.describe_logging_status(ClusterIdentifier=redshift_id)
         result.pop('ResponseMetadata')
 
         self.assertTrue(result["LoggingEnabled"])
-        self.assertEqual(
-            result["BucketName"], "redshiftlogtest2"
-        )
-        self.assertEqual(
-            result["S3KeyPrefix"], "redshiftlogs/"
-        )
+        self.assertEqual(result["BucketName"], "redshiftlogtest2")
+        self.assertEqual(result["S3KeyPrefix"], "redshiftlogs/")
 
     def test_disable_s3_logging(self):
         session_factory = self.replay_flight_data("test_redshift_disable_s3_logging")
@@ -705,7 +712,7 @@ class TestRedshiftLogging(BaseTest):
                 "resource": "redshift",
                 "filters": [
                     {"type": "logging", "key": "LoggingEnabled", "value": True},
-                    {"ClusterIdentifier": "test-logging-enabled"}
+                    {"ClusterIdentifier": "test-logging-enabled"},
                 ],
                 "actions": [
                     {
@@ -726,8 +733,7 @@ class TestRedshiftLogging(BaseTest):
         client = session_factory().client("redshift")
 
         redshift_id = resources[0]['ClusterIdentifier']
-        result = client.describe_logging_status(
-            ClusterIdentifier=redshift_id)
+        result = client.describe_logging_status(ClusterIdentifier=redshift_id)
         result.pop('ResponseMetadata')
 
         self.assertFalse(result["LoggingEnabled"])
@@ -737,12 +743,11 @@ class TestReservedNode(BaseTest):
     def test_redshift_reserved_node_query(self):
         session_factory = self.replay_flight_data("test_redshift_reserved_node_query")
         p = self.load_policy(
-            {
-                "name": "redshift-reserved",
-                "resource": "aws.redshift-reserved"
-            },
+            {"name": "redshift-reserved", "resource": "aws.redshift-reserved"},
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["ReservedNodeId"], "1ba8e2e3-bc01-4d65-b35d-a4a3e931547e")
+        self.assertEqual(
+            resources[0]["ReservedNodeId"], "1ba8e2e3-bc01-4d65-b35d-a4a3e931547e"
+        )

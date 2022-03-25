@@ -19,7 +19,7 @@ class SetFirewallAction(AzureBaseAction):
             'append': {'type': 'boolean', 'default': True},
             'bypass-rules': {'type': 'array'},
             'ip-rules': {'type': 'array', 'items': {'type': 'string'}},
-            'virtual-network-rules': {'type': 'array', 'items': {'type': 'string'}}
+            'virtual-network-rules': {'type': 'array', 'items': {'type': 'string'}},
         }
     )
 

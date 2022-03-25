@@ -6,7 +6,6 @@ from c7n_azure.provider import resources
 
 
 class ResourceMetaTest(BaseTest):
-
     def test_resource_id_meta(self):
         missing = []
         for name, resource in resources.items():
@@ -15,4 +14,5 @@ class ResourceMetaTest(BaseTest):
 
         if missing:
             raise KeyError(
-                "Following resources are missing id metadata %s" % " ".join(missing))
+                "Following resources are missing id metadata %s" % " ".join(missing)
+            )

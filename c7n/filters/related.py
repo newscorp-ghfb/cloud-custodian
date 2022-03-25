@@ -23,20 +23,17 @@ class RelatedResourceFilter(ValueFilter):
     def validate(self):
         name = self.__class__.__name__
         if self.RelatedIdsExpression is None:
-            raise ValueError(
-                "%s Filter requires resource expression" % name)
+            raise ValueError("%s Filter requires resource expression" % name)
         # if self.AnnotationKey is None:
         #    raise ValueError(
         #        "%s Filter requires annotation key" % name)
 
         if self.RelatedResource is None:
-            raise ValueError(
-                "%s Filter requires resource manager spec" % name)
+            raise ValueError("%s Filter requires resource manager spec" % name)
         return super(RelatedResourceFilter, self).validate()
 
     def get_related_ids(self, resources):
-        return set(jmespath.search(
-            "[].%s" % self.RelatedIdsExpression, resources))
+        return set(jmespath.search("[].%s" % self.RelatedIdsExpression, resources))
 
     def get_related(self, resources):
         resource_manager = self.get_resource_manager()
@@ -46,8 +43,7 @@ class RelatedResourceFilter(ValueFilter):
             related = resource_manager.get_resources(list(related_ids))
         else:
             related = resource_manager.resources()
-        return {r[model.id]: r for r in related
-                if r[model.id] in related_ids}
+        return {r[model.id]: r for r in related if r[model.id] in related_ids}
 
     def get_resource_manager(self):
         mod_path, class_name = self.RelatedResource.rsplit('.', 1)
@@ -62,11 +58,12 @@ class RelatedResourceFilter(ValueFilter):
         found = []
 
         if self.data.get('match-resource') is True:
-            self.data['value'] = self.get_resource_value(
-                self.data['key'], resource)
+            self.data['value'] = self.get_resource_value(self.data['key'], resource)
 
         if self.data.get('value_type') == 'resource_count':
-            count_matches = OPERATORS[self.data.get('op')](len(related_ids), self.data.get('value'))
+            count_matches = OPERATORS[self.data.get('op')](
+                len(related_ids), self.data.get('value')
+            )
             if count_matches:
                 self._add_annotations(related_ids, resource)
             return count_matches
@@ -79,7 +76,8 @@ class RelatedResourceFilter(ValueFilter):
                     self.manager.type,
                     resource[model.id],
                     self.RelatedResource.rsplit('.', 1)[-1],
-                    rid)
+                    rid,
+                )
                 # in the event that the filter is looking specifically for absent values, we can
                 # safely assume that the non-existant related resource will have an absent value at
                 # any given key
@@ -131,7 +129,9 @@ class RelatedResourceByIdFilter(RelatedResourceFilter):
         return related
 
     def get_related_by_ids(self, resources):
-        RelatedResourceKey = self.RelatedResourceByIdExpression or self.RelatedIdsExpression
+        RelatedResourceKey = (
+            self.RelatedResourceByIdExpression or self.RelatedIdsExpression
+        )
         ids = jmespath.search("%s" % RelatedResourceKey, resources)
         if isinstance(ids, str):
             ids = [ids]
@@ -143,11 +143,12 @@ class RelatedResourceByIdFilter(RelatedResourceFilter):
         found = []
 
         if self.data.get('match-resource') is True:
-            self.data['value'] = self.get_resource_value(
-                self.data['key'], resource)
+            self.data['value'] = self.get_resource_value(self.data['key'], resource)
 
         if self.data.get('value_type') == 'resource_count':
-            count_matches = OPERATORS[self.data.get('op')](len(related_ids), self.data.get('value'))
+            count_matches = OPERATORS[self.data.get('op')](
+                len(related_ids), self.data.get('value')
+            )
             if count_matches:
                 self._add_annotations(related_ids, resource)
             return count_matches
@@ -185,9 +186,13 @@ class ChildResourceFilter(RelatedResourceFilter):
             child_resource_manager.session_factory,
             child_resource_manager,
         )
-        children = child_query.filter(child_resource_manager, parent_ids=list(parent_ids))
+        children = child_query.filter(
+            child_resource_manager, parent_ids=list(parent_ids)
+        )
         for r in children:
-            self.child_resources.setdefault(r[self.ChildResourceParentKey], []).append(r)
+            self.child_resources.setdefault(r[self.ChildResourceParentKey], []).append(
+                r
+            )
 
         return self.child_resources
 

@@ -11,12 +11,11 @@ from .common import BaseTest, Bag
 
 
 class TestEMR(BaseTest):
-
     def test_get_emr_by_ids(self):
         session_factory = self.replay_flight_data("test_emr_query_ids")
         p = self.load_policy(
-            {'name': 'emr', 'resource': 'aws.emr'},
-            session_factory=session_factory)
+            {'name': 'emr', 'resource': 'aws.emr'}, session_factory=session_factory
+        )
         resources = p.resource_manager.get_resources(["j-1EJMJNTXC63JW"])
         self.assertEqual(resources[0]["Id"], "j-1EJMJNTXC63JW")
 
@@ -76,8 +75,10 @@ class TestEMR(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
 
-        cluster = session_factory().client("emr").describe_cluster(
-            ClusterId="j-1U3KBYP5TY79M"
+        cluster = (
+            session_factory()
+            .client("emr")
+            .describe_cluster(ClusterId="j-1U3KBYP5TY79M")
         )
         cluster_tags = cluster["Cluster"]["Tags"]
         tags = {t["Key"]: t["Value"] for t in cluster_tags}
@@ -156,11 +157,11 @@ class TestEMR(BaseTest):
                     {
                         "type": "security-group",
                         "key": "tag:NetworkLocation",
-                        "value": "CustFacing,EntFacing"
+                        "value": "CustFacing,EntFacing",
                     }
                 ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -168,7 +169,6 @@ class TestEMR(BaseTest):
 
 
 class TestEMRQueryFilter(unittest.TestCase):
-
     def test_parse(self):
         self.assertEqual(QueryFilter.parse([]), [])
         x = QueryFilter.parse([{"ClusterStates": "terminated"}])
@@ -215,11 +215,12 @@ class TestEMRQueryFilter(unittest.TestCase):
             PolicyValidationError, QueryFilter.parse, [{"too": "many", "keys": "error"}]
         )
 
-        self.assertRaises(PolicyValidationError, QueryFilter.parse, ["Not a dictionary"])
+        self.assertRaises(
+            PolicyValidationError, QueryFilter.parse, ["Not a dictionary"]
+        )
 
 
 class TestTerminate(BaseTest):
-
     def test_emr_terminate(self):
         session_factory = self.replay_flight_data("test_emr_terminate")
         policy = self.load_policy(
@@ -235,7 +236,6 @@ class TestTerminate(BaseTest):
 
 
 class TestActions(unittest.TestCase):
-
     def test_action_construction(self):
 
         self.assertIsInstance(actions.factory("terminate", None), emr.Terminate)
@@ -249,14 +249,21 @@ class TestEMRSecurityConfiguration(BaseTest):
                 'name': 'emr',
                 'resource': 'emr-security-configuration',
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         print(resources)
-        self.assertEqual(resources[0]["SecurityConfiguration"]['EncryptionConfiguration']
-             ['EnableInTransitEncryption'], False)
+        self.assertEqual(
+            resources[0]["SecurityConfiguration"]['EncryptionConfiguration'][
+                'EnableInTransitEncryption'
+            ],
+            False,
+        )
 
     def test_emr_security_configuration_delete(self):
-        session_factory = self.replay_flight_data("test_emr_security_configuration_delete")
+        session_factory = self.replay_flight_data(
+            "test_emr_security_configuration_delete"
+        )
         p = self.load_policy(
             {
                 'name': 'emr',
@@ -264,13 +271,11 @@ class TestEMRSecurityConfiguration(BaseTest):
                 "filters": [{"Name": "test"}],
                 "actions": [{"type": "delete"}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
         client = session_factory(region="us-east-1").client("emr")
         resp = client.list_security_configurations()
-        self.assertFalse(
-            resp['SecurityConfigurations']
-        )
+        self.assertFalse(resp['SecurityConfigurations'])

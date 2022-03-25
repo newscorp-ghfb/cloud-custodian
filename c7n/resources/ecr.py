@@ -7,21 +7,28 @@ from c7n.exceptions import PolicyValidationError
 from c7n.filters import CrossAccountAccessFilter, Filter, ValueFilter
 from c7n.manager import resources
 from c7n.query import (
-    ConfigSource, DescribeSource, QueryResourceManager, TypeInfo,
-    ChildResourceManager, ChildDescribeSource, ChildResourceQuery, sources)
+    ConfigSource,
+    DescribeSource,
+    QueryResourceManager,
+    TypeInfo,
+    ChildResourceManager,
+    ChildDescribeSource,
+    ChildResourceQuery,
+    sources,
+)
 from c7n import tags
 from c7n.utils import local_session, type_schema
 
 
 class DescribeECR(DescribeSource):
-
     def augment(self, resources):
         client = local_session(self.manager.session_factory).client('ecr')
         results = []
         for r in resources:
             try:
                 r['Tags'] = client.list_tags_for_resource(
-                    resourceArn=r['repositoryArn']).get('tags')
+                    resourceArn=r['repositoryArn']
+                ).get('tags')
                 results.append(r)
             except client.exceptions.RepositoryNotFoundException:
                 continue
@@ -30,7 +37,6 @@ class DescribeECR(DescribeSource):
 
 @resources.register('ecr')
 class ECR(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ecr'
         enum_spec = ('describe_repositories', 'repositories', None)
@@ -41,19 +47,17 @@ class ECR(QueryResourceManager):
         filter_type = 'list'
         config_type = cfn_type = 'AWS::ECR::Repository'
 
-    source_mapping = {
-        'describe': DescribeECR,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeECR, 'config': ConfigSource}
 
 
 class ECRImageQuery(ChildResourceQuery):
-
     def get(self, resource_manager, identities):
         m = self.resolve(resource_manager.resource_type)
         params = {}
         resources = self.filter(resource_manager, **params)
-        resources = [r for r in resources if "{}/{}".format(r[0], r[1][m.id]) in identities]
+        resources = [
+            r for r in resources if "{}/{}".format(r[0], r[1][m.id]) in identities
+        ]
 
         return resources
 
@@ -72,8 +76,9 @@ class RepositoryImageDescribeSource(ChildDescribeSource):
         results = []
         client = local_session(self.manager.session_factory).client('ecr')
         for repositoryName, image in resources:
-            repoArn = client.describe_repositories(
-                repositoryNames=[repositoryName])['repositories'][0]['repositoryArn']
+            repoArn = client.describe_repositories(repositoryNames=[repositoryName])[
+                'repositories'
+            ][0]['repositoryArn']
             imageArn = "{}/{}".format(repoArn, image["imageDigest"])
             image["imageArn"] = imageArn
             results.append(image)
@@ -82,7 +87,6 @@ class RepositoryImageDescribeSource(ChildDescribeSource):
 
 @resources.register('ecr-image')
 class RepositoryImage(ChildResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ecr'
         parent_spec = ('ecr', 'repositoryName', None)
@@ -103,25 +107,39 @@ ECR_POLICY_SCHEMA = {
     'properties': {
         'Sid': {'type': 'string'},
         'Effect': {'type': 'string', 'enum': ['Allow', 'Deny']},
-        'Principal': {'anyOf': [
-            {'type': 'string'},
-            {'type': 'object'}, {'type': 'array'}]},
+        'Principal': {
+            'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]
+        },
         'NotPrincipal': {'anyOf': [{'type': 'object'}, {'type': 'array'}]},
-        'Action': {'anyOf': [{'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
-            {'type': 'array', 'items': {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'}}]},
-        'NotAction': {'anyOf': [{'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
-            {'type': 'array', 'items': {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'}}]},
+        'Action': {
+            'anyOf': [
+                {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
+                {
+                    'type': 'array',
+                    'items': {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
+                },
+            ]
+        },
+        'NotAction': {
+            'anyOf': [
+                {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
+                {
+                    'type': 'array',
+                    'items': {'type': 'string', 'pattern': '^ecr:[a-zA-Z]*$'},
+                },
+            ]
+        },
         'Resource': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
         'NotResource': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
-        'Condition': {'type': 'object'}
+        'Condition': {'type': 'object'},
     },
     'required': ['Sid', 'Effect'],
     'oneOf': [
         {'required': ['Principal', 'Action']},
         {'required': ['NotPrincipal', 'Action']},
         {'required': ['Principal', 'NotAction']},
-        {'required': ['NotPrincipal', 'NotAction']}
-    ]
+        {'required': ['NotPrincipal', 'NotAction']},
+    ],
 }
 
 
@@ -149,9 +167,11 @@ class ModifyPolicyStatement(ModifyPolicyBase):
                             }]
                     remove-statements: "*"
     """
+
     permissions = ('ecr:GetRepositoryPolicy', 'ecr:SetRepositoryPolicy')
     schema = type_schema(
-        'modify-ecr-policy', schema_alias=False,
+        'modify-ecr-policy',
+        schema_alias=False,
         **{
             'add-statements': {
                 'type': 'array',
@@ -161,10 +181,11 @@ class ModifyPolicyStatement(ModifyPolicyBase):
                 'type': ['array', 'string'],
                 'oneOf': [
                     {'enum': ['matched', '*']},
-                    {'type': 'array', 'items': {'type': 'string'}}
+                    {'type': 'array', 'items': {'type': 'string'}},
                 ],
-            }
-        })
+            },
+        }
+    )
 
     def process(self, resources):
         results = []
@@ -172,13 +193,16 @@ class ModifyPolicyStatement(ModifyPolicyBase):
         for r in resources:
             try:
                 policy = json.loads(
-                    client.get_repository_policy(
-                        repositoryName=r["repositoryName"])["policyText"])
+                    client.get_repository_policy(repositoryName=r["repositoryName"])[
+                        "policyText"
+                    ]
+                )
             except client.exceptions.RepositoryPolicyNotFoundException:
                 policy = {}
             policy_statements = policy.setdefault('Statement', [])
             new_policy, removed = self.remove_statements(
-                policy_statements, r, CrossAccountAccessFilter.annotation_key)
+                policy_statements, r, CrossAccountAccessFilter.annotation_key
+            )
             if new_policy is None:
                 new_policy = policy_statements
             new_policy, added = self.add_statements(new_policy)
@@ -186,8 +210,7 @@ class ModifyPolicyStatement(ModifyPolicyBase):
             if not removed and not added:
                 continue
             elif not new_policy:
-                client.delete_repository_policy(
-                    repositoryName=r['repositoryName'])
+                client.delete_repository_policy(repositoryName=r['repositoryName'])
             else:
                 cleaned = []
                 for statement in new_policy:
@@ -198,12 +221,12 @@ class ModifyPolicyStatement(ModifyPolicyBase):
                         cleaned.append(statement)
                 policy['Statement'] = cleaned
                 client.set_repository_policy(
-                    repositoryName=r['repositoryName'],
-                    policyText=json.dumps(policy))
+                    repositoryName=r['repositoryName'], policyText=json.dumps(policy)
+                )
             results += {
                 'Name': r['repositoryName'],
                 'State': 'PolicyModified',
-                'Statements': new_policy
+                'Statements': new_policy,
             }
 
         return results
@@ -226,9 +249,7 @@ class ECRTag(tags.Tag):
 class ECRSetScanning(Action):
 
     permissions = ('ecr:PutImageScanningConfiguration',)
-    schema = type_schema(
-        'set-scanning',
-        state={'type': 'boolean', 'default': True})
+    schema = type_schema('set-scanning', state={'type': 'boolean', 'default': True})
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ecr')
@@ -238,8 +259,8 @@ class ECRSetScanning(Action):
                 client.put_image_scanning_configuration(
                     registryId=r['registryId'],
                     repositoryName=r['repositoryName'],
-                    imageScanningConfiguration={
-                        'scanOnPush': s})
+                    imageScanningConfiguration={'scanOnPush': s},
+                )
             except client.exceptions.RepositoryNotFoundException:
                 continue
 
@@ -248,9 +269,7 @@ class ECRSetScanning(Action):
 class ECRSetImmutability(Action):
 
     permissions = ('ecr:PutImageTagMutability',)
-    schema = type_schema(
-        'set-immutability',
-        state={'type': 'boolean', 'default': True})
+    schema = type_schema('set-immutability', state={'type': 'boolean', 'default': True})
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ecr')
@@ -260,7 +279,8 @@ class ECRSetImmutability(Action):
                 client.put_image_tag_mutability(
                     registryId=r['registryId'],
                     repositoryName=r['repositoryName'],
-                    imageTagMutability=s)
+                    imageTagMutability=s,
+                )
             except client.exceptions.RepositoryNotFoundException:
                 continue
 
@@ -299,6 +319,7 @@ class ECRCrossAccountAccessFilter(CrossAccountAccessFilter):
                       expr: "accounts.*.accountNumber"
                       url: accounts_url
     """
+
     permissions = ('ecr:GetRepositoryPolicy',)
 
     def process(self, resources, event=None):
@@ -308,7 +329,8 @@ class ECRCrossAccountAccessFilter(CrossAccountAccessFilter):
         def _augment(r):
             try:
                 r['Policy'] = client.get_repository_policy(
-                    repositoryName=r['repositoryName'])['policyText']
+                    repositoryName=r['repositoryName']
+                )['policyText']
             except client.exceptions.RepositoryPolicyNotFoundException:
                 return None
             return r
@@ -331,7 +353,8 @@ LIFECYCLE_RULE_SCHEMA = {
             'type': 'object',
             'required': ['type'],
             'additionalProperties': False,
-            'properties': {'type': {'enum': ['expire']}}},
+            'properties': {'type': {'enum': ['expire']}},
+        },
         'selection': {
             'type': 'object',
             'addtionalProperties': False,
@@ -341,11 +364,10 @@ LIFECYCLE_RULE_SCHEMA = {
                 'tagPrefixList': {'type': 'array', 'items': {'type': 'string'}},
                 'countNumber': {'type': 'integer'},
                 'countUnit': {'enum': ['hours', 'days']},
-                'countType': {
-                    'enum': ['imageCountMoreThan', 'sinceImagePushed']},
-            }
-        }
-    }
+                'countType': {'enum': ['imageCountMoreThan', 'sinceImagePushed']},
+            },
+        },
+    },
 }
 
 
@@ -355,24 +377,36 @@ def lifecycle_rule_validate(policy, rule):
     #
     # https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lp_evaluation_rules
 
-    if (rule['selection']['tagStatus'] == 'tagged' and
-            'tagPrefixList' not in rule['selection']):
+    if (
+        rule['selection']['tagStatus'] == 'tagged'
+        and 'tagPrefixList' not in rule['selection']
+    ):
         raise PolicyValidationError(
-            ("{} has invalid lifecycle rule {} tagPrefixList "
-             "required for tagStatus: tagged").format(
-                 policy.name, rule))
-    if (rule['selection']['countType'] == 'sinceImagePushed' and
-            'countUnit' not in rule['selection']):
+            (
+                "{} has invalid lifecycle rule {} tagPrefixList "
+                "required for tagStatus: tagged"
+            ).format(policy.name, rule)
+        )
+    if (
+        rule['selection']['countType'] == 'sinceImagePushed'
+        and 'countUnit' not in rule['selection']
+    ):
         raise PolicyValidationError(
-            ("{} has invalid lifecycle rule {} countUnit "
-             "required for countType: sinceImagePushed").format(
-                 policy.name, rule))
-    if (rule['selection']['countType'] == 'imageCountMoreThan' and
-            'countUnit' in rule['selection']):
+            (
+                "{} has invalid lifecycle rule {} countUnit "
+                "required for countType: sinceImagePushed"
+            ).format(policy.name, rule)
+        )
+    if (
+        rule['selection']['countType'] == 'imageCountMoreThan'
+        and 'countUnit' in rule['selection']
+    ):
         raise PolicyValidationError(
-            ("{} has invalid lifecycle rule {} countUnit "
-             "invalid for countType: imageCountMoreThan").format(
-                 policy.name, rule))
+            (
+                "{} has invalid lifecycle rule {} countUnit "
+                "invalid for countType: imageCountMoreThan"
+            ).format(policy.name, rule)
+        )
 
 
 @ECR.filter_registry.register('lifecycle-rule')
@@ -397,15 +431,21 @@ class LifecycleRule(Filter):
                   value: 30
                   op: less-than
     """
+
     permissions = ('ecr:GetLifecyclePolicy',)
     schema = type_schema(
         'lifecycle-rule',
         state={'type': 'boolean'},
-        match={'type': 'array', 'items': {
-            'oneOf': [
-                {'$ref': '#/definitions/filters/value'},
-                {'type': 'object', 'minProperties': 1, 'maxProperties': 1},
-            ]}})
+        match={
+            'type': 'array',
+            'items': {
+                'oneOf': [
+                    {'$ref': '#/definitions/filters/value'},
+                    {'type': 'object', 'minProperties': 1, 'maxProperties': 1},
+                ]
+            },
+        },
+    )
     policy_annotation = 'c7n:lifecycle-policy'
 
     def process(self, resources, event=None):
@@ -415,9 +455,10 @@ class LifecycleRule(Filter):
                 continue
             try:
                 r[self.policy_annotation] = json.loads(
-                    client.get_lifecycle_policy(
-                        repositoryName=r['repositoryName']).get(
-                            'lifecyclePolicyText', ''))
+                    client.get_lifecycle_policy(repositoryName=r['repositoryName']).get(
+                        'lifecyclePolicyText', ''
+                    )
+                )
             except client.exceptions.LifecyclePolicyNotFoundException:
                 r[self.policy_annotation] = {}
 
@@ -451,22 +492,22 @@ class SetLifecycle(Action):
     Note at the moment this is limited to set/delete/replacement of
     lifecycle policies, not merge.
     """
+
     permissions = ('ecr:PutLifecyclePolicy', 'ecr:DeleteLifecyclePolicy')
 
     schema = type_schema(
         'set-lifecycle',
         state={'type': 'boolean'},
-        rules={
-            'type': 'array',
-            'items': LIFECYCLE_RULE_SCHEMA})
+        rules={'type': 'array', 'items': LIFECYCLE_RULE_SCHEMA},
+    )
 
     def validate(self):
         if self.data.get('state') is False and 'rules' in self.data:
             raise PolicyValidationError(
-                "set-lifecycle can't use statements and state: false")
+                "set-lifecycle can't use statements and state: false"
+            )
         elif self.data.get('state', True) and not self.data.get('rules'):
-            raise PolicyValidationError(
-                "set-lifecycle requires rules with state: true")
+            raise PolicyValidationError("set-lifecycle requires rules with state: true")
         for r in self.data.get('rules', []):
             lifecycle_rule_validate(self.manager.ctx.policy, r)
         return self
@@ -478,15 +519,16 @@ class SetLifecycle(Action):
             if state is False:
                 try:
                     client.delete_lifecycle_policy(
-                        registryId=r['registryId'],
-                        repositoryName=r['repositoryName'])
+                        registryId=r['registryId'], repositoryName=r['repositoryName']
+                    )
                     continue
                 except client.exceptions.LifecyclePolicyNotFoundException:
                     pass
             client.put_lifecycle_policy(
                 registryId=r['registryId'],
                 repositoryName=r['repositoryName'],
-                lifecyclePolicyText=json.dumps({'rules': self.data['rules']}))
+                lifecyclePolicyText=json.dumps({'rules': self.data['rules']}),
+            )
 
 
 @ECR.action_registry.register('remove-statements')
@@ -517,31 +559,35 @@ class RemovePolicyStatement(RemovePolicyBase):
                 results += filter(None, [self.process_resource(client, r)])
             except Exception:
                 self.log.exception(
-                    "Error processing ecr registry:%s", r['repositoryArn'])
+                    "Error processing ecr registry:%s", r['repositoryArn']
+                )
         return results
 
     def process_resource(self, client, resource):
         if 'Policy' not in resource:
             try:
                 resource['Policy'] = client.get_repository_policy(
-                    repositoryName=resource['repositoryName'])['policyText']
+                    repositoryName=resource['repositoryName']
+                )['policyText']
             except client.exceptions.RepositoryPolicyNotFoundException:
                 return
 
         p = json.loads(resource['Policy'])
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
 
         if not found:
             return
 
         if not statements:
-            client.delete_repository_policy(
-                repositoryName=resource['repositoryName'])
+            client.delete_repository_policy(repositoryName=resource['repositoryName'])
         else:
             client.set_repository_policy(
-                repositoryName=resource['repositoryName'],
-                policyText=json.dumps(p))
-        return {'Name': resource['repositoryName'],
-                'State': 'PolicyRemoved',
-                'Statements': found}
+                repositoryName=resource['repositoryName'], policyText=json.dumps(p)
+            )
+        return {
+            'Name': resource['repositoryName'],
+            'State': 'PolicyRemoved',
+            'Statements': found,
+        }

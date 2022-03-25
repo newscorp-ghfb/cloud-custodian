@@ -14,8 +14,8 @@ from c7n.utils import type_schema, local_session
 
 @resources.register('organization')
 class Organization(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/resource-manager/reference/rest/v1/organizations
-    """
+    """GCP resource: https://cloud.google.com/resource-manager/reference/rest/v1/organizations"""
+
     class resource_type(TypeInfo):
         service = 'cloudresourcemanager'
         version = 'v1'
@@ -25,7 +25,11 @@ class Organization(QueryResourceManager):
         id = 'name'
         name = 'displayName'
         default_report_fields = [
-            "name", "displayName", "creationTime", "lifecycleState"]
+            "name",
+            "displayName",
+            "creationTime",
+            "lifecycleState",
+        ]
         asset_type = "cloudresourcemanager.googleapis.com/Organization"
         scc_type = "google.cloud.resourcemanager.Organization"
         perm_service = 'resourcemanager'
@@ -34,8 +38,7 @@ class Organization(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             org = resource_info['resourceName'].rsplit('/', 1)[-1]
-            return client.execute_query(
-                'get', {'name': "organizations/" + org})
+            return client.execute_query('get', {'name': "organizations/" + org})
 
 
 @Organization.action_registry.register('set-iam-policy')
@@ -43,6 +46,7 @@ class OrganizationSetIamPolicy(SetIamPolicy):
     """
     Overrides the base implementation to process Organization resources correctly.
     """
+
     def _verb_arguments(self, resource):
         verb_arguments = SetIamPolicy._verb_arguments(self, resource)
         verb_arguments['body'] = {}
@@ -51,8 +55,8 @@ class OrganizationSetIamPolicy(SetIamPolicy):
 
 @resources.register('folder')
 class Folder(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/resource-manager/reference/rest/v1/folders
-    """
+    """GCP resource: https://cloud.google.com/resource-manager/reference/rest/v1/folders"""
+
     class resource_type(TypeInfo):
         service = 'cloudresourcemanager'
         version = 'v2'
@@ -61,7 +65,12 @@ class Folder(QueryResourceManager):
         enum_spec = ('list', 'folders', None)
         name = id = 'name'
         default_report_fields = [
-            "name", "displayName", "lifecycleState", "createTime", "parent"]
+            "name",
+            "displayName",
+            "lifecycleState",
+            "createTime",
+            "parent",
+        ]
         asset_type = "cloudresourcemanager.googleapis.com/Folder"
         perm_service = 'resourcemanager'
 
@@ -83,8 +92,8 @@ class Folder(QueryResourceManager):
 
 @resources.register('project')
 class Project(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/projects
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/projects"""
+
     class resource_type(TypeInfo):
         service = 'cloudresourcemanager'
         version = 'v1'
@@ -93,7 +102,12 @@ class Project(QueryResourceManager):
         enum_spec = ('list', 'projects', None)
         name = id = 'projectId'
         default_report_fields = [
-            "name", "displayName", "lifecycleState", "createTime", "parent"]
+            "name",
+            "displayName",
+            "lifecycleState",
+            "createTime",
+            "parent",
+        ]
         asset_type = "cloudresourcemanager.googleapis.com/Project"
         scc_type = "google.cloud.resourcemanager.Project"
         perm_service = 'resourcemanager'
@@ -102,16 +116,20 @@ class Project(QueryResourceManager):
 
         @staticmethod
         def get_label_params(resource, labels):
-            return {'projectId': resource['projectId'],
-                    'body': {
-                        'name': resource['name'],
-                        'parent': resource['parent'],
-                        'labels': labels}}
+            return {
+                'projectId': resource['projectId'],
+                'body': {
+                    'name': resource['name'],
+                    'parent': resource['parent'],
+                    'labels': labels,
+                },
+            }
 
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', {'projectId': resource_info['resourceName'].rsplit('/', 1)[-1]})
+                'get', {'projectId': resource_info['resourceName'].rsplit('/', 1)[-1]}
+            )
 
     def get_resource_query(self):
         # https://cloud.google.com/resource-manager/reference/rest/v1/projects/list
@@ -126,6 +144,7 @@ class ProjectIamPolicyFilter(IamPolicyFilter):
     """
     Overrides the base implementation to process Project resources correctly.
     """
+
     permissions = ('resourcemanager.projects.getIamPolicy',)
 
     def _verb_arguments(self, resource):
@@ -145,6 +164,7 @@ class ProjectDelete(MethodAction):
     https://cloud.google.com/resource-manager/docs/creating-managing-projects#shutting_down_projects
 
     """
+
     method_spec = {'op': 'delete'}
     attr_filter = ('lifecycleState', ('ACTIVE',))
     schema = type_schema('delete')
@@ -158,6 +178,7 @@ class ProjectSetIamPolicy(SetIamPolicy):
     """
     Overrides the base implementation to process Project resources correctly.
     """
+
     def _verb_arguments(self, resource):
         verb_arguments = SetIamPolicy._verb_arguments(self, resource)
         verb_arguments['body'] = {}
@@ -165,7 +186,6 @@ class ProjectSetIamPolicy(SetIamPolicy):
 
 
 class HierarchyAction(MethodAction):
-
     def load_hierarchy(self, resources):
         parents = {}
         session = local_session(self.manager.session_factory)
@@ -173,18 +193,22 @@ class HierarchyAction(MethodAction):
         for r in resources:
             client = self.get_client(session, self.manager.resource_type)
             ancestors = client.execute_command(
-                'getAncestry', {'projectId': r['projectId']}).get('ancestor')
+                'getAncestry', {'projectId': r['projectId']}
+            ).get('ancestor')
             parents[r['projectId']] = [
-                a['resourceId']['id'] for a in ancestors
-                if a['resourceId']['type'] == 'folder']
+                a['resourceId']['id']
+                for a in ancestors
+                if a['resourceId']['type'] == 'folder'
+            ]
         self.parents = parents
         self.folder_ids = set(itertools.chain(*self.parents.values()))
 
     def load_folders(self):
         folder_manager = self.manager.get_resource_manager('gcp.folder')
         self.folders = {
-            f['name'].split('/', 1)[-1]: f for f in
-            folder_manager.get_resources(list(self.folder_ids))}
+            f['name'].split('/', 1)[-1]: f
+            for f in folder_manager.get_resources(list(self.folder_ids))
+        }
 
     def load_metadata(self):
         raise NotImplementedError()
@@ -252,17 +276,15 @@ class ProjectPropagateLabels(HierarchyAction):
     and project-b being tagged with owner: ml and env: dev
 
     """
+
     schema = type_schema(
         'propagate-labels',
         required=('folder-labels',),
-        **{
-            'folder-labels': {
-                '$ref': '#/definitions/filters_common/value_from'}},
+        **{'folder-labels': {'$ref': '#/definitions/filters_common/value_from'}},
     )
 
     attr_filter = ('lifecycleState', ('ACTIVE',))
-    permissions = ('resourcemanager.folders.get',
-                   'resourcemanager.projects.update')
+    permissions = ('resourcemanager.folders.get', 'resourcemanager.projects.update')
     method_spec = {'op': 'update'}
 
     def load_metadata(self):

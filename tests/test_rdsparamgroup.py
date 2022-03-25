@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 
 
 class RDSParamGroupTest(BaseTest):
-
     @functional
     def test_rdsparamgroup_delete(self):
         session_factory = self.replay_flight_data("test_rdsparamgroup_delete")
@@ -134,7 +133,6 @@ class RDSParamGroupTest(BaseTest):
 
 
 class RDSClusterParamGroupTest(BaseTest):
-
     @functional
     def test_rdsclusterparamgroup_delete(self):
         session_factory = self.replay_flight_data("test_rdsclusterparamgroup_delete")

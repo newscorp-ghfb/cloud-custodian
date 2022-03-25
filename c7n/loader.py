@@ -13,6 +13,7 @@ import os
 from c7n.exceptions import PolicyValidationError
 from c7n.policy import PolicyCollection
 from c7n.resources import load_resources
+
 try:
     from c7n import schema
 except ImportError:
@@ -23,7 +24,6 @@ from c7n.utils import load_file
 
 
 class SchemaValidator:
-
     def __init__(self):
         # mostly useful for interactive debugging
         self.schema = None
@@ -44,21 +44,28 @@ class SchemaValidator:
             return schema.check_unique(policy_data) or []
         try:
             resp = schema.policy_error_scope(
-                schema.specific_error(errors[0]), policy_data)
-            name = isinstance(
-                errors[0].instance,
-                dict) and errors[0].instance.get(
-                    'name',
-                    'unknown') or 'unknown'
+                schema.specific_error(errors[0]), policy_data
+            )
+            name = (
+                isinstance(errors[0].instance, dict)
+                and errors[0].instance.get('name', 'unknown')
+                or 'unknown'
+            )
             return [resp, name]
         except Exception:
             logging.exception(
-                "schema-validator: specific_error failed, traceback, followed by fallback")
+                "schema-validator: specific_error failed, traceback, followed by fallback"
+            )
 
-        return list(filter(None, [
-            errors[0],
-            schema.best_match(self.validator.iter_errors(policy_data)),
-        ]))
+        return list(
+            filter(
+                None,
+                [
+                    errors[0],
+                    schema.best_match(self.validator.iter_errors(policy_data)),
+                ],
+            )
+        )
 
     def gen_schema(self, resource_types):
         self.validator = v = self._gen_schema(resource_types)
@@ -103,11 +110,13 @@ class PolicyLoader:
                 pr = "aws.%s" % pr
             if pr in missing:
                 raise PolicyValidationError(
-                    "Policy:%s references an unknown resource:%s" % (
-                        p['name'], p['resource']))
+                    "Policy:%s references an unknown resource:%s"
+                    % (p['name'], p['resource'])
+                )
 
-    def load_data(self, policy_data, file_uri, validate=None,
-                  session_factory=None, config=None):
+    def load_data(
+        self, policy_data, file_uri, validate=None, session_factory=None, config=None
+    ):
         self.structure.validate(policy_data)
 
         # Use passed in policy exec configuration or default on loader
@@ -120,17 +129,18 @@ class PolicyLoader:
         if missing:
             self._handle_missing_resources(policy_data, missing)
 
-        if schema and (validate is not False or (
-                validate is None and
-                self.default_schema_validate)):
+        if schema and (
+            validate is not False or (validate is None and self.default_schema_validate)
+        ):
             errors = self.validator.validate(policy_data, tuple(rtypes))
             if errors:
                 raise PolicyValidationError(
-                    "Failed to validate policy %s\n %s\n" % (
-                        errors[1], errors[0]))
+                    "Failed to validate policy %s\n %s\n" % (errors[1], errors[0])
+                )
 
         collection = self.collection_class.from_data(
-            policy_data, config, session_factory)
+            policy_data, config, session_factory
+        )
 
         # non schema validation of policies isnt optional its
         # become a lazy initialization point for resources.

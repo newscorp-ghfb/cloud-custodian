@@ -257,6 +257,7 @@ class Time(Filter):
     Schedule offhours for resources see :ref:`offhours <offhours>`
     for features and configuration.
     """
+
     schema = {
         'type': 'object',
         'properties': {
@@ -266,10 +267,12 @@ class Time(Filter):
             'weekends': {'type': 'boolean'},
             'weekends-only': {'type': 'boolean'},
             'opt-out': {'type': 'boolean'},
-            'skip-days': {'type': 'array', 'items':
-                {'type': 'string', 'pattern': '^[0-9]{4}-[0-9]{2}-[0-9]{2}'}},
+            'skip-days': {
+                'type': 'array',
+                'items': {'type': 'string', 'pattern': '^[0-9]{4}-[0-9]{2}-[0-9]{2}'},
+            },
             'skip-days-from': ValuesFrom.schema,
-        }
+        },
     }
     schema_alias = True
     time_type = None
@@ -311,9 +314,10 @@ class Time(Filter):
 
     z_names = list(zoneinfo.get_zonefile_instance().zones)
     non_title_case_zones = (
-        lambda aliases=TZ_ALIASES.keys(), z_names=z_names:
-        {z.lower(): z for z in z_names
-            if z.title() != z and z.lower() not in aliases})()
+        lambda aliases=TZ_ALIASES.keys(), z_names=z_names: {
+            z.lower(): z for z in z_names if z.title() != z and z.lower() not in aliases
+        }
+    )()
     TZ_ALIASES.update(non_title_case_zones)
 
     def __init__(self, data, manager=None):
@@ -336,30 +340,27 @@ class Time(Filter):
     def validate(self):
         if self.get_tz(self.default_tz) is None:
             raise PolicyValidationError(
-                "Invalid timezone specified %s" % (
-                    self.default_tz))
+                "Invalid timezone specified %s" % (self.default_tz)
+            )
         hour = self.data.get("%shour" % self.time_type, self.DEFAULT_HR)
         if hour not in self.parser.VALID_HOURS:
-            raise PolicyValidationError(
-                "Invalid hour specified %s" % (hour,))
+            raise PolicyValidationError("Invalid hour specified %s" % (hour,))
         if 'skip-days' in self.data and 'skip-days-from' in self.data:
             raise PolicyValidationError(
-                "Cannot specify two sets of skip days %s" % (
-                    self.data,))
+                "Cannot specify two sets of skip days %s" % (self.data,)
+            )
         return self
 
     def process(self, resources, event=None):
         resources = super(Time, self).process(resources)
         if self.parse_errors and self.manager and self.manager.ctx.log_dir:
             self.log.warning("parse errors %d", len(self.parse_errors))
-            with open(join(
-                    self.manager.ctx.log_dir, 'parse_errors.json'), 'w') as fh:
+            with open(join(self.manager.ctx.log_dir, 'parse_errors.json'), 'w') as fh:
                 dumps(self.parse_errors, fh=fh)
             self.parse_errors = []
         if self.opted_out and self.manager and self.manager.ctx.log_dir:
             self.log.debug("disabled count %d", len(self.opted_out))
-            with open(join(
-                    self.manager.ctx.log_dir, 'opted_out.json'), 'w') as fh:
+            with open(join(self.manager.ctx.log_dir, 'opted_out.json'), 'w') as fh:
                 dumps(self.opted_out, fh=fh)
             self.opted_out = []
         return resources
@@ -370,7 +371,8 @@ class Time(Filter):
         # but unit testing is calling this direct.
         if self.id_key is None:
             self.id_key = (
-                self.manager is None and 'InstanceId' or self.manager.get_model().id)
+                self.manager is None and 'InstanceId' or self.manager.get_model().id
+            )
 
         # The resource tag is not present, if we're not running in an opt-out
         # mode, we're done.
@@ -391,7 +393,10 @@ class Time(Filter):
         except Exception:
             log.exception(
                 "%s failed to process resource:%s value:%s",
-                self.__class__.__name__, i[self.id_key], value)
+                self.__class__.__name__,
+                i[self.id_key],
+                value,
+            )
             return False
 
     def process_resource_schedule(self, i, value, time_type):
@@ -414,18 +419,15 @@ class Time(Filter):
         else:
             schedule = None
         if schedule is None:
-            log.warning(
-                "Invalid schedule on resource:%s value:%s", rid, value)
+            log.warning("Invalid schedule on resource:%s value:%s", rid, value)
             self.parse_errors.append((rid, value))
             return False
         tz = self.get_tz(schedule['tz'])
         if not tz:
-            log.warning(
-                "Could not resolve tz on resource:%s value:%s", rid, value)
+            log.warning("Could not resolve tz on resource:%s value:%s", rid, value)
             self.parse_errors.append((rid, value))
             return False
-        now = datetime.datetime.now(tz).replace(
-            minute=0, second=0, microsecond=0)
+        now = datetime.datetime.now(tz).replace(minute=0, second=0, microsecond=0)
         now_str = now.strftime("%Y-%m-%d")
         if 'skip-days-from' in self.data:
             values = ValuesFrom(self.data['skip-days-from'], self.manager)
@@ -475,16 +477,22 @@ class Time(Filter):
 class OffHour(Time):
 
     schema = type_schema(
-        'offhour', rinherit=Time.schema, required=['offhour', 'default_tz'],
-        offhour={'type': 'integer', 'minimum': 0, 'maximum': 23})
+        'offhour',
+        rinherit=Time.schema,
+        required=['offhour', 'default_tz'],
+        offhour={'type': 'integer', 'minimum': 0, 'maximum': 23},
+    )
     time_type = "off"
 
     DEFAULT_HR = 19
 
     def get_default_schedule(self):
-        default = {'tz': self.default_tz, self.time_type: [
-            {'hour': self.data.get(
-                "%shour" % self.time_type, self.DEFAULT_HR)}]}
+        default = {
+            'tz': self.default_tz,
+            self.time_type: [
+                {'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}
+            ],
+        }
         if self.weekends_only:
             default[self.time_type][0]['days'] = [4]
         elif self.weekends:
@@ -497,16 +505,22 @@ class OffHour(Time):
 class OnHour(Time):
 
     schema = type_schema(
-        'onhour', rinherit=Time.schema, required=['onhour', 'default_tz'],
-        onhour={'type': 'integer', 'minimum': 0, 'maximum': 23})
+        'onhour',
+        rinherit=Time.schema,
+        required=['onhour', 'default_tz'],
+        onhour={'type': 'integer', 'minimum': 0, 'maximum': 23},
+    )
     time_type = "on"
 
     DEFAULT_HR = 7
 
     def get_default_schedule(self):
-        default = {'tz': self.default_tz, self.time_type: [
-            {'hour': self.data.get(
-                "%shour" % self.time_type, self.DEFAULT_HR)}]}
+        default = {
+            'tz': self.default_tz,
+            self.time_type: [
+                {'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}
+            ],
+        }
         if self.weekends_only:
             # turn on monday
             default[self.time_type][0]['days'] = [0]
@@ -659,8 +673,7 @@ class ScheduleParser:
         # single day specified
         if days in self.DAY_MAP:
             return [self.DAY_MAP[days]]
-        day_range = [d for d in map(self.DAY_MAP.get, days.split('-'))
-                     if d is not None]
+        day_range = [d for d in map(self.DAY_MAP.get, days.split('-')) if d is not None]
         if not len(day_range) == 2:
             return None
         # support wrap around days aka friday-monday = 4,5,6,0

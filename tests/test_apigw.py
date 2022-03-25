@@ -6,7 +6,6 @@ from .common import BaseTest
 
 
 class TestRestAccount(BaseTest):
-
     def test_missing_rest_account(self):
         session_factory = self.replay_flight_data("test_rest_account_missing")
         p = self.load_policy(
@@ -38,7 +37,7 @@ class TestRestAccount(BaseTest):
             },
             session_factory=session_factory,
         )
-        before_account, = p.resource_manager._get_account()
+        (before_account,) = p.resource_manager._get_account()
         self.assertEqual(
             before_account["cloudwatchRoleArn"],
             "arn:aws:iam::644160558196:role/ApiGwLogger",
@@ -47,72 +46,93 @@ class TestRestAccount(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        after_account, = p.resource_manager._get_account()
+        (after_account,) = p.resource_manager._get_account()
         self.assertEqual(after_account["cloudwatchRoleArn"], log_role)
 
 
 class TestRestApi(BaseTest):
-
     def test_rest_api_update(self):
         session_factory = self.replay_flight_data('test_rest_api_update')
-        p = self.load_policy({
-            'name': 'update-api',
-            'resource': 'rest-api',
-            'filters': [
-                {'name': 'testapi'},
-                {'description': 'for demo only'}
-            ],
-            'actions': [{
-                'type': 'update',
-                'patch': [{
-                    'op': 'replace',
-                    'path': '/description',
-                    'value': 'for replacement'}]
-            }],
-        }, session_factory=session_factory)
+        p = self.load_policy(
+            {
+                'name': 'update-api',
+                'resource': 'rest-api',
+                'filters': [{'name': 'testapi'}, {'description': 'for demo only'}],
+                'actions': [
+                    {
+                        'type': 'update',
+                        'patch': [
+                            {
+                                'op': 'replace',
+                                'path': '/description',
+                                'value': 'for replacement',
+                            }
+                        ],
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        updated = session_factory().client('apigateway').get_rest_api(
-            restApiId=resources[0]['id'])
+        updated = (
+            session_factory()
+            .client('apigateway')
+            .get_rest_api(restApiId=resources[0]['id'])
+        )
         self.assertEqual(updated['description'], 'for replacement')
 
     def test_rest_api_tag_untag_mark(self):
         session_factory = self.replay_flight_data('test_rest_api_tag_untag_mark')
         client = session_factory().client("apigateway")
-        tags = client.get_tags(resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27')
-        self.assertEqual(tags.get('tags', {}),
-            {'target-tag': 'pratyush'})
+        tags = client.get_tags(
+            resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27'
+        )
+        self.assertEqual(tags.get('tags', {}), {'target-tag': 'pratyush'})
         self.maxDiff = None
-        p = self.load_policy({
-            'name': 'tag-rest-api',
-            'resource': 'rest-api',
-            'filters': [{'type': 'value', 'key': 'id', 'value': 'dj7uijzv27'}],
-            "actions": [
-                {'type': 'tag',
-                'tags': {'Env': 'Dev'}},
-                {'type': 'remove-tag',
-                'tags': ['target-tag']},
-                {'type': 'mark-for-op', 'tag': 'custodian_cleanup',
-                'op': 'update',
-                'days': 2}
-            ]},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                'name': 'tag-rest-api',
+                'resource': 'rest-api',
+                'filters': [{'type': 'value', 'key': 'id', 'value': 'dj7uijzv27'}],
+                "actions": [
+                    {'type': 'tag', 'tags': {'Env': 'Dev'}},
+                    {'type': 'remove-tag', 'tags': ['target-tag']},
+                    {
+                        'type': 'mark-for-op',
+                        'tag': 'custodian_cleanup',
+                        'op': 'update',
+                        'days': 2,
+                    },
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertTrue(len(resources), 1)
-        tags = client.get_tags(resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27')
-        self.assertEqual(tags.get('tags', {}),
-            {'Env': 'Dev',
-            'custodian_cleanup': 'Resource does not meet policy: update@2019/09/11'})
+        tags = client.get_tags(
+            resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27'
+        )
+        self.assertEqual(
+            tags.get('tags', {}),
+            {
+                'Env': 'Dev',
+                'custodian_cleanup': 'Resource does not meet policy: update@2019/09/11',
+            },
+        )
 
     def test_rest_api_delete(self):
         session_factory = self.replay_flight_data('test_rest_api_delete')
-        p = self.load_policy({
-            'name': 'tag-rest-api',
-            'resource': 'rest-api',
-            'filters': [{'tag:target-tag': 'pratyush'}],
-            "actions": [{"type": "delete"}]},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                'name': 'tag-rest-api',
+                'resource': 'rest-api',
+                'filters': [{'tag:target-tag': 'pratyush'}],
+                "actions": [{"type": "delete"}],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         self.assertTrue(resources[0]['id'], 'am0c2fyskg')
@@ -141,21 +161,15 @@ class TestRestApi(BaseTest):
             session_factory=factory,
         )
         test_filter = p.resource_manager.filters[0]
-        resource_payload = {
-            "id": "am0c2fyskg",
-            "name": "c7n-test-2"
-        }
+        resource_payload = {"id": "am0c2fyskg", "name": "c7n-test-2"}
         test_filter.process(resource_payload)
         self.assertEqual(
             test_filter.get_dimensions(resource_payload),
-            [
-                {"Name": "ApiName", "Value": "c7n-test-2"}
-            ],
+            [{"Name": "ApiName", "Value": "c7n-test-2"}],
         )
 
 
 class TestRestResource(BaseTest):
-
     def test_rest_resource_query(self):
         session_factory = self.replay_flight_data("test_rest_resource_resource")
         p = self.load_policy(
@@ -186,7 +200,9 @@ class TestRestResource(BaseTest):
                         "value": "AWS",
                     }
                 ],
-            }, session_factory=session_factory)
+            },
+            session_factory=session_factory,
+        )
 
         resources = p.run()
 
@@ -205,7 +221,9 @@ class TestRestResource(BaseTest):
             {
                 "name": "rest-integration-delete",
                 "resource": "rest-resource",
-                "filters": [{"type": "rest-integration", "key": "type", "value": "AWS"}],
+                "filters": [
+                    {"type": "rest-integration", "key": "type", "value": "AWS"}
+                ],
                 "actions": [{"type": "delete-integration"}],
             },
             session_factory=session_factory,
@@ -219,7 +237,7 @@ class TestRestResource(BaseTest):
             client.get_integration(
                 restApiId=integrations[0]["restApiId"],
                 resourceId=integrations[0]['resourceId'],
-                httpMethod=integrations[0]["resourceHttpMethod"]
+                httpMethod=integrations[0]["resourceHttpMethod"],
             )
         self.assertEqual(e.exception.response['Error']['Code'], 'NotFoundException')
 
@@ -317,7 +335,6 @@ class TestRestResource(BaseTest):
 
 
 class TestRestStage(BaseTest):
-
     def test_rest_stage_resource(self):
         session_factory = self.replay_flight_data("test_rest_stage")
         p = self.load_policy(
@@ -381,7 +398,9 @@ class TestRestStage(BaseTest):
             {
                 "name": "rest-stage-delete",
                 "resource": "rest-stage",
-                "filters": [{"type": "value", "key": "stageName", "value": "delete-test"}],
+                "filters": [
+                    {"type": "value", "key": "stageName", "value": "delete-test"}
+                ],
                 "actions": [{"type": "delete"}],
             },
             session_factory=session_factory,
@@ -398,37 +417,46 @@ class TestRestStage(BaseTest):
         session_factory = self.replay_flight_data('test_rest_stage_tag_untag_mark')
         client = session_factory().client("apigateway")
         tags = client.get_tags(
-            resourceArn='arn:aws:apigateway:us-east-1::/restapis/l5paassc1h/stages/test')
-        self.assertEqual(tags.get('tags', {}),
-            {'target-tag': 'pratyush'})
-        p = self.load_policy({
-            'name': 'tag-rest-stage',
-            'resource': 'rest-stage',
-            'filters': [{'tag:target-tag': 'pratyush'}],
-            "actions": [
-                {'type': 'tag',
-                'tags': {'Env': 'Dev'}},
-                {'type': 'remove-tag',
-                'tags': ['target-tag']},
-                {'type': 'mark-for-op', 'tag': 'custodian_cleanup',
-                'op': 'update',
-                'days': 2}
-            ]},
-            session_factory=session_factory)
+            resourceArn='arn:aws:apigateway:us-east-1::/restapis/l5paassc1h/stages/test'
+        )
+        self.assertEqual(tags.get('tags', {}), {'target-tag': 'pratyush'})
+        p = self.load_policy(
+            {
+                'name': 'tag-rest-stage',
+                'resource': 'rest-stage',
+                'filters': [{'tag:target-tag': 'pratyush'}],
+                "actions": [
+                    {'type': 'tag', 'tags': {'Env': 'Dev'}},
+                    {'type': 'remove-tag', 'tags': ['target-tag']},
+                    {
+                        'type': 'mark-for-op',
+                        'tag': 'custodian_cleanup',
+                        'op': 'update',
+                        'days': 2,
+                    },
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         tags = client.get_tags(
-            resourceArn='arn:aws:apigateway:us-east-1::/restapis/l5paassc1h/stages/test')
-        self.assertEqual(tags.get('tags', {}),
-            {'Env': 'Dev',
-            'custodian_cleanup': 'Resource does not meet policy: update@2019/11/04'})
+            resourceArn='arn:aws:apigateway:us-east-1::/restapis/l5paassc1h/stages/test'
+        )
+        self.assertEqual(
+            tags.get('tags', {}),
+            {
+                'Env': 'Dev',
+                'custodian_cleanup': 'Resource does not meet policy: update@2019/11/04',
+            },
+        )
 
 
 class TestRestClientCertificate(BaseTest):
-
     def test_rest_client_certificate_resource(self):
-        session_factory = self.replay_flight_data('test_rest_client_certificate_resource',
-            region='us-east-2')
+        session_factory = self.replay_flight_data(
+            'test_rest_client_certificate_resource', region='us-east-2'
+        )
         p = self.load_policy(
             {
                 'name': 'list-rest-client-certificates',
@@ -443,7 +471,8 @@ class TestRestClientCertificate(BaseTest):
 
     def test_rest_stage_client_certificate_filter(self):
         session_factory = self.replay_flight_data(
-            'test_rest_stage_client_certificate_filter', region='us-east-2')
+            'test_rest_stage_client_certificate_filter', region='us-east-2'
+        )
         p = self.load_policy(
             {
                 'name': 'rest-stages-with-expired-certificate',
@@ -456,7 +485,7 @@ class TestRestClientCertificate(BaseTest):
                         'value': 0,
                         'op': 'lte',
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
             config={'region': 'us-east-2'},
@@ -467,7 +496,8 @@ class TestRestClientCertificate(BaseTest):
 
     def test_rest_stage_certificate_filter_config_source(self):
         session_factory = self.replay_flight_data(
-            'test_rest_stage_certificate_filter_config_source', region='us-east-2')
+            'test_rest_stage_certificate_filter_config_source', region='us-east-2'
+        )
         p = self.load_policy(
             {
                 'name': 'rest-stages-with-expired-certificate',
@@ -481,7 +511,7 @@ class TestRestClientCertificate(BaseTest):
                         'value': 0,
                         'op': 'lte',
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
             config={'region': 'us-east-2'},
@@ -504,11 +534,11 @@ class TestCustomDomainName(BaseTest):
                             {
                                 "type": "value",
                                 "key": "securityPolicy",
-                                "value": "TLS_1_2"
+                                "value": "TLS_1_2",
                             }
                         ]
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -528,17 +558,12 @@ class TestCustomDomainName(BaseTest):
                             {
                                 "type": "value",
                                 "key": "securityPolicy",
-                                "value": "TLS_1_2"
+                                "value": "TLS_1_2",
                             }
                         ]
                     }
                 ],
-                "actions": [
-                    {
-                        "type": "update-security",
-                        "securityPolicy": "TLS_1_2"
-                    }
-                ],
+                "actions": [{"type": "update-security", "securityPolicy": "TLS_1_2"}],
             },
             session_factory=factory,
         )

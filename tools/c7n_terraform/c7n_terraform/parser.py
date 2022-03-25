@@ -158,7 +158,7 @@ class HclLocator:
         return {
             "start": start_line,
             "end": end_line,
-            "lines": self.file_cache[path][start_line - 1:end_line - 1],
+            "lines": self.file_cache[path][start_line - 1 : end_line - 1],
         }
 
     def _get_end_line(self, start_line, cache_idx, lines):
@@ -167,7 +167,7 @@ class HclLocator:
         s, e = "{", "}"
         if s not in lines[cache_idx][1]:
             s, e = "(", ")"
-        for lineno, l in lines[cache_idx + 1:]:
+        for lineno, l in lines[cache_idx + 1 :]:
             if s in l:
                 idx += 1
             if e in l:
@@ -429,7 +429,8 @@ class Parser:
 
         for block in data:
             output[block] = [
-                {resource: larkify(instance)} for resource, instance in data.get(block, {}).items()
+                {resource: larkify(instance)}
+                for resource, instance in data.get(block, {}).items()
             ]
 
         return output
@@ -457,7 +458,9 @@ class Parser:
             for f in file_iter(pattern):
                 self.seen_dirs.add(f.parent)
                 try:
-                    file_parser = getattr(self, self._parser_map.get(pattern.replace("*", "")))
+                    file_parser = getattr(
+                        self, self._parser_map.get(pattern.replace("*", ""))
+                    )
                     self.tf_resources[f] = tf_data = file_parser(f)
                     modules.update(self._resolve_modules(f.parent, tf_data))
                 except Exception as e:

@@ -61,8 +61,7 @@ class PutMetricsTest(BaseTest):
         return policy
 
     def _test_putmetrics_s3(self):
-        """ This test fails when replaying flight data due to an issue with placebo.
-        """
+        """This test fails when replaying flight data due to an issue with placebo."""
         policy = self._get_test_policy(
             name="s3test", yaml_doc=self.EXAMPLE_S3_POLICY, record=self.record
         )

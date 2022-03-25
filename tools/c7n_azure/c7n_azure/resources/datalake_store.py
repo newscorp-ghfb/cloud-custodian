@@ -28,6 +28,7 @@ class DataLakeStore(ArmResourceManager):
                 timeframe: 72
 
     """
+
     class resource_type(ArmResourceManager.resource_type):
         doc_groups = ['Storage']
 

@@ -39,6 +39,6 @@ class Redis(ArmResourceManager):
             'location',
             'resourceGroup',
             'properties.redisVersion',
-            'properties.sku.[name, family, capacity]'
+            'properties.sku.[name, family, capacity]',
         )
         resource_type = 'Microsoft.Cache/Redis'

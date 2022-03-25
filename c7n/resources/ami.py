@@ -8,8 +8,7 @@ import jmespath
 
 from c7n.actions import BaseAction
 from c7n.exceptions import ClientError, PolicyValidationError
-from c7n.filters import (
-    AgeFilter, Filter, CrossAccountAccessFilter)
+from c7n.filters import AgeFilter, Filter, CrossAccountAccessFilter
 from c7n.manager import resources
 from c7n.query import QueryResourceManager, DescribeSource, TypeInfo
 from c7n.resolver import ValuesFrom
@@ -20,7 +19,6 @@ log = logging.getLogger('custodian.ami')
 
 
 class DescribeImageSource(DescribeSource):
-
     def get_resources(self, ids, cache=True):
         while ids:
             try:
@@ -37,12 +35,10 @@ class DescribeImageSource(DescribeSource):
 
 @resources.register('ami')
 class AMI(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ec2'
         arn_type = 'image'
-        enum_spec = (
-            'describe_images', 'Images', None)
+        enum_spec = ('describe_images', 'Images', None)
         id = 'ImageId'
         filter_name = 'ImageIds'
         filter_type = 'list'
@@ -50,9 +46,7 @@ class AMI(QueryResourceManager):
         date = 'CreationDate'
         id_prefix = "ami-"
 
-    source_mapping = {
-        'describe': DescribeImageSource
-    }
+    source_mapping = {'describe': DescribeImageSource}
 
     def resources(self, query=None):
         if query is None and 'query' in self.data:
@@ -65,7 +59,6 @@ class AMI(QueryResourceManager):
 
 
 class ErrorHandler:
-
     @staticmethod
     def extract_bad_ami(e):
         """Handle various client side errors when describing images"""
@@ -74,11 +67,12 @@ class ErrorHandler:
         e_ami_ids = None
         if error == 'InvalidAMIID.NotFound':
             e_ami_ids = [
-                e_ami_id.strip() for e_ami_id
-                in msg[msg.find("'[") + 2:msg.rfind("]'")].split(',')]
+                e_ami_id.strip()
+                for e_ami_id in msg[msg.find("'[") + 2 : msg.rfind("]'")].split(',')
+            ]
             log.warning("Image not found %s" % e_ami_ids)
         elif error == 'InvalidAMIID.Malformed':
-            e_ami_ids = [msg[msg.find('"') + 1:msg.rfind('"')]]
+            e_ami_ids = [msg[msg.find('"') + 1 : msg.rfind('"')]]
             log.warning("Image id malformed %s" % e_ami_ids)
         return e_ami_ids
 
@@ -111,9 +105,13 @@ class Deregister(BaseAction):
     def process(self, images):
         client = local_session(self.manager.session_factory).client('ec2')
         image_count = len(images)
-        images = [i for i in images if self.manager.ctx.options.account_id == i['OwnerId']]
+        images = [
+            i for i in images if self.manager.ctx.options.account_id == i['OwnerId']
+        ]
         if len(images) != image_count:
-            self.log.info("Implicitly filtered %d non owned images", image_count - len(images))
+            self.log.info(
+                "Implicitly filtered %d non owned images", image_count - len(images)
+            )
 
         for i in images:
             self.manager.retry(client.deregister_image, ImageId=i['ImageId'])
@@ -154,11 +152,18 @@ class RemoveLaunchPermissions(BaseAction):
 
     schema = type_schema(
         'remove-launch-permissions',
-        accounts={'oneOf': [
-            {'enum': ['matched']},
-            {'type': 'string', 'minLength': 12, 'maxLength': 12}]})
+        accounts={
+            'oneOf': [
+                {'enum': ['matched']},
+                {'type': 'string', 'minLength': 12, 'maxLength': 12},
+            ]
+        },
+    )
 
-    permissions = ('ec2:ResetImageAttribute', 'ec2:ModifyImageAttribute',)
+    permissions = (
+        'ec2:ResetImageAttribute',
+        'ec2:ModifyImageAttribute',
+    )
 
     def validate(self):
         if 'accounts' in self.data and self.data['accounts'] == 'matched':
@@ -169,8 +174,9 @@ class RemoveLaunchPermissions(BaseAction):
                     break
             if not found:
                 raise PolicyValidationError(
-                    "policy:%s filter:%s with matched requires cross-account filter" % (
-                        self.manager.ctx.policy.name, self.type))
+                    "policy:%s filter:%s with matched requires cross-account filter"
+                    % (self.manager.ctx.policy.name, self.type)
+                )
 
     def process(self, images):
         client = local_session(self.manager.session_factory).client('ec2')
@@ -181,7 +187,8 @@ class RemoveLaunchPermissions(BaseAction):
         accounts = self.data.get('accounts')
         if not accounts:
             return client.reset_image_attribute(
-                ImageId=image['ImageId'], Attribute="launchPermission")
+                ImageId=image['ImageId'], Attribute="launchPermission"
+            )
         if accounts == 'matched':
             accounts = image.get(AmiCrossAccountFilter.annotation_key)
         if not accounts:
@@ -196,7 +203,8 @@ class RemoveLaunchPermissions(BaseAction):
         client.modify_image_attribute(
             ImageId=image['ImageId'],
             LaunchPermission={'Remove': remove},
-            OperationType='remove')
+            OperationType='remove',
+        )
 
 
 @AMI.action_registry.register('copy')
@@ -235,15 +243,13 @@ class Copy(BaseAction):
             'description': {'type': 'string'},
             'region': {'type': 'string'},
             'encrypt': {'type': 'boolean'},
-            'key-id': {'type': 'string'}
-        }
+            'key-id': {'type': 'string'},
+        },
     }
 
     def process(self, images):
         session = local_session(self.manager.session_factory)
-        client = session.client(
-            'ec2',
-            region_name=self.data.get('region', None))
+        client = session.client('ec2', region_name=self.data.get('region', None))
 
         for image in images:
             client.copy_image(
@@ -252,7 +258,8 @@ class Copy(BaseAction):
                 SourceRegion=session.region_name,
                 SourceImageId=image['ImageId'],
                 Encrypted=self.data.get('encrypt', False),
-                KmsKeyId=self.data.get('key-id', ''))
+                KmsKeyId=self.data.get('key-id', ''),
+            )
 
 
 @AMI.filter_registry.register('image-age')
@@ -275,7 +282,8 @@ class ImageAgeFilter(AgeFilter):
     schema = type_schema(
         'image-age',
         op={'$ref': '#/definitions/filters_common/comparison_operators'},
-        days={'type': 'number', 'minimum': 0})
+        days={'type': 'number', 'minimum': 0},
+    )
 
 
 @AMI.filter_registry.register('unused')
@@ -300,24 +308,36 @@ class ImageUnusedFilter(Filter):
     schema = type_schema('unused', value={'type': 'boolean'})
 
     def get_permissions(self):
-        return list(itertools.chain(*[
-            self.manager.get_resource_manager(m).get_permissions()
-            for m in ('asg', 'launch-config', 'ec2')]))
+        return list(
+            itertools.chain(
+                *[
+                    self.manager.get_resource_manager(m).get_permissions()
+                    for m in ('asg', 'launch-config', 'ec2')
+                ]
+            )
+        )
 
     def _pull_asg_images(self):
         asgs = self.manager.get_resource_manager('asg').resources()
         image_ids = set()
-        lcfgs = set(a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a)
+        lcfgs = set(
+            a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a
+        )
         lcfg_mgr = self.manager.get_resource_manager('launch-config')
 
         if lcfgs:
-            image_ids.update([
-                lcfg['ImageId'] for lcfg in lcfg_mgr.resources()
-                if lcfg['LaunchConfigurationName'] in lcfgs])
+            image_ids.update(
+                [
+                    lcfg['ImageId']
+                    for lcfg in lcfg_mgr.resources()
+                    if lcfg['LaunchConfigurationName'] in lcfgs
+                ]
+            )
 
         tmpl_mgr = self.manager.get_resource_manager('launch-template-version')
         for tversion in tmpl_mgr.get_resources(
-                list(tmpl_mgr.get_asg_templates(asgs).keys())):
+            list(tmpl_mgr.get_asg_templates(asgs).keys())
+        ):
             image_ids.add(tversion['LaunchTemplateData'].get('ImageId'))
         return image_ids
 
@@ -339,7 +359,8 @@ class AmiCrossAccountFilter(CrossAccountAccessFilter):
         'cross-account',
         # white list accounts
         whitelist_from=ValuesFrom.schema,
-        whitelist={'type': 'array', 'items': {'type': 'string'}})
+        whitelist={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     permissions = ('ec2:DescribeImageAttribute',)
     annotation_key = 'c7n:CrossAccountViolations'
@@ -350,7 +371,8 @@ class AmiCrossAccountFilter(CrossAccountAccessFilter):
             attrs = self.manager.retry(
                 client.describe_image_attribute,
                 ImageId=r['ImageId'],
-                Attribute='launchPermission')['LaunchPermissions']
+                Attribute='launchPermission',
+            )['LaunchPermissions']
             r['c7n:LaunchPermissions'] = attrs
             image_accounts = {a.get('Group') or a.get('UserId') for a in attrs}
             delta_accounts = image_accounts.difference(accounts)
@@ -368,13 +390,14 @@ class AmiCrossAccountFilter(CrossAccountAccessFilter):
             futures = []
             for resource_set in chunks(resources, 20):
                 futures.append(
-                    w.submit(
-                        self.process_resource_set, client, accounts, resource_set))
+                    w.submit(self.process_resource_set, client, accounts, resource_set)
+                )
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Exception checking cross account access \n %s" % (
-                            f.exception()))
+                        "Exception checking cross account access \n %s"
+                        % (f.exception())
+                    )
                     continue
                 results.extend(f.result())
         return results

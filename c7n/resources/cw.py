@@ -15,7 +15,12 @@ from c7n.filters.iamaccess import CrossAccountAccessFilter
 from c7n.filters.related import ChildResourceFilter
 from c7n.filters.kms import KmsRelatedFilter
 from c7n.query import (
-    QueryResourceManager, ChildResourceManager, TypeInfo, DescribeSource, ConfigSource)
+    QueryResourceManager,
+    ChildResourceManager,
+    TypeInfo,
+    DescribeSource,
+    ConfigSource,
+)
 from c7n.manager import resources
 from c7n.resolver import ValuesFrom
 from c7n.resources import load_resources
@@ -31,7 +36,6 @@ class DescribeAlarm(DescribeSource):
 
 @resources.register('alarm')
 class Alarm(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudwatch'
         arn_type = 'alarm'
@@ -45,10 +49,7 @@ class Alarm(QueryResourceManager):
         cfn_type = config_type = 'AWS::CloudWatch::Alarm'
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeAlarm,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeAlarm, 'config': ConfigSource}
 
     retry = staticmethod(get_retry(('Throttled',)))
 
@@ -79,18 +80,16 @@ class AlarmDelete(BaseAction):
     permissions = ('cloudwatch:DeleteAlarms',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('cloudwatch')
+        client = local_session(self.manager.session_factory).client('cloudwatch')
 
         for resource_set in chunks(resources, size=100):
             self.manager.retry(
-                client.delete_alarms,
-                AlarmNames=[r['AlarmName'] for r in resource_set])
+                client.delete_alarms, AlarmNames=[r['AlarmName'] for r in resource_set]
+            )
 
 
 @resources.register('event-bus')
 class EventBus(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'events'
         arn_type = 'event-bus'
@@ -111,7 +110,6 @@ class EventBusCrossAccountFilter(CrossAccountAccessFilter):
 
 @resources.register('event-rule')
 class EventRule(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'events'
         arn_type = 'rule'
@@ -128,7 +126,6 @@ class EventRule(QueryResourceManager):
 
 @EventRule.filter_registry.register('metrics')
 class EventRuleMetrics(MetricsFilter):
-
     def get_dimensions(self, resource):
         return [{'Name': 'RuleName', 'Value': resource['Name']}]
 
@@ -184,13 +181,7 @@ class ValidEventRuleTargetFilter(ChildResourceFilter):
     AnnotationKey = "EventRuleTargets"
 
     schema = type_schema(
-        'invalid-targets',
-        **{
-            'all': {
-                'type': 'boolean',
-                'default': False
-            }
-        }
+        'invalid-targets', **{'all': {'type': 'boolean', 'default': False}}
     )
 
     permissions = ('events:ListTargetsByRule',)
@@ -275,7 +266,11 @@ class EventRuleDelete(BaseAction):
     """
 
     schema = type_schema('delete', force={'type': 'boolean'})
-    permissions = ('events:DeleteRule', 'events:RemoveTargets', 'events:ListTargetsByRule',)
+    permissions = (
+        'events:DeleteRule',
+        'events:RemoveTargets',
+        'events:ListTargetsByRule',
+    )
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('events')
@@ -290,11 +285,16 @@ class EventRuleDelete(BaseAction):
                 if not self.data.get('force'):
                     self.log.warning(
                         'Unable to delete %s event rule due to attached rule targets,'
-                        'set force to true to remove targets' % r['Name'])
+                        'set force to true to remove targets' % r['Name']
+                    )
                     raise
-                child_manager = self.manager.get_resource_manager('aws.event-rule-target')
+                child_manager = self.manager.get_resource_manager(
+                    'aws.event-rule-target'
+                )
                 if not children:
-                    children = EventRuleTargetFilter({}, child_manager).get_related(resources)
+                    children = EventRuleTargetFilter({}, child_manager).get_related(
+                        resources
+                    )
                 targets = list(set([t['Id'] for t in children.get(r['Name'])]))
                 client.remove_targets(Rule=r['Name'], Ids=targets)
                 client.delete_rule(Name=r['Name'])
@@ -302,7 +302,6 @@ class EventRuleDelete(BaseAction):
 
 @resources.register('event-rule-target')
 class EventRuleTarget(ChildResourceManager):
-
     class resource_type(TypeInfo):
         service = 'events'
         arn = False
@@ -319,7 +318,8 @@ class CrossAccountFilter(CrossAccountAccessFilter):
         'cross-account',
         # white list accounts
         whitelist_from=ValuesFrom.schema,
-        whitelist={'type': 'array', 'items': {'type': 'string'}})
+        whitelist={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     # dummy permission
     permissions = ('events:ListTargetsByRule',)
@@ -342,14 +342,11 @@ class DeleteTarget(BaseAction):
             rule_targets.setdefault(r['c7n:parent-id'], []).append(r['Id'])
 
         for rule_id, target_ids in rule_targets.items():
-            client.remove_targets(
-                Ids=target_ids,
-                Rule=rule_id)
+            client.remove_targets(Ids=target_ids, Rule=rule_id)
 
 
 @resources.register('log-group')
 class LogGroup(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'logs'
         arn_type = 'log-group'
@@ -373,7 +370,6 @@ class LogGroup(QueryResourceManager):
 
 @resources.register('insight-rule')
 class InsightRule(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudwatch'
         arn_type = 'insight-rule'
@@ -388,8 +384,7 @@ class InsightRule(QueryResourceManager):
 
         def _add_tags(r):
             arn = self.generate_arn(r['Name'])
-            r['Tags'] = client.list_tags_for_resource(
-                ResourceARN=arn).get('Tags', [])
+            r['Tags'] = client.list_tags_for_resource(ResourceARN=arn).get('Tags', [])
             return r
 
         return list(map(_add_tags, rules))
@@ -419,13 +414,13 @@ class InsightRuleDisable(BaseAction):
     permissions = ('cloudwatch:DisableInsightRules',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('cloudwatch')
+        client = local_session(self.manager.session_factory).client('cloudwatch')
 
         for resource_set in chunks(resources, size=100):
             self.manager.retry(
                 client.disable_insight_rules,
-                RuleNames=[r['Name'] for r in resource_set])
+                RuleNames=[r['Name'] for r in resource_set],
+            )
 
 
 @InsightRule.action_registry.register('delete')
@@ -452,18 +447,16 @@ class InsightRuleDelete(BaseAction):
     permissions = ('cloudwatch:DeleteInsightRules',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('cloudwatch')
+        client = local_session(self.manager.session_factory).client('cloudwatch')
 
         for resource_set in chunks(resources, size=100):
             self.manager.retry(
-                client.delete_insight_rules,
-                RuleNames=[r['Name'] for r in resource_set])
+                client.delete_insight_rules, RuleNames=[r['Name'] for r in resource_set]
+            )
 
 
 @LogGroup.filter_registry.register('metrics')
 class LogGroupMetrics(MetricsFilter):
-
     def get_dimensions(self, resource):
         return [{'Name': 'LogGroupName', 'Value': resource['logGroupName']}]
 
@@ -511,13 +504,18 @@ class LogMetricAlarmFilter(ValueFilter):
         if len(resources) < self.FetchThreshold:
             client = local_session(self.manager.session_factory).client('cloudwatch')
             for r in resources:
-                r[self.annotation_key] = list(itertools.chain(*(
-                    self.manager.retry(
-                        client.describe_alarms_for_metric,
-                        Namespace=t['metricNamespace'],
-                        MetricName=t['metricName'])['MetricAlarms']
-                    for t in r.get('metricTransformations', ())
-                )))
+                r[self.annotation_key] = list(
+                    itertools.chain(
+                        *(
+                            self.manager.retry(
+                                client.describe_alarms_for_metric,
+                                Namespace=t['metricNamespace'],
+                                MetricName=t['metricName'],
+                            )['MetricAlarms']
+                            for t in r.get('metricTransformations', ())
+                        )
+                    )
+                )
         else:
             alarms = self.manager.get_resource_manager('aws.alarm').resources()
 
@@ -525,18 +523,26 @@ class LogMetricAlarmFilter(ValueFilter):
             # metric name - this lookup table makes that smoother
             alarms_by_metric = defaultdict(list)
             for alarm in alarms:
-                alarms_by_metric[(alarm['Namespace'], alarm['MetricName'])].append(alarm)
+                alarms_by_metric[(alarm['Namespace'], alarm['MetricName'])].append(
+                    alarm
+                )
 
             for r in resources:
-                r[self.annotation_key] = list(itertools.chain(*(
-                    alarms_by_metric.get((t['metricNamespace'], t['metricName']), [])
-                    for t in r.get('metricTransformations', ())
-                )))
+                r[self.annotation_key] = list(
+                    itertools.chain(
+                        *(
+                            alarms_by_metric.get(
+                                (t['metricNamespace'], t['metricName']), []
+                            )
+                            for t in r.get('metricTransformations', ())
+                        )
+                    )
+                )
 
     def get_permissions(self):
         return [
             *self.manager.get_resource_manager('aws.alarm').get_permissions(),
-            'cloudwatch:DescribeAlarmsForMetric'
+            'cloudwatch:DescribeAlarmsForMetric',
         ]
 
     def process(self, resources, event=None):
@@ -575,7 +581,8 @@ class Retention(BaseAction):
             self.manager.retry(
                 client.put_retention_policy,
                 logGroupName=r['logGroupName'],
-                retentionInDays=days)
+                retentionInDays=days,
+            )
 
 
 @LogGroup.action_registry.register('delete')
@@ -604,7 +611,8 @@ class Delete(BaseAction):
         for r in resources:
             try:
                 self.manager.retry(
-                    client.delete_log_group, logGroupName=r['logGroupName'])
+                    client.delete_log_group, logGroupName=r['logGroupName']
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -625,14 +633,14 @@ class LastWriteDays(Filter):
                     days: 60
     """
 
-    schema = type_schema(
-        'last-write', days={'type': 'number'})
+    schema = type_schema('last-write', days={'type': 'number'})
     permissions = ('logs:DescribeLogStreams',)
 
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('logs')
         self.date_threshold = parse_date(datetime.utcnow()) - timedelta(
-            days=self.data['days'])
+            days=self.data['days']
+        )
         return [r for r in resources if self.check_group(client, r)]
 
     def check_group(self, client, group):
@@ -641,7 +649,8 @@ class LastWriteDays(Filter):
             logGroupName=group['logGroupName'],
             orderBy='LastEventTime',
             descending=True,
-            limit=3).get('logStreams')
+            limit=3,
+        ).get('logStreams')
         group['streams'] = streams
         if not streams:
             last_timestamp = group['creationTime']
@@ -662,7 +671,8 @@ class LogCrossAccountFilter(CrossAccountAccessFilter):
         'cross-account',
         # white list accounts
         whitelist_from=ValuesFrom.schema,
-        whitelist={'type': 'array', 'items': {'type': 'string'}})
+        whitelist={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     permissions = ('logs:DescribeSubscriptionFilters',)
 
@@ -674,13 +684,13 @@ class LogCrossAccountFilter(CrossAccountAccessFilter):
             futures = []
             for rset in chunks(resources, 50):
                 futures.append(
-                    w.submit(
-                        self.process_resource_set, client, accounts, rset))
+                    w.submit(self.process_resource_set, client, accounts, rset)
+                )
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Error checking log groups cross-account %s",
-                        f.exception())
+                        "Error checking log groups cross-account %s", f.exception()
+                    )
                     continue
                 results.extend(f.result())
         return results
@@ -690,15 +700,14 @@ class LogCrossAccountFilter(CrossAccountAccessFilter):
         for r in resources:
             found = False
             filters = self.manager.retry(
-                client.describe_subscription_filters,
-                logGroupName=r['logGroupName']).get('subscriptionFilters', ())
+                client.describe_subscription_filters, logGroupName=r['logGroupName']
+            ).get('subscriptionFilters', ())
             for f in filters:
                 if 'destinationArn' not in f:
                     continue
                 account_id = f['destinationArn'].split(':', 5)[4]
                 if account_id not in accounts:
-                    r.setdefault('c7n:CrossAccountViolations', []).append(
-                        account_id)
+                    r.setdefault('c7n:CrossAccountViolations', []).append(account_id)
                     found = True
             if found:
                 results.append(r)
@@ -721,6 +730,7 @@ class LogSubscriptionFilter(ValueFilter):
                     key: destinationArn
                     value: arn:aws:lambda:us-east-1:123456789876:function:forwarder
     """
+
     schema = type_schema('subscription-filter', rinherit=ValueFilter.schema)
     annotation_key = 'c7n:SubscriptionFilters'
     permissions = ('logs:DescribeSubscriptionFilters',)
@@ -730,13 +740,15 @@ class LogSubscriptionFilter(ValueFilter):
         results = []
         for r in resources:
             filters = self.manager.retry(
-                client.describe_subscription_filters,
-                logGroupName=r['logGroupName']).get('subscriptionFilters', ())
+                client.describe_subscription_filters, logGroupName=r['logGroupName']
+            ).get('subscriptionFilters', ())
             if not any(filters):
                 continue
             for f in filters:
                 r.setdefault(self.annotation_key, []).append(f)
-            if (len(self.data) == 1) or any((self.match(sub) for sub in r[self.annotation_key])):
+            if (len(self.data) == 1) or any(
+                (self.match(sub) for sub in r[self.annotation_key])
+            ):
                 results.append(r)
         return results
 
@@ -773,12 +785,12 @@ class EncryptLogGroup(BaseAction):
               - type: set-encryption
                 state: False
     """
+
     schema = type_schema(
         'set-encryption',
-        **{'kms-key': {'type': 'string'},
-           'state': {'type': 'boolean'}})
-    permissions = (
-        'logs:AssociateKmsKey', 'logs:DisassociateKmsKey', 'kms:DescribeKey')
+        **{'kms-key': {'type': 'string'}, 'state': {'type': 'boolean'}}
+    )
+    permissions = ('logs:AssociateKmsKey', 'logs:DisassociateKmsKey', 'kms:DescribeKey')
 
     def validate(self):
         if not self.data.get('state', True):
@@ -787,8 +799,7 @@ class EncryptLogGroup(BaseAction):
         if not key:
             raise ValueError('Must specify either a KMS key ARN or Alias')
         if 'alias/' not in key and ':key/' not in key:
-            raise PolicyValidationError(
-                "Invalid kms key format %s" % key)
+            raise PolicyValidationError("Invalid kms key format %s" % key)
         return self
 
     def resolve_key(self, key):
@@ -800,10 +811,11 @@ class EncryptLogGroup(BaseAction):
             return key
 
         # Alias
-        key = local_session(
-            self.manager.session_factory).client(
-                'kms').describe_key(
-                    KeyId=key)['KeyMetadata']['Arn']
+        key = (
+            local_session(self.manager.session_factory)
+            .client('kms')
+            .describe_key(KeyId=key)['KeyMetadata']['Arn']
+        )
         return key
 
     def process(self, resources):
@@ -817,7 +829,8 @@ class EncryptLogGroup(BaseAction):
             try:
                 if state:
                     client.associate_kms_key(
-                        logGroupName=r['logGroupName'], kmsKeyId=key)
+                        logGroupName=r['logGroupName'], kmsKeyId=key
+                    )
                 else:
                     client.disassociate_kms_key(logGroupName=r['logGroupName'])
             except client.exceptions.ResourceNotFoundException:

@@ -60,9 +60,7 @@ class TestCFN(BaseTest):
         self.assertEqual(len(resources), 1)
 
         # this should have done nothing.
-        stacks = client.describe_stacks(StackName=stack_name).get(
-            "Stacks"
-        )
+        stacks = client.describe_stacks(StackName=stack_name).get("Stacks")
         self.assertEqual(stacks[0].get("EnableTerminationProtection"), True)
         self.assertEqual(stacks[0].get("StackStatus"), "CREATE_COMPLETE")
 
@@ -99,9 +97,7 @@ class TestCFN(BaseTest):
             time.sleep(30)
 
         # deleted stacks must be referenced by StackId
-        stacks = client.describe_stacks(StackName=resources[0]["StackId"]).get(
-            "Stacks"
-        )
+        stacks = client.describe_stacks(StackName=resources[0]["StackId"]).get("Stacks")
         self.assertEqual(stacks[0].get("StackStatus"), "DELETE_COMPLETE")
 
     def test_query(self):

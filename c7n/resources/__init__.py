@@ -30,9 +30,7 @@ def load_resources(resource_types=('*',)):
 
 def should_load_provider(name, provider_types):
     global LOADED
-    if (name not in LOADED and
-        ('*' in provider_types or
-         name in provider_types)):
+    if name not in LOADED and ('*' in provider_types or name in provider_types):
         return True
     return False
 
@@ -50,7 +48,7 @@ def load_available(resources=True):
     for provider in PROVIDER_NAMES:
         try:
             load_providers((provider,))
-        except ImportError as e: # pragma: no cover
+        except ImportError as e:  # pragma: no cover
             continue
         else:
             found.append(provider)
@@ -67,26 +65,31 @@ def load_providers(provider_types):
     if should_load_provider('aws', provider_types):
         import c7n.resources.securityhub
         import c7n.resources.sfn
-        import c7n.resources.ssm # NOQA
+        import c7n.resources.ssm  # NOQA
 
     if should_load_provider('awscc', provider_types):
         from c7n_awscc.entry import initialize_awscc
+
         initialize_awscc()
 
     if should_load_provider('azure', provider_types):
         from c7n_azure.entry import initialize_azure
+
         initialize_azure()
 
     if should_load_provider('gcp', provider_types):
         from c7n_gcp.entry import initialize_gcp
+
         initialize_gcp()
 
     if should_load_provider('k8s', provider_types):
         from c7n_kube.entry import initialize_kube
+
         initialize_kube()
 
     if should_load_provider('openstack', provider_types):
         from c7n_openstack.entry import initialize_openstack
+
         initialize_openstack()
 
     if should_load_provider('c7n', provider_types):

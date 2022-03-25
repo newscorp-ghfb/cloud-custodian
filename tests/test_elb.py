@@ -8,7 +8,6 @@ from c7n.resources.elb import ELB, SetSslListenerPolicy
 
 
 class ELBTagTest(BaseTest):
-
     def test_elb_tag_and_remove(self):
         self.patch(ELB, "executor_factory", MainThreadExecutor)
         session_factory = self.replay_flight_data("test_elb_tag_and_remove")
@@ -29,11 +28,7 @@ class ELBTagTest(BaseTest):
         self.assertEqual(len(resources), 1)
         tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])[
             "TagDescriptions"
-        ][
-            0
-        ][
-            "Tags"
-        ]
+        ][0]["Tags"]
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertTrue("xyz" in tag_map)
 
@@ -51,11 +46,7 @@ class ELBTagTest(BaseTest):
         self.assertEqual(len(resources), 1)
         tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])[
             "TagDescriptions"
-        ][
-            0
-        ][
-            "Tags"
-        ]
+        ][0]["Tags"]
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertFalse("xyz" in tag_map)
 
@@ -96,15 +87,13 @@ class ELBTagTest(BaseTest):
         resources = policy.run()
 
         self.assertEqual(len(resources), 1)
-        tags = session_factory().client("elb").describe_tags(
-            LoadBalancerNames=["CloudCustodian"]
-        )[
-            "TagDescriptions"
-        ][
-            0
-        ][
-            "Tags"
-        ]
+        tags = (
+            session_factory()
+            .client("elb")
+            .describe_tags(LoadBalancerNames=["CloudCustodian"])["TagDescriptions"][0][
+                "Tags"
+            ]
+        )
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertTrue("custodian_next" in tag_map)
 
@@ -124,7 +113,6 @@ class ELBTagTest(BaseTest):
 
 
 class ELBInstance(BaseTest):
-
     def test_instance_filter(self):
         session_factory = self.replay_flight_data("test_elb_instance_filter")
         policy = self.load_policy(
@@ -143,7 +131,6 @@ class ELBInstance(BaseTest):
 
 
 class HealthCheckProtocolMismatchTest(BaseTest):
-
     def test_healthcheck_protocol_mismatch(self):
         session_factory = self.replay_flight_data("test_healthcheck_protocol_mismatch")
         policy = self.load_policy(
@@ -171,7 +158,6 @@ class HealthCheckProtocolMismatchTest(BaseTest):
 
 
 class SSLPolicyTest(BaseTest):
-
     def test_ssl_ciphers(self):
         session_factory = self.replay_flight_data("test_ssl_ciphers")
         policy = self.load_policy(
@@ -188,17 +174,25 @@ class SSLPolicyTest(BaseTest):
 
     def test_set_ssl_listener_policy_fail(self):
         session_factory = self.replay_flight_data("test_set_ssl_listener")
-        self.patch(SetSslListenerPolicy, 'process_elb', lambda self, client, elb: elb.xyz)
+        self.patch(
+            SetSslListenerPolicy, 'process_elb', lambda self, client, elb: elb.xyz
+        )
 
-        policy = self.load_policy({
-            "name": "test-set-ssl-listerner",
-            "resource": "elb",
-            "filters": [{'LoadBalancerName': 'test-elb'}],
-            "actions": [{
-                "type": "set-ssl-listener-policy",
-                "name": "testpolicy",
-                "attributes": ["AES128-SHA256", "Protocol-TLSv1"]}]},
-            session_factory=session_factory)
+        policy = self.load_policy(
+            {
+                "name": "test-set-ssl-listerner",
+                "resource": "elb",
+                "filters": [{'LoadBalancerName': 'test-elb'}],
+                "actions": [
+                    {
+                        "type": "set-ssl-listener-policy",
+                        "name": "testpolicy",
+                        "attributes": ["AES128-SHA256", "Protocol-TLSv1"],
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         self.assertRaises(AttributeError, policy.run)
 
     def test_set_ssl_listener_policy(self):
@@ -237,9 +231,7 @@ class SSLPolicyTest(BaseTest):
         )
         curr_pol = response_pol["LoadBalancerDescriptions"][0]["ListenerDescriptions"][
             0
-        ][
-            "PolicyNames"
-        ]
+        ]["PolicyNames"]
 
         curr_ciphers = []
         for x in response_ciphers["PolicyDescriptions"][0][
@@ -269,7 +261,9 @@ class SSLPolicyTest(BaseTest):
                         "type": "ssl-policy",
                         "matching": "^Protocol-",
                         "whitelist": [
-                            "Protocol-TLSv1", "Protocol-TLSv1.1", "Protocol-TLSv1.2"
+                            "Protocol-TLSv1",
+                            "Protocol-TLSv1.1",
+                            "Protocol-TLSv1.2",
                         ],
                     }
                 ],
@@ -308,7 +302,6 @@ class SSLPolicyTest(BaseTest):
 
 
 class TestDefaultVpc(BaseTest):
-
     def test_elb_default_vpc(self):
         session_factory = self.replay_flight_data("test_elb_default_vpc")
         p = self.load_policy(
@@ -327,7 +320,6 @@ class TestDefaultVpc(BaseTest):
 
 
 class TestModifyVpcSecurityGroupsAction(BaseTest):
-
     def test_elb_remove_security_groups(self):
         # Test conditions:
         #   - running ELB in default VPC
@@ -337,11 +329,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         client = session_factory().client("ec2")
         default_sg_id = client.describe_security_groups(GroupNames=["default"])[
             "SecurityGroups"
-        ][
-            0
-        ][
-            "GroupId"
-        ]
+        ][0]["GroupId"]
         p = self.load_policy(
             {
                 "name": "elb-modify-security-groups-filter",
@@ -445,11 +433,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
 
         default_sg_id = client.describe_security_groups(GroupNames=["default"])[
             "SecurityGroups"
-        ][
-            0
-        ][
-            "GroupId"
-        ]
+        ][0]["GroupId"]
 
         policy = self.load_policy(
             {
@@ -483,7 +467,6 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
 
 
 class TestElbLogging(BaseTest):
-
     def test_enable_s3_logging(self):
         session_factory = self.replay_flight_data("test_elb_enable_s3_logging")
         policy = self.load_policy(
@@ -552,12 +535,12 @@ class TestElbLogging(BaseTest):
 
 
 class TestElbIsLoggingFilter(BaseTest):
-    """ replicate
-        - name: elb-is-logging-to-bucket-test
-          resource: elb
-          filters:
-            - type: is-logging
-            bucket: elbv2logtest
+    """replicate
+    - name: elb-is-logging-to-bucket-test
+      resource: elb
+      filters:
+        - type: is-logging
+        bucket: elbv2logtest
     """
 
     def test_is_logging_to_bucket(self):
@@ -579,12 +562,12 @@ class TestElbIsLoggingFilter(BaseTest):
 
 
 class TestElbIsNotLoggingFilter(BaseTest):
-    """ replicate
-        - name: elb-is-not-logging-to-bucket-test
-          resource: elb
-          filters:
-            - type: is-not-logging
-            bucket: otherbucket
+    """replicate
+    - name: elb-is-not-logging-to-bucket-test
+      resource: elb
+      filters:
+        - type: is-not-logging
+        bucket: otherbucket
     """
 
     def test_is_logging_to_bucket(self):
@@ -606,16 +589,15 @@ class TestElbIsNotLoggingFilter(BaseTest):
 
 
 class TestElbAttributeFilter(BaseTest):
-
     def test_is_connection_draining(self):
-        """ replicate
-            - name: elb-is-connection-draining-test
-              resource: elb
-              filters:
-                - type: attributes
-                  key: ConnectionDraining.Enabled
-                  value: true
-                  op: eq
+        """replicate
+        - name: elb-is-connection-draining-test
+          resource: elb
+          filters:
+            - type: attributes
+              key: ConnectionDraining.Enabled
+              value: true
+              op: eq
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -623,12 +605,12 @@ class TestElbAttributeFilter(BaseTest):
                 "name": "elb-is-connection-draining-test",
                 "resource": "elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "ConnectionDraining.Enabled",
-                            "value": True,
-                            "op": "eq"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "ConnectionDraining.Enabled",
+                        "value": True,
+                        "op": "eq",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -645,14 +627,14 @@ class TestElbAttributeFilter(BaseTest):
         )
 
     def test_is_not_connection_draining(self):
-        """ replicate
-            - name: elb-is-not-connection-draining-test
-              resource: elb
-              filters:
-                - type: attributes
-                  key: ConnectionDraining.Enabled
-                  value: true
-                  op: eq
+        """replicate
+        - name: elb-is-not-connection-draining-test
+          resource: elb
+          filters:
+            - type: attributes
+              key: ConnectionDraining.Enabled
+              value: true
+              op: eq
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -664,7 +646,7 @@ class TestElbAttributeFilter(BaseTest):
                         "type": "attributes",
                         "key": "ConnectionDraining.Enabled",
                         "value": False,
-                        "op": "eq"
+                        "op": "eq",
                     }
                 ],
             },
@@ -678,14 +660,14 @@ class TestElbAttributeFilter(BaseTest):
         )
 
     def test_is_cross_zone_load_balancing(self):
-        """ replicate
-            - name: elb-is-cross-zone-load-balancing-test
-              resource: elb
-              filters:
-                - type: attributes
-                  key: CrossZoneLoadBalancing.Enabled
-                  value: true
-                  op: eq
+        """replicate
+        - name: elb-is-cross-zone-load-balancing-test
+          resource: elb
+          filters:
+            - type: attributes
+              key: CrossZoneLoadBalancing.Enabled
+              value: true
+              op: eq
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -697,7 +679,7 @@ class TestElbAttributeFilter(BaseTest):
                         "type": "attributes",
                         "key": "CrossZoneLoadBalancing.Enabled",
                         "value": True,
-                        "op": "eq"
+                        "op": "eq",
                     }
                 ],
             },
@@ -715,14 +697,14 @@ class TestElbAttributeFilter(BaseTest):
         )
 
     def test_is_not_cross_zone_load_balancing(self):
-        """ replicate
-            - name: elb-is-not-cross-zone-load-balancing
-              resource: elb
-              filters:
-                - type: attributes
-                  key: CrossZoneLoadBalancing.Enabled
-                  value: false
-                  op: eq
+        """replicate
+        - name: elb-is-not-cross-zone-load-balancing
+          resource: elb
+          filters:
+            - type: attributes
+              key: CrossZoneLoadBalancing.Enabled
+              value: false
+              op: eq
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -734,7 +716,7 @@ class TestElbAttributeFilter(BaseTest):
                         "type": "attributes",
                         "key": "CrossZoneLoadBalancing.Enabled",
                         "value": False,
-                        "op": "eq"
+                        "op": "eq",
                     }
                 ],
             },
@@ -748,14 +730,14 @@ class TestElbAttributeFilter(BaseTest):
         )
 
     def test_idle_time_greater_than_30(self):
-        """ replicate
-            - name: elb-idle-timeout-test
-              resource: elb
-              filters:
-                - type: attributes
-                  key: ConnectionSettings.IdleTimeout
-                  value: 30
-                  op: gt
+        """replicate
+        - name: elb-idle-timeout-test
+          resource: elb
+          filters:
+            - type: attributes
+              key: ConnectionSettings.IdleTimeout
+              value: 30
+              op: gt
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -767,7 +749,7 @@ class TestElbAttributeFilter(BaseTest):
                         "type": "attributes",
                         "key": "ConnectionSettings.IdleTimeout",
                         "value": 30,
-                        "op": "gt"
+                        "op": "gt",
                     }
                 ],
             },
@@ -785,14 +767,14 @@ class TestElbAttributeFilter(BaseTest):
         )
 
     def test_idle_time_less_than_30(self):
-        """ replicate
-            - name: elb-idle-timeout-test
-              resource: elb
-              filters:
-                - type: attributes
-                  key: ConnectionSettings.IdleTimeout
-                  value: 30
-                  op: lt
+        """replicate
+        - name: elb-idle-timeout-test
+          resource: elb
+          filters:
+            - type: attributes
+              key: ConnectionSettings.IdleTimeout
+              value: 30
+              op: lt
         """
         session_factory = self.replay_flight_data("test_elb_attribute_filter")
         policy = self.load_policy(
@@ -804,7 +786,7 @@ class TestElbAttributeFilter(BaseTest):
                         "type": "attributes",
                         "key": "ConnectionSettings.IdleTimeout",
                         "value": 30,
-                        "op": "lt"
+                        "op": "lt",
                     }
                 ],
             },

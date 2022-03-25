@@ -36,7 +36,7 @@ class ApiManagement(ArmResourceManager):
             'name',
             'location',
             'resourceGroup',
-            'sku.[name, capacity]'
+            'sku.[name, capacity]',
         )
         resource_type = 'Microsoft.ApiManagement/service'
 
@@ -72,8 +72,9 @@ class Resize(AzureBaseAction):
         required=['capacity', 'tier'],
         **{
             'capacity': {'type': 'number'},
-            'tier': {'enum': ['Developer', 'Basic', 'Standard', 'Premium']}
-        })
+            'tier': {'enum': ['Developer', 'Basic', 'Standard', 'Premium']},
+        }
+    )
 
     def __init__(self, data, manager=None):
         super(Resize, self).__init__(data, manager)
@@ -81,7 +82,9 @@ class Resize(AzureBaseAction):
         self.tier = self.data['tier']
 
     def _prepare_processing(self):
-        self.client = self.session.client('azure.mgmt.resource.ResourceManagementClient')
+        self.client = self.session.client(
+            'azure.mgmt.resource.ResourceManagementClient'
+        )
 
     def _process_resource(self, resource):
         resource['sku']['capacity'] = self.capacity
@@ -95,4 +98,6 @@ class Resize(AzureBaseAction):
         # create a GenericResource object with the required parameters
         generic_resource = GenericResource(sku=az_resource.sku)
 
-        self.client.resources.update_by_id(resource['id'], api_version, generic_resource)
+        self.client.resources.update_by_id(
+            resource['id'], api_version, generic_resource
+        )

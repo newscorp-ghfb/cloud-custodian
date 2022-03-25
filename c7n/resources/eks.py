@@ -4,8 +4,13 @@ from c7n.actions import Action
 from c7n.filters.vpc import SecurityGroupFilter, SubnetFilter, VpcFilter
 from c7n.manager import resources
 from c7n import tags, query
-from c7n.query import QueryResourceManager, TypeInfo, DescribeSource, \
-    ChildResourceManager, ChildDescribeSource
+from c7n.query import (
+    QueryResourceManager,
+    TypeInfo,
+    DescribeSource,
+    ChildResourceManager,
+    ChildDescribeSource,
+)
 from c7n.utils import local_session, type_schema, get_retry
 from botocore.waiter import WaiterModel, create_waiter_with_client
 from .aws import shape_validate
@@ -14,7 +19,6 @@ from .ecs import ContainerConfigSource
 
 @query.sources.register('describe-eks-nodegroup')
 class NodeGroupDescribeSource(ChildDescribeSource):
-
     def get_query(self):
         query = super(NodeGroupDescribeSource, self).get_query()
         query.capture_parent_id = True
@@ -25,17 +29,18 @@ class NodeGroupDescribeSource(ChildDescribeSource):
         client = local_session(self.manager.session_factory).client('eks')
         for cluster_name, nodegroup_name in resources:
             nodegroup = client.describe_nodegroup(
-                clusterName=cluster_name,
-                nodegroupName=nodegroup_name)['nodegroup']
+                clusterName=cluster_name, nodegroupName=nodegroup_name
+            )['nodegroup']
             if 'tags' in nodegroup:
-                nodegroup['Tags'] = [{'Key': k, 'Value': v} for k, v in nodegroup['tags'].items()]
+                nodegroup['Tags'] = [
+                    {'Key': k, 'Value': v} for k, v in nodegroup['tags'].items()
+                ]
             results.append(nodegroup)
         return results
 
 
 @resources.register('eks-nodegroup')
 class NodeGroup(ChildResourceManager):
-
     class resource_type(TypeInfo):
 
         service = 'eks'
@@ -66,15 +71,16 @@ class DeleteNodeGroup(Action):
         retry = get_retry(('Throttling',))
         for r in resources:
             try:
-                retry(client.delete_nodegroup,
-                      clusterName=r['clusterName'],
-                      nodegroupName=r['nodegroupName'])
+                retry(
+                    client.delete_nodegroup,
+                    clusterName=r['clusterName'],
+                    nodegroupName=r['nodegroupName'],
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue
 
 
 class EKSDescribeSource(DescribeSource):
-
     def augment(self, resources):
         resources = super().augment(resources)
         for r in resources:
@@ -90,7 +96,6 @@ class EKSConfigSource(ContainerConfigSource):
 
 @resources.register('eks')
 class EKS(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'eks'
         enum_spec = ('list_clusters', 'clusters', None)
@@ -101,10 +106,7 @@ class EKS(QueryResourceManager):
         date = 'createdAt'
         config_type = cfn_type = 'AWS::EKS::Cluster'
 
-    source_mapping = {
-        'config': EKSConfigSource,
-        'describe': EKSDescribeSource
-    }
+    source_mapping = {'config': EKSConfigSource, 'describe': EKSDescribeSource}
 
 
 @EKS.filter_registry.register('subnet')
@@ -136,7 +138,8 @@ class EKSTag(tags.Tag):
                 self.manager.retry(
                     client.tag_resource,
                     resourceArn=r['arn'],
-                    tags={t['Key']: t['Value'] for t in tags})
+                    tags={t['Key']: t['Value'] for t in tags},
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -154,8 +157,8 @@ class EKSRemoveTag(tags.RemoveTag):
         for r in resource_set:
             try:
                 self.manager.retry(
-                    client.untag_resource,
-                    resourceArn=r['arn'], tagKeys=tags)
+                    client.untag_resource, resourceArn=r['arn'], tagKeys=tags
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -169,12 +172,13 @@ class UpdateConfig(Action):
         'oneOf': [
             {'required': ['type', 'logging']},
             {'required': ['type', 'resourcesVpcConfig']},
-            {'required': ['type', 'logging', 'resourcesVpcConfig']}],
+            {'required': ['type', 'logging', 'resourcesVpcConfig']},
+        ],
         'properties': {
             'type': {'enum': ['update-config']},
             'logging': {'type': 'object'},
-            'resourcesVpcConfig': {'type': 'object'}
-        }
+            'resourcesVpcConfig': {'type': 'object'},
+        },
     }
 
     permissions = ('eks:UpdateClusterConfig',)
@@ -184,8 +188,7 @@ class UpdateConfig(Action):
         cfg = dict(self.data)
         cfg['name'] = 'validate'
         cfg.pop('type')
-        return shape_validate(
-            cfg, self.shape, self.manager.resource_type.service)
+        return shape_validate(cfg, self.shape, self.manager.resource_type.service)
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('eks')
@@ -199,7 +202,10 @@ class UpdateConfig(Action):
             client.update_cluster_config(name=r['name'], **params)
         if state_filtered:
             self.log.warning(
-                "Filtered %d of %d clusters due to state", state_filtered, len(resources))
+                "Filtered %d of %d clusters due to state",
+                state_filtered,
+                len(resources),
+            )
 
 
 @EKS.action_registry.register('delete')
@@ -219,13 +225,17 @@ class Delete(Action):
 
     def delete_associated(self, r, client):
         nodegroups = client.list_nodegroups(clusterName=r['name'])['nodegroups']
-        fargate_profiles = client.list_fargate_profiles(
-            clusterName=r['name'])['fargateProfileNames']
+        fargate_profiles = client.list_fargate_profiles(clusterName=r['name'])[
+            'fargateProfileNames'
+        ]
         waiters = []
         if nodegroups:
             for nodegroup in nodegroups:
                 self.manager.retry(
-                    client.delete_nodegroup, clusterName=r['name'], nodegroupName=nodegroup)
+                    client.delete_nodegroup,
+                    clusterName=r['name'],
+                    nodegroupName=nodegroup,
+                )
                 # Nodegroup supports parallel delete so process in parallel, check these later on
                 waiters.append({"clusterName": r['name'], "nodegroupName": nodegroup})
         if fargate_profiles:
@@ -233,10 +243,11 @@ class Delete(Action):
             for profile in fargate_profiles:
                 self.manager.retry(
                     client.delete_fargate_profile,
-                    clusterName=r['name'], fargateProfileName=profile)
+                    clusterName=r['name'],
+                    fargateProfileName=profile,
+                )
                 # Fargate profiles don't support parallel deletes so process serially
-                waiter.wait(
-                    clusterName=r['name'], fargateProfileName=profile)
+                waiter.wait(clusterName=r['name'], fargateProfileName=profile)
         if waiters:
             waiter = client.get_waiter('nodegroup_deleted')
             for w in waiters:
@@ -256,15 +267,17 @@ class Delete(Action):
                             "expected": "DELETE_FAILED",
                             "matcher": "path",
                             "state": "failure",
-                            "argument": "fargateprofile.status"
+                            "argument": "fargateprofile.status",
                         },
                         {
                             "expected": "ResourceNotFoundException",
                             "matcher": "error",
-                            "state": "success"
-                        }
-                    ]
+                            "state": "success",
+                        },
+                    ],
                 }
-            }
+            },
         }
-        return create_waiter_with_client("FargateProfileDeleted", WaiterModel(config), client)
+        return create_waiter_with_client(
+            "FargateProfileDeleted", WaiterModel(config), client
+        )

@@ -27,9 +27,5 @@ class ApplicationGateway(ArmResourceManager):
         service = 'azure.mgmt.network'
         client = 'NetworkManagementClient'
         enum_spec = ('application_gateways', 'list_all', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.Network/applicationGateways'

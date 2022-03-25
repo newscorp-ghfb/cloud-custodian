@@ -15,13 +15,14 @@ class SimpleWorkflowDomain(QueryResourceManager):
     class resource_type(TypeInfo):
         service = 'swf'
         arn_type = ''
-        enum_spec = ('list_domains', 'domainInfos', {'registrationStatus': 'REGISTERED'})
+        enum_spec = (
+            'list_domains',
+            'domainInfos',
+            {'registrationStatus': 'REGISTERED'},
+        )
         id = name = 'name'
         arn = 'arn'
         universal_taggable = object()
         permission_augment = ('swf:ListTagsForResource',)
 
-    source_mapping = {
-        'describe': DescribeSimpleWorkflow,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeSimpleWorkflow, 'config': ConfigSource}

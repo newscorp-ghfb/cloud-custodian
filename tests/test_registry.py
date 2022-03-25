@@ -6,7 +6,6 @@ from c7n.registry import PluginRegistry
 
 
 class RegistryTest(unittest.TestCase):
-
     def test_unregister(self):
 
         registry = PluginRegistry('dummy')

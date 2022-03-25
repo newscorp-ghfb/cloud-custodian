@@ -108,7 +108,6 @@ placebo.pill.deserialize = deserialize
 
 
 class BluePill(pill.Pill):
-
     def playback(self):
         super(BluePill, self).playback()
         self._avail = self.get_available()
@@ -136,7 +135,6 @@ class BluePill(pill.Pill):
 
 
 class ZippedPill(pill.Pill):
-
     def __init__(self, path, prefix=None, debug=False):
         super(ZippedPill, self).__init__(prefix, debug)
         self.path = path
@@ -195,7 +193,8 @@ class ZippedPill(pill.Pill):
             self.archive.read(response_file), object_hook=pill.deserialize
         )
         return (
-            pill.FakeHttpResponse(response_data["status_code"]), response_data["data"]
+            pill.FakeHttpResponse(response_data["status_code"]),
+            response_data["data"],
         )
 
     def get_new_file_path(self, service, operation):
@@ -245,13 +244,11 @@ def attach(session, data_path, prefix=None, debug=False):
 
 
 class RedPill(pill.Pill):
-
     def datetime_converter(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
 
-    def save_response(self, service, operation, response_data,
-                    http_response=200):
+    def save_response(self, service, operation, response_data, http_response=200):
         """
         Override to sanitize response metadata and account_ids
         """
@@ -266,8 +263,9 @@ class RedPill(pill.Pill):
         response_data = re.sub(r"\b\d{12}\b", ACCOUNT_ID, response_data)  # noqa
         response_data = json.loads(response_data, object_hook=deserialize)
 
-        super(RedPill, self).save_response(service, operation, response_data,
-                    http_response)
+        super(RedPill, self).save_response(
+            service, operation, response_data, http_response
+        )
 
 
 class PillTest(CustodianTestCore):
@@ -311,7 +309,6 @@ class PillTest(CustodianTestCore):
         self.addCleanup(self.cleanUp)
 
         class FakeFactory:
-
             def __call__(fake, region=None, assume=None):
                 new_session = None
                 # slightly experimental for test recording, using
@@ -322,13 +319,14 @@ class PillTest(CustodianTestCore):
                 if 0 and (assume is not False and fake.assume_role):
                     client = session.client('sts')
                     creds = client.assume_role(
-                        RoleArn=fake.assume_role,
-                        RoleSessionName='CustodianTest')['Credentials']
+                        RoleArn=fake.assume_role, RoleSessionName='CustodianTest'
+                    )['Credentials']
                     new_session = boto3.Session(
                         aws_access_key_id=creds['AccessKeyId'],
                         aws_secret_access_key=creds['SecretAccessKey'],
                         aws_session_token=creds['SessionToken'],
-                        region_name=region or fake.region or default_region)
+                        region_name=region or fake.region or default_region,
+                    )
                 elif region and region != default_region:
                     new_session = boto3.Session(region_name=region)
 

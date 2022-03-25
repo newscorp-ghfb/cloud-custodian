@@ -8,46 +8,67 @@ from .azure_common import BaseTest
 
 
 class ParentFilterTest(BaseTest):
-
     def test_schema(self):
-        self.assertTrue(self.load_policy({
-            'name': 'test-policy',
-            'resource': 'azure.keyvault-key',
-            'filters': [
-                {'type': 'parent',
-                 'filter': {
-                     'type': 'value',
-                     'key': 'name',
-                     'op': 'glob',
-                     'value': 'cctestkv*'
-                 }}]
-        }, validate=True))
+        self.assertTrue(
+            self.load_policy(
+                {
+                    'name': 'test-policy',
+                    'resource': 'azure.keyvault-key',
+                    'filters': [
+                        {
+                            'type': 'parent',
+                            'filter': {
+                                'type': 'value',
+                                'key': 'name',
+                                'op': 'glob',
+                                'value': 'cctestkv*',
+                            },
+                        }
+                    ],
+                },
+                validate=True,
+            )
+        )
 
-        self.assertTrue(self.load_policy({
-            'name': 'test-policy',
-            'resource': 'azure.cosmosdb-collection',
-            'filters': [
-                {'type': 'parent',
-                 'filter': {
-                     'type': 'value',
-                     'key': 'name',
-                     'op': 'glob',
-                     'value': 'cctestkv*'
-                 }}]
-        }, validate=True))
+        self.assertTrue(
+            self.load_policy(
+                {
+                    'name': 'test-policy',
+                    'resource': 'azure.cosmosdb-collection',
+                    'filters': [
+                        {
+                            'type': 'parent',
+                            'filter': {
+                                'type': 'value',
+                                'key': 'name',
+                                'op': 'glob',
+                                'value': 'cctestkv*',
+                            },
+                        }
+                    ],
+                },
+                validate=True,
+            )
+        )
 
     def test_verify_parent_filter(self):
-        p = self.load_policy({
-            'name': 'test-policy',
-            'resource': 'azure.keyvault-key',
-            'filters': [
-                {'type': 'parent',
-                 'filter': {
-                     'type': 'value',
-                     'key': 'name',
-                     'op': 'glob',
-                     'value': 'cctestkv*'
-                 }}]})
+        p = self.load_policy(
+            {
+                'name': 'test-policy',
+                'resource': 'azure.keyvault-key',
+                'filters': [
+                    {
+                        'type': 'parent',
+                        'filter': {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'glob',
+                            'value': 'cctestkv*',
+                        },
+                    }
+                ],
+            }
+        )
 
         self.assertEqual(len(p.resource_manager.filters), 1)
 

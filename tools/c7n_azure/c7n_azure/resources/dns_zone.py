@@ -33,5 +33,5 @@ class DnsZone(ArmResourceManager):
             'location',
             'resourceGroup',
             'properties.numberOfRecordSets',
-            'properties.nameServers'
+            'properties.nameServers',
         )

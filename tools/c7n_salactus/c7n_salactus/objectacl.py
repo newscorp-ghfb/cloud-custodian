@@ -26,7 +26,6 @@ class Permissions:
 
 
 class ObjectAclCheck:
-
     def __init__(self, data, record_users=False):
         self.data = data
         self.whitelist_accounts = set(data.get('whitelist-accounts', ()))
@@ -47,7 +46,8 @@ class ObjectAclCheck:
 
     def process_version(self, client, bucket_name, key):
         acl = client.get_object_acl(
-            Bucket=bucket_name, Key=key['Key'], VersionId=key['VersionId'])
+            Bucket=bucket_name, Key=key['Key'], VersionId=key['VersionId']
+        )
         acl.pop('ResponseMetadata')
         grants = self.check_grants(acl)
 
@@ -58,7 +58,7 @@ class ObjectAclCheck:
             'key': key['Key'],
             'version': key['VersionId'],
             'is_latest': key['IsLatest'],
-            'grants': grants
+            'grants': grants,
         }
         if self.data.get('report-only'):
             return result
@@ -74,6 +74,7 @@ class ObjectAclCheck:
             if 'ID' in grantee:
                 users[grantee['DisplayName']] = grantee['ID']
         from c7n_salactus.worker import connection
+
         connection.hmset('bucket-user', users)
 
     def check_grants(self, acl):

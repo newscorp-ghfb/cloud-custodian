@@ -24,7 +24,6 @@ SUBSCRIPTION_TYPE = '/subscriptions'
 
 
 class Deployment:
-
     def __init__(self, ctx):
         self.dry_run = ctx.parent.params.get('dry_run')
         self.deployment_name = ctx.parent.params.get('deployment_name')
@@ -67,11 +66,13 @@ class Deployment:
 
     def add_subscription_host(self, name, environment={}, secret_environment={}):
 
-        self.subscription_hosts.append({
-            'name': name,
-            'environment': environment,
-            'secretEnvironment': secret_environment,
-        })
+        self.subscription_hosts.append(
+            {
+                'name': name,
+                'environment': environment,
+                'secretEnvironment': secret_environment,
+            }
+        )
 
     def build_helm_command(self, values_file_path):
         command = 'helm upgrade --install --debug'
@@ -101,7 +102,6 @@ class Deployment:
 
 
 class SubscriptionDeployment(Deployment):
-
     def __init__(self, ctx, subscription_id=None):
         super(SubscriptionDeployment, self).__init__(ctx)
         self.subscription_id = subscription_id
@@ -114,13 +114,12 @@ class SubscriptionDeployment(Deployment):
             Deployment.sub_name_to_deployment_name(subscription.display_name),
             {
                 ENV_SUB_ID: self.subscription_id,
-                ENV_CONTAINER_QUEUE_NAME: 'c7n-{}'.format(self.subscription_id[-4:])
-            }
+                ENV_CONTAINER_QUEUE_NAME: 'c7n-{}'.format(self.subscription_id[-4:]),
+            },
         )
 
 
 class ManagementGroupDeployment(Deployment):
-
     def __init__(self, ctx, management_group_id=None):
         super(ManagementGroupDeployment, self).__init__(ctx)
         self.management_group_id = management_group_id
@@ -132,7 +131,8 @@ class ManagementGroupDeployment(Deployment):
     def _add_subscription_hosts(self):
         client = self.session.client('azure.mgmt.managementgroups.ManagementGroupsAPI')
         info = client.management_groups.get(
-            self.management_group_id, expand='children', recurse=True)
+            self.management_group_id, expand='children', recurse=True
+        )
         self._add_subscription_hosts_from_info(info)
 
     def _add_subscription_hosts_from_info(self, info):
@@ -142,7 +142,7 @@ class ManagementGroupDeployment(Deployment):
                 Deployment.sub_name_to_deployment_name(info.display_name),
                 {
                     ENV_SUB_ID: sub_id,
-                    ENV_CONTAINER_QUEUE_NAME: 'c7n-{}'.format(info.name[-4:])
+                    ENV_CONTAINER_QUEUE_NAME: 'c7n-{}'.format(info.name[-4:]),
                 },
             )
         elif info.type == MANAGEMENT_GROUP_TYPE and info.children:
@@ -156,7 +156,13 @@ class ManagementGroupDeployment(Deployment):
 @click.option('--helm-values-file', '-v', required=True)
 @click.option('--helm-set', '-s', multiple=True)
 @click.option('--dry-run/--no-dry-run', default=False)
-def cli(deployment_name, deployment_namespace, helm_values_file=None, helm_set=None, dry_run=False):
+def cli(
+    deployment_name,
+    deployment_namespace,
+    helm_values_file=None,
+    helm_set=None,
+    dry_run=False,
+):
     pass
 
 

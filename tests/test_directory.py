@@ -6,7 +6,6 @@ from .common import BaseTest, load_data
 
 
 class CloudDirectoryTest(BaseTest):
-
     def test_cloud_directory(self):
         session_factory = self.replay_flight_data("test_cloud_directory")
         client = session_factory().client("clouddirectory")
@@ -21,9 +20,7 @@ class CloudDirectoryTest(BaseTest):
 
         published_schema = client.publish_schema(
             DevelopmentSchemaArn=schema_arn, Version="1"
-        ).get(
-            "PublishedSchemaArn"
-        )
+        ).get("PublishedSchemaArn")
         self.addCleanup(client.delete_schema, SchemaArn=published_schema)
 
         dir_info = client.create_directory(Name="c7n-test", SchemaArn=published_schema)
@@ -51,7 +48,6 @@ class CloudDirectoryTest(BaseTest):
 
 
 class DirectoryTests(BaseTest):
-
     def test_directory_tag(self):
         session_factory = self.replay_flight_data("test_directory_tag")
         client = session_factory().client("ds")

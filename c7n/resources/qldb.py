@@ -11,14 +11,12 @@ from c7n.utils import local_session, type_schema
 
 
 class DescribeQLDB(DescribeSource):
-
     def augment(self, resources):
         return universal_augment(self.manager, super().augment(resources))
 
 
 @resources.register('qldb')
 class QLDB(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'qldb'
         enum_spec = ('list_ledgers', 'Ledgers', None)
@@ -29,10 +27,7 @@ class QLDB(QueryResourceManager):
         universal_taggable = object()
         cfn_type = config_type = 'AWS::QLDB::Ledger'
 
-    source_mapping = {
-        'describe': DescribeQLDB,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeQLDB, 'config': ConfigSource}
 
 
 @QLDB.action_registry.register('delete')
@@ -47,9 +42,7 @@ class Delete(Action):
         for r in resources:
             if r.get('DeletionProtection') and self.data.get('force'):
                 try:
-                    client.update_ledger(
-                        Name=r['Name'],
-                        DeletionProtection=False)
+                    client.update_ledger(Name=r['Name'], DeletionProtection=False)
                 except client.exceptions.ResourceNotFoundException:  # pragma: no cover
                     continue
             elif r.get('DeletionProtection'):
@@ -60,6 +53,10 @@ class Delete(Action):
             except client.exceptions.ResourceNotFoundException:  # pragma: no cover
                 continue
         if protected:
-            self.log.warning((
-                'qldb delete found %d delete-protected resources, '
-                'configure force: true to delete'), protected)
+            self.log.warning(
+                (
+                    'qldb delete found %d delete-protected resources, '
+                    'configure force: true to delete'
+                ),
+                protected,
+            )

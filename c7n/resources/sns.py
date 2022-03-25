@@ -15,13 +15,13 @@ from c7n.resources.securityhub import PostFinding
 
 
 class DescribeTopic(DescribeSource):
-
     def augment(self, resources):
         client = local_session(self.manager.session_factory).client('sns')
 
         def _augment(r):
-            tags = self.manager.retry(client.list_tags_for_resource,
-                ResourceArn=r['TopicArn'])['Tags']
+            tags = self.manager.retry(
+                client.list_tags_for_resource, ResourceArn=r['TopicArn']
+            )['Tags']
             r['Tags'] = tags
             return r
 
@@ -32,14 +32,12 @@ class DescribeTopic(DescribeSource):
 
 @resources.register('sns')
 class SNS(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sns'
         arn_type = ''
         arn_service = 'sns'
         enum_spec = ('list_topics', 'Topics', None)
-        detail_spec = (
-            'get_topic_attributes', 'TopicArn', 'TopicArn', 'Attributes')
+        detail_spec = ('get_topic_attributes', 'TopicArn', 'TopicArn', 'Attributes')
         id = 'TopicArn'
         name = 'DisplayName'
         dimension = 'TopicName'
@@ -49,14 +47,11 @@ class SNS(QueryResourceManager):
             'DisplayName',
             'SubscriptionsConfirmed',
             'SubscriptionsPending',
-            'SubscriptionsDeleted'
+            'SubscriptionsDeleted',
         )
 
     permissions = ('sns:ListTagsForResource',)
-    source_mapping = {
-        'describe': DescribeTopic,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeTopic, 'config': ConfigSource}
 
 
 SNS.filter_registry.register('marked-for-op', TagActionFilter)
@@ -70,10 +65,14 @@ class SNSPostFinding(PostFinding):
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
         payload.update(
-            self.filter_empty({
-                'KmsMasterKeyId': r.get('KmsMasterKeyId'),
-                'Owner': r['Owner'],
-                'TopicName': r['TopicArn'].rsplit(':', 1)[-1]}))
+            self.filter_empty(
+                {
+                    'KmsMasterKeyId': r.get('KmsMasterKeyId'),
+                    'Owner': r['Owner'],
+                    'TopicName': r['TopicArn'].rsplit(':', 1)[-1],
+                }
+            )
+        )
         return envelope
 
 
@@ -101,9 +100,7 @@ class TagTopic(Tag):
     def process_resource_set(self, client, resources, new_tags):
         for r in resources:
             try:
-                client.tag_resource(
-                    ResourceArn=r['TopicArn'],
-                    Tags=new_tags)
+                client.tag_resource(ResourceArn=r['TopicArn'], Tags=new_tags)
             except client.exceptions.ResourceNotFound:
                 continue
 
@@ -157,7 +154,6 @@ class MarkTopicForOp(TagDelayedAction):
 
 
 class SNSPolicyChecker(PolicyChecker):
-
     @property
     def allowed_endpoints(self):
         return self.checker_config.get('allowed_endpoints', ())
@@ -213,7 +209,7 @@ class SNSCrossAccount(CrossAccountAccessFilter):
         "sms",
         "sqs",
         "application",
-        "lambda"
+        "lambda",
     )
 
     schema = type_schema(
@@ -221,8 +217,11 @@ class SNSCrossAccount(CrossAccountAccessFilter):
         rinherit=CrossAccountAccessFilter.schema,
         whitelist_endpoints={'type': 'array', 'items': {'type': 'string'}},
         whitelist_endpoints_from=ValuesFrom.schema,
-        whitelist_protocols={'type': 'array', 'items': {'type': 'string', 'enum': valid_protocols}},
-        whitelist_protocols_from=ValuesFrom.schema
+        whitelist_protocols={
+            'type': 'array',
+            'items': {'type': 'string', 'enum': valid_protocols},
+        },
+        whitelist_protocols_from=ValuesFrom.schema,
     )
 
     permissions = ('sns:GetTopicAttributes',)
@@ -234,10 +233,7 @@ class SNSCrossAccount(CrossAccountAccessFilter):
         self.protocols = self.get_protocols()
         self.checker_config = getattr(self, 'checker_config', None) or {}
         self.checker_config.update(
-            {
-                'allowed_endpoints': self.endpoints,
-                'allowed_protocols': self.protocols
-            }
+            {'allowed_endpoints': self.endpoints, 'allowed_protocols': self.protocols}
         )
         return super(SNSCrossAccount, self).process(resources, event)
 
@@ -285,8 +281,7 @@ class RemovePolicyStatement(RemovePolicyBase):
             try:
                 results += filter(None, [self.process_resource(client, r)])
             except Exception:
-                self.log.exception(
-                    "Error processing sns:%s", r['TopicArn'])
+                self.log.exception("Error processing sns:%s", r['TopicArn'])
         return results
 
     def process_resource(self, client, resource):
@@ -296,7 +291,8 @@ class RemovePolicyStatement(RemovePolicyBase):
 
         p = json.loads(resource['Policy'])
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
 
         if not found:
             return
@@ -304,11 +300,13 @@ class RemovePolicyStatement(RemovePolicyBase):
         client.set_topic_attributes(
             TopicArn=resource['TopicArn'],
             AttributeName='Policy',
-            AttributeValue=json.dumps(p)
+            AttributeValue=json.dumps(p),
         )
-        return {'Name': resource['TopicArn'],
-                'State': 'PolicyRemoved',
-                'Statements': found}
+        return {
+            'Name': resource['TopicArn'],
+            'State': 'PolicyRemoved',
+            'Statements': found,
+        }
 
 
 @SNS.action_registry.register('modify-policy')
@@ -324,7 +322,8 @@ class ModifyPolicyStatement(ModifyPolicyBase):
             policy_statements = policy.setdefault('Statement', [])
 
             new_policy, removed = self.remove_statements(
-                policy_statements, r, CrossAccountAccessFilter.annotation_key)
+                policy_statements, r, CrossAccountAccessFilter.annotation_key
+            )
             if new_policy is None:
                 new_policy = policy_statements
             new_policy, added = self.add_statements(new_policy)
@@ -335,13 +334,13 @@ class ModifyPolicyStatement(ModifyPolicyBase):
             results += {
                 'Name': r['TopicArn'],
                 'State': 'PolicyModified',
-                'Statements': new_policy
+                'Statements': new_policy,
             }
             policy['Statement'] = new_policy
             client.set_topic_attributes(
                 TopicArn=r['TopicArn'],
                 AttributeName='Policy',
-                AttributeValue=json.dumps(policy)
+                AttributeValue=json.dumps(policy),
             )
         return results
 
@@ -389,12 +388,13 @@ class SetEncryption(BaseAction):
     """
 
     schema = type_schema(
-        'set-encryption',
-        enabled={'type': 'boolean'},
-        key={'type': 'string'}
+        'set-encryption', enabled={'type': 'boolean'}, key={'type': 'string'}
     )
 
-    permissions = ('sns:SetTopicAttributes', 'kms:DescribeKey',)
+    permissions = (
+        'sns:SetTopicAttributes',
+        'kms:DescribeKey',
+    )
 
     def process(self, resources):
         sns = local_session(self.manager.session_factory).client('sns')
@@ -408,7 +408,7 @@ class SetEncryption(BaseAction):
             sns.set_topic_attributes(
                 TopicArn=r['TopicArn'],
                 AttributeName='KmsMasterKeyId',
-                AttributeValue=key
+                AttributeValue=key,
             )
         return resources
 
@@ -446,7 +446,6 @@ class DeleteTopic(BaseAction):
 
 @resources.register('sns-subscription')
 class SNSSubscription(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sns'
         enum_spec = ('list_subscriptions', 'Subscriptions', None)
@@ -458,7 +457,7 @@ class SNSSubscription(QueryResourceManager):
             'Owner',
             'Protocol',
             'Endpoint',
-            'TopicArn'
+            'TopicArn',
         )
 
 
@@ -487,8 +486,9 @@ class SubscriptionDeleteAction(BaseAction):
     permissions = ("sns:Unsubscribe",)
 
     def process(self, subscriptions):
-        client = local_session(
-            self.manager.session_factory).client(self.manager.get_model().service)
+        client = local_session(self.manager.session_factory).client(
+            self.manager.get_model().service
+        )
 
         for s in subscriptions:
             self.process_subscription(client, s)
@@ -497,5 +497,7 @@ class SubscriptionDeleteAction(BaseAction):
         # Can't delete a pending subscription
         if subscription['SubscriptionArn'] != 'PendingConfirmation':
             self.manager.retry(
-                client.unsubscribe, SubscriptionArn=subscription['SubscriptionArn'],
-                ignore_err_codes=('NotFoundException',))
+                client.unsubscribe,
+                SubscriptionArn=subscription['SubscriptionArn'],
+                ignore_err_codes=('NotFoundException',),
+            )

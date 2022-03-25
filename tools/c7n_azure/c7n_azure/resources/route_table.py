@@ -31,6 +31,6 @@ class RouteTable(ArmResourceManager):
             'name',
             'location',
             'resourceGroup',
-            'properties.subnets[].id'
+            'properties.subnets[].id',
         )
         resource_type = 'Microsoft.Network/routeTables'

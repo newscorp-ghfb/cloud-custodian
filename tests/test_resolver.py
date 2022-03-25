@@ -16,7 +16,6 @@ from c7n.resolver import ValuesFrom, URIResolver
 
 
 class FakeCache:
-
     def __init__(self):
         self.state = {}
         self.gets = 0
@@ -32,7 +31,6 @@ class FakeCache:
 
 
 class FakeResolver:
-
     def __init__(self, contents):
         if isinstance(contents, bytes):
             contents = contents.decode("utf8")
@@ -43,7 +41,6 @@ class FakeResolver:
 
 
 class ResolverTest(BaseTest):
-
     def test_resolve_s3(self):
         session_factory = self.replay_flight_data("test_s3_resolver")
         session = session_factory()
@@ -65,7 +62,9 @@ class ResolverTest(BaseTest):
         uri = "s3://%s/resource.json?RequestPayer=requestor" % bname
         data = resolver.resolve(uri)
         self.assertEqual(content, data)
-        self.assertEqual(list(cache.state.keys()), [pickle.dumps(("uri-resolver", uri))])
+        self.assertEqual(
+            list(cache.state.keys()), [pickle.dumps(("uri-resolver", uri))]
+        )
 
     def test_handle_content_encoding(self):
         session_factory = self.replay_flight_data("test_s3_resolver")
@@ -83,7 +82,9 @@ class ResolverTest(BaseTest):
         content = json.dumps({"universe": {"galaxy": {"system": "sun"}}})
         cache = FakeCache()
         resolver = URIResolver(None, cache)
-        with tempfile.NamedTemporaryFile(mode="w+", dir=os.getcwd(), delete=False) as fh:
+        with tempfile.NamedTemporaryFile(
+            mode="w+", dir=os.getcwd(), delete=False
+        ) as fh:
             self.addCleanup(os.unlink, fh.name)
             fh.write(content)
             fh.flush()
@@ -91,7 +92,6 @@ class ResolverTest(BaseTest):
 
 
 class UrlValueTest(BaseTest):
-
     def setUp(self):
         self.old_dir = os.getcwd()
         os.chdir(tempfile.gettempdir())
@@ -156,9 +156,7 @@ class UrlValueTest(BaseTest):
             writer = csv.writer(out)
             writer.writerows([range(5) for r in range(5)])
         with open("test_expr.csv", "rb") as out:
-            values = self.get_values_from(
-                {"url": "sun.csv", "expr": "DNE"}, out.read()
-            )
+            values = self.get_values_from({"url": "sun.csv", "expr": "DNE"}, out.read())
         os.remove("test_expr.csv")
         self.assertEqual(values.get_values(), None)
 

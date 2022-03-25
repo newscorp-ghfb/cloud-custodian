@@ -9,29 +9,25 @@ from c7n_azure.utils import ResourceIdParser
 
 
 class RecordSetTest(BaseTest):
-
     def test_record_set_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'record-set-policy',
-                'resource': 'azure.recordset'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'record-set-policy', 'resource': 'azure.recordset'},
+                validate=True,
+            )
             self.assertTrue(p)
 
     @arm_template('dns.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-find-by-name',
-            'resource': 'azure.recordset',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'op': 'eq',
-                    'value': 'www'
-                }
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-find-by-name',
+                'resource': 'azure.recordset',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'www'}
+                ],
+            }
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -39,11 +35,14 @@ class RecordSetTest(BaseTest):
 
 
 class DeleteRecordSetTest(BaseTest):
-
     @classmethod
     def setUpClass(cls, *args, **kwargs):
         super(DeleteRecordSetTest, cls).setUpClass(*args, **kwargs)
-        cls.client = local_session(Session).client('azure.mgmt.dns.DnsManagementClient').record_sets
+        cls.client = (
+            local_session(Session)
+            .client('azure.mgmt.dns.DnsManagementClient')
+            .record_sets
+        )
 
     def tearDown(self, *args, **kwargs):
         super(DeleteRecordSetTest, self).tearDown(*args, **kwargs)
@@ -64,11 +63,7 @@ class DeleteRecordSetTest(BaseTest):
             record_type=rs_type,
             parameters={
                 'ttl': rs_ttl,
-                'arecords': [
-                    {
-                        'ipv4_address': rs_arecord_ipaddr
-                    }
-                ]
+                'arecords': [{'ipv4_address': rs_arecord_ipaddr}],
             },
         )
 
@@ -77,23 +72,21 @@ class DeleteRecordSetTest(BaseTest):
 
         record_set_name = 'deleteme'
 
-        p = self.load_policy({
-            'name': 'test-delete-a-record-set',
-            'resource': 'azure.recordset',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'op': 'eq',
-                    'value': record_set_name
-                }
-            ],
-            'actions': [
-                {
-                    'type': 'delete'
-                }
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-delete-a-record-set',
+                'resource': 'azure.recordset',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value': record_set_name,
+                    }
+                ],
+                'actions': [{'type': 'delete'}],
+            }
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -107,6 +100,8 @@ class DeleteRecordSetTest(BaseTest):
         self._assert_record_set_not_present(record_set_name, rg, zone)
 
     def _assert_record_set_not_present(self, name, resource_group, dns_zone):
-        record_sets = DeleteRecordSetTest.client.list_by_dns_zone(resource_group, dns_zone)
+        record_sets = DeleteRecordSetTest.client.list_by_dns_zone(
+            resource_group, dns_zone
+        )
         record_set = next((rs for rs in record_sets if rs.name == name), None)
         self.assertIsNone(record_set)

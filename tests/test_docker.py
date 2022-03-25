@@ -169,7 +169,9 @@ def test_cli_providers_available():
 )
 def test_cli_version_debug():
     client = docker.from_env()
-    output = client.containers.run(CUSTODIAN_IMAGE, "version --debug", stderr=True).decode('utf8')
+    output = client.containers.run(
+        CUSTODIAN_IMAGE, "version --debug", stderr=True
+    ).decode('utf8')
     assert "Docker: True" in output
     assert "boto3==" in output
 

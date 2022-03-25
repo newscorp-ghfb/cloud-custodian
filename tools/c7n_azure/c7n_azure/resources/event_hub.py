@@ -38,14 +38,13 @@ class EventHub(ArmResourceManager):
             'location',
             'resourceGroup',
             'sku.name',
-            'properties.isAutoInflateEnabled'
+            'properties.isAutoInflateEnabled',
         )
         resource_type = 'Microsoft.EventHub/namespaces'
 
 
 @EventHub.filter_registry.register('firewall-rules')
 class EventHubFirewallRulesFilter(FirewallRulesFilter):
-
     def __init__(self, data, manager=None):
         super(EventHubFirewallRulesFilter, self).__init__(data, manager)
         self.client = None
@@ -56,8 +55,8 @@ class EventHubFirewallRulesFilter(FirewallRulesFilter):
 
     def _query_rules(self, resource):
         query = self.client.namespaces.get_network_rule_set(
-            resource['resourceGroup'],
-            resource['name'])
+            resource['resourceGroup'], resource['name']
+        )
 
         resource_rules = IPSet([r.ip_mask for r in query.ip_rules])
 

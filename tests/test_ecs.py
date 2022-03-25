@@ -10,61 +10,61 @@ from c7n.exceptions import PolicyExecutionError
 
 
 class TestEcsService(BaseTest):
-
     def test_ecs_cluster_tag_augment(self):
-        session_factory = self.replay_flight_data(
-            'test_ecs_cluster_tag_augment')
-        p = self.load_policy({
-            'name': 'ctags', 'resource': 'ecs',
-            'filters': [{'tag:Data': 'Magic'}]},
-            session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_ecs_cluster_tag_augment')
+        p = self.load_policy(
+            {'name': 'ctags', 'resource': 'ecs', 'filters': [{'tag:Data': 'Magic'}]},
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
             resources[0]['Tags'],
-            [{'Key': 'Env', 'Value': 'Dev'},
-             {'Key': 'Data', 'Value': 'Magic'}])
+            [{'Key': 'Env', 'Value': 'Dev'}, {'Key': 'Data', 'Value': 'Magic'}],
+        )
 
     def test_ecs_service_config(self):
-        session_factory = self.replay_flight_data(
-            'test_ecs_service_config')
-        p = self.load_policy({
-            'name': 'ctags', 'resource': 'ecs-service', 'source': 'config'},
-            session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_ecs_service_config')
+        p = self.load_policy(
+            {'name': 'ctags', 'resource': 'ecs-service', 'source': 'config'},
+            session_factory=session_factory,
+        )
         resources = p.run()
         assert len(resources) == 1
         assert resources[0]['name'] == 'queue-processor'
         assert resources[0]['clusterArn'].endswith('cluster/dev')
 
     def test_ecs_service_tag_augment(self):
-        session_factory = self.replay_flight_data(
-            'test_ecs_service_tag_augment')
-        p = self.load_policy({
-            'name': 'ctags', 'resource': 'ecs-service'},
-            session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_ecs_service_tag_augment')
+        p = self.load_policy(
+            {'name': 'ctags', 'resource': 'ecs-service'},
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]['Tags'],
-            [{'Key': 'Name', 'Value': 'Dev'}])
+        self.assertEqual(resources[0]['Tags'], [{'Key': 'Name', 'Value': 'Dev'}])
 
     def test_ecs_service_by_arn(self):
         session_factory = self.replay_flight_data('test_ecs_service_by_arn')
 
-        p = self.load_policy({
-            'name': 'ecs-svc', 'resource': 'ecs-service'},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {'name': 'ecs-svc', 'resource': 'ecs-service'},
+            session_factory=session_factory,
+        )
         svcs = p.resource_manager.get_resources(
-            ["arn:aws:ecs:us-east-1:644160558196:service/test/test-no-delete"])
+            ["arn:aws:ecs:us-east-1:644160558196:service/test/test-no-delete"]
+        )
         self.assertEqual(len(svcs), 1)
         self.assertEqual(
             {t['Key']: t['Value'] for t in svcs[0]['Tags']},
-            {'Env': 'Dev', 'Owner': '1'})
+            {'Env': 'Dev', 'Owner': '1'},
+        )
 
         self.assertRaises(
             PolicyExecutionError,
             p.resource_manager.get_resources,
-            ["arn:aws:ecs:us-east-1:644160558196:service/test-no-delete"])
+            ["arn:aws:ecs:us-east-1:644160558196:service/test-no-delete"],
+        )
 
     def test_ecs_service_resource(self):
         session_factory = self.replay_flight_data("test_ecs_service")
@@ -107,8 +107,10 @@ class TestEcsService(BaseTest):
                 "name": "all-ecs-to-update",
                 "resource": "ecs-service",
                 "filters": [
-                    {"networkConfiguration.awsvpcConfiguration.assignPublicIp": "ENABLED"},
-                    {"serviceName": test_service_name}
+                    {
+                        "networkConfiguration.awsvpcConfiguration.assignPublicIp": "ENABLED"
+                    },
+                    {"serviceName": test_service_name},
                 ],
                 "actions": [
                     {
@@ -119,7 +121,7 @@ class TestEcsService(BaseTest):
                                     'assignPublicIp': 'DISABLED',
                                 }
                             },
-                        }
+                        },
                     }
                 ],
             },
@@ -131,22 +133,26 @@ class TestEcsService(BaseTest):
         client = session_factory().client("ecs")
         svc_current = client.describe_services(
             cluster="arn:aws:ecs:us-east-1:644160558196:cluster/test-cluster",
-            services=[test_service_name]
+            services=[test_service_name],
         )["services"][0]
-        self.assertEqual(svc_current['networkConfiguration'][
-            'awsvpcConfiguration']['assignPublicIp'], 'DISABLED')
+        self.assertEqual(
+            svc_current['networkConfiguration']['awsvpcConfiguration'][
+                'assignPublicIp'
+            ],
+            'DISABLED',
+        )
 
     def test_ecs_service_autoscaling_offhours(self):
-        session_factory = self.replay_flight_data("test_ecs_service_autoscaling_offhours")
+        session_factory = self.replay_flight_data(
+            "test_ecs_service_autoscaling_offhours"
+        )
         test_service_name = 'custodian-service-autoscaling-test'
 
         p = self.load_policy(
             {
                 "name": "all-ecs-to-autoscaling",
                 "resource": "ecs-service",
-                "filters": [
-                    {"serviceName": test_service_name}
-                ],
+                "filters": [{"serviceName": test_service_name}],
                 "actions": [
                     {
                         'type': 'resize',
@@ -165,21 +171,21 @@ class TestEcsService(BaseTest):
         client = session_factory().client("ecs")
         svc_current = client.describe_services(
             cluster="arn:aws:ecs:us-east-1:644160558196:cluster/test-cluster",
-            services=[test_service_name]
+            services=[test_service_name],
         )["services"][0]
         self.assertEqual(svc_current['desiredCount'], 0)
 
     def test_ecs_service_autoscaling_onhours(self):
-        session_factory = self.replay_flight_data("test_ecs_service_autoscaling_onhours")
+        session_factory = self.replay_flight_data(
+            "test_ecs_service_autoscaling_onhours"
+        )
         test_service_name = 'custodian-service-autoscaling-test'
 
         p = self.load_policy(
             {
                 "name": "all-ecs-to-autoscaling",
                 "resource": "ecs-service",
-                "filters": [
-                    {"serviceName": test_service_name}
-                ],
+                "filters": [{"serviceName": test_service_name}],
                 "actions": [
                     {
                         'type': 'resize',
@@ -196,7 +202,7 @@ class TestEcsService(BaseTest):
         client = session_factory().client("ecs")
         svc_current = client.describe_services(
             cluster="arn:aws:ecs:us-east-1:644160558196:cluster/test-cluster",
-            services=[test_service_name]
+            services=[test_service_name],
         )["services"][0]
         self.assertEqual(svc_current['desiredCount'], 1)
 
@@ -220,11 +226,7 @@ class TestEcsService(BaseTest):
         client = session_factory().client("ecs")
         svc_current = client.describe_services(
             cluster=svc["clusterArn"], services=[svc["serviceName"]]
-        )[
-            "services"
-        ][
-            0
-        ]
+        )["services"][0]
         self.assertEqual(svc_current["serviceArn"], svc["serviceArn"])
         self.assertNotEqual(svc_current["status"], svc["status"])
 
@@ -252,17 +254,24 @@ class TestEcsService(BaseTest):
 
     def test_ecs_service_taggable(self):
         services = [
-            {"serviceArn": "arn:aws:ecs:us-east-1:644160558196:service/test/test-yes-tag",
-             "serviceName": "test-yes-tag",
-             "clusterArn": "arn:aws:ecs:us-east-1:644160558196:cluster/test"},
-            {"serviceArn": "arn:aws:ecs:us-east-1:644160558196:service/test-no-tag",
-             "serviceName": "test-no-tag",
-             "clusterArn": "arn:aws:ecs:us-east-1:644160558196:cluster/test"}]
-        p = self.load_policy({
-            "name": "ecs-service-taggable",
-            "resource": "ecs-service",
-            "filters": [
-                {"type": "taggable", "state": True}]})
+            {
+                "serviceArn": "arn:aws:ecs:us-east-1:644160558196:service/test/test-yes-tag",
+                "serviceName": "test-yes-tag",
+                "clusterArn": "arn:aws:ecs:us-east-1:644160558196:cluster/test",
+            },
+            {
+                "serviceArn": "arn:aws:ecs:us-east-1:644160558196:service/test-no-tag",
+                "serviceName": "test-no-tag",
+                "clusterArn": "arn:aws:ecs:us-east-1:644160558196:cluster/test",
+            },
+        ]
+        p = self.load_policy(
+            {
+                "name": "ecs-service-taggable",
+                "resource": "ecs-service",
+                "filters": [{"type": "taggable", "state": True}],
+            }
+        )
         resources = p.resource_manager.filter_resources(services)
         self.assertEqual(len(resources), 1)
         self.assertTrue(resources[0]['serviceName'], 'test-yes-tag')
@@ -273,13 +282,7 @@ class TestEcsService(BaseTest):
             {
                 "name": "ecs-service-subnets",
                 "resource": "ecs-service",
-                "filters": [
-                    {
-                        "type": "subnet",
-                        "key": "tag:Name",
-                        "value": "implied"
-                    }
-                ],
+                "filters": [{"type": "subnet", "key": "tag:Name", "value": "implied"}],
             },
             session_factory=session_factory,
         )
@@ -289,7 +292,6 @@ class TestEcsService(BaseTest):
 
 
 class TestEcsTaskDefinition(BaseTest):
-
     def test_task_definition_resource(self):
         session_factory = self.replay_flight_data("test_ecs_task_def")
         p = self.load_policy(
@@ -323,10 +325,11 @@ class TestEcsTaskDefinition(BaseTest):
             resources[0]["containerDefinitions"][0]["image"], "postgres:latest"
         )
         self.assertEqual(resources[0]["status"], "ACTIVE")
-        arns = session_factory().client("ecs").list_task_definitions(
-            familyPrefix="launch-me", status="ACTIVE"
-        ).get(
-            "taskDefinitionArns"
+        arns = (
+            session_factory()
+            .client("ecs")
+            .list_task_definitions(familyPrefix="launch-me", status="ACTIVE")
+            .get("taskDefinitionArns")
         )
         self.assertEqual(arns, [])
 
@@ -353,22 +356,17 @@ class TestEcsTaskDefinition(BaseTest):
         )
 
     def test_ecs_task_def_tags(self):
-        session_factory = self.replay_flight_data(
-            "test_ecs_task_def_tags"
-        )
+        session_factory = self.replay_flight_data("test_ecs_task_def_tags")
         arn = "arn:aws:ecs:us-east-1:644160558196:task-definition/c7n:1"
         p = self.load_policy(
             {
                 "name": "tag-ecs-task-def",
                 "resource": "ecs-task-definition",
-                "filters": [
-                    {"taskDefinitionArn": arn},
-                    {"tag:Role": "present"}
-                ],
+                "filters": [{"taskDefinitionArn": arn}, {"tag:Role": "present"}],
                 "actions": [
                     {"type": "tag", "key": "TestKey", "value": "TestValue"},
                     {"type": "tag", "key": "c7n-tag", "value": "present"},
-                    {"type": "remove-tag", "tags": ["Role"]}
+                    {"type": "remove-tag", "tags": ["Role"]},
                 ],
             },
             session_factory=session_factory,
@@ -377,9 +375,12 @@ class TestEcsTaskDefinition(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client("ecs")
-        tags = {t['key']: t['value'] for t in
-                client.list_tags_for_resource(
-                    resourceArn=resources[0]["taskDefinitionArn"]).get("tags")}
+        tags = {
+            t['key']: t['value']
+            for t in client.list_tags_for_resource(
+                resourceArn=resources[0]["taskDefinitionArn"]
+            ).get("tags")
+        }
         self.assertEqual(tags, {"TestKey": "TestValue", "c7n-tag": "present"})
 
     def test_ecs_task_def_config(self):
@@ -389,55 +390,65 @@ class TestEcsTaskDefinition(BaseTest):
                 "name": "ecs-task-def-config-tag",
                 "resource": "ecs-task-definition",
                 "source": "config",
-                "filters": [
-                    {"tag:test": "name"}
-                ],
-                "actions": [
-                    {"type": "remove-tag", "tags": ["test"]}
-                ],
+                "filters": [{"tag:test": "name"}],
+                "actions": [{"type": "remove-tag", "tags": ["test"]}],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         assert resources[0]['containerDefinitions'] == [
-            {'command': ['/bin/sh -c "echo \'<html> <head> '
-                         '<title>Amazon ECS Sample App</title> '
-                         '<style>body {margin-top: 40px; '
-                         'background-color: #333;} </style> '
-                         '</head><body> <div '
-                         'style=color:white;text-align:center> '
-                         '<h1>Amazon ECS Sample App</h1> '
-                         '<h2>Congratulations!</h2> <p>Your '
-                         'application is now running on a '
-                         'container in Amazon ECS.</p> '
-                         "</div></body></html>' >  "
-                         '/usr/local/apache2/htdocs/index.html '
-                         '&& httpd-foreground"'],
-             'cpu': 0,
-             'entryPoint': ['sh', '-c'],
-             'essential': True,
-             'image': 'httpd:2.4',
-             'mountPoints': [],
-             'name': 'fargate-app-2',
-             'portMappings': [{'containerPort': 80,
-                               'hostPort': 80,
-                               'protocol': 'tcp'}],
-             'volumesFrom': []}]
+            {
+                'command': [
+                    '/bin/sh -c "echo \'<html> <head> '
+                    '<title>Amazon ECS Sample App</title> '
+                    '<style>body {margin-top: 40px; '
+                    'background-color: #333;} </style> '
+                    '</head><body> <div '
+                    'style=color:white;text-align:center> '
+                    '<h1>Amazon ECS Sample App</h1> '
+                    '<h2>Congratulations!</h2> <p>Your '
+                    'application is now running on a '
+                    'container in Amazon ECS.</p> '
+                    "</div></body></html>' >  "
+                    '/usr/local/apache2/htdocs/index.html '
+                    '&& httpd-foreground"'
+                ],
+                'cpu': 0,
+                'entryPoint': ['sh', '-c'],
+                'essential': True,
+                'image': 'httpd:2.4',
+                'mountPoints': [],
+                'name': 'fargate-app-2',
+                'portMappings': [
+                    {'containerPort': 80, 'hostPort': 80, 'protocol': 'tcp'}
+                ],
+                'volumesFrom': [],
+            }
+        ]
         assert resources[0]['Tags'] == [{'Key': 'test', 'Value': 'name'}]
         client = session_factory().client("ecs")
-        self.assertEqual(len(client.list_tags_for_resource(
-            resourceArn=resources[0]["taskDefinitionArn"]).get("tags")), 0)
+        self.assertEqual(
+            len(
+                client.list_tags_for_resource(
+                    resourceArn=resources[0]["taskDefinitionArn"]
+                ).get("tags")
+            ),
+            0,
+        )
 
 
 class TestEcsTask(BaseTest):
-
     def test_task_by_arn(self):
         session_factory = self.replay_flight_data('test_ecs_task_by_arn')
-        p = self.load_policy({
-            'name': 'tasks', 'resource': 'ecs-task'}, session_factory=session_factory)
-        tasks = p.resource_manager.get_resources([
-            'arn:aws:ecs:us-east-1:644160558196:task/devx/21b23041dec947b996fcc7a8aa606d64'])
+        p = self.load_policy(
+            {'name': 'tasks', 'resource': 'ecs-task'}, session_factory=session_factory
+        )
+        tasks = p.resource_manager.get_resources(
+            [
+                'arn:aws:ecs:us-east-1:644160558196:task/devx/21b23041dec947b996fcc7a8aa606d64'
+            ]
+        )
         self.assertEqual(len(tasks), 1)
         self.assertEqual(tasks[0]['launchType'], 'FARGATE')
         self.assertEqual(tasks[0]['lastStatus'], 'STOPPED')
@@ -445,7 +456,10 @@ class TestEcsTask(BaseTest):
         self.assertRaises(
             PolicyExecutionError,
             p.resource_manager.get_resources,
-            ['arn:aws:ecs:us-east-1:644160558196:task/21b23041dec947b996fcc7a8aa606d64'])
+            [
+                'arn:aws:ecs:us-east-1:644160558196:task/21b23041dec947b996fcc7a8aa606d64'
+            ],
+        )
 
     def test_task_resource(self):
         session_factory = self.replay_flight_data("test_ecs_task")
@@ -461,20 +475,16 @@ class TestEcsTask(BaseTest):
             {
                 "name": "ecs-task-fargate-subnets",
                 "resource": "ecs-task",
-                "filters": [
-                    {
-                        "type": "subnet",
-                        "key": "tag:Name",
-                        "value": "implied"
-                    }
-                ],
+                "filters": [{"type": "subnet", "key": "tag:Name", "value": "implied"}],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].get('attachments')[0].get(
-            'details')[0].get('value'), "subnet-05b58b4afe5124322")
+        self.assertEqual(
+            resources[0].get('attachments')[0].get('details')[0].get('value'),
+            "subnet-05b58b4afe5124322",
+        )
 
     def test_task_delete(self):
         session_factory = self.replay_flight_data("test_ecs_task_delete")
@@ -495,7 +505,6 @@ class TestEcsTask(BaseTest):
 
 
 class TestEcsContainerInstance(BaseTest):
-
     def test_container_instance_resource(self):
         session_factory = self.replay_flight_data("test_ecs_container_instance")
         p = self.load_policy(
@@ -524,15 +533,7 @@ class TestEcsContainerInstance(BaseTest):
         updated_version = client.describe_container_instances(
             cluster="default",
             containerInstances=["a8a469ef-009f-40f8-9639-3a0d9c6a9b9e"],
-        )[
-            "containerInstances"
-        ][
-            0
-        ][
-            "versionInfo"
-        ][
-            "agentVersion"
-        ]
+        )["containerInstances"][0]["versionInfo"]["agentVersion"]
         self.assertNotEqual(
             updated_version, resources[0]["versionInfo"]["agentVersion"]
         )
@@ -553,13 +554,7 @@ class TestEcsContainerInstance(BaseTest):
         client = session_factory().client("ecs")
         state = client.describe_container_instances(
             cluster="default", containerInstances=[resources[0]["containerInstanceArn"]]
-        )[
-            "containerInstances"
-        ][
-            0
-        ][
-            "status"
-        ]
+        )["containerInstances"][0]["status"]
         self.assertEqual(state, "DRAINING")
 
     def test_ecs_container_instance_subnet(self):
@@ -569,11 +564,7 @@ class TestEcsContainerInstance(BaseTest):
                 "name": "ecs-container-instance-subnet",
                 "resource": "ecs-container-instance",
                 "filters": [
-                    {
-                        "type": "subnet",
-                        "key": "tag:NetworkLocation",
-                        "value": "Public"
-                    }
+                    {"type": "subnet", "key": "tag:NetworkLocation", "value": "Public"}
                 ],
             },
             session_factory=session_factory,

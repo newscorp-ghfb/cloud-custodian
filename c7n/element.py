@@ -9,8 +9,7 @@ from c7n.executor import ThreadPoolExecutor
 
 
 class Element:
-    """Parent base class for filters and actions.
-    """
+    """Parent base class for filters and actions."""
 
     permissions = ()
     metrics = ()
@@ -44,14 +43,20 @@ class Element:
         search_expr = key_expr
         if not search_expr.startswith('[].'):
             search_expr = '[].' + key_expr
-        results = [r for value, r in zip(
-            jmespath.search(search_expr, resources), resources)
-            if value in allowed_values]
+        results = [
+            r
+            for value, r in zip(jmespath.search(search_expr, resources), resources)
+            if value in allowed_values
+        ]
         if resource_count != len(results):
             self.log.warning(
                 "%s implicitly filtered %d of %d resources key:%s on %s",
-                self.type, len(results), resource_count, key_expr,
-                (', '.join(allowed_values)))
+                self.type,
+                len(results),
+                resource_count,
+                key_expr,
+                (', '.join(allowed_values)),
+            )
         return results
 
     def get_deprecations(self):

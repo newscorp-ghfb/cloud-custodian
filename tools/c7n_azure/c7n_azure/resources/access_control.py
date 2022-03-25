@@ -99,16 +99,20 @@ class RoleAssignment(QueryResourceManager):
             'name',
             'type',
             'properties.scope',
-            'properties.roleDefinitionId'
+            'properties.roleDefinitionId',
         )
 
     def augment(self, resources):
         s = self.get_session().get_session_for_resource(GRAPH_AUTH_ENDPOINT)
         graph_client = s.client('azure.graphrbac.GraphRbacManagementClient')
 
-        object_ids = list(set(
-            resource['properties']['principalId'] for resource in resources
-            if resource['properties']['principalId']))
+        object_ids = list(
+            set(
+                resource['properties']['principalId']
+                for resource in resources
+                if resource['properties']['principalId']
+            )
+        )
 
         principal_dics = GraphHelper.get_principal_dictionary(graph_client, object_ids)
 
@@ -116,7 +120,9 @@ class RoleAssignment(QueryResourceManager):
             if resource['properties']['principalId'] in principal_dics.keys():
                 graph_resource = principal_dics[resource['properties']['principalId']]
                 if graph_resource.object_id:
-                    resource['principalName'] = GraphHelper.get_principal_name(graph_resource)
+                    resource['principalName'] = GraphHelper.get_principal_name(
+                        graph_resource
+                    )
                     resource['displayName'] = graph_resource.display_name
                     resource['aadType'] = graph_resource.object_type
 
@@ -159,9 +165,8 @@ class RoleDefinition(QueryResourceManager):
             'properties.description',
             'id',
             'name',
-            'type'
-            'properties.type',
-            'properties.permissions'
+            'type' 'properties.type',
+            'properties.permissions',
         )
 
     @property
@@ -171,7 +176,6 @@ class RoleDefinition(QueryResourceManager):
 
 @sources.register('describe-azure-roledefinition')
 class DescribeSource(DescribeSource):
-
     def get_resources(self, query):
         s = local_session(self.manager.session_factory)
         client = s.client('azure.mgmt.authorization.AuthorizationManagementClient')
@@ -267,15 +271,14 @@ class ResourceAccessFilter(RelatedResourceFilter):
         'resource-access',
         relatedResource={'type': 'string'},
         rinherit=RelatedResourceFilter.schema,
-        required=['relatedResource']
+        required=['relatedResource'],
     )
 
     def __init__(self, data, manager=None):
         super(ResourceAccessFilter, self).__init__(data, manager)
         resource_type = self.data['relatedResource']
         load_resources((resource_type,))
-        self.factory = Azure.resources.get(
-            resource_type.rsplit('.', 1)[-1])
+        self.factory = Azure.resources.get(resource_type.rsplit('.', 1)[-1])
 
     def get_related(self, resources):
         related = self.manager.get_resource_manager(self.factory.type).resources()
@@ -296,8 +299,10 @@ class ResourceAccessFilter(RelatedResourceFilter):
             raise FilterValidationError(
                 "The related resource is not a custodian supported azure resource"
             )
-        if (self.data['relatedResource'] == 'azure.roleassignment' or
-                self.data['relatedResource'] == 'azure.roledefinition'):
+        if (
+            self.data['relatedResource'] == 'azure.roleassignment'
+            or self.data['relatedResource'] == 'azure.roledefinition'
+        ):
             raise FilterValidationError(
                 "The related resource can not be role assignments or role definitions"
             )
@@ -363,7 +368,8 @@ class ScopeFilter(Filter):
 
     schema = type_schema(
         'scope',
-        value={'type': 'string', 'enum': [SUBSCRIPTION_SCOPE, RG_SCOPE, MG_SCOPE]})
+        value={'type': 'string', 'enum': [SUBSCRIPTION_SCOPE, RG_SCOPE, MG_SCOPE]},
+    )
 
     def process(self, data, event=None):
         scope_value = self.data.get('value', '')
@@ -393,9 +399,12 @@ class DeleteAssignmentAction(AzureBaseAction):
 
     schema = type_schema('delete')
 
-    def _prepare_processing(self,):
+    def _prepare_processing(
+        self,
+    ):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
         self.client.role_assignments.delete(
-            resource['properties']['scope'], resource['name'])
+            resource['properties']['scope'], resource['name']
+        )

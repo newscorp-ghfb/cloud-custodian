@@ -55,8 +55,16 @@ def validate_header(path):
 def get_creation_year(path):
     # This command find the year a file was first created in git
     cmd = [
-        'git', 'log', '--diff-filter=A', '--follow', '--format=%ad',
-        "--date=format:'%Y'", '-1', '--', path]
+        'git',
+        'log',
+        '--diff-filter=A',
+        '--follow',
+        '--format=%ad',
+        "--date=format:'%Y'",
+        '-1',
+        '--',
+        path,
+    ]
     year = subprocess.check_output(cmd)
 
     # Sanity check

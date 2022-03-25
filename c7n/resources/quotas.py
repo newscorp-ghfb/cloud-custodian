@@ -24,11 +24,14 @@ from c7n.utils import local_session, type_schema, get_retry
 
 @resources.register('service-quota-request')
 class ServiceQuotaRequest(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'service-quotas'
         permission_prefix = 'servicequotas'
-        enum_spec = ('list_requested_service_quota_change_history', 'RequestedQuotas', None)
+        enum_spec = (
+            'list_requested_service_quota_change_history',
+            'RequestedQuotas',
+            None,
+        )
         name = id = 'Id'
         # Service Quota Requests dont actually have arns, but we need to set an arn_type here
         # to ensure that the tests pass resource type validation
@@ -56,17 +59,11 @@ class ServiceQuota(QueryResourceManager):
         def get_quotas(client, s):
             quotas = {}
             token = None
-            kwargs = {
-                'ServiceCode': s['ServiceCode'],
-                'MaxResults': self.batch_size
-            }
+            kwargs = {'ServiceCode': s['ServiceCode'], 'MaxResults': self.batch_size}
             while True:
                 if token:
                     kwargs['NextToken'] = token
-                response = retry(
-                    client.list_service_quotas,
-                    **kwargs
-                )
+                response = retry(client.list_service_quotas, **kwargs)
                 rquotas = {q['QuotaCode']: q for q in response['Quotas']}
                 token = response.get('NextToken')
                 new = set(rquotas) - set(quotas)
@@ -136,7 +133,7 @@ class UsageFilter(MetricsFilter):
         'Minimum': min,
         'Average': mean,
         'Sum': sum,
-        'SampleCount': len
+        'SampleCount': len,
     }
 
     percentile_regex = re.compile('p\\d{0,2}\\.{0,1}\\d{0,2}')
@@ -162,11 +159,18 @@ class UsageFilter(MetricsFilter):
             if not metric:
                 continue
             stat = metric.get('MetricStatisticRecommendation', 'Maximum')
-            if stat not in self.metric_map and self.percentile_regex.match(stat) is None:
+            if (
+                stat not in self.metric_map
+                and self.percentile_regex.match(stat) is None
+            ):
                 continue
             if 'Period' in r:
                 period_unit = self.time_delta_map[r['Period']['PeriodUnit']]
-                period = int(timedelta(**{period_unit: r['Period']['PeriodValue']}).total_seconds())
+                period = int(
+                    timedelta(
+                        **{period_unit: r['Period']['PeriodValue']}
+                    ).total_seconds()
+                )
             else:
                 period = int(timedelta(1).total_seconds())
             res = client.get_metric_statistics(
@@ -226,9 +230,7 @@ class RequestHistoryFilter(RelatedResourceFilter):
     RelatedIdsExpression = 'QuotaCode'
     AnnotationKey = 'ServiceQuotaChangeHistory'
 
-    schema = type_schema(
-        'request-history', rinherit=ValueFilter.schema
-    )
+    schema = type_schema('request-history', rinherit=ValueFilter.schema)
 
     permissions = ('servicequotas:ListRequestedServiceQuotaChangeHistory',)
 
@@ -269,7 +271,9 @@ class Increase(Action):
                 multiplier: 1.2
     """
 
-    schema = type_schema('request-increase', multiplier={'type': 'number', 'minimum': 1.0})
+    schema = type_schema(
+        'request-increase', multiplier={'type': 'number', 'minimum': 1.0}
+    )
     permissions = ('servicequotas:RequestServiceQuotaIncrease',)
 
     def process(self, resources):
@@ -284,18 +288,26 @@ class Increase(Action):
                 client.request_service_quota_increase(
                     ServiceCode=r['ServiceCode'],
                     QuotaCode=r['QuotaCode'],
-                    DesiredValue=count
+                    DesiredValue=count,
                 )
             except client.exceptions.QuotaExceededException as e:
                 error = e
-                self.log.error('Requested:%s exceeds quota limit for %s' % (count, r['QuotaCode']))
+                self.log.error(
+                    'Requested:%s exceeds quota limit for %s' % (count, r['QuotaCode'])
+                )
                 continue
-            except (client.exceptions.AccessDeniedException,
-                    client.exceptions.DependencyAccessDeniedException,):
-                raise PolicyExecutionError('Access Denied to increase quota: %s' % r['QuotaCode'])
-            except (client.exceptions.NoSuchResourceException,
-                    client.exceptions.InvalidResourceStateException,
-                    client.exceptions.ResourceAlreadyExistsException,) as e:
+            except (
+                client.exceptions.AccessDeniedException,
+                client.exceptions.DependencyAccessDeniedException,
+            ):
+                raise PolicyExecutionError(
+                    'Access Denied to increase quota: %s' % r['QuotaCode']
+                )
+            except (
+                client.exceptions.NoSuchResourceException,
+                client.exceptions.InvalidResourceStateException,
+                client.exceptions.ResourceAlreadyExistsException,
+            ) as e:
                 error = e
                 continue
         if error:

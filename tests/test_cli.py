@@ -17,17 +17,16 @@ from .common import BaseTest, TextTestIO
 
 
 class CliTest(BaseTest):
-    """ A subclass of BaseTest with some handy functions for CLI related tests. """
+    """A subclass of BaseTest with some handy functions for CLI related tests."""
 
     def patch_account_id(self):
-
         def test_account_id(options):
             options.account_id = self.account_id
 
         self.patch(aws, "_default_account_id", test_account_id)
 
     def get_output(self, argv):
-        """ Run cli.main with the supplied argv and return the output. """
+        """Run cli.main with the supplied argv and return the output."""
         out, err = self.run_and_expect_success(argv)
         return out
 
@@ -39,7 +38,7 @@ class CliTest(BaseTest):
         return out, err
 
     def run_and_expect_success(self, argv):
-        """ Run cli.main() with supplied argv and expect normal execution. """
+        """Run cli.main() with supplied argv and expect normal execution."""
         self.patch_account_id()
         self.patch(sys, "argv", argv)
         out, err = self.capture_output()
@@ -54,7 +53,7 @@ class CliTest(BaseTest):
         return out.getvalue(), err.getvalue()
 
     def run_and_expect_failure(self, argv, exit_code):
-        """ Run cli.main() with supplied argv and expect exit_code. """
+        """Run cli.main() with supplied argv and expect exit_code."""
         self.patch_account_id()
         self.patch(sys, "argv", argv)
         out, err = self.capture_output()
@@ -65,7 +64,7 @@ class CliTest(BaseTest):
         return out.getvalue(), err.getvalue()
 
     def run_and_expect_exception(self, argv, exception):
-        """ Run cli.main() with supplied argv and expect supplied exception. """
+        """Run cli.main() with supplied argv and expect supplied exception."""
         self.patch_account_id()
         self.patch(sys, "argv", argv)
         # clear_resources()
@@ -77,7 +76,6 @@ class CliTest(BaseTest):
 
 
 class UtilsTest(BaseTest):
-
     def test_key_val_pair(self):
         self.assertRaises(ArgumentTypeError, cli._key_val_pair, "invalid option")
         param = "day=today"
@@ -85,7 +83,6 @@ class UtilsTest(BaseTest):
 
 
 class VersionTest(CliTest):
-
     def test_version(self):
         output = self.get_output(["custodian", "version"])
         self.assertEqual(output.strip(), version.version)
@@ -98,7 +95,6 @@ class VersionTest(CliTest):
 
 
 class ValidateTest(CliTest):
-
     def test_invalidate_structure_exit(self):
         invalid_policies = {"policies": [{"name": "foo"}]}
         yaml_file = self.write_policy_file(invalid_policies)
@@ -175,25 +171,26 @@ class ValidateTest(CliTest):
 
 
 class SchemaTest(CliTest):
-
     def test_schema_outline(self):
-        stdout, stderr = self.run_and_expect_success([
-            "custodian", "schema", "--outline", "--json", "aws"])
+        stdout, stderr = self.run_and_expect_success(
+            ["custodian", "schema", "--outline", "--json", "aws"]
+        )
         data = json.loads(stdout)
         self.assertEqual(list(data.keys()), ["aws"])
         self.assertTrue(len(data['aws']) > 100)
-        self.assertEqual(
-            sorted(data['aws']['aws.ec2'].keys()), ['actions', 'filters'])
+        self.assertEqual(sorted(data['aws']['aws.ec2'].keys()), ['actions', 'filters'])
         self.assertTrue(len(data['aws']['aws.ec2']['actions']) > 10)
 
     def test_schema_alias(self):
-        stdout, stderr = self.run_and_expect_success([
-            "custodian", "schema", "aws.network-addr"])
+        stdout, stderr = self.run_and_expect_success(
+            ["custodian", "schema", "aws.network-addr"]
+        )
         self.assertIn("aws.elastic-ip:", stdout)
 
     def test_schema_alias_unqualified(self):
-        stdout, stderr = self.run_and_expect_success([
-            "custodian", "schema", "network-addr"])
+        stdout, stderr = self.run_and_expect_success(
+            ["custodian", "schema", "network-addr"]
+        )
         self.assertIn("aws.elastic-ip:", stdout)
 
     def test_schema(self):
@@ -275,62 +272,51 @@ class SchemaTest(CliTest):
 
     def test_schema_expand(self):
         # refs should only ever exist in a dictionary by itself
-        test_schema = {
-            '$ref': '#/definitions/filters_common/value_from'
-        }
+        test_schema = {'$ref': '#/definitions/filters_common/value_from'}
         result = ElementSchema.schema(generate()['definitions'], test_schema)
         self.assertEqual(result, ValuesFrom.schema)
 
     def test_schema_multi_expand(self):
         test_schema = {
-            'schema1': {
-                '$ref': '#/definitions/filters_common/value_from'
-            },
-            'schema2': {
-                '$ref': '#/definitions/filters_common/value_from'
-            }
+            'schema1': {'$ref': '#/definitions/filters_common/value_from'},
+            'schema2': {'$ref': '#/definitions/filters_common/value_from'},
         }
 
-        expected = yaml_dump({
-            'schema1': {
-                'type': 'object',
-                'additionalProperties': 'False',
-                'required': ['url'],
-                'properties': {
-                    'url': {'type': 'string'},
-                    'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
-                    'expr': {'oneOf': [
-                        {'type': 'integer'},
-                        {'type': 'string'}]}
-                }
-            },
-            'schema2': {
-                'type': 'object',
-                'additionalProperties': 'False',
-                'required': ['url'],
-                'properties': {
-                    'url': {'type': 'string'},
-                    'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
-                    'expr': {'oneOf': [
-                        {'type': 'integer'},
-                        {'type': 'string'}]}
-                }
+        expected = yaml_dump(
+            {
+                'schema1': {
+                    'type': 'object',
+                    'additionalProperties': 'False',
+                    'required': ['url'],
+                    'properties': {
+                        'url': {'type': 'string'},
+                        'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
+                        'expr': {'oneOf': [{'type': 'integer'}, {'type': 'string'}]},
+                    },
+                },
+                'schema2': {
+                    'type': 'object',
+                    'additionalProperties': 'False',
+                    'required': ['url'],
+                    'properties': {
+                        'url': {'type': 'string'},
+                        'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
+                        'expr': {'oneOf': [{'type': 'integer'}, {'type': 'string'}]},
+                    },
+                },
             }
-        })
+        )
 
         result = yaml_dump(ElementSchema.schema(generate()['definitions'], test_schema))
         self.assertEqual(result, expected)
 
     def test_schema_expand_not_found(self):
-        test_schema = {
-            '$ref': '#/definitions/filters_common/invalid_schema'
-        }
+        test_schema = {'$ref': '#/definitions/filters_common/invalid_schema'}
         result = ElementSchema.schema(generate()['definitions'], test_schema)
         self.assertEqual(result, None)
 
 
 class ReportTest(CliTest):
-
     def test_report(self):
         policy_name = "ec2-running-instances"
         valid_policies = {
@@ -367,7 +353,15 @@ class ReportTest(CliTest):
 
         # json format
         output = self.get_output(
-            ["custodian", "report", "--format", "json", "-s", self.output_dir, yaml_file]
+            [
+                "custodian",
+                "report",
+                "--format",
+                "json",
+                "-s",
+                self.output_dir,
+                yaml_file,
+            ]
         )
         self.assertTrue("i-014296505597bf519", json.loads(output)[0]['InstanceId'])
 
@@ -382,7 +376,8 @@ class ReportTest(CliTest):
         # more than 1 policy
         policies = {
             "policies": [
-                {"name": "foo", "resource": "s3"}, {"name": "bar", "resource": "ec2"}
+                {"name": "foo", "resource": "s3"},
+                {"name": "bar", "resource": "ec2"},
             ]
         }
         yaml_file = self.write_policy_file(policies)
@@ -423,7 +418,6 @@ class ReportTest(CliTest):
 
 
 class LogsTest(CliTest):
-
     def test_logs(self):
         temp_dir = self.get_temp_dir()
 
@@ -435,7 +429,8 @@ class LogsTest(CliTest):
         # Test 2 - more than one policy
         policies = {
             "policies": [
-                {"name": "foo", "resource": "s3"}, {"name": "bar", "resource": "ec2"}
+                {"name": "foo", "resource": "s3"},
+                {"name": "bar", "resource": "ec2"},
             ]
         }
         yaml_file = self.write_policy_file(policies)
@@ -452,11 +447,12 @@ class LogsTest(CliTest):
         }
         yaml_file = self.write_policy_file({"policies": [p_data]})
         output_dir = os.path.join(os.path.dirname(__file__), "data", "logs")
-        self.run_and_expect_failure(["custodian", "logs", "-s", output_dir, yaml_file], 1)
+        self.run_and_expect_failure(
+            ["custodian", "logs", "-s", output_dir, yaml_file], 1
+        )
 
 
 class RunTest(CliTest):
-
     def test_ec2(self):
         session_factory = self.replay_flight_data(
             "test_ec2_state_transition_age_filter"
@@ -478,7 +474,8 @@ class RunTest(CliTest):
                         "name": "ec2-state-transition-age",
                         "resource": "ec2",
                         "filters": [
-                            {"State.Name": "running"}, {"type": "state-age", "days": 30}
+                            {"State.Name": "running"},
+                            {"type": "state-age", "days": 30},
                         ],
                     }
                 ]
@@ -520,7 +517,8 @@ class RunTest(CliTest):
                         "name": "error",
                         "resource": "ec2",
                         "filters": [
-                            {"State.Name": "running"}, {"type": "state-age", "days": 30}
+                            {"State.Name": "running"},
+                            {"type": "state-age", "days": 30},
                         ],
                     }
                 ]
@@ -556,7 +554,6 @@ class RunTest(CliTest):
 
 
 class MetricsTest(CliTest):
-
     def test_metrics(self):
         session_factory = self.replay_flight_data("test_lambda_policy_metrics")
         from c7n.policy import PolicyCollection
@@ -604,7 +601,7 @@ class MetricsTest(CliTest):
                 str(period),
                 yaml_file,
             ],
-            1
+            1,
         )
 
     def test_metrics_get_endpoints(self):
@@ -640,7 +637,6 @@ class MetricsTest(CliTest):
 
 
 class MiscTest(CliTest):
-
     def test_no_args(self):
         stdout, stderr = self.run_and_expect_failure(["custodian"], 2)
         self.assertIn("metrics", stderr)
@@ -650,8 +646,7 @@ class MiscTest(CliTest):
         # Doesn't do anything, but should exit 0
         temp_dir = self.get_temp_dir()
         yaml_file = self.write_policy_file({})
-        self.run_and_expect_failure(
-            ["custodian", "run", "-s", temp_dir, yaml_file], 1)
+        self.run_and_expect_failure(["custodian", "run", "-s", temp_dir, yaml_file], 1)
 
     def test_nonexistent_policy_file(self):
         temp_dir = self.get_temp_dir()

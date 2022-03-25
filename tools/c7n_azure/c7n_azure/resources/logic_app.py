@@ -32,9 +32,5 @@ class LogicAppWorkflow(ArmResourceManager):
         service = 'azure.mgmt.logic'
         client = 'LogicManagementClient'
         enum_spec = ('workflows', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.Logic/workflows'

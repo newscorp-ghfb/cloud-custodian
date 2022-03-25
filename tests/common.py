@@ -8,7 +8,7 @@ import unittest
 import uuid
 from c7n.config import Bag
 
-from c7n.testing import TestUtils, TextTestIO, functional # NOQA
+from c7n.testing import TestUtils, TextTestIO, functional  # NOQA
 
 from .zpill import PillTest, ACCOUNT_ID
 
@@ -70,7 +70,10 @@ class ConfigTest(BaseTest):
                 msg = json.loads(m["Body"])
                 change = json.loads(msg["Message"])
                 messages.ack(m)
-                if resource_id and change["configurationItem"]["resourceId"] != resource_id:
+                if (
+                    resource_id
+                    and change["configurationItem"]["resourceId"] != resource_id
+                ):
                     continue
                 results.append(change["configurationItem"])
                 break
@@ -117,9 +120,7 @@ class ConfigTest(BaseTest):
         )
         subscription = sns.subscribe(
             TopicArn=topic, Protocol="sqs", Endpoint=queue_arn
-        ).get(
-            "SubscriptionArn"
-        )
+        ).get("SubscriptionArn")
         self.addCleanup(sns.unsubscribe, SubscriptionArn=subscription)
         return queue_url
 
@@ -163,7 +164,6 @@ class Reservation(Bag):
 
 
 class Client:
-
     def __init__(self, instances):
         self.instances = instances
         self.filters = None

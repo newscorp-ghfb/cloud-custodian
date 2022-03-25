@@ -61,15 +61,16 @@ class ResourceGroup(ArmResourceManager):
         enum_spec = ('resource_groups', 'list', None)
         resource_type = RESOURCE_GROUPS_TYPE
 
-        default_report_fields = (
-            'name',
-            'location'
-        )
+        default_report_fields = ('name', 'location')
 
     def get_resources(self, resource_ids):
-        resource_client = self.get_client('azure.mgmt.resource.ResourceManagementClient')
+        resource_client = self.get_client(
+            'azure.mgmt.resource.ResourceManagementClient'
+        )
         data = [
-            resource_client.resource_groups.get(ResourceIdParser.get_resource_group(rid))
+            resource_client.resource_groups.get(
+                ResourceIdParser.get_resource_group(rid)
+            )
             for rid in resource_ids
         ]
         for d in data:
@@ -87,10 +88,7 @@ class EmptyGroup(Filter):
     schema = type_schema('empty-group')
 
     def __call__(self, group):
-        resources_iterator = (
-            self.manager
-                .get_client()
-                .resources
-                .list_by_resource_group(group['name'])
+        resources_iterator = self.manager.get_client().resources.list_by_resource_group(
+            group['name']
         )
         return not any(True for _ in resources_iterator)

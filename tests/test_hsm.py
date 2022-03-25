@@ -5,14 +5,10 @@ import time
 
 
 class CloudHSMClusterTest(BaseTest):
-
     def test_clouhsm_deprecated(self):
         factory = self.replay_flight_data("test_hsm_deprecated")
         p = self.load_policy(
-            {
-                "name": "cloudhsm",
-                "resource": "hsm"
-            },
+            {"name": "cloudhsm", "resource": "hsm"},
             session_factory=factory,
         )
         resources = p.run()
@@ -45,19 +41,24 @@ class CloudHSMClusterTest(BaseTest):
                 "filters": [
                     {"type": "subnet", "key": "SubnetId", "value": "subnet-914763e7"},
                 ],
-                "actions": [{"type": "delete"}]
+                "actions": [{"type": "delete"}],
             },
             session_factory=factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0].get('ClusterId'), 'cluster-pqczsunscng')
-        self.assertEqual(resources[0].get('SubnetMapping'), {"us-east-1a": "subnet-914763e7"})
+        self.assertEqual(
+            resources[0].get('SubnetMapping'), {"us-east-1a": "subnet-914763e7"}
+        )
         if self.recording:
             time.sleep(25)
         self.assertEqual(
-            client.describe_clusters(Filters={'clusterIds': ['cluster-pqczsunscng']}).get(
-                'Clusters')[0].get('State'), 'DELETED')
+            client.describe_clusters(Filters={'clusterIds': ['cluster-pqczsunscng']})
+            .get('Clusters')[0]
+            .get('State'),
+            'DELETED',
+        )
 
     def test_cloudhsm_tag(self):
         factory = self.replay_flight_data("test_cloudhsm_tag")
@@ -67,7 +68,7 @@ class CloudHSMClusterTest(BaseTest):
                 "name": "cloudhsm",
                 "resource": "cloudhsm-cluster",
                 "filters": [{"tag:c7n": "absent"}],
-                "actions": [{"type": "tag", "key": "c7n", "value": "test"}]
+                "actions": [{"type": "tag", "key": "c7n", "value": "test"}],
             },
             session_factory=factory,
         )

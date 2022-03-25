@@ -5,13 +5,12 @@ from gcp_common import BaseTest, event_data
 
 
 class LoadBalancingAddressTest(BaseTest):
-
     def test_loadbalancer_address_query(self):
         factory = self.replay_flight_data('lb-addresses-query')
         p = self.load_policy(
-            {'name': 'all-lb-addresses',
-             'resource': 'gcp.loadbalancer-address'},
-            session_factory=factory)
+            {'name': 'all-lb-addresses', 'resource': 'gcp.loadbalancer-address'},
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#address')
@@ -20,13 +19,13 @@ class LoadBalancingAddressTest(BaseTest):
     def test_loadbalancer_address_get(self):
         factory = self.replay_flight_data('lb-addresses-get')
         p = self.load_policy(
-            {'name': 'one-region-address',
-             'resource': 'gcp.loadbalancer-address',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-region-address',
+                'resource': 'gcp.loadbalancer-address',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-addresses-get.json')
         instances = exec_mode.run(event, None)
@@ -37,33 +36,34 @@ class LoadBalancingAddressTest(BaseTest):
     def test_loadbalancer_address_delete(self):
         region = 'us-central1'
         project_id = 'cloud-custodian'
-        factory = self.replay_flight_data('lb-addresses-delete',
-                                          project_id=project_id)
+        factory = self.replay_flight_data('lb-addresses-delete', project_id=project_id)
         policy = self.load_policy(
-            {'name': 'delete-address',
-             'resource': 'gcp.loadbalancer-address',
-             'actions': ['delete']
-             }, session_factory=factory)
+            {
+                'name': 'delete-address',
+                'resource': 'gcp.loadbalancer-address',
+                'actions': ['delete'],
+            },
+            session_factory=factory,
+        )
 
         resources = policy.run()
         self.assertEqual(resources[0]['name'], 'new322')
 
         client = policy.resource_manager.get_client()
-        result = client.execute_query(
-            'list', {'project': project_id,
-                     'region': region})
+        result = client.execute_query('list', {'project': project_id, 'region': region})
 
-        self.assertEqual(len(result['items']["regions/{}".format(region)]['addresses']), 0)
+        self.assertEqual(
+            len(result['items']["regions/{}".format(region)]['addresses']), 0
+        )
 
 
 class LoadBalancingUrlMapTest(BaseTest):
-
     def test_loadbalancer_url_map_query(self):
         factory = self.replay_flight_data('lb-url-maps-query')
         p = self.load_policy(
-            {'name': 'all-lb-url-maps',
-             'resource': 'gcp.loadbalancer-url-map'},
-            session_factory=factory)
+            {'name': 'all-lb-url-maps', 'resource': 'gcp.loadbalancer-url-map'},
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#urlMap')
@@ -72,13 +72,13 @@ class LoadBalancingUrlMapTest(BaseTest):
     def test_loadbalancer_url_map_get(self):
         factory = self.replay_flight_data('lb-url-maps-get')
         p = self.load_policy(
-            {'name': 'one-lb-url-map',
-             'resource': 'gcp.loadbalancer-url-map',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-url-map',
+                'resource': 'gcp.loadbalancer-url-map',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-url-maps-get.json')
         instances = exec_mode.run(event, None)
@@ -89,13 +89,15 @@ class LoadBalancingUrlMapTest(BaseTest):
 
 
 class LoadBalancingTargetTcpProxyTest(BaseTest):
-
     def test_loadbalancer_target_tcp_proxy_query(self):
         factory = self.replay_flight_data('lb-target-tcp-proxies-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-tcp-proxies',
-             'resource': 'gcp.loadbalancer-target-tcp-proxy'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-target-tcp-proxies',
+                'resource': 'gcp.loadbalancer-target-tcp-proxy',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetTcpProxy')
@@ -104,13 +106,13 @@ class LoadBalancingTargetTcpProxyTest(BaseTest):
     def test_loadbalancer_target_tcp_proxy_get(self):
         factory = self.replay_flight_data('lb-target-tcp-proxies-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-tcp-proxy',
-             'resource': 'gcp.loadbalancer-target-tcp-proxy',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-tcp-proxy',
+                'resource': 'gcp.loadbalancer-target-tcp-proxy',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-tcp-proxy-get.json')
         instances = exec_mode.run(event, None)
@@ -120,13 +122,15 @@ class LoadBalancingTargetTcpProxyTest(BaseTest):
 
 
 class LoadBalancingTargetSslProxyTest(BaseTest):
-
     def test_loadbalancer_target_ssl_proxy_query(self):
         factory = self.replay_flight_data('lb-target-ssl-proxies-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-ssl-proxies',
-             'resource': 'gcp.loadbalancer-target-ssl-proxy'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-target-ssl-proxies',
+                'resource': 'gcp.loadbalancer-target-ssl-proxy',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetSslProxy')
@@ -135,13 +139,13 @@ class LoadBalancingTargetSslProxyTest(BaseTest):
     def test_loadbalancer_target_ssl_proxy_get(self):
         factory = self.replay_flight_data('lb-target-ssl-proxies-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-ssl-proxy',
-             'resource': 'gcp.loadbalancer-target-ssl-proxy',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-ssl-proxy',
+                'resource': 'gcp.loadbalancer-target-ssl-proxy',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-ssl-proxy-get.json')
         instances = exec_mode.run(event, None)
@@ -151,13 +155,12 @@ class LoadBalancingTargetSslProxyTest(BaseTest):
 
 
 class LoadBalancingSslPolicyTest(BaseTest):
-
     def test_loadbalancer_ssl_policy_query(self):
         factory = self.replay_flight_data('lb-ssl-policies-query')
         p = self.load_policy(
-            {'name': 'all-lb-ssl-policies',
-             'resource': 'gcp.loadbalancer-ssl-policy'},
-            session_factory=factory)
+            {'name': 'all-lb-ssl-policies', 'resource': 'gcp.loadbalancer-ssl-policy'},
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#sslPolicy')
@@ -166,13 +169,13 @@ class LoadBalancingSslPolicyTest(BaseTest):
     def test_loadbalancer_ssl_policy_get(self):
         factory = self.replay_flight_data('lb-ssl-policies-get')
         p = self.load_policy(
-            {'name': 'one-lb-ssl-policies',
-             'resource': 'gcp.loadbalancer-ssl-policy',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-ssl-policies',
+                'resource': 'gcp.loadbalancer-ssl-policy',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-ssl-policy-get.json')
         instances = exec_mode.run(event, None)
@@ -182,19 +185,29 @@ class LoadBalancingSslPolicyTest(BaseTest):
 
     def test_loadbalancer_ssl_policy_delete(self):
         project_id = 'custodian-test-project-0'
-        session_factory = self.replay_flight_data('lb-ssl-policy-delete',
-                                                  project_id=project_id)
-        base_policy = {'name': 'lb-ssl-policy-delete',
-                       'resource': 'gcp.loadbalancer-ssl-policy'}
+        session_factory = self.replay_flight_data(
+            'lb-ssl-policy-delete', project_id=project_id
+        )
+        base_policy = {
+            'name': 'lb-ssl-policy-delete',
+            'resource': 'gcp.loadbalancer-ssl-policy',
+        }
 
         policy = self.load_policy(
-            dict(base_policy,
-                 filters=[{'type': 'value',
-                           'key': 'minTlsVersion',
-                           'op': 'ne',
-                           'value': 'TLS_1_2'}],
-                 actions=[{'type': 'delete'}]),
-            session_factory=session_factory)
+            dict(
+                base_policy,
+                filters=[
+                    {
+                        'type': 'value',
+                        'key': 'minTlsVersion',
+                        'op': 'ne',
+                        'value': 'TLS_1_2',
+                    }
+                ],
+                actions=[{'type': 'delete'}],
+            ),
+            session_factory=session_factory,
+        )
         resources = policy.run()
         self.assertEqual(2, len(resources))
         self.assertIsNot('TLS_1_2', resources[0]['minTlsVersion'])
@@ -204,21 +217,22 @@ class LoadBalancingSslPolicyTest(BaseTest):
             sleep(1)
 
         client = policy.resource_manager.get_client()
-        result = client.execute_query(
-            'list', {'project': project_id})
+        result = client.execute_query('list', {'project': project_id})
         items = result['items']
         self.assertEqual(1, len(items))
         self.assertEqual('TLS_1_2', items[0]['minTlsVersion'])
 
 
 class LoadBalancingSslCertificateTest(BaseTest):
-
     def test_loadbalancer_ssl_certificate_query(self):
         factory = self.replay_flight_data('lb-ssl-certificates-query')
         p = self.load_policy(
-            {'name': 'all-lb-ssl-certificates',
-             'resource': 'gcp.loadbalancer-ssl-certificate'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-ssl-certificates',
+                'resource': 'gcp.loadbalancer-ssl-certificate',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#sslCertificate')
@@ -227,13 +241,13 @@ class LoadBalancingSslCertificateTest(BaseTest):
     def test_loadbalancer_ssl_certificate_get(self):
         factory = self.replay_flight_data('lb-ssl-certificates-get')
         p = self.load_policy(
-            {'name': 'one-lb-ssl-certificates',
-             'resource': 'gcp.loadbalancer-ssl-certificate',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-ssl-certificates',
+                'resource': 'gcp.loadbalancer-ssl-certificate',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-ssl-certificate-get.json')
         instances = exec_mode.run(event, None)
@@ -243,13 +257,15 @@ class LoadBalancingSslCertificateTest(BaseTest):
 
 
 class LoadBalancingTargetHttpsProxyTest(BaseTest):
-
     def test_loadbalancer_target_https_proxy_query(self):
         factory = self.replay_flight_data('lb-target-https-proxies-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-https-proxies',
-             'resource': 'gcp.loadbalancer-target-https-proxy'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-target-https-proxies',
+                'resource': 'gcp.loadbalancer-target-https-proxy',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetHttpsProxy')
@@ -258,13 +274,13 @@ class LoadBalancingTargetHttpsProxyTest(BaseTest):
     def test_loadbalancer_target_https_proxy_get(self):
         factory = self.replay_flight_data('lb-target-https-proxies-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-https-proxies',
-             'resource': 'gcp.loadbalancer-target-https-proxy',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-https-proxies',
+                'resource': 'gcp.loadbalancer-target-https-proxy',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-https-proxy-get.json')
         instances = exec_mode.run(event, None)
@@ -274,13 +290,15 @@ class LoadBalancingTargetHttpsProxyTest(BaseTest):
 
 
 class LoadBalancingBackendBucketTest(BaseTest):
-
     def test_loadbalancer_backend_bucket_query(self):
         factory = self.replay_flight_data('lb-backend-buckets-query')
         p = self.load_policy(
-            {'name': 'all-lb-backend-buckets',
-             'resource': 'gcp.loadbalancer-backend-bucket'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-backend-buckets',
+                'resource': 'gcp.loadbalancer-backend-bucket',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#backendBucket')
@@ -289,13 +307,13 @@ class LoadBalancingBackendBucketTest(BaseTest):
     def test_loadbalancer_backend_bucket_get(self):
         factory = self.replay_flight_data('lb-backend-buckets-get')
         p = self.load_policy(
-            {'name': 'one-lb-backend-buckets',
-             'resource': 'gcp.loadbalancer-backend-bucket',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-backend-buckets',
+                'resource': 'gcp.loadbalancer-backend-bucket',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-backend-bucket-get.json')
         instances = exec_mode.run(event, None)
@@ -305,19 +323,29 @@ class LoadBalancingBackendBucketTest(BaseTest):
 
     def test_loadbalancer_backend_bucket_delete(self):
         project_id = 'cloud-custodian'
-        session_factory = self.replay_flight_data('lb-backend-buckets-delete',
-                                                  project_id=project_id)
-        base_policy = {'name': 'lb-addresses-delete',
-                       'resource': 'gcp.loadbalancer-backend-bucket'}
+        session_factory = self.replay_flight_data(
+            'lb-backend-buckets-delete', project_id=project_id
+        )
+        base_policy = {
+            'name': 'lb-addresses-delete',
+            'resource': 'gcp.loadbalancer-backend-bucket',
+        }
 
         policy = self.load_policy(
-            dict(base_policy,
-                 filters=[{'type': 'value',
-                           'key': 'bucketName',
-                           'op': 'eq',
-                           'value': 'custodian-bucket-0'}],
-                 actions=[{'type': 'delete'}]),
-            session_factory=session_factory)
+            dict(
+                base_policy,
+                filters=[
+                    {
+                        'type': 'value',
+                        'key': 'bucketName',
+                        'op': 'eq',
+                        'value': 'custodian-bucket-0',
+                    }
+                ],
+                actions=[{'type': 'delete'}],
+            ),
+            session_factory=session_factory,
+        )
         resources = policy.run()
         self.assertEqual(2, len(resources))
         self.assertEqual('custodian-bucket-0', resources[0]['bucketName'])
@@ -329,8 +357,7 @@ class LoadBalancingBackendBucketTest(BaseTest):
             sleep(5)
 
         client = policy.resource_manager.get_client()
-        result = client.execute_query(
-            'list', {'project': project_id})
+        result = client.execute_query('list', {'project': project_id})
         items = result['items']
         self.assertEqual(1, len(items))
         self.assertIsNot('custodian-bucket-0', items[0]['bucketName'])
@@ -338,13 +365,15 @@ class LoadBalancingBackendBucketTest(BaseTest):
 
 
 class LoadBalancingHttpsHealthCheckTest(BaseTest):
-
     def test_loadbalancer_https_health_check_query(self):
         factory = self.replay_flight_data('lb-https-health-checks-query')
         p = self.load_policy(
-            {'name': 'all-lb-https-health-checks',
-             'resource': 'gcp.loadbalancer-https-health-check'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-https-health-checks',
+                'resource': 'gcp.loadbalancer-https-health-check',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#httpsHealthCheck')
@@ -353,13 +382,13 @@ class LoadBalancingHttpsHealthCheckTest(BaseTest):
     def test_loadbalancer_https_health_check_get(self):
         factory = self.replay_flight_data('lb-https-health-checks-get')
         p = self.load_policy(
-            {'name': 'one-lb-https-health-checks',
-             'resource': 'gcp.loadbalancer-https-health-check',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-https-health-checks',
+                'resource': 'gcp.loadbalancer-https-health-check',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-https-health-checks-get.json')
         instances = exec_mode.run(event, None)
@@ -369,13 +398,15 @@ class LoadBalancingHttpsHealthCheckTest(BaseTest):
 
 
 class LoadBalancingHttpHealthCheckTest(BaseTest):
-
     def test_loadbalancer_http_health_check_query(self):
         factory = self.replay_flight_data('lb-http-health-checks-query')
         p = self.load_policy(
-            {'name': 'all-lb-http-health-checks',
-             'resource': 'gcp.loadbalancer-http-health-check'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-http-health-checks',
+                'resource': 'gcp.loadbalancer-http-health-check',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#httpHealthCheck')
@@ -384,13 +415,13 @@ class LoadBalancingHttpHealthCheckTest(BaseTest):
     def test_loadbalancer_http_health_check_get(self):
         factory = self.replay_flight_data('lb-http-health-checks-get')
         p = self.load_policy(
-            {'name': 'one-lb-http-health-checks',
-             'resource': 'gcp.loadbalancer-http-health-check',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-http-health-checks',
+                'resource': 'gcp.loadbalancer-http-health-check',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-http-health-checks-get.json')
         instances = exec_mode.run(event, None)
@@ -400,13 +431,15 @@ class LoadBalancingHttpHealthCheckTest(BaseTest):
 
 
 class LoadBalancingHealthCheckTest(BaseTest):
-
     def test_loadbalancer_health_check_query(self):
         factory = self.replay_flight_data('lb-health-checks-query')
         p = self.load_policy(
-            {'name': 'all-lb-health-checks',
-             'resource': 'gcp.loadbalancer-health-check'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-health-checks',
+                'resource': 'gcp.loadbalancer-health-check',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#healthCheck')
@@ -415,13 +448,13 @@ class LoadBalancingHealthCheckTest(BaseTest):
     def test_loadbalancer_health_check_get(self):
         factory = self.replay_flight_data('lb-health-checks-get')
         p = self.load_policy(
-            {'name': 'one-lb-health-checks',
-             'resource': 'gcp.loadbalancer-health-check',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-health-checks',
+                'resource': 'gcp.loadbalancer-health-check',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-health-checks-get.json')
         instances = exec_mode.run(event, None)
@@ -431,13 +464,15 @@ class LoadBalancingHealthCheckTest(BaseTest):
 
 
 class LoadBalancingTargetHttpProxyTest(BaseTest):
-
     def test_loadbalancer_target_http_proxy_query(self):
         factory = self.replay_flight_data('lb-target-http-proxies-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-http-proxies',
-             'resource': 'gcp.loadbalancer-target-http-proxy'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-target-http-proxies',
+                'resource': 'gcp.loadbalancer-target-http-proxy',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetHttpProxy')
@@ -446,13 +481,13 @@ class LoadBalancingTargetHttpProxyTest(BaseTest):
     def test_loadbalancer_target_http_proxy_get(self):
         factory = self.replay_flight_data('lb-target-http-proxies-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-http-proxies',
-             'resource': 'gcp.loadbalancer-target-http-proxy',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-http-proxies',
+                'resource': 'gcp.loadbalancer-target-http-proxy',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-http-proxies-get.json')
         instances = exec_mode.run(event, None)
@@ -462,13 +497,15 @@ class LoadBalancingTargetHttpProxyTest(BaseTest):
 
 
 class LoadBalancingBackendServiceTest(BaseTest):
-
     def test_loadbalancer_backend_service_query(self):
         factory = self.replay_flight_data('lb-backend-services-query')
         p = self.load_policy(
-            {'name': 'all-lb-backend-services',
-             'resource': 'gcp.loadbalancer-backend-service'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-backend-services',
+                'resource': 'gcp.loadbalancer-backend-service',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#backendService')
@@ -477,13 +514,13 @@ class LoadBalancingBackendServiceTest(BaseTest):
     def test_loadbalancer_backend_service_get(self):
         factory = self.replay_flight_data('lb-backend-services-get')
         p = self.load_policy(
-            {'name': 'one-lb-backend-services',
-             'resource': 'gcp.loadbalancer-backend-service',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-backend-services',
+                'resource': 'gcp.loadbalancer-backend-service',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-backend-services-get.json')
         instances = exec_mode.run(event, None)
@@ -493,13 +530,15 @@ class LoadBalancingBackendServiceTest(BaseTest):
 
 
 class LoadBalancingTargetInstanceTest(BaseTest):
-
     def test_loadbalancer_target_instance_query(self):
         factory = self.replay_flight_data('lb-target-instances-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-instances',
-             'resource': 'gcp.loadbalancer-target-instance'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-target-instances',
+                'resource': 'gcp.loadbalancer-target-instance',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetInstance')
@@ -508,13 +547,13 @@ class LoadBalancingTargetInstanceTest(BaseTest):
     def test_loadbalancer_target_instance_get(self):
         factory = self.replay_flight_data('lb-target-instances-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-instances',
-             'resource': 'gcp.loadbalancer-target-instance',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-instances',
+                'resource': 'gcp.loadbalancer-target-instance',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-instances-get.json')
         instances = exec_mode.run(event, None)
@@ -524,13 +563,12 @@ class LoadBalancingTargetInstanceTest(BaseTest):
 
 
 class LoadBalancingTargetPoolTest(BaseTest):
-
     def test_loadbalancer_target_pool_query(self):
         factory = self.replay_flight_data('lb-target-pools-query')
         p = self.load_policy(
-            {'name': 'all-lb-target-pools',
-             'resource': 'gcp.loadbalancer-target-pool'},
-            session_factory=factory)
+            {'name': 'all-lb-target-pools', 'resource': 'gcp.loadbalancer-target-pool'},
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#targetPool')
@@ -539,13 +577,13 @@ class LoadBalancingTargetPoolTest(BaseTest):
     def test_loadbalancer_target_pool_get(self):
         factory = self.replay_flight_data('lb-target-pools-get')
         p = self.load_policy(
-            {'name': 'one-lb-target-pools',
-             'resource': 'gcp.loadbalancer-target-pool',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-target-pools',
+                'resource': 'gcp.loadbalancer-target-pool',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-target-pools-get.json')
         instances = exec_mode.run(event, None)
@@ -555,13 +593,15 @@ class LoadBalancingTargetPoolTest(BaseTest):
 
 
 class LoadBalancingForwardingRuleTest(BaseTest):
-
     def test_loadbalancer_forwarding_rule_query(self):
         factory = self.replay_flight_data('lb-forwarding-rules-query')
         p = self.load_policy(
-            {'name': 'all-lb-forwarding-rules',
-             'resource': 'gcp.loadbalancer-forwarding-rule'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-forwarding-rules',
+                'resource': 'gcp.loadbalancer-forwarding-rule',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#forwardingRule')
@@ -570,13 +610,13 @@ class LoadBalancingForwardingRuleTest(BaseTest):
     def test_loadbalancer_forwarding_rule_get(self):
         factory = self.replay_flight_data('lb-forwarding-rules-get')
         p = self.load_policy(
-            {'name': 'one-lb-forwarding-rules',
-             'resource': 'gcp.loadbalancer-forwarding-rule',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-forwarding-rules',
+                'resource': 'gcp.loadbalancer-forwarding-rule',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-forwarding-rules-get.json')
         instances = exec_mode.run(event, None)
@@ -586,13 +626,15 @@ class LoadBalancingForwardingRuleTest(BaseTest):
 
 
 class LoadBalancingGlobalForwardingRuleTest(BaseTest):
-
     def test_loadbalancer_global_forwarding_rule_query(self):
         factory = self.replay_flight_data('lb-global-forwarding-rules-query')
         p = self.load_policy(
-            {'name': 'all-lb-global-forwarding-rules',
-             'resource': 'gcp.loadbalancer-global-forwarding-rule'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-global-forwarding-rules',
+                'resource': 'gcp.loadbalancer-global-forwarding-rule',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#forwardingRule')
@@ -601,13 +643,13 @@ class LoadBalancingGlobalForwardingRuleTest(BaseTest):
     def test_loadbalancer_global_forwarding_rule_get(self):
         factory = self.replay_flight_data('lb-global-forwarding-rules-get')
         p = self.load_policy(
-            {'name': 'one-lb-global-forwarding-rules',
-             'resource': 'gcp.loadbalancer-global-forwarding-rule',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-global-forwarding-rules',
+                'resource': 'gcp.loadbalancer-global-forwarding-rule',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-global-forwarding-rules-get.json')
         instances = exec_mode.run(event, None)
@@ -617,13 +659,15 @@ class LoadBalancingGlobalForwardingRuleTest(BaseTest):
 
 
 class LoadBalancingGlobalAddressTest(BaseTest):
-
     def test_loadbalancer_global_address_query(self):
         factory = self.replay_flight_data('lb-global-addresses-query')
         p = self.load_policy(
-            {'name': 'all-lb-global-addresses',
-             'resource': 'gcp.loadbalancer-global-address'},
-            session_factory=factory)
+            {
+                'name': 'all-lb-global-addresses',
+                'resource': 'gcp.loadbalancer-global-address',
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['kind'], 'compute#address')
@@ -632,13 +676,13 @@ class LoadBalancingGlobalAddressTest(BaseTest):
     def test_loadbalancer_global_address_get(self):
         factory = self.replay_flight_data('lb-global-addresses-get')
         p = self.load_policy(
-            {'name': 'one-lb-global-addresses',
-             'resource': 'gcp.loadbalancer-global-address',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': []
-             }},
-            session_factory=factory)
+            {
+                'name': 'one-lb-global-addresses',
+                'resource': 'gcp.loadbalancer-global-address',
+                'mode': {'type': 'gcp-audit', 'methods': []},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         event = event_data('lb-global-addresses-get.json')
         instances = exec_mode.run(event, None)

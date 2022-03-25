@@ -85,7 +85,6 @@ class GoogleFlightRecorder(CustodianTestCore):
 
 
 class FlightRecorderTest(TestUtils):
-
     def cleanUp(self):
         LOCAL_THREAD.http = None
         return super(FlightRecorderTest, self).cleanUp()

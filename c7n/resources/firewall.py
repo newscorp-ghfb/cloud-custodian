@@ -2,13 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .aws import AWS
-from c7n.query import (
-    QueryResourceManager, TypeInfo, DescribeSource, ConfigSource)
+from c7n.query import QueryResourceManager, TypeInfo, DescribeSource, ConfigSource
 from c7n.filters.vpc import VpcFilter, SubnetFilter
 
 
 class FirewallDescribe(DescribeSource):
-
     def augment(self, resources):
         resources = super().augment(resources)
         for r in resources:
@@ -20,7 +18,6 @@ class FirewallDescribe(DescribeSource):
 
 
 class FirewallConfig(ConfigSource):
-
     def load_resource(self, item):
         resource = super().load_resource(item)
         resource.update(resource.pop('Firewall'))
@@ -33,10 +30,8 @@ class NetworkFirewall(QueryResourceManager):
 
     https://docs.aws.amazon.com/network-firewall/latest/developerguide/what-is-aws-network-firewall.html
     """
-    source_mapping = {
-        'describe': FirewallDescribe,
-        'config': FirewallConfig
-    }
+
+    source_mapping = {'describe': FirewallDescribe, 'config': FirewallConfig}
 
     class resource_type(TypeInfo):
 

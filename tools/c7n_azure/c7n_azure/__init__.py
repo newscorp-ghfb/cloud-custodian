@@ -13,4 +13,6 @@ logging.getLogger("azure.cosmosdb.table.common.storageclient").setLevel(logging.
 
 # This logger is spamming INFO with a bunch of requests data
 logging.getLogger('azure.identity').setLevel(logging.WARNING)
-logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
+logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(
+    logging.WARNING
+)

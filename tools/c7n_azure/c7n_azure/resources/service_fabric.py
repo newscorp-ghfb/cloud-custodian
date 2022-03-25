@@ -27,11 +27,7 @@ class ServiceFabricCluster(ArmResourceManager):
         service = 'azure.mgmt.servicefabric'
         client = 'ServiceFabricManagementClient'
         enum_spec = ('clusters', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.ServiceFabric/clusters'
 
 
@@ -57,9 +53,5 @@ class ServiceFabricClusterManaged(ArmResourceManager):
         service = 'azure.mgmt.servicefabric'
         client = 'ServiceFabricManagementClient'
         enum_spec = ('managed_clusters', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.ServiceFabric/clusters'

@@ -9,16 +9,8 @@ class TestFSx(BaseTest):
     def test_fsx_resource(self):
         session_factory = self.replay_flight_data('test_fsx_resource')
         p = self.load_policy(
-            {
-                'name': 'test-fsx',
-                'resource': 'fsx',
-                'filters': [
-                    {
-                        'tag:Name': 'test'
-                    }
-                ]
-            },
-            session_factory=session_factory
+            {'name': 'test-fsx', 'resource': 'fsx', 'filters': [{'tag:Name': 'test'}]},
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources))
@@ -29,20 +21,10 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-fsx',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'tag:Name': 'test'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'tag',
-                        'key': 'test',
-                        'value': 'test-value'
-                    }
-                ]
+                'filters': [{'tag:Name': 'test'}],
+                'actions': [{'type': 'tag', 'key': 'test', 'value': 'test-value'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources))
@@ -57,22 +39,15 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-fsx',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'tag:Name': 'test'
-                    }
-                ],
+                'filters': [{'tag:Name': 'test'}],
                 'actions': [
                     {
                         'type': 'remove-tag',
-                        'tags': [
-                            'maid_status',
-                            'test'
-                        ],
+                        'tags': ['maid_status', 'test'],
                     }
-                ]
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources))
@@ -87,19 +62,10 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-fsx',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'tag:Name': 'test'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'mark-for-op',
-                        'op': 'tag'
-                    }
-                ]
+                'filters': [{'tag:Name': 'test'}],
+                'actions': [{'type': 'mark-for-op', 'op': 'tag'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources))
@@ -114,21 +80,15 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-update-fsx-configuration',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'WindowsConfiguration.AutomaticBackupRetentionDays': 1
-                    }
-                ],
+                'filters': [{'WindowsConfiguration.AutomaticBackupRetentionDays': 1}],
                 'actions': [
                     {
                         'type': 'update',
-                        'WindowsConfiguration': {
-                            'AutomaticBackupRetentionDays': 3
-                        }
+                        'WindowsConfiguration': {'AutomaticBackupRetentionDays': 3},
                     }
-                ]
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
 
@@ -136,12 +96,10 @@ class TestFSx(BaseTest):
         client = session_factory().client('fsx')
         new_resources = client.describe_file_systems()['FileSystems']
         self.assertEqual(len(resources), 1)
+        self.assertEqual(new_resources[0]['FileSystemId'], resources[0]['FileSystemId'])
         self.assertEqual(
-            new_resources[0]['FileSystemId'],
-            resources[0]['FileSystemId']
+            new_resources[0]['WindowsConfiguration']['AutomaticBackupRetentionDays'], 3
         )
-        self.assertEqual(
-            new_resources[0]['WindowsConfiguration']['AutomaticBackupRetentionDays'], 3)
 
     def test_fsx_create_bad_backup(self):
         session_factory = self.replay_flight_data('test_fsx_create_backup_with_errors')
@@ -149,21 +107,10 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-update-fsx-configuration',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'FileSystemId': 'fs-0bc98cbfb6b356896'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'backup',
-                        'tags': {
-                            'test-tag': 'backup-tag'
-                        }
-                    }
-                ]
+                'filters': [{'FileSystemId': 'fs-0bc98cbfb6b356896'}],
+                'actions': [{'type': 'backup', 'tags': {'test-tag': 'backup-tag'}}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
 
@@ -173,14 +120,8 @@ class TestFSx(BaseTest):
 
         backups = client.describe_backups(
             Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-0bc98cbfb6b356896']
-                },
-                {
-                    'Name': 'backup-type',
-                    'Values': ['USER_INITIATED']
-                }
+                {'Name': 'file-system-id', 'Values': ['fs-0bc98cbfb6b356896']},
+                {'Name': 'backup-type', 'Values': ['USER_INITIATED']},
             ]
         )
         self.assertEqual(len(backups['Backups']), 0)
@@ -191,22 +132,16 @@ class TestFSx(BaseTest):
             {
                 'name': 'test-update-fsx-configuration',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'FileSystemId': 'fs-002ccbccdcf032728'
-                    }
-                ],
+                'filters': [{'FileSystemId': 'fs-002ccbccdcf032728'}],
                 'actions': [
                     {
                         'type': 'backup',
                         'copy-tags': True,
-                        'tags': {
-                            'test-tag': 'backup-tag'
-                        }
+                        'tags': {'test-tag': 'backup-tag'},
                     }
-                ]
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
 
@@ -219,14 +154,8 @@ class TestFSx(BaseTest):
 
         backups = client.describe_backups(
             Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                },
-                {
-                    'Name': 'backup-type',
-                    'Values': ['USER_INITIATED']
-                }
+                {'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']},
+                {'Name': 'backup-type', 'Values': ['USER_INITIATED']},
             ]
         )
 
@@ -241,27 +170,23 @@ class TestFSx(BaseTest):
         self.assertEqual(expected_tag_map, final_tag_map)
 
     def test_fsx_create_backup_without_copy_tags(self):
-        session_factory = self.replay_flight_data('test_fsx_create_backup_without_copy_tags')
+        session_factory = self.replay_flight_data(
+            'test_fsx_create_backup_without_copy_tags'
+        )
         p = self.load_policy(
             {
                 'name': 'test-update-fsx-configuration',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'FileSystemId': 'fs-002ccbccdcf032728'
-                    }
-                ],
+                'filters': [{'FileSystemId': 'fs-002ccbccdcf032728'}],
                 'actions': [
                     {
                         'type': 'backup',
                         'copy-tags': False,
-                        'tags': {
-                            'test-tag': 'backup-tag'
-                        }
+                        'tags': {'test-tag': 'backup-tag'},
                     }
-                ]
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -272,14 +197,8 @@ class TestFSx(BaseTest):
         client = session_factory().client('fsx')
         backups = client.describe_backups(
             Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                },
-                {
-                    'Name': 'backup-type',
-                    'Values': ['USER_INITIATED']
-                }
+                {'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']},
+                {'Name': 'backup-type', 'Values': ['USER_INITIATED']},
             ]
         )
         self.assertEqual(len(backups['Backups']), 1)
@@ -287,44 +206,32 @@ class TestFSx(BaseTest):
         self.assertEqual(expected_tags, backups['Backups'][0]['Tags'])
 
     def test_fsx_delete_file_system_skip_snapshot(self):
-        session_factory = self.replay_flight_data('test_fsx_delete_file_system_skip_snapshot')
+        session_factory = self.replay_flight_data(
+            'test_fsx_delete_file_system_skip_snapshot'
+        )
         p = self.load_policy(
             {
                 'name': 'fsx-delete-file-system',
                 'resource': 'fsx',
                 'filters': [
-                    {
-                        'type': 'value',
-                        'key': 'Lifecycle',
-                        'value': 'AVAILABLE'
-                    }
+                    {'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}
                 ],
-                'actions': [
-                    {
-                        'type': 'delete',
-                        'skip-snapshot': True
-                    }
-                ]
+                'actions': [{'type': 'delete', 'skip-snapshot': True}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         client = session_factory().client('fsx')
-        fs = client.describe_file_systems(
-            FileSystemIds=[resources[0]['FileSystemId']])['FileSystems']
+        fs = client.describe_file_systems(FileSystemIds=[resources[0]['FileSystemId']])[
+            'FileSystems'
+        ]
         self.assertTrue(len(fs), 1)
         self.assertEqual(fs[0]['Lifecycle'], 'DELETING')
         backups = client.describe_backups(
             Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': [fs[0]['FileSystemId']]
-                },
-                {
-                    'Name': 'backup-type',
-                    'Values': ['USER_INITIATED']
-                }
+                {'Name': 'file-system-id', 'Values': [fs[0]['FileSystemId']]},
+                {'Name': 'backup-type', 'Values': ['USER_INITIATED']},
             ]
         )['Backups']
         self.assertEqual(len(backups), 0)
@@ -336,78 +243,64 @@ class TestFSx(BaseTest):
                 'name': 'fsx-delete-file-system',
                 'resource': 'fsx',
                 'filters': [
-                    {
-                        'type': 'value',
-                        'key': 'Lifecycle',
-                        'value': 'AVAILABLE'
-                    }
+                    {'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}
                 ],
                 'actions': [
                     {
                         'type': 'delete',
-                        'tags': {
-                            'DeletedBy': 'CloudCustodian'
-                        },
-                        'skip-snapshot': False
+                        'tags': {'DeletedBy': 'CloudCustodian'},
+                        'skip-snapshot': False,
                     }
-                ]
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         client = session_factory().client('fsx')
-        fs = client.describe_file_systems(
-            FileSystemIds=[resources[0]['FileSystemId']])['FileSystems']
+        fs = client.describe_file_systems(FileSystemIds=[resources[0]['FileSystemId']])[
+            'FileSystems'
+        ]
         self.assertTrue(len(fs), 1)
         self.assertEqual(fs[0]['Lifecycle'], 'DELETING')
         backups = client.describe_backups(
             Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': [fs[0]['FileSystemId']]
-                },
-                {
-                    'Name': 'backup-type',
-                    'Values': ['USER_INITIATED']
-                }
+                {'Name': 'file-system-id', 'Values': [fs[0]['FileSystemId']]},
+                {'Name': 'backup-type', 'Values': ['USER_INITIATED']},
             ]
         )['Backups']
         self.assertEqual(len(backups), 1)
 
     def test_fsx_delete_file_system_with_error(self):
-        session_factory = self.replay_flight_data('test_fsx_delete_file_system_with_error')
+        session_factory = self.replay_flight_data(
+            'test_fsx_delete_file_system_with_error'
+        )
         p = self.load_policy(
             {
                 'name': 'fsx-delete-file-system',
                 'resource': 'fsx',
-                'filters': [
-                    {
-                        'type': 'value',
-                        'key': 'Lifecycle',
-                        'value': 'CREATING'
-                    }
-                ],
-                'actions': [
-                    {'type': 'delete'}
-                ]
+                'filters': [{'type': 'value', 'key': 'Lifecycle', 'value': 'CREATING'}],
+                'actions': [{'type': 'delete'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         client = session_factory().client('fsx')
-        fs = client.describe_file_systems(
-            FileSystemIds=[resources[0]['FileSystemId']])['FileSystems']
+        fs = client.describe_file_systems(FileSystemIds=[resources[0]['FileSystemId']])[
+            'FileSystems'
+        ]
         self.assertTrue(len(fs), 1)
         self.assertNotEqual(fs[0]['Lifecycle'], 'DELETING')
 
     def test_fsx_arn_in_event(self):
         session_factory = self.replay_flight_data('test_fsx_resource')
-        p = self.load_policy({'name': 'test-fsx', 'resource': 'fsx'},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {'name': 'test-fsx', 'resource': 'fsx'}, session_factory=session_factory
+        )
         resources = p.resource_manager.get_resources(
-            ["arn:aws:fsx:us-east-1:644160558196:file-system/fs-0bc98cbfb6b356896"])
+            ["arn:aws:fsx:us-east-1:644160558196:file-system/fs-0bc98cbfb6b356896"]
+        )
         self.assertEqual(len(resources), 1)
 
 
@@ -419,25 +312,16 @@ class TestFSxBackup(BaseTest):
             {
                 'name': 'fsx-backup-resource',
                 'resource': 'fsx-backup',
-                'filters': [
-                    {'BackupId': backup_id}
-                ],
-                'actions': [
-                    {'type': 'delete'}
-                ]
+                'filters': [{'BackupId': backup_id}],
+                'actions': [{'type': 'delete'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(resources)
         client = session_factory().client('fsx')
         backups = client.describe_backups(
-            Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                }
-            ]
+            Filters=[{'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']}]
         )['Backups']
         results = [b for b in backups if b['BackupId'] == backup_id]
         self.assertFalse(results)
@@ -449,26 +333,16 @@ class TestFSxBackup(BaseTest):
             {
                 'name': 'fsx-backup-resource-tag',
                 'resource': 'fsx-backup',
-                'filters': [
-                    {'BackupId': backup_id},
-                    {'Tags': []}
-                ],
-                'actions': [
-                    {'type': 'tag', 'tags': {'tag-test': 'tag-test'}}
-                ]
+                'filters': [{'BackupId': backup_id}, {'Tags': []}],
+                'actions': [{'type': 'tag', 'tags': {'tag-test': 'tag-test'}}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
         client = session_factory().client('fsx')
         backups = client.describe_backups(
-            Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                }
-            ]
+            Filters=[{'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']}]
         )['Backups']
         tags = None
         for b in backups:
@@ -486,27 +360,17 @@ class TestFSxBackup(BaseTest):
             {
                 'name': 'fsx-backup-resource-mark-for-op',
                 'resource': 'fsx-backup',
-                'filters': [
-                    {'BackupId': backup_id},
-                    {'Tags': []}
-                ],
-                'actions': [
-                    {'type': 'mark-for-op', 'op': 'delete'}
-                ]
+                'filters': [{'BackupId': backup_id}, {'Tags': []}],
+                'actions': [{'type': 'mark-for-op', 'op': 'delete'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
 
         client = session_factory().client('fsx')
         backups = client.describe_backups(
-            Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                }
-            ]
+            Filters=[{'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']}]
         )['Backups']
         tags = None
         for b in backups:
@@ -526,23 +390,16 @@ class TestFSxBackup(BaseTest):
                     {'BackupId': backup_id},
                     {'tag:test-tag': 'backup-tag'},
                 ],
-                'actions': [
-                    {'type': 'remove-tag', 'tags': ['test-tag']}
-                ]
+                'actions': [{'type': 'remove-tag', 'tags': ['test-tag']}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
 
         client = session_factory().client('fsx')
         backups = client.describe_backups(
-            Filters=[
-                {
-                    'Name': 'file-system-id',
-                    'Values': ['fs-002ccbccdcf032728']
-                }
-            ]
+            Filters=[{'Name': 'file-system-id', 'Values': ['fs-002ccbccdcf032728']}]
         )['Backups']
         tags = [1]
         for b in backups:
@@ -562,9 +419,9 @@ class TestFSxBackup(BaseTest):
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "^(alias/aws/fsx)",
-                        "op": "regex"
+                        "op": "regex",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -583,9 +440,9 @@ class TestFSxBackup(BaseTest):
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "^(alias/aws/fsx)",
-                        "op": "regex"
+                        "op": "regex",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )

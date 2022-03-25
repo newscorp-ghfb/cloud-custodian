@@ -6,10 +6,23 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.parametrize("package", [
-    "c7n", "c7n_azure", "c7n_gcp", "c7n_kube", "c7n_org",
-    "c7n_mailer", "policystream", "c7n_trailcreator", "c7n_terraform",
-    "c7n_logexporter", "c7n_sphinxext", "c7n_openstack"])
+@pytest.mark.parametrize(
+    "package",
+    [
+        "c7n",
+        "c7n_azure",
+        "c7n_gcp",
+        "c7n_kube",
+        "c7n_org",
+        "c7n_mailer",
+        "policystream",
+        "c7n_trailcreator",
+        "c7n_terraform",
+        "c7n_logexporter",
+        "c7n_sphinxext",
+        "c7n_openstack",
+    ],
+)
 def test_package_metadata(package):
     try:
         m = __import__(package)
@@ -18,8 +31,9 @@ def test_package_metadata(package):
         return
     found = False
     for c in [
-            Path(m.__file__).parent.parent / 'pyproject.toml',
-            Path(m.__file__).parent / 'pyproject.toml']:
+        Path(m.__file__).parent.parent / 'pyproject.toml',
+        Path(m.__file__).parent / 'pyproject.toml',
+    ]:
         if c.exists():
             found = True
             p = c
@@ -34,7 +48,8 @@ def test_package_metadata(package):
     assert md.get('classifiers', []) == [
         'License :: OSI Approved :: Apache Software License',
         'Topic :: System :: Systems Administration',
-        'Topic :: System :: Distributed Computing']
+        'Topic :: System :: Distributed Computing',
+    ]
     assert md.get('readme', '').endswith('md')
     assert (p.parent / md['readme']).exists()
     assert 'description' in md

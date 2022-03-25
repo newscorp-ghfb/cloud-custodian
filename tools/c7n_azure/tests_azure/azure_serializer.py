@@ -4,7 +4,6 @@ import json
 
 
 class AzureSerializer:
-
     def deserialize(self, cassette_string):
         return json.loads(cassette_string)
 
@@ -23,7 +22,7 @@ class AzureSerializer:
                 b"Error serializing cassette to JSON",
                 original.start,
                 original.end,
-                original.args[-1] + error_message
+                original.args[-1] + error_message,
             )
         except TypeError:  # py3
             raise TypeError(error_message)

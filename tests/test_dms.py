@@ -5,7 +5,6 @@ from .common import BaseTest
 
 
 class ReplInstance(BaseTest):
-
     def test_describe_augment_no_tags(self):
         session_factory = self.replay_flight_data(
             "test_dms_repl_instance_describe_sans_tags"
@@ -89,7 +88,6 @@ class ReplInstance(BaseTest):
 
 
 class ReplicationInstanceTagging(BaseTest):
-
     def test_replication_instance_tag(self):
         session_factory = self.replay_flight_data("test_dms_tag")
         p = self.load_policy(
@@ -108,9 +106,7 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         tag_value = [t["Value"] for t in tag_list if t["Key"] == "RequiredTag"]
         self.assertEqual(tag_value[0], "RequiredValue")
 
@@ -130,9 +126,7 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         self.assertFalse([t for t in tag_list if t["Key"] == "RequiredTag"])
 
     def test_replication_instance_markforop(self):
@@ -158,9 +152,7 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         self.assertTrue(
             [t["Value"] for t in tag_list if t["Key"] == "custodian_cleanup"]
         )
@@ -190,7 +182,6 @@ class ReplicationInstanceTagging(BaseTest):
 
 
 class DmsEndpointTests(BaseTest):
-
     def test_resource_query(self):
         session_factory = self.replay_flight_data("test_dms_resource_query")
         p = self.load_policy(
@@ -247,7 +238,7 @@ class DmsEndpointTests(BaseTest):
                 "resource": "dms-endpoint",
                 "filters": [
                     {"tag:Owner": "pikachu"},
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -270,11 +261,7 @@ class DmsEndpointTests(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         ep = client.describe_endpoints(
             Filters=[{"Name": "endpoint-id", "Values": ["c7n-test"]}]
-        )[
-            "Endpoints"
-        ][
-            0
-        ]
+        )["Endpoints"][0]
         self.assertEqual(
             [ep["EndpointIdentifier"], ep["Status"]], ["c7n-test", "deleting"]
         )

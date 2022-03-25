@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class UserPool(BaseTest):
-
     def test_query_user_pool(self):
         factory = self.replay_flight_data("test_cognito-user-pool")
         p = self.load_policy(
@@ -37,7 +36,6 @@ class UserPool(BaseTest):
 
 
 class IdentityPool(BaseTest):
-
     def test_query_identity_pool(self):
         factory = self.replay_flight_data("test_cognito-identity-pool")
         p = self.load_policy(

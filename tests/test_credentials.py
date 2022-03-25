@@ -13,7 +13,6 @@ from .common import BaseTest
 
 
 class Credential(BaseTest):
-
     def test_session_factory(self):
         factory = SessionFactory("us-east-1")
         session = factory()
@@ -28,11 +27,10 @@ class Credential(BaseTest):
         client = get_sts_client(factory(), region='us-east-2')
         # unfortunately we have to poke at boto3 client internals to verify
         self.assertEqual(client._client_config.region_name, 'us-east-2')
-        self.assertEqual(client._endpoint.host,
-                         'https://sts.us-east-2.amazonaws.com')
+        self.assertEqual(client._endpoint.host, 'https://sts.us-east-2.amazonaws.com')
         self.assertEqual(
-            client.get_caller_identity()['Arn'],
-            'arn:aws:iam::644160558196:user/kapil')
+            client.get_caller_identity()['Arn'], 'arn:aws:iam::644160558196:user/kapil'
+        )
 
     def test_assumed_session(self):
         factory = self.replay_flight_data("test_credential_sts")
@@ -44,7 +42,8 @@ class Credential(BaseTest):
 
         # attach the placebo flight recorder to the new session.
         pill = placebo.attach(
-            session, os.path.join(self.placebo_dir, 'test_credential_sts'))
+            session, os.path.join(self.placebo_dir, 'test_credential_sts')
+        )
         if self.recording:
             pill.record()
         else:
@@ -58,7 +57,8 @@ class Credential(BaseTest):
 
         self.assertEqual(
             identity['Arn'],
-            'arn:aws:sts::644160558196:assumed-role/CustodianGuardDuty/custodian-dev')
+            'arn:aws:sts::644160558196:assumed-role/CustodianGuardDuty/custodian-dev',
+        )
 
     def test_policy_name_user_agent(self):
         session = SessionFactory("us-east-1")
@@ -74,11 +74,9 @@ class Credential(BaseTest):
         factory = SessionFactory('us-east-1')
         factory.policy_name = "check-ebs"
         client = local_session(factory).client('ec2')
-        self.assertTrue(
-            'check-ebs' in client._client_config.user_agent)
+        self.assertTrue('check-ebs' in client._client_config.user_agent)
 
         factory.policy_name = "check-ec2"
         factory.update(local_session(factory))
         client = local_session(factory).client('ec2')
-        self.assertTrue(
-            'check-ec2' in client._client_config.user_agent)
+        self.assertTrue('check-ec2' in client._client_config.user_agent)

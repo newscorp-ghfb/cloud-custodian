@@ -8,7 +8,6 @@ from mock import MagicMock
 
 
 class AutoTagCreator(BaseTest):
-
     def test_auto_tag_assumed(self):
         # verify auto tag works with assumed roles and can optionally update
         session_factory = self.replay_flight_data("test_ec2_autotag_assumed")

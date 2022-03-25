@@ -13,24 +13,22 @@ from c7n.testing import mock_datetime_now
 from c7n.output import metrics_outputs
 from c7n.utils import parse_url_config, reset_session_cache
 
-from c7n_gcp.output import (
-    GCPStorageOutput, StackDriverLogging, StackDriverMetrics)
+from c7n_gcp.output import GCPStorageOutput, StackDriverLogging, StackDriverMetrics
 
 from gcp_common import BaseTest
 
 
 class MetricsOutputTest(BaseTest):
-
     def test_metrics_selector(self):
-        self.assertEqual(
-            metrics_outputs.get('gcp'),
-            StackDriverMetrics)
+        self.assertEqual(metrics_outputs.get('gcp'), StackDriverMetrics)
 
     def test_metrics_output(self):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('output-metrics', project_id=project_id)
-        ctx = Bag(session_factory=factory,
-                  policy=Bag(name='custodian-works', resource_type='gcp.function'))
+        ctx = Bag(
+            session_factory=factory,
+            policy=Bag(name='custodian-works', resource_type='gcp.function'),
+        )
         conf = Bag()
         metrics = StackDriverMetrics(ctx, conf)
         metrics.put_metric('ResourceCount', 43, 'Count', Scope='Policy')
@@ -42,39 +40,56 @@ class MetricsOutputTest(BaseTest):
         session = factory()
         client = session.client('monitoring', 'v3', 'projects.timeSeries')
         results = client.execute_command(
-            'list', {
+            'list',
+            {
                 'name': 'projects/{}'.format(project_id),
                 'filter': 'metric.type="custom.googleapis.com/custodian/policy/resourcecount"',
                 'pageSize': 3,
                 'interval_startTime': (
                     datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
-                ).isoformat('T') + 'Z',
-                'interval_endTime': datetime.datetime.utcnow().isoformat('T') + 'Z'
-            })
+                ).isoformat('T')
+                + 'Z',
+                'interval_endTime': datetime.datetime.utcnow().isoformat('T') + 'Z',
+            },
+        )
         self.assertEqual(
             results['timeSeries'],
-            [{u'metric': {
-                u'labels': {
-                    u'policy': u'custodian-works',
-                    u'project_id': u'cloud-custodian'},
-                u'type': u'custom.googleapis.com/custodian/policy/resourcecount'},
-              u'metricKind': u'GAUGE',
-              u'points': [{
-                  u'interval': {
-                      u'endTime': u'2018-08-12T22:30:53.524505Z',
-                      u'startTime': u'2018-08-12T22:30:53.524505Z'},
-                  u'value': {u'int64Value': u'43'}}],
-              u'resource': {
-                  u'labels': {u'project_id': u'cloud-custodian'},
-                  u'type': u'global'},
-              u'valueType': u'INT64'}])
+            [
+                {
+                    u'metric': {
+                        u'labels': {
+                            u'policy': u'custodian-works',
+                            u'project_id': u'cloud-custodian',
+                        },
+                        u'type': u'custom.googleapis.com/custodian/policy/resourcecount',
+                    },
+                    u'metricKind': u'GAUGE',
+                    u'points': [
+                        {
+                            u'interval': {
+                                u'endTime': u'2018-08-12T22:30:53.524505Z',
+                                u'startTime': u'2018-08-12T22:30:53.524505Z',
+                            },
+                            u'value': {u'int64Value': u'43'},
+                        }
+                    ],
+                    u'resource': {
+                        u'labels': {u'project_id': u'cloud-custodian'},
+                        u'type': u'global',
+                    },
+                    u'valueType': u'INT64',
+                }
+            ],
+        )
 
     def test_metrics_output_set_write_project_id(self):
         project_id = 'cloud-custodian-sub'
         write_project_id = 'cloud-custodian'
         factory = self.replay_flight_data('output-metrics', project_id=project_id)
-        ctx = Bag(session_factory=factory,
-                  policy=Bag(name='custodian-works', resource_type='gcp.function'))
+        ctx = Bag(
+            session_factory=factory,
+            policy=Bag(name='custodian-works', resource_type='gcp.function'),
+        )
         conf = Bag(project_id=write_project_id)
         metrics = StackDriverMetrics(ctx, conf)
         metrics.put_metric('ResourceCount', 43, 'Count', Scope='Policy')
@@ -86,8 +101,9 @@ def get_log_output(request, output_url):
         ExecutionContext(
             lambda assume=False: mock.MagicMock(),
             Bag(name="xyz", provider_name="gcp", resource_type='gcp.function'),
-            Config.empty(account_id='custodian-test')),
-        parse_url_config(output_url)
+            Config.empty(account_id='custodian-test'),
+        ),
+        parse_url_config(output_url),
     )
     request.addfinalizer(reset_session_cache)
     return log
@@ -100,12 +116,13 @@ def get_blob_output(request, output_url=None, cleanup=True):
         ExecutionContext(
             lambda assume=False: mock.MagicMock(),
             Bag(name="xyz", provider_name="gcp"),
-            Config.empty(output_dir=output_url, account_id='custodian-test')),
-        parse_url_config(output_url)
+            Config.empty(output_dir=output_url, account_id='custodian-test'),
+        ),
+        parse_url_config(output_url),
     )
 
     if cleanup:
-        request.addfinalizer(lambda : shutil.rmtree(output.root_dir)) # noqa
+        request.addfinalizer(lambda: shutil.rmtree(output.root_dir))  # noqa
     request.addfinalizer(reset_session_cache)
     return output
 

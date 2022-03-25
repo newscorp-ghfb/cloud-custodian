@@ -10,7 +10,6 @@ from c7n.executor import MainThreadExecutor
 
 
 class DynamodbTest(BaseTest):
-
     def test_resources(self):
         session_factory = self.replay_flight_data("test_dynamodb_table")
         p = self.load_policy(
@@ -60,7 +59,8 @@ class DynamodbTest(BaseTest):
                 "filters": [{"tag:test_key": "test_value"}],
             },
             session_factory=session_factory,
-            config={'region': 'us-west-2', 'account_id': '644160558196'})
+            config={'region': 'us-west-2', 'account_id': '644160558196'},
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -80,9 +80,9 @@ class DynamodbTest(BaseTest):
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "^(alias/aws/dynamodb)",
-                        "op": "regex"
+                        "op": "regex",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -91,7 +91,9 @@ class DynamodbTest(BaseTest):
         self.assertEqual(resources[0]["TableName"], "test-table-kms-filter")
 
     def test_continuous_backup_filter(self):
-        session_factory = self.replay_flight_data("test_dynamodb_continuous_backup_filter")
+        session_factory = self.replay_flight_data(
+            "test_dynamodb_continuous_backup_filter"
+        )
         p = self.load_policy(
             {
                 "name": "dynamodb-continuous_backup-filters",
@@ -101,20 +103,25 @@ class DynamodbTest(BaseTest):
                         "type": "continuous-backup",
                         "key": "PointInTimeRecoveryDescription.PointInTimeRecoveryStatus",
                         "value": "ENABLED",
-                        "op": "ne"
+                        "op": "ne",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            resources[0]["c7n:continuous-backup"]["PointInTimeRecoveryDescription"]["PointInTimeRecoveryStatus"], # noqa
-            "DISABLED")
+            resources[0]["c7n:continuous-backup"]["PointInTimeRecoveryDescription"][
+                "PointInTimeRecoveryStatus"
+            ],  # noqa
+            "DISABLED",
+        )
 
     def test_continuous_backup_action(self):
-        session_factory = self.replay_flight_data("test_dynamodb_continuous_backup_action")
+        session_factory = self.replay_flight_data(
+            "test_dynamodb_continuous_backup_action"
+        )
         client = session_factory().client("dynamodb")
         p = self.load_policy(
             {
@@ -125,26 +132,28 @@ class DynamodbTest(BaseTest):
                         "type": "continuous-backup",
                         "key": "PointInTimeRecoveryDescription.PointInTimeRecoveryStatus",
                         "value": "ENABLED",
-                        "op": "ne"
+                        "op": "ne",
                     }
                 ],
-                "actions": [
-                    {
-                        "type": "set-continuous-backup"
-                    }
-                ]
+                "actions": [{"type": "set-continuous-backup"}],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            resources[0]["c7n:continuous-backup"]["PointInTimeRecoveryDescription"]["PointInTimeRecoveryStatus"],  # noqa
-            "DISABLED")
-        res = client.describe_continuous_backups(TableName=resources[0]["TableName"])['ContinuousBackupsDescription']  # noqa
+            resources[0]["c7n:continuous-backup"]["PointInTimeRecoveryDescription"][
+                "PointInTimeRecoveryStatus"
+            ],  # noqa
+            "DISABLED",
+        )
+        res = client.describe_continuous_backups(TableName=resources[0]["TableName"])[
+            'ContinuousBackupsDescription'
+        ]  # noqa
         self.assertEqual(
             res['PointInTimeRecoveryDescription']["PointInTimeRecoveryStatus"],
-            'ENABLED')
+            'ENABLED',
+        )
 
     def test_continuous_backup_action_error(self):
         factory = self.replay_flight_data("test_dynamodb_continuous_backup_action")
@@ -153,13 +162,14 @@ class DynamodbTest(BaseTest):
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
-            'dynamodb').exceptions.TableNotFoundException = (
-                client.exceptions.TableNotFoundException)
+            'dynamodb'
+        ).exceptions.TableNotFoundException = client.exceptions.TableNotFoundException
 
-        mock_factory().client('dynamodb').update_continuous_backups.side_effect = (
-            client.exceptions.TableNotFoundException(
-                {'Error': {'Code': 'xyz'}},
-                operation_name='update_continuous_backups'))
+        mock_factory().client(
+            'dynamodb'
+        ).update_continuous_backups.side_effect = client.exceptions.TableNotFoundException(
+            {'Error': {'Code': 'xyz'}}, operation_name='update_continuous_backups'
+        )
         p = self.load_policy(
             {
                 "name": "dynamodb-continuous_backup-action",
@@ -169,19 +179,17 @@ class DynamodbTest(BaseTest):
                         "type": "continuous-backup",
                         "key": "PointInTimeRecoveryDescription.PointInTimeRecoveryStatus",
                         "value": "ENABLED",
-                        "op": "ne"
+                        "op": "ne",
                     }
                 ],
-                "actions": [
-                    {
-                        "type": "set-continuous-backup"
-                    }
-                ]
+                "actions": [{"type": "set-continuous-backup"}],
             },
             session_factory=mock_factory,
         )
         try:
-            p.resource_manager.actions[0].process([{'TableName': 'abc', 'TableStatus': 'ACTIVE'}])
+            p.resource_manager.actions[0].process(
+                [{'TableName': 'abc', 'TableStatus': 'ACTIVE'}]
+            )
         except client.exceptions.TableNotFoundException:
             self.fail('should not raise')
         mock_factory().client('dynamodb').update_continuous_backups.assert_called_once()
@@ -193,10 +201,7 @@ class DynamodbTest(BaseTest):
             {
                 "name": "dynamodb-mark",
                 "resource": "dynamodb-table",
-                "filters": [
-                    {"TableName": "c7n-test"},
-                    {'tag:test_tag': 'absent'}
-                ],
+                "filters": [{"TableName": "c7n-test"}, {'tag:test_tag': 'absent'}],
                 "actions": [
                     {
                         "type": "mark-for-op",
@@ -219,9 +224,7 @@ class DynamodbTest(BaseTest):
         dt = dt.replace(year=2018, month=6, day=8, hour=7, minute=00)
         result = datetime.datetime.strptime(
             tag_map["test_tag"].strip().split("@", 1)[-1], "%Y/%m/%d"
-        ).replace(
-            tzinfo=localtz
-        )
+        ).replace(tzinfo=localtz)
         self.assertEqual(result.date(), dt.date())
 
     def test_dynamodb_tag(self):
@@ -361,7 +364,6 @@ class DynamodbTest(BaseTest):
 
 
 class DynamoDbAccelerator(BaseTest):
-
     def test_resources(self):
         session_factory = self.replay_flight_data("test_dax_resources")
         p = self.load_policy(
@@ -431,7 +433,8 @@ class DynamoDbAccelerator(BaseTest):
                 "name": "dax-resources",
                 "resource": "dax",
                 "filters": [
-                    {"tag:custodian_cleanup": "absent"}, {"tag:Required": "absent"}
+                    {"tag:custodian_cleanup": "absent"},
+                    {"tag:Required": "absent"},
                 ],
                 "actions": [
                     {
@@ -472,60 +475,70 @@ class DynamoDbAccelerator(BaseTest):
         self.assertEqual(clusters[0]['Status'], 'deleting')
 
     def test_update_cluster(self):
-        session_factory = self.replay_flight_data(
-            'test_dax_update_cluster')
-        p = self.load_policy({
-            'name': 'dax-resources',
-            'resource': 'dax',
-            'filters': [{
-                'ParameterGroup.ParameterGroupName': 'default.dax1.0'}],
-            'actions': [{
-                'type': 'update-cluster',
-                'ParameterGroupName': 'testparamgroup'}]
-        }, session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_dax_update_cluster')
+        p = self.load_policy(
+            {
+                'name': 'dax-resources',
+                'resource': 'dax',
+                'filters': [{'ParameterGroup.ParameterGroupName': 'default.dax1.0'}],
+                'actions': [
+                    {'type': 'update-cluster', 'ParameterGroupName': 'testparamgroup'}
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ClusterName'], 'c7n-dax')
         client = session_factory(region='us-east-1').client('dax')
         clusters = client.describe_clusters()['Clusters']
-        self.assertEqual(clusters[0]['ParameterGroup']['ParameterGroupName'],
-                         'testparamgroup')
+        self.assertEqual(
+            clusters[0]['ParameterGroup']['ParameterGroupName'], 'testparamgroup'
+        )
 
     def test_modify_security_groups(self):
-        session_factory = self.replay_flight_data(
-            'test_dax_update_security_groups')
-        p = self.load_policy({
-            'name': 'dax-resources',
-            'resource': 'dax',
-            'filters': [{
-                'type': 'security-group',
-                'key': 'GroupName',
-                'value': 'default'}],
-            'actions': [{
-                'type': 'modify-security-groups',
-                'remove': 'matched',
-                'add': 'sg-72916c3b'}]
-        }, session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_dax_update_security_groups')
+        p = self.load_policy(
+            {
+                'name': 'dax-resources',
+                'resource': 'dax',
+                'filters': [
+                    {'type': 'security-group', 'key': 'GroupName', 'value': 'default'}
+                ],
+                'actions': [
+                    {
+                        'type': 'modify-security-groups',
+                        'remove': 'matched',
+                        'add': 'sg-72916c3b',
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ClusterName'], 'c7n-dax')
         client = session_factory(region='us-east-1').client('dax')
         sgs = client.describe_clusters()['Clusters'][0]['SecurityGroups']
-        self.assertDictEqual(sgs[0], {"Status": "adding",
-                                      "SecurityGroupIdentifier": "sg-72916c3b"})
-        self.assertDictEqual(sgs[1], {"Status": "removing",
-                                      "SecurityGroupIdentifier": "sg-4b9ada34"})
+        self.assertDictEqual(
+            sgs[0], {"Status": "adding", "SecurityGroupIdentifier": "sg-72916c3b"}
+        )
+        self.assertDictEqual(
+            sgs[1], {"Status": "removing", "SecurityGroupIdentifier": "sg-4b9ada34"}
+        )
 
     def test_subnet_group_filter(self):
-        session_factory = self.replay_flight_data(
-            "test_dax_subnet_group_filter")
-        p = self.load_policy({
-            "name": "dax-cluster",
-            "resource": "dax",
-            "filters": [{
-                "type": "subnet",
-                "key": "MapPublicIpOnLaunch",
-                "value": False}]}, session_factory=session_factory)
+        session_factory = self.replay_flight_data("test_dax_subnet_group_filter")
+        p = self.load_policy(
+            {
+                "name": "dax-cluster",
+                "resource": "dax",
+                "filters": [
+                    {"type": "subnet", "key": "MapPublicIpOnLaunch", "value": False}
+                ],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ClusterName'], 'c7n-test')
@@ -533,10 +546,10 @@ class DynamoDbAccelerator(BaseTest):
     def test_dax_get_resource(self):
         session_factory = self.replay_flight_data('test_dax_get_resource')
 
-        p = self.load_policy({
-            'name': 'dax-cluster-gr', 'resource': 'dax'},
-            session_factory=session_factory)
-        resources = p.resource_manager.get_resources(
-            ["c7n-test-cluster"])
+        p = self.load_policy(
+            {'name': 'dax-cluster-gr', 'resource': 'dax'},
+            session_factory=session_factory,
+        )
+        resources = p.resource_manager.get_resources(["c7n-test-cluster"])
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['TotalNodes'], 1)

@@ -4,16 +4,20 @@
 from c7n.manager import resources
 from c7n.query import QueryResourceManager, TypeInfo, DescribeSource
 from c7n.actions import BaseAction
-from c7n.tags import Tag, TagDelayedAction, RemoveTag, coalesce_copy_user_tags, TagActionFilter
+from c7n.tags import (
+    Tag,
+    TagDelayedAction,
+    RemoveTag,
+    coalesce_copy_user_tags,
+    TagActionFilter,
+)
 from c7n.utils import local_session, type_schema
 from c7n.filters.kms import KmsRelatedFilter
 
 
 class DescribeFSx(DescribeSource):
-
     def get_resources(self, ids):
-        """Support server side filtering on arns
-        """
+        """Support server side filtering on arns"""
         for n in range(len(ids)):
             if ids[n].startswith('arn:'):
                 ids[n] = ids[n].rsplit('/', 1)[-1]
@@ -23,7 +27,6 @@ class DescribeFSx(DescribeSource):
 
 @resources.register('fsx')
 class FSx(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'fsx'
         enum_spec = ('describe_file_systems', 'FileSystems', None)
@@ -32,14 +35,11 @@ class FSx(QueryResourceManager):
         date = 'CreationTime'
         cfn_type = 'AWS::FSx::FileSystem'
 
-    source_mapping = {
-        'describe': DescribeFSx
-    }
+    source_mapping = {'describe': DescribeFSx}
 
 
 @resources.register('fsx-backup')
 class FSxBackup(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'fsx'
         enum_spec = ('describe_backups', 'Backups', None)
@@ -69,6 +69,7 @@ class DeleteBackup(BaseAction):
               actions:
                 - type: delete
     """
+
     permissions = ('fsx:DeleteBackup',)
     schema = type_schema('delete')
 
@@ -79,8 +80,9 @@ class DeleteBackup(BaseAction):
                 client.delete_backup(BackupId=r['BackupId'])
             except client.exceptions.BackupRestoring as e:
                 self.log.warning(
-                    'Unable to delete backup for: %s - %s - %s' % (
-                        r['FileSystemId'], r['BackupId'], e))
+                    'Unable to delete backup for: %s - %s - %s'
+                    % (r['FileSystemId'], r['BackupId'], e)
+                )
 
 
 FSxBackup.filter_registry.register('marked-for-op', TagActionFilter)
@@ -142,12 +144,13 @@ class UpdateFileSystem(BaseAction):
 
     Reference: https://docs.aws.amazon.com/fsx/latest/APIReference/API_UpdateFileSystem.html
     """
+
     permissions = ('fsx:UpdateFileSystem',)
 
     schema = type_schema(
         'update',
         WindowsConfiguration={'type': 'object'},
-        LustreConfiguration={'type': 'object'}
+        LustreConfiguration={'type': 'object'},
     )
 
     def process(self, resources):
@@ -156,7 +159,7 @@ class UpdateFileSystem(BaseAction):
             client.update_file_system(
                 FileSystemId=r['FileSystemId'],
                 WindowsConfiguration=self.data.get('WindowsConfiguration', {}),
-                LustreConfiguration=self.data.get('LustreConfiguration', {})
+                LustreConfiguration=self.data.get('LustreConfiguration', {}),
             )
 
 
@@ -203,22 +206,13 @@ class BackupFileSystem(BaseAction):
     schema = type_schema(
         'backup',
         **{
-            'tags': {
-                'type': 'object'
-            },
+            'tags': {'type': 'object'},
             'copy-tags': {
                 'oneOf': [
-                    {
-                        'type': 'boolean'
-                    },
-                    {
-                        'type': 'array',
-                        'items': {
-                            'type': 'string'
-                        }
-                    }
+                    {'type': 'boolean'},
+                    {'type': 'array', 'items': {'type': 'string'}},
                 ]
-            }
+            },
         }
     )
 
@@ -230,17 +224,13 @@ class BackupFileSystem(BaseAction):
             tags = coalesce_copy_user_tags(r, copy_tags, user_tags)
             try:
                 if tags:
-                    client.create_backup(
-                        FileSystemId=r['FileSystemId'],
-                        Tags=tags
-                    )
+                    client.create_backup(FileSystemId=r['FileSystemId'], Tags=tags)
                 else:
-                    client.create_backup(
-                        FileSystemId=r['FileSystemId']
-                    )
+                    client.create_backup(FileSystemId=r['FileSystemId'])
             except client.exceptions.BackupInProgress as e:
                 self.log.warning(
-                    'Unable to create backup for: %s - %s' % (r['FileSystemId'], e))
+                    'Unable to create backup for: %s - %s' % (r['FileSystemId'], e)
+                )
 
 
 @FSx.action_registry.register('delete')
@@ -284,17 +274,10 @@ class DeleteFileSystem(BaseAction):
             'tags': {'type': 'object'},
             'copy-tags': {
                 'oneOf': [
-                    {
-                        'type': 'array',
-                        'items': {
-                            'type': 'string'
-                        }
-                    },
-                    {
-                        'type': 'boolean'
-                    }
+                    {'type': 'array', 'items': {'type': 'string'}},
+                    {'type': 'boolean'},
                 ]
-            }
+            },
         }
     )
 
@@ -312,8 +295,7 @@ class DeleteFileSystem(BaseAction):
                 config['FinalBackupTags'] = tags
             try:
                 client.delete_file_system(
-                    FileSystemId=r['FileSystemId'],
-                    WindowsConfiguration=config
+                    FileSystemId=r['FileSystemId'], WindowsConfiguration=config
                 )
             except client.exceptions.BadRequest as e:
                 self.log.warning('Unable to delete: %s - %s' % (r['FileSystemId'], e))

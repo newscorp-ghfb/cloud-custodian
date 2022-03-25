@@ -17,7 +17,9 @@ class MultiAttrFilter(Filter):
         if delta:
             raise PolicyValidationError(
                 "filter:{} unknown keys {} on {}".format(
-                    self.type, ", ".join(delta), self.manager.data))
+                    self.type, ", ".join(delta), self.manager.data
+                )
+            )
 
     def process(self, resources, event=None):
         matched = []
@@ -30,13 +32,11 @@ class MultiAttrFilter(Filter):
         return matched
 
     def get_target(self, resource):
-        """Return the resource, or related resource that should be attribute matched.
-        """
+        """Return the resource, or related resource that should be attribute matched."""
         return resource
 
     def get_attr_filters(self):
-        """Return an iterator resource attribute filters configured.
-        """
+        """Return an iterator resource attribute filters configured."""
         for f in self.data.keys():
             if f not in self.multi_attrs:
                 continue

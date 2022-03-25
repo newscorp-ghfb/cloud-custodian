@@ -34,7 +34,7 @@ from c7n.output import (
     blob_outputs,
     log_outputs,
     metrics_outputs,
-    tracer_outputs
+    tracer_outputs,
 )
 
 # Output base implementations we extend.
@@ -53,10 +53,14 @@ log = logging.getLogger('custodian.aws')
 try:
     from aws_xray_sdk.core import xray_recorder, patch
     from aws_xray_sdk.core.context import Context
+
     HAVE_XRAY = True
 except ImportError:
     HAVE_XRAY = False
-    class Context: pass  # NOQA
+
+    class Context:
+        pass  # NOQA
+
 
 _profile_session = None
 
@@ -90,8 +94,10 @@ def _default_region(options):
         options.regions = [None]
 
     if options.regions[0] is None:
-        log.error('No default region set. Specify a default via AWS_DEFAULT_REGION '
-                  'or setting a region in ~/.aws/config')
+        log.error(
+            'No default region set. Specify a default via AWS_DEFAULT_REGION '
+            'or setting a region in ~/.aws/config'
+        )
         sys.exit(1)
 
     log.debug("using default region:%s from boto" % options.regions[0])
@@ -123,9 +129,21 @@ def shape_validate(params, shape_name, service):
         raise PolicyValidationError(report.generate_report())
 
 
-class Arn(namedtuple('_Arn', (
-        'arn', 'partition', 'service', 'region',
-        'account_id', 'resource', 'resource_type', 'separator'))):
+class Arn(
+    namedtuple(
+        '_Arn',
+        (
+            'arn',
+            'partition',
+            'service',
+            'region',
+            'account_id',
+            'resource',
+            'resource_type',
+            'separator',
+        ),
+    )
+):
 
     __slots__ = ()
 
@@ -137,7 +155,8 @@ class Arn(namedtuple('_Arn', (
             self.account_id,
             self.resource_type,
             self.separator,
-            self.resource)
+            self.resource,
+        )
 
     @classmethod
     def parse(cls, arn):
@@ -163,7 +182,6 @@ class Arn(namedtuple('_Arn', (
 
 
 class ArnResolver:
-
     def __init__(self, manager):
         self.manager = manager
 
@@ -179,11 +197,9 @@ class ArnResolver:
             rtype = ArnResolver.resolve_type(arn_set[0])
             rmanager = self.manager.get_resource_manager(rtype)
             if rtype == 'sns':
-                resources = rmanager.get_resources(
-                    [rarn.arn for rarn in arn_set])
+                resources = rmanager.get_resources([rarn.arn for rarn in arn_set])
             else:
-                resources = rmanager.get_resources(
-                    [rarn.resource for rarn in arn_set])
+                resources = rmanager.get_resources([rarn.resource for rarn in arn_set])
             for rarn, r in zip(rmanager.get_arns(resources), resources):
                 results[rarn] = r
 
@@ -198,26 +214,37 @@ class ArnResolver:
 
         # this would benefit from a class cache {service} -> rtypes
         for type_name, klass in AWS.resources.items():
-            if type_name in ('rest-account', 'account') or klass.resource_type.arn is False:
+            if (
+                type_name in ('rest-account', 'account')
+                or klass.resource_type.arn is False
+            ):
                 continue
-            if arn.service != (klass.resource_type.arn_service or klass.resource_type.service):
+            if arn.service != (
+                klass.resource_type.arn_service or klass.resource_type.service
+            ):
                 continue
-            if (type_name in ('asg', 'ecs-task') and
-                    "%s%s" % (klass.resource_type.arn_type, klass.resource_type.arn_separator)
-                    in arn.resource_type):
+            if (
+                type_name in ('asg', 'ecs-task')
+                and "%s%s"
+                % (klass.resource_type.arn_type, klass.resource_type.arn_separator)
+                in arn.resource_type
+            ):
                 return type_name
-            elif (klass.resource_type.arn_type is not None and
-                    klass.resource_type.arn_type == arn.resource_type):
+            elif (
+                klass.resource_type.arn_type is not None
+                and klass.resource_type.arn_type == arn.resource_type
+            ):
                 return type_name
-            elif (klass.resource_type.arn_service == arn.service and
-                    klass.resource_type.arn_type == ""):
+            elif (
+                klass.resource_type.arn_service == arn.service
+                and klass.resource_type.arn_type == ""
+            ):
                 return type_name
 
 
 @metrics_outputs.register('aws')
 class MetricsOutput(Metrics):
-    """Send metrics data to cloudwatch
-    """
+    """Send metrics data to cloudwatch"""
 
     permissions = ("cloudWatch:PutMetricData",)
     retry = staticmethod(utils.get_retry(('Throttling',)))
@@ -227,40 +254,45 @@ class MetricsOutput(Metrics):
         self.namespace = self.config.get('namespace', DEFAULT_NAMESPACE)
         self.region = self.config.get('region')
         self.destination = (
-            self.config.scheme == 'aws' and
-            self.config.get('netloc') == 'master') and 'master' or None
+            (self.config.scheme == 'aws' and self.config.get('netloc') == 'master')
+            and 'master'
+            or None
+        )
 
     def _format_metric(self, key, value, unit, dimensions):
         d = {
             "MetricName": key,
             "Timestamp": datetime.datetime.utcnow(),
             "Value": value,
-            "Unit": unit}
+            "Unit": unit,
+        }
         d["Dimensions"] = [
             {"Name": "Policy", "Value": self.ctx.policy.name},
-            {"Name": "ResType", "Value": self.ctx.policy.resource_type}]
+            {"Name": "ResType", "Value": self.ctx.policy.resource_type},
+        ]
         for k, v in dimensions.items():
             # Skip legacy static dimensions if using new capabilities
             if (self.destination or self.region) and k == 'Scope':
                 continue
             d['Dimensions'].append({"Name": k, "Value": v})
         if self.region:
-            d['Dimensions'].append(
-                {'Name': 'Region', 'Value': self.ctx.options.region})
+            d['Dimensions'].append({'Name': 'Region', 'Value': self.ctx.options.region})
         if self.destination:
             d['Dimensions'].append(
-                {'Name': 'Account', 'Value': self.ctx.options.account_id or ''})
+                {'Name': 'Account', 'Value': self.ctx.options.account_id or ''}
+            )
         return d
 
     def _put_metrics(self, ns, metrics):
         if self.destination == 'master':
-            watch = self.ctx.session_factory(
-                assume=False).client('cloudwatch', region_name=self.region)
+            watch = self.ctx.session_factory(assume=False).client(
+                'cloudwatch', region_name=self.region
+            )
         else:
-            watch = utils.local_session(
-                self.ctx.session_factory).client('cloudwatch', region_name=self.region)
-        return self.retry(
-            watch.put_metric_data, Namespace=ns, MetricData=metrics)
+            watch = utils.local_session(self.ctx.session_factory).client(
+                'cloudwatch', region_name=self.region
+            )
+        return self.retry(watch.put_metric_data, Namespace=ns, MetricData=metrics)
 
 
 @log_outputs.register('aws')
@@ -274,12 +306,15 @@ class CloudWatchLogOutput(LogOutput):
             self.log_group = self.config['path'].strip('/')
         else:
             # join netloc to path for casual usages of aws://log/group/name
-            self.log_group = ("%s/%s" % (
-                self.config['netloc'], self.config['path'].strip('/'))).strip('/')
+            self.log_group = (
+                "%s/%s" % (self.config['netloc'], self.config['path'].strip('/'))
+            ).strip('/')
         self.region = self.config.get('region', ctx.options.region)
         self.destination = (
-            self.config.scheme == 'aws' and
-            self.config.get('netloc') == 'master') and 'master' or None
+            (self.config.scheme == 'aws' and self.config.get('netloc') == 'master')
+            and 'master'
+            or None
+        )
 
     def construct_stream_name(self):
         if self.config.get('stream') is None:
@@ -293,23 +328,29 @@ class CloudWatchLogOutput(LogOutput):
                 region=self.ctx.options.region,
                 account=self.ctx.options.account_id,
                 policy=self.ctx.policy.name,
-                now=datetime.datetime.utcnow())
+                now=datetime.datetime.utcnow(),
+            )
         return log_stream
 
     def get_handler(self):
         log_stream = self.construct_stream_name()
         params = dict(
-            log_group=self.log_group, log_stream=log_stream,
+            log_group=self.log_group,
+            log_stream=log_stream,
             session_factory=(
                 lambda x=None: self.ctx.session_factory(
-                    region=self.region, assume=self.destination != 'master')))
+                    region=self.region, assume=self.destination != 'master'
+                )
+            ),
+        )
         return CloudWatchLogHandler(**params)
 
     def __repr__(self):
         return "<%s to group:%s stream:%s>" % (
             self.__class__.__name__,
             self.ctx.options.log_group,
-            self.ctx.policy.name)
+            self.ctx.policy.name,
+        )
 
 
 class XrayEmitter:
@@ -329,7 +370,8 @@ class XrayEmitter:
         self.buf = []
         for segment_set in utils.chunks(buf, 50):
             self.client.put_trace_segments(
-                TraceSegmentDocuments=[s.serialize() for s in segment_set])
+                TraceSegmentDocuments=[s.serialize() for s in segment_set]
+            )
 
 
 class XrayContext(Context):
@@ -422,7 +464,8 @@ class XrayTracer:
             emitter=cls.use_daemon is False and cls.emitter or None,
             context=context,
             sampling=sampling,
-            context_missing='LOG_ERROR')
+            context_missing='LOG_ERROR',
+        )
         patch(['boto3', 'requests'])
         logging.getLogger('aws_xray_sdk.core').setLevel(logging.ERROR)
 
@@ -453,8 +496,7 @@ class XrayTracer:
         if self.in_lambda:
             self.segment = xray_recorder.begin_subsegment(self.service_name)
         else:
-            self.segment = xray_recorder.begin_segment(
-                self.service_name, sampling=True)
+            self.segment = xray_recorder.begin_segment(self.service_name, sampling=True)
 
         p = self.ctx.policy
         xray_recorder.put_annotation('policy', p.name)
@@ -473,14 +515,16 @@ class XrayTracer:
         if not self.use_daemon:
             self.emitter.flush()
             log.info(
-                ('View XRay Trace https://console.aws.amazon.com/xray/home?region=%s#/'
-                 'traces/%s' % (self.ctx.options.region, self.segment.trace_id)))
+                (
+                    'View XRay Trace https://console.aws.amazon.com/xray/home?region=%s#/'
+                    'traces/%s' % (self.ctx.options.region, self.segment.trace_id)
+                )
+            )
         self.metadata.clear()
 
 
 @api_stats_outputs.register('aws')
 class ApiStats(DeltaStats):
-
     def __init__(self, ctx, config=None):
         super(ApiStats, self).__init__(ctx, config)
         self.api_calls = Counter()
@@ -503,19 +547,17 @@ class ApiStats(DeltaStats):
         # With cached sessions, we need to unregister any events subscribers
         # on extant sessions to allow for the next registration.
         utils.local_session(self.ctx.session_factory).events.unregister(
-            'after-call.*.*', self._record, unique_id='c7n-api-stats')
+            'after-call.*.*', self._record, unique_id='c7n-api-stats'
+        )
 
-        self.ctx.metrics.put_metric(
-            "ApiCalls", sum(self.api_calls.values()), "Count")
+        self.ctx.metrics.put_metric("ApiCalls", sum(self.api_calls.values()), "Count")
         self.pop_snapshot()
 
     def __call__(self, s):
-        s.events.register(
-            'after-call.*.*', self._record, unique_id='c7n-api-stats')
+        s.events.register('after-call.*.*', self._record, unique_id='c7n-api-stats')
 
     def _record(self, http_response, parsed, model, **kwargs):
-        self.api_calls["%s.%s" % (
-            model.service_model.endpoint_prefix, model.name)] += 1
+        self.api_calls["%s.%s" % (model.service_model.endpoint_prefix, model.name)] += 1
 
 
 @blob_outputs.register('s3')
@@ -535,15 +577,18 @@ class S3Output(BlobOutput):
     def __init__(self, ctx, config):
         super().__init__(ctx, config)
         # can't use a local session as we dont want an unassumed session cached.
-        self.transfer = S3Transfer(
-            self.ctx.session_factory(assume=False).client('s3'))
+        self.transfer = S3Transfer(self.ctx.session_factory(assume=False).client('s3'))
 
     def upload_file(self, path, key):
         self.transfer.upload_file(
-            path, self.bucket, key,
+            path,
+            self.bucket,
+            key,
             extra_args={
                 'ACL': 'bucket-owner-full-control',
-                'ServerSideEncryption': 'AES256'})
+                'ServerSideEncryption': 'AES256',
+            },
+        )
 
 
 @clouds.register('aws')
@@ -557,8 +602,7 @@ class AWS(Provider):
     resource_map = ResourceMap
 
     def initialize(self, options):
-        """
-        """
+        """ """
         _default_region(options)
         _default_account_id(options)
         if options.tracer and options.tracer.startswith('xray') and HAVE_XRAY:
@@ -568,10 +612,8 @@ class AWS(Provider):
 
     def get_session_factory(self, options):
         return SessionFactory(
-            options.region,
-            options.profile,
-            options.assume_role,
-            options.external_id)
+            options.region, options.profile, options.assume_role, options.external_id
+        )
 
     def initialize_policies(self, policy_collection, options):
         """Return a set of policies targetted to the given regions.
@@ -586,23 +628,34 @@ class AWS(Provider):
         region from the partition must be passed in.
         """
         from c7n.policy import Policy, PolicyCollection
+
         policies = []
         service_region_map, resource_service_map = get_service_region_map(
-            options.regions, policy_collection.resource_types, self.type)
+            options.regions, policy_collection.resource_types, self.type
+        )
         if 'all' in options.regions:
             enabled_regions = {
-                r['RegionName'] for r in
-                get_profile_session(options).client('ec2').describe_regions(
-                    Filters=[{'Name': 'opt-in-status',
-                              'Values': ['opt-in-not-required', 'opted-in']}]
-                ).get('Regions')}
+                r['RegionName']
+                for r in get_profile_session(options)
+                .client('ec2')
+                .describe_regions(
+                    Filters=[
+                        {
+                            'Name': 'opt-in-status',
+                            'Values': ['opt-in-not-required', 'opted-in'],
+                        }
+                    ]
+                )
+                .get('Regions')
+            }
         for p in policy_collection:
             if 'aws.' in p.resource_type:
                 _, resource_type = p.resource_type.split('.', 1)
             else:
                 resource_type = p.resource_type
             available_regions = service_region_map.get(
-                resource_service_map.get(resource_type), ())
+                resource_service_map.get(resource_type), ()
+            )
 
             # its a global service/endpoint, use user provided region
             # or us-east-1.
@@ -617,29 +670,42 @@ class AWS(Provider):
 
             for region in svc_regions:
                 if available_regions and region not in available_regions:
-                    level = ('all' in options.regions and
-                             logging.DEBUG or logging.WARNING)
+                    level = (
+                        'all' in options.regions and logging.DEBUG or logging.WARNING
+                    )
                     # TODO: fixme
                     policy_collection.log.log(
-                        level, "policy:%s resources:%s not available in region:%s",
-                        p.name, p.resource_type, region)
+                        level,
+                        "policy:%s resources:%s not available in region:%s",
+                        p.name,
+                        p.resource_type,
+                        region,
+                    )
                     continue
                 options_copy = copy.copy(options)
                 options_copy.region = str(region)
 
-                if len(options.regions) > 1 or 'all' in options.regions and getattr(
-                        options, 'output_dir', None):
+                if (
+                    len(options.regions) > 1
+                    or 'all' in options.regions
+                    and getattr(options, 'output_dir', None)
+                ):
                     options_copy.output_dir = join_output(options.output_dir, region)
                 policies.append(
-                    Policy(p.data, options_copy,
-                           session_factory=policy_collection.session_factory()))
+                    Policy(
+                        p.data,
+                        options_copy,
+                        session_factory=policy_collection.session_factory(),
+                    )
+                )
 
         return PolicyCollection(
             # order policies by region to minimize local session invalidation.
             # note relative ordering of policies must be preserved, python sort
             # is stable.
             sorted(policies, key=operator.attrgetter('options.region')),
-            options)
+            options,
+        )
 
 
 def join_output(output_dir, suffix):
@@ -654,7 +720,8 @@ def fake_session():
     session = boto3.Session(  # nosec nosemgrep
         region_name='us-east-1',
         aws_access_key_id='never',
-        aws_secret_access_key='found')
+        aws_secret_access_key='found',
+    )
     return session
 
 
@@ -665,13 +732,15 @@ def get_service_region_map(regions, resource_types, provider='aws'):
     normalized_types = []
     for r in resource_types:
         if r.startswith('%s.' % provider):
-            normalized_types.append(r[len(provider) + 1:])
+            normalized_types.append(r[len(provider) + 1 :])
         else:
             normalized_types.append(r)
 
     resource_service_map = {
         r: clouds[provider].resources.get(r).resource_type.service
-        for r in normalized_types if r != 'account'}
+        for r in normalized_types
+        if r != 'account'
+    }
     # support for govcloud and china, we only utilize these regions if they
     # are explicitly passed in on the cli.
     partition_regions = {}
@@ -688,5 +757,6 @@ def get_service_region_map(regions, resource_types, provider='aws'):
     for s in set(itertools.chain(resource_service_map.values())):
         for partition in partitions:
             service_region_map.setdefault(s, []).extend(
-                session.get_available_regions(s, partition_name=partition))
+                session.get_available_regions(s, partition_name=partition)
+            )
     return service_region_map, resource_service_map

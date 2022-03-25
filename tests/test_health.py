@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class HealthResource(BaseTest):
-
     def test_health_query(self):
         session_factory = self.replay_flight_data("test_health_query")
         p = self.load_policy(
@@ -42,5 +41,6 @@ class HealthResource(BaseTest):
         for r in resources:
             self.assertTrue("Description" in r)
             self.assertTrue(
-                (r["eventTypeCategory"] == "accountNotification") ^ ("AffectedEntities" in r)
+                (r["eventTypeCategory"] == "accountNotification")
+                ^ ("AffectedEntities" in r)
             )

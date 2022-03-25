@@ -36,7 +36,8 @@ class Notify(BaseNotify):
         'addtionalProperties': False,
         'anyOf': [
             {'required': ['type', 'transport', 'to']},
-            {'required': ['type', 'transport', 'to_from']}],
+            {'required': ['type', 'transport', 'to_from']},
+        ],
         'properties': {
             'type': {'enum': ['notify']},
             'to': {'type': 'array', 'items': {'type': 'string'}},
@@ -50,14 +51,17 @@ class Notify(BaseNotify):
             'template': {'type': 'string'},
             'transport': {
                 'oneOf': [
-                    {'type': 'object',
-                     'required': ['type', 'topic'],
-                     'properties': {
-                         'topic': {'type': 'string'},
-                         'type': {'enum': ['pubsub']},
-                     }}],
+                    {
+                        'type': 'object',
+                        'required': ['type', 'topic'],
+                        'properties': {
+                            'topic': {'type': 'string'},
+                            'type': {'enum': ['pubsub']},
+                        },
+                    }
+                ],
             },
-        }
+        },
     }
     schema_alias = True
     permissions = ('pubsub.topics.publish',)
@@ -72,7 +76,7 @@ class Notify(BaseNotify):
             'account_id': project,
             'account': project,
             'region': 'all',
-            'policy': self.manager.data
+            'policy': self.manager.data,
         }
 
         message['action'] = self.expand_variables(message)
@@ -83,16 +87,14 @@ class Notify(BaseNotify):
 
     # Methods to handle GCP Pub Sub topic publishing
     def publish_message(self, message, client):
-        """Publish message to a GCP pub/sub topic
-         """
-        return client.execute_command('publish', {
-            'topic': self.data['transport']['topic'],
-            'body': {
-                'messages': {
-                    'data': self.pack(message)
-                }
-            }
-        })
+        """Publish message to a GCP pub/sub topic"""
+        return client.execute_command(
+            'publish',
+            {
+                'topic': self.data['transport']['topic'],
+                'body': {'messages': {'data': self.pack(message)}},
+            },
+        )
 
     @classmethod
     def register_resource(cls, registry, resource_class):

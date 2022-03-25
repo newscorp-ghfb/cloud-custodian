@@ -8,7 +8,6 @@ from c7n.utils import yaml_load
 
 
 class TestSNS(BaseTest):
-
     @functional
     def test_sns_remove_matched(self):
         session_factory = self.replay_flight_data("test_sns_remove_matched")
@@ -62,9 +61,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertEqual(
             [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
@@ -122,9 +119,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertTrue("RemoveMe" not in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -185,9 +180,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertTrue(
             "ReplaceWithMe" in [s["Sid"] for s in data.get("Statement", ())]
@@ -256,13 +249,11 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertTrue(
-            "__default_statement_ID_" +
-            self.account_id in [s["Sid"] for s in data.get("Statement", ())]
+            "__default_statement_ID_" + self.account_id
+            in [s["Sid"] for s in data.get("Statement", ())]
         )
 
     @functional
@@ -321,9 +312,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertTrue("RemoveMe" not in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -384,9 +373,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         self.assertTrue("AddMe" in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -456,9 +443,7 @@ class TestSNS(BaseTest):
         data = json.loads(
             client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
                 "Attributes"
-            ][
-                "Policy"
-            ]
+            ]["Policy"]
         )
         statement_ids = {s["Sid"] for s in data.get("Statement", ())}
         self.assertTrue("AddMe" in statement_ids)
@@ -473,17 +458,15 @@ class TestSNS(BaseTest):
                 'name': 'test-sns-kms-related-filter',
                 'resource': 'sns',
                 'filters': [
-                    {
-                        'TopicArn': 'arn:aws:sns:us-east-1:644160558196:test'
-                    },
+                    {'TopicArn': 'arn:aws:sns:us-east-1:644160558196:test'},
                     {
                         'type': 'kms-key',
                         'key': 'c7n:AliasName',
-                        'value': 'alias/skunk/trails'
-                    }
-                ]
+                        'value': 'alias/skunk/trails',
+                    },
+                ],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
@@ -497,21 +480,10 @@ class TestSNS(BaseTest):
             {
                 'name': 'test-sns-kms-related-filter',
                 'resource': 'sns',
-                'filters': [
-                    {
-                        'TopicArn': topic
-                    },
-                    {
-                        'KmsMasterKeyId': 'absent'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'set-encryption'
-                    }
-                ]
+                'filters': [{'TopicArn': topic}, {'KmsMasterKeyId': 'absent'}],
+                'actions': [{'type': 'set-encryption'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -526,22 +498,10 @@ class TestSNS(BaseTest):
             {
                 'name': 'test-sns-kms-related-filter',
                 'resource': 'sns',
-                'filters': [
-                    {
-                        'TopicArn': topic
-                    },
-                    {
-                        'KmsMasterKeyId': 'alias/aws/sns'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'set-encryption',
-                        'enabled': False
-                    }
-                ]
+                'filters': [{'TopicArn': topic}, {'KmsMasterKeyId': 'alias/aws/sns'}],
+                'actions': [{'type': 'set-encryption', 'enabled': False}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
 
         resources = p.run()
@@ -561,22 +521,10 @@ class TestSNS(BaseTest):
             {
                 'name': 'test-sns-kms-related-filter-alias',
                 'resource': 'sns',
-                'filters': [
-                    {
-                        'TopicArn': topic
-                    },
-                    {
-                        'KmsMasterKeyId': 'absent'
-                    }
-                ],
-                'actions': [
-                    {
-                        'type': 'set-encryption',
-                        'key': key_alias
-                    }
-                ]
+                'filters': [{'TopicArn': topic}, {'KmsMasterKeyId': 'absent'}],
+                'actions': [{'type': 'set-encryption', 'key': key_alias}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -615,12 +563,13 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
+            "Tags"
+        ]
         self.assertEqual(tags[0]["Value"], "added")
 
     def test_sns_remove_tag(self):
-        session_factory = self.replay_flight_data(
-            "test_sns_remove_tag")
+        session_factory = self.replay_flight_data("test_sns_remove_tag")
         p = self.load_policy(
             {
                 "name": "untag-sns",
@@ -640,13 +589,13 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
+            "Tags"
+        ]
         self.assertEqual(len(tags), 0)
 
     def test_sns_mark_for_op(self):
-        session_factory = self.replay_flight_data(
-            "test_sns_mark_for_op"
-        )
+        session_factory = self.replay_flight_data("test_sns_mark_for_op")
         p = self.load_policy(
             {
                 "name": "sns-untagged-delete",
@@ -669,42 +618,56 @@ class TestSNS(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
+            "Tags"
+        ]
         self.assertTrue(tags[0]["Key"], "custodian_cleanup")
 
     def test_sns_post_finding(self):
         factory = self.replay_flight_data('test_sns_post_finding')
-        p = self.load_policy({
-            'name': 'sns',
-            'resource': 'aws.sns',
-            'actions': [
-                {'type': 'post-finding',
-                 'types': [
-                     'Software and Configuration Checks/OrgStandard/abc-123']}]},
-            session_factory=factory, config={'region': 'us-west-2'})
-        resources = p.resource_manager.get_resources([
-            'arn:aws:sns:us-west-2:644160558196:config-topic'])
-        rfinding = p.resource_manager.actions[0].format_resource(
-            resources[0])
+        p = self.load_policy(
+            {
+                'name': 'sns',
+                'resource': 'aws.sns',
+                'actions': [
+                    {
+                        'type': 'post-finding',
+                        'types': [
+                            'Software and Configuration Checks/OrgStandard/abc-123'
+                        ],
+                    }
+                ],
+            },
+            session_factory=factory,
+            config={'region': 'us-west-2'},
+        )
+        resources = p.resource_manager.get_resources(
+            ['arn:aws:sns:us-west-2:644160558196:config-topic']
+        )
+        rfinding = p.resource_manager.actions[0].format_resource(resources[0])
         self.assertEqual(
             rfinding,
-            {'Details': {'AwsSnsTopic': {
-                'Owner': '644160558196',
-                'TopicName': 'config-topic'}},
-             'Id': 'arn:aws:sns:us-west-2:644160558196:config-topic',
-             'Partition': 'aws',
-             'Region': 'us-west-2',
-             'Type': 'AwsSnsTopic'})
+            {
+                'Details': {
+                    'AwsSnsTopic': {
+                        'Owner': '644160558196',
+                        'TopicName': 'config-topic',
+                    }
+                },
+                'Id': 'arn:aws:sns:us-west-2:644160558196:config-topic',
+                'Partition': 'aws',
+                'Region': 'us-west-2',
+                'Type': 'AwsSnsTopic',
+            },
+        )
         shape_validate(
-            rfinding['Details']['AwsSnsTopic'],
-            'AwsSnsTopicDetails', 'securityhub')
+            rfinding['Details']['AwsSnsTopic'], 'AwsSnsTopicDetails', 'securityhub'
+        )
 
     def test_sns_config(self):
         session_factory = self.replay_flight_data("test_sns_config")
         p = self.load_policy(
-            {"name": "sns-config",
-             "source": "config",
-             "resource": "sns"},
+            {"name": "sns-config", "source": "config", "resource": "sns"},
             session_factory=session_factory,
         )
         resources = p.run()
@@ -713,7 +676,6 @@ class TestSNS(BaseTest):
 
 
 class TestSubscription(BaseTest):
-
     def test_subscription_delete(self):
         factory = self.replay_flight_data("test_subscription_delete")
 

@@ -6,7 +6,6 @@ from c7n_gcp.provider import resources
 
 @resources.register('build')
 class CloudBuild(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudbuild'
         version = 'v1'

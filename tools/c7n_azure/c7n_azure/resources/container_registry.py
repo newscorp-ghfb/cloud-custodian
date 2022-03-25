@@ -32,10 +32,5 @@ class ContainerRegistry(ArmResourceManager):
         service = 'azure.mgmt.containerregistry'
         client = 'ContainerRegistryManagementClient'
         enum_spec = ('registries', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name')
         resource_type = 'Microsoft.ContainerRegistry/registries'

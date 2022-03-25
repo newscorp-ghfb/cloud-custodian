@@ -10,7 +10,6 @@ import os
 
 
 class TestCache(TestCase):
-
     def test_factory(self):
         self.assertIsInstance(cache.factory(None), cache.NullCache)
         test_config = Namespace(cache_period=60, cache="test-cloud-custodian.cache")
@@ -20,11 +19,11 @@ class TestCache(TestCase):
 
 
 class MemCacheTest(TestCase):
-
     def test_mem_factory(self):
         self.assertEqual(
             cache.factory(config.Bag(cache='memory', cache_period=5)).__class__,
-            cache.InMemoryCache)
+            cache.InMemoryCache,
+        )
 
     def test_get_set(self):
         mem_cache = cache.InMemoryCache()
@@ -33,13 +32,10 @@ class MemCacheTest(TestCase):
         self.assertEqual(mem_cache.load(), True)
 
         mem_cache = cache.InMemoryCache()
-        self.assertEqual(
-            mem_cache.get({'region': 'us-east-1'}),
-            {'hello': 'world'})
+        self.assertEqual(mem_cache.get({'region': 'us-east-1'}), {'hello': 'world'})
 
 
 class FileCacheManagerTest(TestCase):
-
     def setUp(self):
         self.test_config = Namespace(
             cache_period=60, cache="test-cloud-custodian.cache"

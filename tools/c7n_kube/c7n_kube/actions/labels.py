@@ -5,6 +5,7 @@ import logging
 
 from c7n_kube.actions.core import PatchAction
 from c7n.utils import type_schema
+
 log = logging.getLogger('custodian.k8s.labels')
 
 
@@ -41,10 +42,7 @@ class LabelAction(PatchAction):
 
     """
 
-    schema = type_schema(
-        'label',
-        labels={'type': 'object'}
-    )
+    schema = type_schema('label', labels={'type': 'object'})
 
     def process_resource_set(self, client, resources):
         body = {'metadata': {'labels': self.data.get('labels', {})}}

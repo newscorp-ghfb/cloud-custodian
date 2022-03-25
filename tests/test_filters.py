@@ -20,7 +20,6 @@ from c7n.filters.core import ValueRegex, parse_date as core_parse_date
 
 
 class BaseFilterTest(unittest.TestCase):
-
     def assertFilter(self, f, i, v):
         """
         f: filter data/spec
@@ -35,7 +34,6 @@ class BaseFilterTest(unittest.TestCase):
 
 
 class TestFilter(unittest.TestCase):
-
     def test_filter_construction(self):
         self.assertTrue(
             isinstance(filters.factory({"tag:ASV": "absent"}), base_filters.ValueFilter)
@@ -60,39 +58,52 @@ class TestFilter(unittest.TestCase):
         filter_instance1.get_block_operator = lambda: 'and'
         filter_instance2.get_block_operator = lambda: 'and'
 
-        resource1 = {'Arn': 'arn:aws:iam::123456789012:user/zscholl',
-                     'CreateDate': datetime(2020, 1, 2, 17, 53, 23, 976000, tzinfo=tz.tzutc()),
-                     'Path': '/',
-                     'UserId': 'xafegj4qjwfl3mpuvyj5',
-                     'UserName': 'zscholl'}
-        resource2 = {'Arn': 'arn:aws:iam::123456789012:user/zscholl',
-                     'CreateDate': datetime(2020, 1, 2, 17, 53, 23, 976000, tzinfo=tz.tzutc()),
-                     'Path': '/',
-                     'UserId': 'xafegj4qjwfl3mpuvyj5',
-                     'UserName': 'zscholl'}
+        resource1 = {
+            'Arn': 'arn:aws:iam::123456789012:user/zscholl',
+            'CreateDate': datetime(2020, 1, 2, 17, 53, 23, 976000, tzinfo=tz.tzutc()),
+            'Path': '/',
+            'UserId': 'xafegj4qjwfl3mpuvyj5',
+            'UserName': 'zscholl',
+        }
+        resource2 = {
+            'Arn': 'arn:aws:iam::123456789012:user/zscholl',
+            'CreateDate': datetime(2020, 1, 2, 17, 53, 23, 976000, tzinfo=tz.tzutc()),
+            'Path': '/',
+            'UserId': 'xafegj4qjwfl3mpuvyj5',
+            'UserName': 'zscholl',
+        }
 
-        value1 = {'active': True, 'c7n:match-type': 'credential',
-                 'last_rotated': '2019-01-04T17:53:24+00:00',
-                 'last_used_date': '2019-01-04T17:53:24+00:00',
-                 'last_used_region': 'not_supported',
-                 'last_used_service': 'not_supported'}
+        value1 = {
+            'active': True,
+            'c7n:match-type': 'credential',
+            'last_rotated': '2019-01-04T17:53:24+00:00',
+            'last_used_date': '2019-01-04T17:53:24+00:00',
+            'last_used_region': 'not_supported',
+            'last_used_service': 'not_supported',
+        }
 
-        value2 = {'active': True, 'c7n:match-type': 'credential',
-                 'last_rotated': '2020-01-02T18:53:24+00:00',
-                 'last_used_date': '2020-01-04T17:53:24+00:00',
-                 'last_used_region': 'not_supported',
-                 'last_used_service': 'not_supported'}
-        filter_instance1.merge_annotation(resource1, 'c7n:matched-keys', [value1, value2])
+        value2 = {
+            'active': True,
+            'c7n:match-type': 'credential',
+            'last_rotated': '2020-01-02T18:53:24+00:00',
+            'last_used_date': '2020-01-04T17:53:24+00:00',
+            'last_used_region': 'not_supported',
+            'last_used_service': 'not_supported',
+        }
+        filter_instance1.merge_annotation(
+            resource1, 'c7n:matched-keys', [value1, value2]
+        )
         filter_instance1.merge_annotation(resource1, 'c7n:matched-keys', [value1])
 
         filter_instance2.merge_annotation(resource2, 'c7n:matched-keys', [value1])
-        filter_instance2.merge_annotation(resource2, 'c7n:matched-keys', [value1, value2])
+        filter_instance2.merge_annotation(
+            resource2, 'c7n:matched-keys', [value1, value2]
+        )
 
         self.assertEqual(resource1, resource2)
 
 
 class TestOrFilter(unittest.TestCase):
-
     def test_or(self):
         f = filters.factory(
             {"or": [{"Architecture": "x86_64"}, {"Architecture": "armv8"}]}
@@ -103,7 +114,6 @@ class TestOrFilter(unittest.TestCase):
 
 
 class TestAndFilter(unittest.TestCase):
-
     def test_and(self):
         f = filters.factory({"and": [{"Architecture": "x86_64"}, {"Color": "green"}]})
         results = [instance(Architecture="x86_64", Color="green")]
@@ -113,7 +123,6 @@ class TestAndFilter(unittest.TestCase):
 
 
 class TestNotFilter(unittest.TestCase):
-
     def test_not(self):
 
         results = [
@@ -126,13 +135,11 @@ class TestNotFilter(unittest.TestCase):
         self.assertEqual(len(f.process(results)), 2)
 
     def test_not_break_empty_set(self):
-        results = [
-            instance(Architecture="x86_64", Color="green")]
+        results = [instance(Architecture="x86_64", Color="green")]
 
         f = filters.factory({"not": [{"Architecture": "amd64"}]})
 
         class Manager:
-
             class resource_type:
                 id = 'Color'
 
@@ -141,7 +148,6 @@ class TestNotFilter(unittest.TestCase):
                 return cls.resource_type
 
         class FakeFilter:
-
             def __init__(self):
                 self.invoked = False
 
@@ -212,20 +218,21 @@ class TestValueFilter(unittest.TestCase):
         resource = {'a': 1, 'b': 1}
 
         # test explicit op
-        vf = filters.factory({
-            "type": "value",
-            "value": "b",
-            "op": 'eq',
-            "value_type": "expr",
-            "key": "a"})
+        vf = filters.factory(
+            {
+                "type": "value",
+                "value": "b",
+                "op": 'eq',
+                "value_type": "expr",
+                "key": "a",
+            }
+        )
         self.assertTrue(vf.match(resource))
 
         # test implicit/fallback op
-        vf = filters.factory({
-            "type": "value",
-            "value": "b",
-            "value_type": "expr",
-            "key": "a"})
+        vf = filters.factory(
+            {"type": "value", "value": "b", "value_type": "expr", "key": "a"}
+        )
         self.assertTrue(vf.match(resource))
 
     def test_value_match(self):
@@ -242,14 +249,12 @@ class TestValueFilter(unittest.TestCase):
 
 
 class TestAgeFilter(unittest.TestCase):
-
     def test_age_filter(self):
         af = base_filters.AgeFilter({})
         self.assertRaises(NotImplementedError, af.validate)
 
 
 class TestGlobValue(unittest.TestCase):
-
     def test_regex_match(self):
         f = filters.factory(
             {"type": "value", "key": "Color", "value": "*green*", "op": "glob"}
@@ -265,7 +270,6 @@ class TestGlobValue(unittest.TestCase):
 
 
 class TestRegexValue(unittest.TestCase):
-
     def test_regex_validate(self):
         self.assertRaises(
             PolicyValidationError,
@@ -285,7 +289,6 @@ class TestRegexValue(unittest.TestCase):
 
 
 class TestRegexCaseSensitiveValue(unittest.TestCase):
-
     def test_regex_case_sensitive_validate(self):
         self.assertRaises(
             PolicyValidationError,
@@ -299,13 +302,14 @@ class TestRegexCaseSensitiveValue(unittest.TestCase):
             {"type": "value", "key": "Color", "value": ".*GREEN.*", "op": "regex-case"}
         )
         self.assertEqual(f(instance(Architecture="x86_64", Color="GREEN papaya")), True)
-        self.assertEqual(f(instance(Architecture="x86_64", Color="green papaya")), False)
+        self.assertEqual(
+            f(instance(Architecture="x86_64", Color="green papaya")), False
+        )
 
         self.assertEqual(f(instance(Architecture="x86_64")), False)
 
 
 class TestValueTypes(BaseFilterTest):
-
     def test_normalize(self):
         fdata = {
             "type": "value",
@@ -414,7 +418,8 @@ class TestValueTypes(BaseFilterTest):
             'key': 'LaunchTime',
             'op': 'less-than',
             'value_type': 'date',
-            'value': '2019/05/01'}
+            'value': '2019/05/01',
+        }
 
         self.assertFilter(fdata, i(parse_date('2019/04/01')), True)
         self.assertFilter(fdata, i(datetime.now().isoformat()), False)
@@ -427,18 +432,18 @@ class TestValueTypes(BaseFilterTest):
             else:
                 self.assertEqual(dt.year, y)
 
-        t("1234567890", 2009)       # (2009, 2, 13, 15, 31, 30)
-        t("1234567890123", 2009)    # (2009, 2, 13, 15, 31, 30, 123000)
+        t("1234567890", 2009)  # (2009, 2, 13, 15, 31, 30)
+        t("1234567890123", 2009)  # (2009, 2, 13, 15, 31, 30, 123000)
 
-        t("12345678901", 2361)      # (2361, 3, 21, 12, 15, 1)
-        t("12345678901234", 2361)   # (2361, 3, 21, 12, 15, 1, 234000)
+        t("12345678901", 2361)  # (2361, 3, 21, 12, 15, 1)
+        t("12345678901234", 2361)  # (2361, 3, 21, 12, 15, 1, 234000)
 
         if os.name == "nt":
             # too big for windows
-            t("123456789012", 1973)     # (1973, 11, 29, 13, 33, 9, 012000)
+            t("123456789012", 1973)  # (1973, 11, 29, 13, 33, 9, 012000)
             t("123456789012345", None)
         else:
-            t("123456789012", 5882)     # (5882, 3, 10, 16, 30, 12)
+            t("123456789012", 5882)  # (5882, 3, 10, 16, 30, 12)
             t("123456789012345", 5882)  # (5882, 3, 10, 16, 30, 12, 345000)
 
         # nothing should be able to parse this
@@ -502,13 +507,16 @@ class TestValueTypes(BaseFilterTest):
             "value": 61,
         }
 
-        self.assertFilter(fdata, i((three_months - timedelta(100)), three_months), False)
+        self.assertFilter(
+            fdata, i((three_months - timedelta(100)), three_months), False
+        )
         self.assertFilter(fdata, i((two_months - timedelta(100)), two_months), True)
         self.assertFilter(fdata, i((now - timedelta(100)), now), True)
-        self.assertFilter(fdata, i((now - timedelta(100)).isoformat(), now.isoformat()), True)
+        self.assertFilter(
+            fdata, i((now - timedelta(100)).isoformat(), now.isoformat()), True
+        )
 
     def test_value_regex_matches_first_occurrence(self):
-
         def i(first, second):
             value = "{}text{}".format(first, second)
             return instance(Tags=[{"Key": "metadata", "Value": value}])
@@ -530,7 +538,6 @@ class TestValueTypes(BaseFilterTest):
         self.assertFilter(fdata, i(3, 2), False)
 
     def test_value_regex_with_non_capturing_groups(self):
-
         def i(d):
             return instance(Tags=[{"Key": "metadata", "Value": d}])
 
@@ -615,7 +622,10 @@ class TestValueTypes(BaseFilterTest):
 
     def test_resource_count_filter(self):
         fdata = {
-            "type": "value", "value_type": "resource_count", "op": "lt", "value": 2
+            "type": "value",
+            "value_type": "resource_count",
+            "op": "lt",
+            "value": 2,
         }
         self.assertFilter(fdata, instance(file="ec2-instances.json"), [])
 
@@ -628,36 +638,33 @@ class TestValueTypes(BaseFilterTest):
     def test_resource_count_filter_validation(self):
         # Bad `op`
         f = {"type": "value", "value_type": "resource_count", "op": "regex", "value": 1}
-        self.assertRaises(
-            PolicyValidationError, filters.factory(f, {}).validate
-        )
+        self.assertRaises(PolicyValidationError, filters.factory(f, {}).validate)
 
         # Bad `value`
         f = {
-            "type": "value", "value_type": "resource_count", "op": "eq", "value": "foo"
+            "type": "value",
+            "value_type": "resource_count",
+            "op": "eq",
+            "value": "foo",
         }
-        self.assertRaises(
-            PolicyValidationError, filters.factory(f, {}).validate
-        )
+        self.assertRaises(PolicyValidationError, filters.factory(f, {}).validate)
 
         # Missing `op`
         f = {"type": "value", "value_type": "resource_count", "value": 1}
-        self.assertRaises(
-            PolicyValidationError, filters.factory(f, {}).validate
-        )
+        self.assertRaises(PolicyValidationError, filters.factory(f, {}).validate)
 
         # Unexpected `value_regex`
         f = {
-            "type": "value", "value_type": "resource_count", "op": "eq", "value": "foo",
-            "value_regex": "([0-7]{3,7})"
+            "type": "value",
+            "value_type": "resource_count",
+            "op": "eq",
+            "value": "foo",
+            "value_regex": "([0-7]{3,7})",
         }
-        self.assertRaises(
-            PolicyValidationError, filters.factory(f, {}).validate
-        )
+        self.assertRaises(PolicyValidationError, filters.factory(f, {}).validate)
 
 
 class TestInstanceAge(BaseFilterTest):
-
     def test_filter_instance_age(self):
         now = datetime.now(tz=tz.tzutc())
         three_months = now - timedelta(90)
@@ -679,7 +686,6 @@ class TestInstanceAge(BaseFilterTest):
 
 
 class TestInstanceAgeMinute(BaseFilterTest):
-
     def test_filter_instance_age(self):
         now = datetime.now(tz=tz.tzutc())
         five_minute = now - timedelta(minutes=5)
@@ -694,7 +700,6 @@ class TestInstanceAgeMinute(BaseFilterTest):
 
 
 class TestMarkedForAction(BaseFilterTest):
-
     def test_marked_for_op_with_skew(self):
         now = datetime.now()
         yesterday = datetime.now() - timedelta(7)
@@ -749,7 +754,6 @@ class TestMarkedForAction(BaseFilterTest):
 
 
 class EventFilterTest(BaseFilterTest):
-
     def test_event_filter(self):
         b = Bag(data={"mode": []})
         event = event_data("event-instance-state.json")
@@ -769,7 +773,6 @@ class EventFilterTest(BaseFilterTest):
 
 
 class TestInstanceValue(BaseFilterTest):
-
     def test_filter_tag_count(self):
         tags = []
         for i in range(10):
@@ -846,7 +849,6 @@ class TestInstanceValue(BaseFilterTest):
 
 
 class TestEqualValue(unittest.TestCase):
-
     def test_eq(self):
         f = filters.factory(
             {"type": "value", "key": "Color", "value": "green", "op": "eq"}
@@ -863,7 +865,6 @@ class TestEqualValue(unittest.TestCase):
 
 
 class TestNotEqualValue(unittest.TestCase):
-
     def test_ne(self):
         f = filters.factory(
             {"type": "value", "key": "Color", "value": "green", "op": "ne"}
@@ -880,7 +881,6 @@ class TestNotEqualValue(unittest.TestCase):
 
 
 class TestGreaterThanValue(unittest.TestCase):
-
     def test_gt(self):
         f = filters.factory({"type": "value", "key": "Number", "value": 10, "op": "gt"})
         self.assertEqual(f(instance(Number=11)), True)
@@ -897,7 +897,6 @@ class TestGreaterThanValue(unittest.TestCase):
 
 
 class TestLessThanValue(unittest.TestCase):
-
     def test_lt(self):
         f = filters.factory({"type": "value", "key": "Number", "value": 10, "op": "lt"})
         self.assertEqual(f(instance(Number=9)), True)
@@ -914,7 +913,6 @@ class TestLessThanValue(unittest.TestCase):
 
 
 class TestInList(unittest.TestCase):
-
     def test_in(self):
         f = filters.factory(
             {
@@ -929,7 +927,6 @@ class TestInList(unittest.TestCase):
 
 
 class TestNotInList(unittest.TestCase):
-
     def test_ni(self):
         f = filters.factory(
             {
@@ -956,7 +953,6 @@ class TestNotInList(unittest.TestCase):
 
 
 class TestContains(unittest.TestCase):
-
     def test_contains(self):
         f = filters.factory(
             {"type": "value", "key": "Thing", "value": "D", "op": "contains"}
@@ -966,7 +962,6 @@ class TestContains(unittest.TestCase):
 
 
 class TestDifference(unittest.TestCase):
-
     def test_difference(self):
         f = filters.factory(
             {
@@ -982,7 +977,6 @@ class TestDifference(unittest.TestCase):
 
 
 class TestIntersect(unittest.TestCase):
-
     def test_intersect(self):
         f = filters.factory(
             {
@@ -997,14 +991,12 @@ class TestIntersect(unittest.TestCase):
 
 
 class TestFilterRegistry(unittest.TestCase):
-
     def test_filter_registry(self):
         reg = base_filters.FilterRegistry("test.filters")
         self.assertRaises(PolicyValidationError, reg.factory, {"type": ""})
 
 
 class TestMetricsFilter(BaseTest):
-
     def test_missing_metrics(self):
         self.patch(ELB, "executor_factory", MainThreadExecutor)
         session_factory = self.replay_flight_data("test_missing_metrics")
@@ -1054,14 +1046,19 @@ class TestMetricsFilter(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 2)
-        self.assertEqual(all(
-            isinstance(res["c7n.metrics"]["AWS/ELB.RequestCount.Sum"], list)
-            for res in resources
-        ), True)
+        self.assertEqual(
+            all(
+                isinstance(res["c7n.metrics"]["AWS/ELB.RequestCount.Sum"], list)
+                for res in resources
+            ),
+            True,
+        )
         self.assertIn(
             "Fill value for missing data",
-            (res["c7n.metrics"]["AWS/ELB.RequestCount.Sum"][0].get("c7n:detail")
-                for res in resources)
+            (
+                res["c7n.metrics"]["AWS/ELB.RequestCount.Sum"][0].get("c7n:detail")
+                for res in resources
+            ),
         )
 
     def test_metric_period_rounding(self):
@@ -1080,17 +1077,19 @@ class TestMetricsFilter(BaseTest):
                         "statistics": "Sum",
                         "days": 90,
                         "value": 0,
-                        "op": "eq"
+                        "op": "eq",
                     }
-                ]
+                ],
             },
             config={"region": "us-east-2"},
-            session_factory=factory
+            session_factory=factory,
         )
         metrics_filter = p.resource_manager.filters[0]
 
         # Set a fixed end time for the metrics filter with a non-zero minute component.
-        with mock_datetime_now(parse_date("2020-12-03T04:45:00+00:00"), base_filters.metrics):
+        with mock_datetime_now(
+            parse_date("2020-12-03T04:45:00+00:00"), base_filters.metrics
+        ):
             resources = p.run()
             datapoints = resources[0]["c7n.metrics"]["AWS/SQS.NumberOfMessagesSent.Sum"]
 
@@ -1100,13 +1099,14 @@ class TestMetricsFilter(BaseTest):
 
 
 class TestReduceFilter(BaseFilterTest):
-
     def instances(self):
         return [
             dict(InstanceId="A", Group="A", Foo="a", Bar="3", Date="2011/05/06"),
             dict(InstanceId="B", Group="B", Foo="c", Bar="1", Date="2020/01/01"),
             dict(InstanceId="C", Group="C", Foo="d", Date="2015-05-25T01:02:03"),
-            dict(InstanceId="D", Group="A", Foo="b", Date="1592870000"),  # 2020-06-22 23:53:20 UTC
+            dict(
+                InstanceId="D", Group="A", Foo="b", Date="1592870000"
+            ),  # 2020-06-22 23:53:20 UTC
             dict(InstanceId="E", Group="B", Foo="e", Bar="23", Date="invalid"),
             dict(InstanceId="F", Group="C", Foo="f"),
         ]
@@ -1277,8 +1277,7 @@ class TestReduceFilter(BaseFilterTest):
         self.assertEqual(len(rs1), len(resources))
         self.assertEqual(len(rs2), len(resources))
         self.assertNotEqual(
-            [r['InstanceId'] for r in rs1],
-            [r['InstanceId'] for r in rs2]
+            [r['InstanceId'] for r in rs1], [r['InstanceId'] for r in rs2]
         )
 
     def test_reverse(self):
@@ -1292,8 +1291,7 @@ class TestReduceFilter(BaseFilterTest):
         rs = f.process(resources)
         self.assertEqual(len(rs), len(resources))
         self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            [r['InstanceId'] for r in resources[::-1]]
+            [r['InstanceId'] for r in rs], [r['InstanceId'] for r in resources[::-1]]
         )
 
     def test_sort_string(self):
@@ -1305,44 +1303,23 @@ class TestReduceFilter(BaseFilterTest):
             }
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['B', 'E', 'A', 'C', 'D', 'F']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['B', 'E', 'A', 'C', 'D', 'F'])
 
     def test_sort_number(self):
         resources = self.instances()
         f = filters.factory(
-            {
-                "type": "reduce",
-                "sort-by": {
-                    "key": "Bar",
-                    "value_type": "number"
-                }
-            }
+            {"type": "reduce", "sort-by": {"key": "Bar", "value_type": "number"}}
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['B', 'A', 'E', 'C', 'D', 'F']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['B', 'A', 'E', 'C', 'D', 'F'])
 
     def test_sort_date(self):
         resources = self.instances()
         f = filters.factory(
-            {
-                "type": "reduce",
-                "sort-by": {
-                    "key": "Date",
-                    "value_type": "date"
-                }
-            }
+            {"type": "reduce", "sort-by": {"key": "Date", "value_type": "date"}}
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['A', 'C', 'B', 'D', 'E', 'F']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['A', 'C', 'B', 'D', 'E', 'F'])
 
     def test_group_string(self):
         resources = self.instances()
@@ -1355,28 +1332,19 @@ class TestReduceFilter(BaseFilterTest):
         )
         rs = f.process(resources)
         self.assertEqual(len(rs), 4)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['B', 'E', 'A', 'C']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['B', 'E', 'A', 'C'])
 
     def test_group_number(self):
         resources = self.instances()
         f = filters.factory(
             {
                 "type": "reduce",
-                "group-by": {
-                    "key": "Bar",
-                    "value_type": "number"
-                },
-                "limit": 1
+                "group-by": {"key": "Bar", "value_type": "number"},
+                "limit": 1,
             }
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['B', 'A', 'E', 'C']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['B', 'A', 'E', 'C'])
 
     def test_group_regex_date_asc(self):
         resources = self.instances()
@@ -1386,17 +1354,14 @@ class TestReduceFilter(BaseFilterTest):
                 "group-by": {
                     "key": "Date",
                     "value_type": "date",
-                    "value_regex": "([0-9]{4}-[0-9]{2}-[0-9]{2}).*"
+                    "value_regex": "([0-9]{4}-[0-9]{2}-[0-9]{2}).*",
                 },
-                "limit": 1
+                "limit": 1,
             }
         )
         f.validate()
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['C', 'A']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['C', 'A'])
 
     def test_group_regex_date_desc(self):
         resources = self.instances()
@@ -1409,14 +1374,11 @@ class TestReduceFilter(BaseFilterTest):
                     "value_regex": "([0-9]{4}[/-][0-9]{2}[/-][0-9]{2}).*",
                 },
                 "order": "desc",
-                "limit": 1
+                "limit": 1,
             }
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['B', 'C', 'A', 'D']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['B', 'C', 'A', 'D'])
 
     def test_group_regex_date_desc_null_first(self):
         resources = self.instances()
@@ -1430,14 +1392,11 @@ class TestReduceFilter(BaseFilterTest):
                 },
                 "order": "desc",
                 "null-order": "first",
-                "limit": 1
+                "limit": 1,
             }
         )
         rs = f.process(resources)
-        self.assertEqual(
-            [r['InstanceId'] for r in rs],
-            ['D', 'B', 'C', 'A']
-        )
+        self.assertEqual([r['InstanceId'] for r in rs], ['D', 'B', 'C', 'A'])
 
 
 if __name__ == "__main__":

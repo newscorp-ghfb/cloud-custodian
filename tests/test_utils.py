@@ -16,18 +16,12 @@ from .common import BaseTest
 
 
 class TestTesting(BaseTest):
-
     def test_assert_regex(self):
-        self.assertRaises(
-            AssertionError,
-            self.assertRegex,
-            "^hello", "not hello world")
+        self.assertRaises(AssertionError, self.assertRegex, "^hello", "not hello world")
 
 
 class Backoff(BaseTest):
-
     def test_retry_passthrough(self):
-
         def func():
             return 42
 
@@ -65,50 +59,43 @@ class Backoff(BaseTest):
 
 
 class UrlConfTest(BaseTest):
-
     def test_parse_url(self):
         self.assertEqual(
             dict(utils.parse_url_config('aws://target?format=json&region=us-west-2')),
-            dict(url='aws://target?format=json&region=us-west-2',
-                 netloc='target',
-                 path='',
-                 scheme='aws',
-                 region='us-west-2',
-                 format='json'))
+            dict(
+                url='aws://target?format=json&region=us-west-2',
+                netloc='target',
+                path='',
+                scheme='aws',
+                region='us-west-2',
+                format='json',
+            ),
+        )
 
         self.assertEqual(
             dict(utils.parse_url_config('')),
-            {
-                'netloc': '',
-                'path': '',
-                'scheme': '',
-                'url': ''
-            })
+            {'netloc': '', 'path': '', 'scheme': '', 'url': ''},
+        )
 
         self.assertEqual(
             dict(utils.parse_url_config('aws')),
-            {
-                'path': '',
-                'scheme': 'aws',
-                'netloc': '',
-                'url': 'aws://'
-            })
+            {'path': '', 'scheme': 'aws', 'netloc': '', 'url': 'aws://'},
+        )
 
         self.assertEqual(
             dict(utils.parse_url_config('aws://')),
-            {
-                'path': '',
-                'scheme': 'aws',
-                'netloc': '',
-                'url': 'aws://'
-            })
+            {'path': '', 'scheme': 'aws', 'netloc': '', 'url': 'aws://'},
+        )
 
         self.assertEqual(
             dict(utils.parse_url_config('http://example.com:8080')),
-            dict(url='http://example.com:8080',
-                 netloc='example.com:8080',
-                 path='',
-                 scheme='http'))
+            dict(
+                url='http://example.com:8080',
+                netloc='example.com:8080',
+                path='',
+                scheme='http',
+            ),
+        )
 
 
 class ProxyUrlTest(BaseTest):
@@ -117,89 +104,102 @@ class ProxyUrlTest(BaseTest):
         self.assertEqual(None, utils.get_proxy_url('http://web.site'))
 
     def test_http_proxy_with_full_url(self):
-        with mock.patch.dict(os.environ,
-                             {'http_proxy': 'http://mock.http.proxy.server:8000'},
-                             clear=True):
+        with mock.patch.dict(
+            os.environ, {'http_proxy': 'http://mock.http.proxy.server:8000'}, clear=True
+        ):
             proxy_url = utils.get_proxy_url('http://web.site')
             self.assertEqual(proxy_url, 'http://mock.http.proxy.server:8000')
 
     def test_http_proxy_with_relative_url(self):
-        with mock.patch.dict(os.environ,
-                             {'http_proxy': 'http://mock.http.proxy.server:8000'},
-                             clear=True):
+        with mock.patch.dict(
+            os.environ, {'http_proxy': 'http://mock.http.proxy.server:8000'}, clear=True
+        ):
             proxy_url = utils.get_proxy_url('/relative/url')
             self.assertEqual(proxy_url, None)
 
     def test_all_proxy_with_full_url(self):
-        with mock.patch.dict(os.environ,
-                             {'all_proxy': 'http://mock.all.proxy.server:8000'},
-                             clear=True):
+        with mock.patch.dict(
+            os.environ, {'all_proxy': 'http://mock.all.proxy.server:8000'}, clear=True
+        ):
             proxy_url = utils.get_proxy_url('http://web.site')
             self.assertEqual(proxy_url, 'http://mock.all.proxy.server:8000')
 
     def test_http_proxy_with_no_proxy_without_port(self):
-        with mock.patch.dict(os.environ,
-                             {
-                                 'http_proxy': 'http://mock.http.proxy.server:8000',
-                                 'no_proxy': '127.0.0.1,web.site,google.com',
-                             },
-                             clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {
+                'http_proxy': 'http://mock.http.proxy.server:8000',
+                'no_proxy': '127.0.0.1,web.site,google.com',
+            },
+            clear=True,
+        ):
             proxy_url = utils.get_proxy_url('http://web.site')
             self.assertEqual(proxy_url, None)
 
     def test_http_proxy_with_no_proxy_mismatch_explicit_port(self):
-        with mock.patch.dict(os.environ,
-                             {
-                                 'http_proxy': 'http://mock.http.proxy.server:8000',
-                                 'no_proxy': '127.0.0.1,web.site:8080,google.com',
-                             },
-                             clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {
+                'http_proxy': 'http://mock.http.proxy.server:8000',
+                'no_proxy': '127.0.0.1,web.site:8080,google.com',
+            },
+            clear=True,
+        ):
             proxy_url = utils.get_proxy_url('http://web.site')
             self.assertEqual(proxy_url, 'http://mock.http.proxy.server:8000')
 
     def test_http_proxy_with_no_proxy_match_explicit_port(self):
-        with mock.patch.dict(os.environ,
-                             {
-                                 'http_proxy': 'http://mock.http.proxy.server:8000',
-                                 'no_proxy': '127.0.0.1,web.site:8080,google.com',
-                             },
-                             clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {
+                'http_proxy': 'http://mock.http.proxy.server:8000',
+                'no_proxy': '127.0.0.1,web.site:8080,google.com',
+            },
+            clear=True,
+        ):
             proxy_url = utils.get_proxy_url('http://web.site:8080')
             self.assertEqual(proxy_url, None)
 
 
 class UtilTest(BaseTest):
-
     def test_merge_dict_list(self):
 
-        assert utils.merge_dict_list([
-            {'a': 1, 'x': 0}, {'b': 2, 'x': 0}, {'c': 3, 'x': 1}]) == {
-                'a': 1, 'b': 2, 'c': 3, 'x': 1}
+        assert utils.merge_dict_list(
+            [{'a': 1, 'x': 0}, {'b': 2, 'x': 0}, {'c': 3, 'x': 1}]
+        ) == {'a': 1, 'b': 2, 'c': 3, 'x': 1}
 
     def test_merge_dict(self):
-        a = {'detail': {'eventName': ['CreateSubnet'],
-                        'eventSource': ['ec2.amazonaws.com']},
-             'detail-type': ['AWS API Call via CloudTrail']}
-        b = {'detail': {'userIdentity': {
-            'userName': [{'anything-but': 'deputy'}]}}}
+        a = {
+            'detail': {
+                'eventName': ['CreateSubnet'],
+                'eventSource': ['ec2.amazonaws.com'],
+            },
+            'detail-type': ['AWS API Call via CloudTrail'],
+        }
+        b = {'detail': {'userIdentity': {'userName': [{'anything-but': 'deputy'}]}}}
         self.assertEqual(
             utils.merge_dict(a, b),
-            {'detail-type': ['AWS API Call via CloudTrail'],
-             'detail': {
-                 'eventName': ['CreateSubnet'],
-                 'eventSource': ['ec2.amazonaws.com'],
-                 'userIdentity': {
-                     'userName': [
-                         {'anything-but': 'deputy'}]}}})
+            {
+                'detail-type': ['AWS API Call via CloudTrail'],
+                'detail': {
+                    'eventName': ['CreateSubnet'],
+                    'eventSource': ['ec2.amazonaws.com'],
+                    'userIdentity': {'userName': [{'anything-but': 'deputy'}]},
+                },
+            },
+        )
 
     def test_local_session_region(self):
         policies = [
             self.load_policy(
                 {'name': 'ec2', 'resource': 'ec2'},
-                config=Config.empty(region="us-east-1")),
+                config=Config.empty(region="us-east-1"),
+            ),
             self.load_policy(
                 {'name': 'ec2', 'resource': 'ec2'},
-                config=Config.empty(region='us-west-2'))]
+                config=Config.empty(region='us-west-2'),
+            ),
+        ]
         previous = None
         previous_region = None
         for p in policies:
@@ -233,10 +233,12 @@ class UtilTest(BaseTest):
             {"Type": {"Part": "a"}},
             {"Type": {"Part": "b"}},
         ]
-        self.assertEqual(list(utils.group_by(items, "Type.Part").keys()), [None, "a", "b"])
+        self.assertEqual(
+            list(utils.group_by(items, "Type.Part").keys()), [None, "a", "b"]
+        )
 
     def write_temp_file(self, contents, suffix=".tmp"):
-        """ Write a temporary file and return the filename.
+        """Write a temporary file and return the filename.
 
         The file will be cleaned up after the test.
         """
@@ -295,7 +297,7 @@ class UtilTest(BaseTest):
 
         self.assertEqual(
             utils.generate_arn("s3", "my_bucket", region="us-gov-west-1"),
-            "arn:aws-us-gov:s3:::my_bucket"
+            "arn:aws-us-gov:s3:::my_bucket",
         )
 
         self.assertEqual(
@@ -372,10 +374,12 @@ class UtilTest(BaseTest):
         )
 
     def test_camel_case_implicit(self):
-        d = {'ownerId': 'abc',
-             'modifyDateIso': '2021-01-05T13:43:26.749906',
-             'createTimeMillis': '1609854135165',
-             'createTime': '1609854135'}
+        d = {
+            'ownerId': 'abc',
+            'modifyDateIso': '2021-01-05T13:43:26.749906',
+            'createTimeMillis': '1609854135165',
+            'createTime': '1609854135',
+        }
         r = utils.camelResource(d, implicitTitle=False, implicitDate=True)
         assert set(r) == {'ownerId', 'modifyDateIso', 'createTimeMillis', 'createTime'}
         r.pop('ownerId')
@@ -498,17 +502,14 @@ class UtilTest(BaseTest):
         self.assertEqual(fmt["Key4"][2], "aa")
         self.assertEqual(fmt["Key4"][1]["K"], "bb")
 
-        self.assertEqual(
-            utils.format_string_values(
-                {'k': '{1}'}),
-            {'k': '{1}'})
+        self.assertEqual(utils.format_string_values({'k': '{1}'}), {'k': '{1}'})
 
         self.assertEqual(
             utils.format_string_values(
-                {'k': '{limit}',
-                 'b': '{account_id}'}, account_id=21),
-            {'k': '{limit}',
-             'b': '21'})
+                {'k': '{limit}', 'b': '{account_id}'}, account_id=21
+            ),
+            {'k': '{limit}', 'b': '21'},
+        )
 
 
 def test_parse_date_floor():

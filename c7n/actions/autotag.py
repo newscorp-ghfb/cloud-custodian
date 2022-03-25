@@ -44,46 +44,50 @@ class AutoTagUser(EventAction):
 
      CloudTrail User
      https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-user-identity.html
-    """ # NOQA
+    """  # NOQA
 
     schema_alias = True
     schema = utils.type_schema(
         'auto-tag-user',
         required=['tag'],
-        **{'user-type': {
-            'type': 'array',
-            'items': {'type': 'string',
-                      'enum': [
-                          'IAMUser',
-                          'AssumedRole',
-                          'FederatedUser'
-                      ]}},
-           'update': {'type': 'boolean'},
-           'tag': {'type': 'string'},
-           'principal_id_tag': {'type': 'string'}
-           }
+        **{
+            'user-type': {
+                'type': 'array',
+                'items': {
+                    'type': 'string',
+                    'enum': ['IAMUser', 'AssumedRole', 'FederatedUser'],
+                },
+            },
+            'update': {'type': 'boolean'},
+            'tag': {'type': 'string'},
+            'principal_id_tag': {'type': 'string'},
+        }
     )
 
     def get_permissions(self):
-        return self.manager.action_registry.get(
-            'tag')({}, self.manager).get_permissions()
+        return self.manager.action_registry.get('tag')(
+            {}, self.manager
+        ).get_permissions()
 
     def validate(self):
         if self.manager.data.get('mode', {}).get('type') != 'cloudtrail':
             raise PolicyValidationError(
-                "Auto tag owner requires an event %s" % (self.manager.data,))
+                "Auto tag owner requires an event %s" % (self.manager.data,)
+            )
         if self.manager.action_registry.get('tag') is None:
             raise PolicyValidationError(
-                "Resource does not support tagging %s" % (self.manager.data,))
+                "Resource does not support tagging %s" % (self.manager.data,)
+            )
         if 'tag' not in self.data:
-            raise PolicyValidationError(
-                "auto-tag action requires 'tag'")
+            raise PolicyValidationError("auto-tag action requires 'tag'")
         return self
 
     def get_tag_value(self, event):
         event = event['detail']
         utype = event['userIdentity']['type']
-        if utype not in self.data.get('user-type', ['AssumedRole', 'IAMUser', 'FederatedUser']):
+        if utype not in self.data.get(
+            'user-type', ['AssumedRole', 'IAMUser', 'FederatedUser']
+        ):
             return
 
         user = None
@@ -93,7 +97,9 @@ class AutoTagUser(EventAction):
         elif utype == "AssumedRole" or utype == "FederatedUser":
             user = event['userIdentity']['arn']
             prefix, user = user.rsplit('/', 1)
-            principal_id_value = event['userIdentity'].get('principalId', '').split(':')[0]
+            principal_id_value = (
+                event['userIdentity'].get('principalId', '').split(':')[0]
+            )
             # instance role
             if user.startswith('i-'):
                 return

@@ -26,9 +26,5 @@ class FrontDoor(ArmResourceManager):
         service = 'azure.mgmt.frontdoor'
         client = 'FrontDoorManagementClient'
         enum_spec = ('front_doors', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.Network/frontDoors'

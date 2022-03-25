@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class AlarmTest(BaseTest):
-
     def test_delete(self):
         alarm_name = "c7n-test-alarm-delete"
         factory = self.replay_flight_data("test_alarm_delete")
@@ -47,7 +46,7 @@ class AlarmTest(BaseTest):
                         'type': 'value',
                         'key': 'tag:some-tag',
                         'value': 'some-value',
-                        'op': 'eq'
+                        'op': 'eq',
                     }
                 ],
             },
@@ -64,15 +63,13 @@ class AlarmTest(BaseTest):
             {
                 "name": "add-alarm-tags",
                 "resource": "alarm",
-                "actions": [{
-                    "type": "tag",
-                    "key": "OwnerName",
-                    "value": "SomeName"
-                }],
+                "actions": [{"type": "tag", "key": "OwnerName", "value": "SomeName"}],
             },
             session_factory=factory,
         )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertTrue({'Key': 'OwnerName', 'Value': 'SomeName'} in resources[0].get('Tags'))
+        self.assertTrue(
+            {'Key': 'OwnerName', 'Value': 'SomeName'} in resources[0].get('Tags')
+        )

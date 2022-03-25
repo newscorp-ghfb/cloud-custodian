@@ -17,20 +17,24 @@ class FunctionMode(ServerlessExecutionMode):
 
     schema = type_schema(
         'gcp',
-        **{'execution-options': {'$ref': '#/definitions/basic_dict'},
-           'timeout': {'type': 'string'},
-           'memory-size': {'type': 'integer'},
-           'labels': {'$ref': '#/definitions/string_dict'},
-           'network': {'type': 'string'},
-           'max-instances': {'type': 'integer'},
-           'service-account': {'type': 'string'},
-           'environment': {'$ref': '#/definitions/string_dict'}}
+        **{
+            'execution-options': {'$ref': '#/definitions/basic_dict'},
+            'timeout': {'type': 'string'},
+            'memory-size': {'type': 'integer'},
+            'labels': {'$ref': '#/definitions/string_dict'},
+            'network': {'type': 'string'},
+            'max-instances': {'type': 'integer'},
+            'service-account': {'type': 'string'},
+            'environment': {'$ref': '#/definitions/string_dict'},
+        }
     )
 
     def __init__(self, policy):
         self.policy = policy
         self.log = logging.getLogger('custodian.gcp.funcexec')
-        self.region = policy.options.regions[0] if len(policy.options.regions) else DEFAULT_REGION
+        self.region = (
+            policy.options.regions[0] if len(policy.options.regions) else DEFAULT_REGION
+        )
 
     def run(self):
         raise NotImplementedError("subclass responsibility")
@@ -64,16 +68,19 @@ class PeriodicMode(FunctionMode, PullMode):
         'gcp-periodic',
         rinherit=FunctionMode.schema,
         required=['schedule'],
-        **{'target-type': {'enum': ['http', 'pubsub']},
-           'tz': {'type': 'string'},
-           'schedule': {'type': 'string'}})
+        **{
+            'target-type': {'enum': ['http', 'pubsub']},
+            'tz': {'type': 'string'},
+            'schedule': {'type': 'string'},
+        }
+    )
 
     def validate(self):
         mode = self.policy.data['mode']
         if 'tz' in mode:
             error = PolicyValidationError(
-                "policy:%s gcp-periodic invalid tz:%s" % (
-                    self.policy.name, mode['tz']))
+                "policy:%s gcp-periodic invalid tz:%s" % (self.policy.name, mode['tz'])
+            )
             # We can't catch all errors statically, our local tz retrieval
             # then the form gcp is using, ie. not all the same aliases are
             # defined.
@@ -82,11 +89,13 @@ class PeriodicMode(FunctionMode, PullMode):
                 raise error
 
     def _get_function(self):
-        events = [mu.PeriodicEvent(
-            local_session(self.policy.session_factory),
-            self.policy.data['mode'],
-            self.region
-        )]
+        events = [
+            mu.PeriodicEvent(
+                local_session(self.policy.session_factory),
+                self.policy.data['mode'],
+                self.region,
+            )
+        ]
         return mu.PolicyFunction(self.policy, events=events)
 
     def run(self, event, context):
@@ -113,11 +122,11 @@ class ApiAuditMode(FunctionMode):
         'gcp-audit',
         methods={'type': 'array', 'items': {'type': 'string'}},
         required=['methods'],
-        rinherit=FunctionMode.schema)
+        rinherit=FunctionMode.schema,
+    )
 
     def resolve_resources(self, event):
-        """Resolve a gcp resource from its audit trail metadata.
-        """
+        """Resolve a gcp resource from its audit trail metadata."""
         if self.policy.resource_manager.resource_type.get_requires_event:
             return [self.policy.resource_manager.get_resource(event)]
         resource_info = event.get('resource')
@@ -126,22 +135,27 @@ class ApiAuditMode(FunctionMode):
             return
         # copy resource name, the api doesn't like resource ids, just names.
         if 'resourceName' in event['protoPayload']:
-            resource_info['labels']['resourceName'] = event['protoPayload']['resourceName']
+            resource_info['labels']['resourceName'] = event['protoPayload'][
+                'resourceName'
+            ]
 
         resource = self.policy.resource_manager.get_resource(resource_info['labels'])
         return [resource]
 
     def _get_function(self):
-        events = [mu.ApiSubscriber(
-            local_session(self.policy.session_factory),
-            self.policy.data['mode'])]
+        events = [
+            mu.ApiSubscriber(
+                local_session(self.policy.session_factory), self.policy.data['mode']
+            )
+        ]
         return mu.PolicyFunction(self.policy, events=events)
 
     def validate(self):
         if not self.policy.resource_manager.resource_type.get:
             raise PolicyValidationError(
-                "Resource:%s does not implement retrieval method" % (
-                    self.policy.resource_type))
+                "Resource:%s does not implement retrieval method"
+                % (self.policy.resource_type)
+            )
 
     def run(self, event, context):
         """Execute a gcp serverless model"""
@@ -151,8 +165,7 @@ class ApiAuditMode(FunctionMode):
         if not resources:
             return
 
-        resources = self.policy.resource_manager.filter_resources(
-            resources, event)
+        resources = self.policy.resource_manager.filter_resources(resources, event)
 
         self.policy.log.info("Filtered resources %d" % len(resources))
 
@@ -160,8 +173,8 @@ class ApiAuditMode(FunctionMode):
             return
 
         self.policy.ctx.metrics.put_metric(
-            'ResourceCount', len(resources), 'Count', Scope="Policy",
-            buffer=False)
+            'ResourceCount', len(resources), 'Count', Scope="Policy", buffer=False
+        )
 
         for action in self.policy.resource_manager.actions:
             if isinstance(action, EventAction):
@@ -206,11 +219,11 @@ class SecurityCenterMode(FunctionMode):
         'gcp-scc',
         org={'type': 'integer'},
         required=['org'],
-        rinherit=FunctionMode.schema)
+        rinherit=FunctionMode.schema,
+    )
 
     def resolve_resources(self, event):
-        """Resolve a gcp resource from its scc finding.
-        """
+        """Resolve a gcp resource from its scc finding."""
         if not event["finding"].get("resourceName"):
             self.policy.log.warning("Could not find resourceName in event")
             return
@@ -218,7 +231,7 @@ class SecurityCenterMode(FunctionMode):
         project_id = event["resource"].get("project", "").split('/')[-1]
         finding_details = {
             "resourceName": event["finding"]["resourceName"],
-            "project_id": project_id
+            "project_id": project_id,
         }
 
         resource = self.policy.resource_manager.get_resource(finding_details)
@@ -232,22 +245,32 @@ class SecurityCenterMode(FunctionMode):
 
     def _get_function(self):
         events = [
-            mu.PubSubSource(local_session(self.policy.session_factory),
-            {"topic": self._resource_topic()}),
-            mu.SecurityCenterSubscriber(local_session(self.policy.session_factory),
-             {"topic": self._resource_topic(),
-             "org": self.policy.data["mode"]["org"]}, self.policy.resource_manager)]
+            mu.PubSubSource(
+                local_session(self.policy.session_factory),
+                {"topic": self._resource_topic()},
+            ),
+            mu.SecurityCenterSubscriber(
+                local_session(self.policy.session_factory),
+                {
+                    "topic": self._resource_topic(),
+                    "org": self.policy.data["mode"]["org"],
+                },
+                self.policy.resource_manager,
+            ),
+        ]
         return mu.PolicyFunction(self.policy, events=events)
 
     def validate(self):
         if not self.policy.resource_manager.resource_type.get:
             raise PolicyValidationError(
-                "Resource:%s does not implement retrieval method get" % (
-                    self.policy.resource_type))
+                "Resource:%s does not implement retrieval method get"
+                % (self.policy.resource_type)
+            )
         if not self.policy.resource_manager.resource_type.scc_type:
             raise PolicyValidationError(
-                "Resource:%s is not supported by scc currently" % (
-                    self.policy.resource_type))
+                "Resource:%s is not supported by scc currently"
+                % (self.policy.resource_type)
+            )
 
     def run(self, event, context):
         """Execute a gcp serverless model"""
@@ -257,8 +280,7 @@ class SecurityCenterMode(FunctionMode):
         if not resources:
             return
 
-        resources = self.policy.resource_manager.filter_resources(
-            resources, event)
+        resources = self.policy.resource_manager.filter_resources(resources, event)
 
         self.policy.log.info("Filtered resources %d" % len(resources))
 
@@ -266,8 +288,8 @@ class SecurityCenterMode(FunctionMode):
             return
 
         self.policy.ctx.metrics.put_metric(
-            'ResourceCount', len(resources), 'Count', Scope="Policy",
-            buffer=False)
+            'ResourceCount', len(resources), 'Count', Scope="Policy", buffer=False
+        )
 
         for action in self.policy.resource_manager.actions:
             if isinstance(action, EventAction):

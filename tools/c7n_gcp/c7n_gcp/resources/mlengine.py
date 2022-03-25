@@ -11,6 +11,7 @@ class MLModel(QueryResourceManager):
     """GCP Resource
     https://cloud.google.com/ai-platform/prediction/docs/reference/rest/v1/projects.models
     """
+
     class resource_type(TypeInfo):
         service = 'ml'
         version = 'v1'
@@ -20,16 +21,14 @@ class MLModel(QueryResourceManager):
         scope_key = 'parent'
         scope_template = 'projects/{}'
         name = id = 'name'
-        default_report_fields = [
-            id, name, "description", "onlinePredictionLogging"]
+        default_report_fields = [id, name, "description", "onlinePredictionLogging"]
         get_requires_event = True
 
         @staticmethod
         def get(client, event):
             return client.execute_query(
-                'get', {'name': jmespath.search(
-                    'protoPayload.response.name', event
-                )})
+                'get', {'name': jmespath.search('protoPayload.response.name', event)}
+            )
 
 
 @resources.register('ml-job')
@@ -37,6 +36,7 @@ class MLJob(QueryResourceManager):
     """GCP Resource
     https://cloud.google.com/ai-platform/prediction/docs/reference/rest/v1/projects.jobs
     """
+
     class resource_type(TypeInfo):
         service = 'ml'
         version = 'v1'
@@ -46,13 +46,17 @@ class MLJob(QueryResourceManager):
         scope_key = 'parent'
         scope_template = 'projects/{}'
         name = id = 'jobId'
-        default_report_fields = [
-            "jobId", "status", "createTime", "endTime"]
+        default_report_fields = ["jobId", "status", "createTime", "endTime"]
         get_requires_event = True
 
         @staticmethod
         def get(client, event):
             return client.execute_query(
-                'get', {'name': 'projects/{}/jobs/{}'.format(
-                    jmespath.search('resource.labels.project_id', event),
-                    jmespath.search('protoPayload.response.jobId', event))})
+                'get',
+                {
+                    'name': 'projects/{}/jobs/{}'.format(
+                        jmespath.search('resource.labels.project_id', event),
+                        jmespath.search('protoPayload.response.jobId', event),
+                    )
+                },
+            )

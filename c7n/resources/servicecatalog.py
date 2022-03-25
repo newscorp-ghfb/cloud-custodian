@@ -12,14 +12,12 @@ from c7n.utils import local_session, type_schema
 
 
 class DescribePortfolio(DescribeSource):
-
     def augment(self, resources):
         return universal_augment(self.manager, super().augment(resources))
 
 
 @resources.register('catalog-portfolio')
 class CatalogPortfolio(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'servicecatalog'
         enum_spec = ('list_portfolios', 'PortfolioDetails', None)
@@ -31,10 +29,7 @@ class CatalogPortfolio(QueryResourceManager):
         universal_taggable = object()
         cfn_type = config_type = 'AWS::ServiceCatalog::Portfolio'
 
-    source_mapping = {
-        'describe': DescribePortfolio,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribePortfolio, 'config': ConfigSource}
 
 
 @CatalogPortfolio.action_registry.register('delete')
@@ -60,8 +55,11 @@ class CatalogPortfolioDeleteAction(BaseAction):
     def process(self, portfolios):
         client = local_session(self.manager.session_factory).client('servicecatalog')
         for r in portfolios:
-            self.manager.retry(client.delete_portfolio, Id=r['Id'], ignore_err_codes=(
-                'ResourceNotFoundException',))
+            self.manager.retry(
+                client.delete_portfolio,
+                Id=r['Id'],
+                ignore_err_codes=('ResourceNotFoundException',),
+            )
 
 
 @CatalogPortfolio.filter_registry.register('cross-account')
@@ -82,7 +80,8 @@ class CatalogPortfolioCrossAccount(CrossAccountAccessFilter):
     schema = type_schema(
         'cross-account',
         whitelist_from={'$ref': '#/definitions/filters_common/value_from'},
-        whitelist={'type': 'array', 'items': {'type': 'string'}})
+        whitelist={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     permissions = ('servicecatalog:ListPortfolioAccess',)
     annotation_key = 'c7n:CrossAccountViolations'
@@ -91,8 +90,10 @@ class CatalogPortfolioCrossAccount(CrossAccountAccessFilter):
         results = []
         for r in resources:
             shared_accounts = self.manager.retry(
-                client.list_portfolio_access, PortfolioId=r['Id'], ignore_err_codes=(
-                    'ResourceNotFoundException',)).get('AccountIds')
+                client.list_portfolio_access,
+                PortfolioId=r['Id'],
+                ignore_err_codes=('ResourceNotFoundException',),
+            ).get('AccountIds')
             if not shared_accounts:
                 continue
             shared_accounts = set(shared_accounts)
@@ -138,10 +139,17 @@ class RemoveSharedAccounts(BaseAction):
 
     schema = type_schema(
         'remove-shared-accounts',
-        accounts={'oneOf': [
-            {'enum': ['matched']},
-            {'type': 'array', 'items': {'type': 'string', 'pattern': '^[0-9]{12}$'}}]},
-        required=['accounts'])
+        accounts={
+            'oneOf': [
+                {'enum': ['matched']},
+                {
+                    'type': 'array',
+                    'items': {'type': 'string', 'pattern': '^[0-9]{12}$'},
+                },
+            ]
+        },
+        required=['accounts'],
+    )
 
     permissions = ('servicecatalog:DeletePortfolioShare',)
 
@@ -155,15 +163,18 @@ class RemoveSharedAccounts(BaseAction):
                 break
         if not found:
             raise PolicyValidationError(
-                "policy:%s action:%s with matched requires cross-account filter" % (
-                    self.manager.ctx.policy.name, self.type))
+                "policy:%s action:%s with matched requires cross-account filter"
+                % (self.manager.ctx.policy.name, self.type)
+            )
 
     def delete_shared_accounts(self, client, portfolio):
         accounts = self.data.get('accounts')
         if accounts == 'matched':
             accounts = portfolio.get(CatalogPortfolioCrossAccount.annotation_key)
         for account in accounts:
-            client.delete_portfolio_share(PortfolioId=portfolio['Id'], AccountId=account)
+            client.delete_portfolio_share(
+                PortfolioId=portfolio['Id'], AccountId=account
+            )
 
     def process(self, portfolios):
         client = local_session(self.manager.session_factory).client('servicecatalog')

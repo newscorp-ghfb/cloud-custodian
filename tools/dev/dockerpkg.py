@@ -471,8 +471,13 @@ def test_image(image_id, image_name, providers):
     if providers not in (None, ()):
         env["CUSTODIAN_PROVIDERS"] = " ".join(providers)
     subprocess.check_call(
-        [Path(sys.executable).parent / "pytest", "-p",
-         "no:terraform", "-v", "tests/test_docker.py"],
+        [
+            Path(sys.executable).parent / "pytest",
+            "-p",
+            "no:terraform",
+            "-v",
+            "tests/test_docker.py",
+        ],
         env=env,
         stderr=subprocess.STDOUT,
     )
@@ -526,7 +531,11 @@ def build_image(client, image_name, image_def, dfile_path, build_args):
     built_image = client.images.get(built_image_id)
     log.info(
         "Built %s image Id:%s Size:%s"
-        % (image_name, built_image_id[:12], human_size(built_image.attrs["Size"]),)
+        % (
+            image_name,
+            built_image_id[:12],
+            human_size(built_image.attrs["Size"]),
+        )
     )
 
     return built_image_id[:12]

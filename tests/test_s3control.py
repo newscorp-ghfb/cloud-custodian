@@ -20,7 +20,7 @@ def test_s3_access_point(test, s3_access_point):
             'actions': ['delete'],
         },
         session_factory=factory,
-        config={'account_id': account_id}
+        config={'account_id': account_id},
     )
 
     resources = p.run()

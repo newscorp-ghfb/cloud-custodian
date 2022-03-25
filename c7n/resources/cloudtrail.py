@@ -16,7 +16,6 @@ log = logging.getLogger('c7n.resources.cloudtrail')
 
 
 class DescribeTrail(DescribeSource):
-
     def augment(self, resources):
         return universal_augment(self.manager, resources)
 
@@ -30,14 +29,14 @@ def get_trail_groups(session_factory, trails):
         trails.append(t)
         if client is None:
             client = local_session(session_factory).client(
-                'cloudtrail', region_name=region)
+                'cloudtrail', region_name=region
+            )
         grouped[region] = client, trails
     return grouped
 
 
 @resources.register('cloudtrail')
 class CloudTrail(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudtrail'
         enum_spec = ('describe_trails', 'trailList', None)
@@ -49,10 +48,7 @@ class CloudTrail(QueryResourceManager):
         cfn_type = config_type = "AWS::CloudTrail::Trail"
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeTrail,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeTrail, 'config': ConfigSource}
 
 
 @CloudTrail.filter_registry.register('is-shadow')
@@ -63,22 +59,32 @@ class IsShadow(Filter):
     Shadow trails are created for multi-region trails as well for
     organizational trails.
     """
+
     schema = type_schema('is-shadow', state={'type': 'boolean'})
     permissions = ('cloudtrail:DescribeTrails',)
     embedded = False
 
     def process(self, resources, event=None):
         rcount = len(resources)
-        trails = [t for t in resources if (self.is_shadow(t) == self.data.get('state', True))]
+        trails = [
+            t for t in resources if (self.is_shadow(t) == self.data.get('state', True))
+        ]
         if len(trails) != rcount and self.embedded:
-            self.log.info("implicitly filtering shadow trails %d -> %d",
-                     rcount, len(trails))
+            self.log.info(
+                "implicitly filtering shadow trails %d -> %d", rcount, len(trails)
+            )
         return trails
 
     def is_shadow(self, t):
-        if t.get('IsOrganizationTrail') and self.manager.config.account_id not in t['TrailARN']:
+        if (
+            t.get('IsOrganizationTrail')
+            and self.manager.config.account_id not in t['TrailARN']
+        ):
             return True
-        if t.get('IsMultiRegionTrail') and t['HomeRegion'] != self.manager.config.region:
+        if (
+            t.get('IsMultiRegionTrail')
+            and t['HomeRegion'] != self.manager.config.region
+        ):
             return True
         return False
 
@@ -179,23 +185,19 @@ class UpdateTrail(Action):
                 KmsKeyId: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef
                 EnableLogFileValidation: true
     """
+
     schema = type_schema(
-        'update-trail',
-        attributes={'type': 'object'},
-        required=('attributes',))
+        'update-trail', attributes={'type': 'object'}, required=('attributes',)
+    )
     shape = 'UpdateTrailRequest'
     permissions = ('cloudtrail:UpdateTrail',)
 
     def validate(self):
         attrs = dict(self.data['attributes'])
         if 'Name' in attrs:
-            raise PolicyValidationError(
-                "Can't include Name in update-trail action")
+            raise PolicyValidationError("Can't include Name in update-trail action")
         attrs['Name'] = 'PolicyValidation'
-        return shape_validate(
-            attrs,
-            self.shape,
-            self.manager.resource_type.service)
+        return shape_validate(attrs, self.shape, self.manager.resource_type.service)
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('cloudtrail')
@@ -204,9 +206,7 @@ class UpdateTrail(Action):
         resources = shadow_check.process(resources)
 
         for r in resources:
-            client.update_trail(
-                Name=r['Name'],
-                **self.data['attributes'])
+            client.update_trail(Name=r['Name'], **self.data['attributes'])
 
 
 @CloudTrail.action_registry.register('set-logging')
@@ -228,8 +228,8 @@ class SetLogging(Action):
            - type: set-logging
              enabled: True
     """
-    schema = type_schema(
-        'set-logging', enabled={'type': 'boolean'})
+
+    schema = type_schema('set-logging', enabled={'type': 'boolean'})
 
     def get_permissions(self):
         enable = self.data.get('enabled', True)
@@ -254,7 +254,7 @@ class SetLogging(Action):
 
 @CloudTrail.action_registry.register('delete')
 class DeleteTrail(BaseAction):
-    """ Delete a cloud trail
+    """Delete a cloud trail
 
     :example:
 

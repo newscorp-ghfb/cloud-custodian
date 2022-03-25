@@ -9,4 +9,4 @@ def initialize_azure():
     # import execution modes
     import c7n_azure.policy
     import c7n_azure.container_host.modes
-    import c7n_azure.output # noqa
+    import c7n_azure.output  # noqa

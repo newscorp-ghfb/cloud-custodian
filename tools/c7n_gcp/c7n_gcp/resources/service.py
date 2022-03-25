@@ -14,6 +14,7 @@ class Service(QueryResourceManager):
     https://cloud.google.com/service-usage/docs/reference/rest
     https://cloud.google.com/service-infrastructure/docs/service-management/reference/rest/v1/services
     """
+
     class resource_type(TypeInfo):
         service = 'serviceusage'
         version = 'v1'
@@ -28,7 +29,9 @@ class Service(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command('get', {'name': resource_info['resourceName']})
+            return client.execute_command(
+                'get', {'name': resource_info['resourceName']}
+            )
 
     def get_resource_query(self):
         # https://cloud.google.com/service-usage/docs/reference/rest/v1/services/list
@@ -63,13 +66,18 @@ class Disable(MethodAction):
     schema = type_schema(
         'disable',
         dependents={'type': 'boolean', 'default': False},
-        usage={'enum': ['SKIP', 'CHECK']})
+        usage={'enum': ['SKIP', 'CHECK']},
+    )
 
     method_spec = {'op': 'disable'}
 
     def get_resource_params(self, model, resource):
-        return {'name': resource['name'],
-                'body': {
-                    'disableDependentServices': self.data.get('dependents', False),
-                    'checkIfServiceHasUsage': self.data.get(
-                        'usage', 'CHECK_IF_SERVICE_HAS_USAGE_UNSPECIFIED')}}
+        return {
+            'name': resource['name'],
+            'body': {
+                'disableDependentServices': self.data.get('dependents', False),
+                'checkIfServiceHasUsage': self.data.get(
+                    'usage', 'CHECK_IF_SERVICE_HAS_USAGE_UNSPECIFIED'
+                ),
+            },
+        }

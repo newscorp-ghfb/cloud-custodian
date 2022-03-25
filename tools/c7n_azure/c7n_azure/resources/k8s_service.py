@@ -38,6 +38,6 @@ class KubernetesService(ArmResourceManager):
             'location',
             'resourceGroup',
             'properties.kubernetesVersion',
-            'properties.agentPoolProfiles[][name, count]'
+            'properties.agentPoolProfiles[][name, count]',
         )
         resource_type = 'Microsoft.ContainerService/managedClusters'

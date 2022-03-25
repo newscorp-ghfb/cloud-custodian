@@ -8,7 +8,11 @@ import logging
 import hashlib
 
 from c7n_gcp.client import errors
-from c7n.mu import generate_requirements, get_exec_options, custodian_archive as base_archive
+from c7n.mu import (
+    generate_requirements,
+    get_exec_options,
+    custodian_archive as base_archive,
+)
 from c7n.utils import local_session
 
 from googleapiclient.errors import HttpError
@@ -35,37 +39,43 @@ def custodian_archive(packages=None, deps=()):
     #
     # note we pin requirements to the same versions installed locally.
     requirements = set()
-    requirements.update((
-        'jmespath',
-        'retrying',
-        'python-dateutil',
-        'ratelimiter',
-        'google-auth',
-        'google-auth-httplib2',
-        'google-api-python-client'))
+    requirements.update(
+        (
+            'jmespath',
+            'retrying',
+            'python-dateutil',
+            'ratelimiter',
+            'google-auth',
+            'google-auth-httplib2',
+            'google-api-python-client',
+        )
+    )
     requirements.update(deps)
     archive.add_contents(
         'requirements.txt',
-        generate_requirements(requirements, ignore=('setuptools',), include_self=True))
+        generate_requirements(requirements, ignore=('setuptools',), include_self=True),
+    )
     return archive
 
 
 class CloudFunctionManager:
-
     def __init__(self, session_factory, region):
         self.session_factory = session_factory
         self.session = local_session(session_factory)
         self.client = self.session.client(
-            'cloudfunctions', 'v1', 'projects.locations.functions')
+            'cloudfunctions', 'v1', 'projects.locations.functions'
+        )
         self.region = region
 
     def list_functions(self, prefix=None):
         """List extant cloud functions."""
         return self.client.execute_command(
             'list',
-            {'parent': "projects/{}/locations/{}".format(
-                self.session.get_default_project(),
-                self.region)}
+            {
+                'parent': "projects/{}/locations/{}".format(
+                    self.session.get_default_project(), self.region
+                )
+            },
         ).get('functions', [])
 
     def remove(self, func):
@@ -75,7 +85,8 @@ class CloudFunctionManager:
         for e in func.events:
             e.remove(func)
         func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func.name)
+            project, self.region, func.name
+        )
         try:
             return self.client.execute_command('delete', {'name': func_name})
         except errors.HttpError as e:
@@ -86,7 +97,8 @@ class CloudFunctionManager:
         """publish the given function."""
         project = self.session.get_default_project()
         func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func.name)
+            project, self.region, func.name
+        )
         func_info = self.get(func.name)
         source_url = None
 
@@ -110,10 +122,12 @@ class CloudFunctionManager:
         if func_info is None:
             log.info("creating function")
             response = self.client.execute_command(
-                'create', {
-                    'location': "projects/{}/locations/{}".format(
-                        project, self.region),
-                    'body': config})
+                'create',
+                {
+                    'location': "projects/{}/locations/{}".format(project, self.region),
+                    'body': config,
+                },
+            )
         else:
             delta = delta_resource(func_info, config, ('httpsTrigger',))
             if not delta:
@@ -122,10 +136,9 @@ class CloudFunctionManager:
                 update_mask = ','.join(delta)
                 log.info("updating function config %s", update_mask)
                 response = self.client.execute_command(
-                    'patch', {
-                        'name': func_name,
-                        'body': config,
-                        'updateMask': update_mask})
+                    'patch',
+                    {'name': func_name, 'body': config, 'updateMask': update_mask},
+                )
         return response
 
     def metrics(self, funcs, start, end, period=5 * 60):
@@ -138,7 +151,8 @@ class CloudFunctionManager:
         """Get the details on a given function."""
         project = self.session.get_default_project()
         func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func_name)
+            project, self.region, func_name
+        )
         try:
             return self.client.execute_query('get', {'name': func_name})
         except errors.HttpError as e:
@@ -153,35 +167,45 @@ class CloudFunctionManager:
     def _delta_source(self, archive, func_name):
         checksum = archive.get_checksum(hasher=hashlib.md5)
         source_info = self.client.execute_command(
-            'generateDownloadUrl', {'name': func_name, 'body': {}})
+            'generateDownloadUrl', {'name': func_name, 'body': {}}
+        )
         http = self._get_http_client(self.client)
         source_headers, _ = http.request(source_info['downloadUrl'], 'HEAD')
         # 'x-goog-hash': 'crc32c=tIfQ9A==, md5=DqrN06/NbVGsG+3CdrVK+Q=='
-        deployed_checksum = source_headers['x-goog-hash'].split(',')[-1].split('=', 1)[-1]
+        deployed_checksum = (
+            source_headers['x-goog-hash'].split(',')[-1].split('=', 1)[-1]
+        )
         modified = deployed_checksum != checksum
-        log.debug("archive modified:%s checksum %r deployed checksum %r",
-                  modified, checksum, deployed_checksum)
+        log.debug(
+            "archive modified:%s checksum %r deployed checksum %r",
+            modified,
+            checksum,
+            deployed_checksum,
+        )
         return modified
 
     def _upload(self, archive, region):
-        """Upload function source and return source url
-        """
+        """Upload function source and return source url"""
         # Generate source upload url
         url = self.client.execute_command(
             'generateUploadUrl',
-            {'parent': 'projects/{}/locations/{}'.format(
-                self.session.get_default_project(),
-                region)}).get('uploadUrl')
+            {
+                'parent': 'projects/{}/locations/{}'.format(
+                    self.session.get_default_project(), region
+                )
+            },
+        ).get('uploadUrl')
         log.debug("uploading function code %s", url)
         http = self._get_http_client(self.client)
         headers, response = http.request(
-            url, method='PUT',
+            url,
+            method='PUT',
             headers={
                 'content-type': 'application/zip',
                 'Content-Length': '%d' % archive.size,
-                'x-goog-content-length-range': '0,104857600'
+                'x-goog-content-length-range': '0,104857600',
             },
-            body=open(archive.path, 'rb')
+            body=open(archive.path, 'rb'),
         )
         log.info("function code uploaded")
         if headers['status'] != '200':
@@ -200,7 +224,6 @@ def delta_resource(old_config, new_config, ignore=()):
 
 
 class CloudFunction:
-
     def __init__(self, func_data, archive=None):
         self.func_data = func_data
         self.archive = archive
@@ -257,7 +280,8 @@ class CloudFunction:
             'entryPoint': 'handler',
             'runtime': self.runtime,
             'labels': labels,
-            'availableMemoryMb': self.memory_size}
+            'availableMemoryMb': self.memory_size,
+        }
 
         if self.environment:
             conf['environmentVariables'] = self.environment
@@ -310,12 +334,10 @@ def run(event, context=None):
 
 
 class PolicyFunction(CloudFunction):
-
     def __init__(self, policy, archive=None, events=()):
         self.policy = policy
         self.func_data = self.policy.data['mode']
-        self.archive = archive or custodian_archive(
-            deps=self.get_output_deps())
+        self.archive = archive or custodian_archive(deps=self.get_output_deps())
         self._events = events
 
     def get_output_deps(self):
@@ -325,7 +347,7 @@ class PolicyFunction(CloudFunction):
         outputs = (
             ('metrics', self.policy.ctx.metrics),
             ('blob', self.policy.ctx.output),
-            ('log', self.policy.ctx.logs)
+            ('log', self.policy.ctx.logs),
         )
         for (output_type, instance) in outputs:
             if not instance:
@@ -346,10 +368,15 @@ class PolicyFunction(CloudFunction):
     def get_archive(self):
         self.archive.add_contents('main.py', PolicyHandlerTemplate)
         self.archive.add_contents(
-            'config.json', json.dumps({
-                'execution-options': get_exec_options(self.policy.options),
-                'policies': [self.policy.data]},
-                indent=2))
+            'config.json',
+            json.dumps(
+                {
+                    'execution-options': get_exec_options(self.policy.options),
+                    'policies': [self.policy.data],
+                },
+                indent=2,
+            ),
+        )
         self.archive.close()
         return self.archive
 
@@ -360,7 +387,6 @@ class PolicyFunction(CloudFunction):
 
 
 class EventSource:
-
     def __init__(self, session, data=None):
         self.data = data
         self.session = session
@@ -370,12 +396,10 @@ class EventSource:
         return self.data.get('prefix', 'custodian-auto-')
 
     def add(self, func):
-        """Default no-op
-        """
+        """Default no-op"""
 
     def remove(self, func):
-        """Default no-op
-        """
+        """Default no-op"""
 
     def get_config(self, func):
         return {}
@@ -399,13 +423,16 @@ class BucketEvent(EventSource):
         'google.storage.object.archive',
         'google.storage.object.delete',
         'google.storage.object.metadataUpdate',
-        'providers/cloud.storage/eventTypes/object.change']
+        'providers/cloud.storage/eventTypes/object.change',
+    ]
 
     def get_config(self, func):
         return {
             'eventTrigger': {
                 'eventType': self.data.get('event', self.trigger),
-                'resource': self.data['bucket']}}
+                'resource': self.data['bucket'],
+            }
+        }
 
 
 class PubSubSource(EventSource):
@@ -421,12 +448,14 @@ class PubSubSource(EventSource):
                 'eventType': self.trigger,
                 'failurePolicy': {},
                 'service': 'pubsub.googleapis.com',
-                'resource': self.get_topic_param()}}
+                'resource': self.get_topic_param(),
+            }
+        }
 
     def get_topic_param(self, topic=None, project=None):
         return 'projects/{}/topics/{}'.format(
-            project or self.session.get_default_project(),
-            topic or self.data['topic'])
+            project or self.session.get_default_project(), topic or self.data['topic']
+        )
 
     def ensure_topic(self):
         """Verify the pub/sub topic exists.
@@ -449,8 +478,7 @@ class PubSubSource(EventSource):
         return topic
 
     def ensure_iam(self, publisher=None):
-        """Ensure the given identities are in the iam role bindings for the topic.
-        """
+        """Ensure the given identities are in the iam role bindings for the topic."""
         topic = self.get_topic_param()
         client = self.session.client('pubsub', 'v1', 'projects.topics')
         policy = client.execute_command('getIamPolicy', {'resource': topic})
@@ -465,11 +493,14 @@ class PubSubSource(EventSource):
 
         if not found:
             policy.setdefault(
-                'bindings', {'members': [publisher], 'role': 'roles/pubsub.publisher'})
+                'bindings', {'members': [publisher], 'role': 'roles/pubsub.publisher'}
+            )
         else:
             found['members'].append(publisher)
 
-        client.execute_command('setIamPolicy', {'resource': topic, 'body': {'policy': policy}})
+        client.execute_command(
+            'setIamPolicy', {'resource': topic, 'body': {'policy': policy}}
+        )
 
     def add(self, func):
         self.ensure_topic()
@@ -482,7 +513,6 @@ class PubSubSource(EventSource):
 
 
 class SecurityCenterSubscriber(EventSource):
-
     def __init__(self, session, data, resource):
         self.session = session
         self.data = data
@@ -496,9 +526,12 @@ class SecurityCenterSubscriber(EventSource):
 
         Returns the notification config name.
         """
-        client = self.session.client('securitycenter', 'v1', 'organizations.notificationConfigs')
-        config_name = "organizations/{}/notificationConfigs/{}".format(self.data["org"],
-         self.notification_name())
+        client = self.session.client(
+            'securitycenter', 'v1', 'organizations.notificationConfigs'
+        )
+        config_name = "organizations/{}/notificationConfigs/{}".format(
+            self.data["org"], self.notification_name()
+        )
         try:
             client.execute_command('get', {'name': config_name})
         except HttpError as e:
@@ -510,26 +543,38 @@ class SecurityCenterSubscriber(EventSource):
         config_body = {
             'name': self.notification_name(),
             'description': 'auto created by cloud custodian \
-                for resource {}'.format(self.resource.type),
-            'pubsubTopic': "projects/{}/topics/{}".format(self.session.get_default_project(),
-             self.data['topic']),
+                for resource {}'.format(
+                self.resource.type
+            ),
+            'pubsubTopic': "projects/{}/topics/{}".format(
+                self.session.get_default_project(), self.data['topic']
+            ),
             'streamingConfig': {
-                "filter": "resource.type=\"{}\"".format(self.resource.resource_type.scc_type)
-            }
+                "filter": "resource.type=\"{}\"".format(
+                    self.resource.resource_type.scc_type
+                )
+            },
         }
-        client.execute_command('create', {
-            'configId': self.notification_name(),
-            'parent': 'organizations/{}'.format(self.data["org"]),
-            'body': config_body})
+        client.execute_command(
+            'create',
+            {
+                'configId': self.notification_name(),
+                'parent': 'organizations/{}'.format(self.data["org"]),
+                'body': config_body,
+            },
+        )
         return config_name
 
     def add(self, func):
         self.ensure_notification_config()
 
     def remove(self, func):
-        client = self.session.client('securitycenter', 'v1', 'organizations.notificationConfigs')
-        config_name = "organizations/{}/notificationConfigs/{}".format(self.data["org"],
-         self.notification_name())
+        client = self.session.client(
+            'securitycenter', 'v1', 'organizations.notificationConfigs'
+        )
+        config_name = "organizations/{}/notificationConfigs/{}".format(
+            self.data["org"], self.notification_name()
+        )
         client.execute_command('delete', {'name': config_name})
 
 
@@ -567,24 +612,27 @@ class PeriodicEvent(EventSource):
         job = self.get_job_config(func, target)
 
         client = self.session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs')
+            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
+        )
 
         delta = self.diff_job(client, job)
         if delta:
             log.info("update periodic function - %s" % (", ".join(delta)))
             return client.execute_command(
-                'patch', {
-                    'name': job['name'],
-                    'updateMask': ','.join(delta),
-                    'body': job})
+                'patch',
+                {'name': job['name'], 'updateMask': ','.join(delta), 'body': job},
+            )
         elif delta is not None:
             return
         return client.execute_command(
-            'create', {
+            'create',
+            {
                 'parent': 'projects/{}/locations/{}'.format(
-                    self.session.get_default_project(),
-                    self.region),
-                'body': job})
+                    self.session.get_default_project(), self.region
+                ),
+                'body': job,
+            },
+        )
 
     def remove(self, func):
         target = self.get_target(func)
@@ -595,7 +643,8 @@ class PeriodicEvent(EventSource):
             return
 
         client = self.session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs')
+            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
+        )
 
         return client.execute_command('delete', {'name': job['name']})
 
@@ -629,21 +678,24 @@ class PeriodicEvent(EventSource):
             'name': "projects/{}/locations/{}/jobs/{}".format(
                 self.session.get_default_project(),
                 self.region,
-                self.data.get('name', '{}{}'.format(self.prefix, func.name))),
+                self.data.get('name', '{}{}'.format(self.prefix, func.name)),
+            ),
             'schedule': self.data['schedule'],
-            'timeZone': self.data.get('tz', 'Etc/UTC')}
+            'timeZone': self.data.get('tz', 'Etc/UTC'),
+        }
 
         if self.target_type == 'http':
             job['httpTarget'] = {
                 'uri': 'https://{}-{}.cloudfunctions.net/{}'.format(
-                    self.region,
-                    self.session.get_default_project(),
-                    func.name)
+                    self.region, self.session.get_default_project(), func.name
+                )
             }
         elif self.target_type == 'pubsub':
             job['pubsubTarget'] = {
                 'topicName': target.get_topic_param(),
-                'data': base64.b64encode("{\"schedule\": true}".encode('utf-8')).decode('utf-8'),
+                'data': base64.b64encode("{\"schedule\": true}".encode('utf-8')).decode(
+                    'utf-8'
+                ),
             }
         return job
 
@@ -672,8 +724,8 @@ class LogSubscriber(EventSource):
     def get_log(self):
         scope_type, scope_id, _, log_id = self.data['log'].split('/', 3)
         return LogInfo(
-            scope_type=scope_type, scope_id=scope_id,
-            id=log_id, name=self.data['log'])
+            scope_type=scope_type, scope_id=scope_id, id=log_id, name=self.data['log']
+        )
 
     def get_log_filter(self):
         return self.data.get('filter')
@@ -686,7 +738,8 @@ class LogSubscriber(EventSource):
             parent = "%s/%s" % (log_info.scope_type, log_info.scope_id)
         elif self.data['scope'] == 'project':
             parent = 'projects/{}'.format(
-                self.data.get('scope_id', self.session.get_default_project()))
+                self.data.get('scope_id', self.session.get_default_project())
+            )
         elif self.data['scope'] == 'organization':
             parent = 'organizations/{}'.format(self.data['scope_id'])
         elif self.data['scope'] == 'folder':
@@ -694,8 +747,7 @@ class LogSubscriber(EventSource):
         elif self.data['scope'] == 'billing':
             parent = 'billingAccounts/{}'.format(self.data['scope_id'])
         else:
-            raise ValueError(
-                'invalid log subscriber scope %s' % (self.data))
+            raise ValueError('invalid log subscriber scope %s' % (self.data))
         return parent
 
     def get_sink(self, topic_info=""):
@@ -710,8 +762,8 @@ class LogSubscriber(EventSource):
             # Sink body
             'body': {
                 'name': self.data['name'],
-                'destination': "pubsub.googleapis.com/%s" % topic_info
-            }
+                'destination': "pubsub.googleapis.com/%s" % topic_info,
+            },
         }
 
         if log_filter is not None:
@@ -759,10 +811,10 @@ class LogSubscriber(EventSource):
         parent = self.get_parent(self.get_log())
         _, sink_path, _ = self.get_sink()
         client = self.session.client(
-            'logging', 'v2', '%s.sinks' % (parent.split('/', 1)[0]))
+            'logging', 'v2', '%s.sinks' % (parent.split('/', 1)[0])
+        )
         try:
-            client.execute_command(
-                'delete', {'sinkName': sink_path})
+            client.execute_command('delete', {'sinkName': sink_path})
         except HttpError as e:
             if e.resp.status != 404:
                 raise
@@ -776,6 +828,7 @@ class ApiSubscriber(EventSource):
 
     via audit log -> filtered sink -> pub/sub topic -> cloud function.
     """
+
     # https://cloud.google.com/logging/docs/reference/audit/auditlog/rest/Shared.Types/AuditLog
 
     # scope - project
@@ -787,16 +840,18 @@ class ApiSubscriber(EventSource):
 
     def get_subscription(self, func):
         log_name = "{}/{}/logs/cloudaudit.googleapis.com%2Factivity".format(
-            self.data.get('scope', 'projects'),
-            self.session.get_default_project())
+            self.data.get('scope', 'projects'), self.session.get_default_project()
+        )
         log_filter = 'logName = "%s"' % log_name
         log_filter += " AND protoPayload.methodName = (%s)" % (
-            ' OR '.join(['"%s"' % m for m in self.data['methods']]))
+            ' OR '.join(['"%s"' % m for m in self.data['methods']])
+        )
         return {
             'topic': '{}audit-{}'.format(self.prefix, func.name),
             'name': '{}audit-{}'.format(self.prefix, func.name),
             'log': log_name,
-            'filter': log_filter}
+            'filter': log_filter,
+        }
 
     def add(self, func):
         return LogSubscriber(self.session, self.get_subscription(func)).add(func)

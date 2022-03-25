@@ -41,7 +41,9 @@ class DefenderResourceManager(QueryResourceManager):
         # [^1]: https://azuresdkdocs.blob.core.windows.net/$web/python/azure-mgmt-security/1.0.0/azure.mgmt.security.html#azure.mgmt.security.SecurityCenter  # noqa
         # [^2]: https://github.com/Azure/azure-cli/blob/29767d75d850ddc1c24cc85bd46d861b61d77a47/src/azure-cli/azure/cli/command_modules/security/_client_factory.py#L11  # noqa
         # [^3]: https://github.com/Azure/azure-cli/pull/7917#discussion_r238458818  # noqa
-        return SecurityCenter(session.get_credentials(), session.subscription_id, "centralus")
+        return SecurityCenter(
+            session.get_credentials(), session.subscription_id, "centralus"
+        )
 
 
 @resources.register("defender-pricing")

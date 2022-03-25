@@ -8,14 +8,12 @@ from c7n.commands import validate as validate_yaml_policies
 
 
 class CommandsValidateTest(BaseTest):
-
     def test_duplicate_key(self):
         # try dupes with top level keys
         yaml_validate_options = argparse.Namespace(
             command="c7n.commands.validate",
             config=None,
-            configs=[
-                "tests/data/test_policies/dup-policies.yml"],
+            configs=["tests/data/test_policies/dup-policies.yml"],
             debug=False,
             subparser="validate",
             verbose=False,
@@ -30,8 +28,7 @@ class CommandsValidateTest(BaseTest):
         yaml_validate_options = argparse.Namespace(
             command="c7n.commands.validate",
             config=None,
-            configs=[
-                "tests/data/test_policies/dup-policy-keys.yml"],
+            configs=["tests/data/test_policies/dup-policy-keys.yml"],
             debug=False,
             subparser="validate",
             verbose=False,

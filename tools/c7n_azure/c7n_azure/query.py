@@ -27,7 +27,6 @@ log = logging.getLogger('custodian.azure.query')
 
 
 class ResourceQuery:
-
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
@@ -49,13 +48,17 @@ class ResourceQuery:
             elif hasattr(result, 'value'):
                 return [r.serialize(True) for r in result.value]
         except Exception as e:
-            log.error("Failed to query resource.\n"
-                      "Type: azure.{0}.\n"
-                      "Error: {1}".format(resource_manager.type, e))
+            log.error(
+                "Failed to query resource.\n"
+                "Type: azure.{0}.\n"
+                "Error: {1}".format(resource_manager.type, e)
+            )
             raise
 
-        raise TypeError("Enumerating resources resulted in a return"
-                        "value which could not be iterated.")
+        raise TypeError(
+            "Enumerating resources resulted in a return"
+            "value which could not be iterated."
+        )
 
     @staticmethod
     def resolve(resource_type):
@@ -89,7 +92,6 @@ class DescribeSource:
 
 @sources.register('resource-graph')
 class ResourceGraphSource:
-
     def __init__(self, manager):
         self.manager = manager
 
@@ -97,7 +99,8 @@ class ResourceGraphSource:
         if not hasattr(self.manager.resource_type, 'resource_type'):
             raise PolicyValidationError(
                 "%s is not supported with the Azure Resource Graph source."
-                % self.manager.data['resource'])
+                % self.manager.data['resource']
+            )
 
     def get_resources(self, _):
         session = self.manager.get_session()
@@ -106,11 +109,12 @@ class ResourceGraphSource:
         # empty scope will return all resource
         query_scope = ""
         if self.manager.resource_type.resource_type != 'armresource':
-            query_scope = "where type =~ '%s'" % self.manager.resource_type.resource_type
+            query_scope = (
+                "where type =~ '%s'" % self.manager.resource_type.resource_type
+            )
 
         query = QueryRequest(
-            query=query_scope,
-            subscriptions=[session.get_subscription_id()]
+            query=query_scope, subscriptions=[session.get_subscription_id()]
         )
         res = client.resources(query)
         cols = [c['name'] for c in res.data['columns']]
@@ -144,7 +148,8 @@ class ChildResourceQuery(ResourceQuery):
                 if m.keyvault_child:
                     vault_url = generate_key_vault_url(parent['name'])
                 subset = resource_manager.enumerate_resources(
-                    parent, m, vault_url=vault_url, **params)
+                    parent, m, vault_url=vault_url, **params
+                )
 
                 if subset:
                     # If required, append parent resource ID to all child resources
@@ -155,8 +160,11 @@ class ChildResourceQuery(ResourceQuery):
                     results.extend(subset)
 
             except Exception as e:
-                log.warning('Child enumeration failed for {0}. {1}'
-                            .format(parent[parents.resource_type.id], e))
+                log.warning(
+                    'Child enumeration failed for {0}. {1}'.format(
+                        parent[parents.resource_type.id], e
+                    )
+                )
                 if m.raise_on_exception:
                     raise e
 
@@ -169,11 +177,8 @@ class ChildDescribeSource(DescribeSource):
 
 
 class TypeMeta(type):
-
     def __repr__(cls):
-        return "<Type info service:%s client: %s>" % (
-            cls.service,
-            cls.client)
+        return "<Type info service:%s client: %s>" % (cls.service, cls.client)
 
 
 class TypeInfo(metaclass=TypeMeta):
@@ -194,6 +199,7 @@ class TypeInfo(metaclass=TypeMeta):
 
 class ChildTypeInfo(TypeInfo, metaclass=TypeMeta):
     """api client construction information for child resources"""
+
     parent_manager_name = ''
     annotate_parent = True
     raise_on_exception = True
@@ -210,11 +216,9 @@ class QueryMeta(type):
 
     def __new__(cls, name, parents, attrs):
         if 'filter_registry' not in attrs:
-            attrs['filter_registry'] = FilterRegistry(
-                '%s.filters' % name.lower())
+            attrs['filter_registry'] = FilterRegistry('%s.filters' % name.lower())
         if 'action_registry' not in attrs:
-            attrs['action_registry'] = ActionRegistry(
-                '%s.actions' % name.lower())
+            attrs['action_registry'] = ActionRegistry('%s.actions' % name.lower())
 
         return super(QueryMeta, cls).__new__(cls, name, parents, attrs)
 
@@ -246,13 +250,16 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
         if not service:
             return self.get_session().client(
                 "%s.%s" % (self.resource_type.service, self.resource_type.client),
-                vault_url=vault_url)
+                vault_url=vault_url,
+            )
         return self.get_session().client(service, vault_url=vault_url)
 
     def get_cache_key(self, query):
-        return {'source_type': self.source_type,
-                'query': query,
-                'resource': str(self.__class__.__name__)}
+        return {
+            'source_type': self.source_type,
+            'query': query,
+            'resource': str(self.__class__.__name__),
+        }
 
     @classmethod
     def get_model(cls):
@@ -269,10 +276,13 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
         if self._cache.load():
             resources = self._cache.get(cache_key)
             if resources is not None:
-                self.log.debug("Using cached %s: %d" % (
-                    "%s.%s" % (self.__class__.__module__,
-                               self.__class__.__name__),
-                    len(resources)))
+                self.log.debug(
+                    "Using cached %s: %d"
+                    % (
+                        "%s.%s" % (self.__class__.__module__, self.__class__.__name__),
+                        len(resources),
+                    )
+                )
 
         if resources is None:
             with self.ctx.tracer.subsegment('resource-fetch'):
@@ -292,8 +302,7 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
         return resources
 
     def check_resource_limit(self, selection_count, population_count):
-        """Check if policy's execution affects more resources then its limit.
-        """
+        """Check if policy's execution affects more resources then its limit."""
         p = self.ctx.policy
         max_resource_limits = MaxResourceLimit(p, selection_count, population_count)
         return max_resource_limits.check_resource_limits()
@@ -307,10 +316,7 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
             params.update(extra_args)
 
         op = getattr(getattr(resource_client, get_client), get_op)
-        data = [
-            op(rid, **params)
-            for rid in resource_ids
-        ]
+        data = [op(rid, **params) for rid in resource_ids]
         return [r.serialize(True) for r in data]
 
     @staticmethod
@@ -336,7 +342,9 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
 
     def get_parent_manager(self):
         if not self.parent_manager:
-            self.parent_manager = self.get_resource_manager(self.resource_type.parent_manager_name)
+            self.parent_manager = self.get_resource_manager(
+                self.resource_type.parent_manager_name
+            )
 
         return self.parent_manager
 
@@ -358,7 +366,9 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
         #   - static values stored in 'extra_args' dict (e.g. some type)
         #   - dynamic values are retrieved via 'extra_args' method (e.g. parent name)
         if extra_args:
-            params.update({key: extra_args[key](parent_resource) for key in extra_args.keys()})
+            params.update(
+                {key: extra_args[key](parent_resource) for key in extra_args.keys()}
+            )
 
         params.update(type_info.extra_args(parent_resource))
 
@@ -372,13 +382,17 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
 
         if isinstance(result, Iterable):
             # KeyVault items don't have `serialize` method now
-            return [(r.serialize(True) if hasattr(r, 'serialize') else serialize(r))
-                    for r in result]
+            return [
+                (r.serialize(True) if hasattr(r, 'serialize') else serialize(r))
+                for r in result
+            ]
         elif hasattr(result, 'value'):
             return [r.serialize(True) for r in result.value]
 
-        raise TypeError("Enumerating resources resulted in a return"
-                        "value which could not be iterated.")
+        raise TypeError(
+            "Enumerating resources resulted in a return"
+            "value which could not be iterated."
+        )
 
     @staticmethod
     def register_child_specific(registry, resource_class):

@@ -20,53 +20,65 @@ TRAIL = "nosetest"
 
 
 class AccountTests(BaseTest):
-
     def test_macie(self):
-        factory = self.replay_flight_data(
-            'test_account_check_macie')
-        p = self.load_policy({
-            'name': 'macie-check',
-            'resource': 'aws.account',
-            'filters': [{
-                'or': [
-                    {'type': 'check-macie',
-                     'value': 'absent',
-                     'key': 'master.accountId'},
-                    {'type': 'check-macie',
-                     'key': 'status',
-                     'value': 'ENABLED'}]}]
-        }, session_factory=factory)
+        factory = self.replay_flight_data('test_account_check_macie')
+        p = self.load_policy(
+            {
+                'name': 'macie-check',
+                'resource': 'aws.account',
+                'filters': [
+                    {
+                        'or': [
+                            {
+                                'type': 'check-macie',
+                                'value': 'absent',
+                                'key': 'master.accountId',
+                            },
+                            {
+                                'type': 'check-macie',
+                                'key': 'status',
+                                'value': 'ENABLED',
+                            },
+                        ]
+                    }
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         assert resources[0]['c7n:macie'] == {
             'createdAt': datetime.datetime(
-                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()),
+                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()
+            ),
             'findingPublishingFrequency': 'FIFTEEN_MINUTES',
             'master': {},
-            'serviceRole': ('arn:aws:iam::{}:role/aws-service-role/'
-                            'macie.amazonaws.com/'
-                            'AWSServiceRoleForAmazonMacie').format(
-                                p.options.account_id),
+            'serviceRole': (
+                'arn:aws:iam::{}:role/aws-service-role/'
+                'macie.amazonaws.com/'
+                'AWSServiceRoleForAmazonMacie'
+            ).format(p.options.account_id),
             'status': 'ENABLED',
             'updatedAt': datetime.datetime(
-                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()),
+                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()
+            ),
         }
 
     def test_missing(self):
-        session_factory = self.replay_flight_data(
-            'test_account_missing_resource_ec2')
-        p = self.load_policy({
-            'name': 'missing-resource',
-            'resource': 'aws.account',
-            'filters': [{
-                'type': 'missing',
-                'policy': {
-                    'resource': 'aws.ec2'}
-            }]}, session_factory=session_factory)
+        session_factory = self.replay_flight_data('test_account_missing_resource_ec2')
+        p = self.load_policy(
+            {
+                'name': 'missing-resource',
+                'resource': 'aws.account',
+                'filters': [{'type': 'missing', 'policy': {'resource': 'aws.ec2'}}],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(sorted(list(resources[0].keys())),
-                         sorted(['account_id', 'account_name']))
+        self.assertEqual(
+            sorted(list(resources[0].keys())), sorted(['account_id', 'account_name'])
+        )
 
     def test_missing_multi_region(self):
         # missing filter needs some special handling as it embeds
@@ -76,80 +88,91 @@ class AccountTests(BaseTest):
         # is missing the regional resource.
         cfg = dict(regions=["eu-west-1", "us-west-2"])
 
-        session_factory = self.replay_flight_data('test_account_missing_region_resource')
+        session_factory = self.replay_flight_data(
+            'test_account_missing_region_resource'
+        )
 
         class SessionFactory:
-
             def __init__(self, options):
                 self.region = options.region
 
             def __call__(self, region=None, assume=None):
                 return session_factory(region=self.region)
 
-        self.patch(clouds['aws'], 'get_session_factory',
-                   lambda x, *args: SessionFactory(*args))
+        self.patch(
+            clouds['aws'], 'get_session_factory', lambda x, *args: SessionFactory(*args)
+        )
 
-        p = self.load_policy({
-            'name': 'missing-lambda',
-            'resource': 'aws.account',
-            'filters': [{
-                'type': 'missing',
-                'policy': {
-                    'resource': 'aws.lambda'}
-            }]},
-            session_factory=session_factory, config=cfg)
+        p = self.load_policy(
+            {
+                'name': 'missing-lambda',
+                'resource': 'aws.account',
+                'filters': [{'type': 'missing', 'policy': {'resource': 'aws.lambda'}}],
+            },
+            session_factory=session_factory,
+            config=cfg,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
     def test_enable_encryption_by_default(self):
         factory = self.replay_flight_data('test_account_ebs_encrypt')
-        p = self.load_policy({
-            'name': 'account',
-            'resource': 'account',
-            'filters': [{
-                'type': 'default-ebs-encryption',
-                'state': False}],
-            'actions': [{
-                'type': 'set-ebs-encryption',
-                'state': True,
-                'key': 'alias/aws/ebs'}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'account',
+                'resource': 'account',
+                'filters': [{'type': 'default-ebs-encryption', 'state': False}],
+                'actions': [
+                    {
+                        'type': 'set-ebs-encryption',
+                        'state': True,
+                        'key': 'alias/aws/ebs',
+                    }
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = local_session(factory).client('ec2')
         self.assertTrue(
-            client.get_ebs_encryption_by_default().get(
-                'EbsEncryptionByDefault'))
+            client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault')
+        )
 
     def test_disable_encryption_by_default(self):
         factory = self.replay_flight_data('test_account_disable_ebs_encrypt')
-        p = self.load_policy({
-            'name': 'account',
-            'resource': 'account',
-            'filters': [{
-                'type': 'default-ebs-encryption',
-                'key': 'alias/aws/ebs',
-                'state': True}],
-            'actions': [{
-                'type': 'set-ebs-encryption',
-                'state': False}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'account',
+                'resource': 'account',
+                'filters': [
+                    {
+                        'type': 'default-ebs-encryption',
+                        'key': 'alias/aws/ebs',
+                        'state': True,
+                    }
+                ],
+                'actions': [{'type': 'set-ebs-encryption', 'state': False}],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = local_session(factory).client('ec2')
         self.assertFalse(
-            client.get_ebs_encryption_by_default().get(
-                'EbsEncryptionByDefault'))
+            client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault')
+        )
 
     def test_guard_duty_filter(self):
         factory = self.replay_flight_data('test_account_guard_duty_filter')
-        p = self.load_policy({
-            'name': 'account',
-            'resource': 'account',
-            'filters': [{
-                'type': 'guard-duty',
-                'Detector.Status': 'ENABLED'}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'account',
+                'resource': 'account',
+                'filters': [{'type': 'guard-duty', 'Detector.Status': 'ENABLED'}],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertTrue('c7n:guard-duty' in resources[0])
@@ -183,34 +206,46 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 0)
 
     def test_s3_public_block_filter_missing(self):
-        session_factory = self.replay_flight_data('test_account_filter_s3_public_block_missing')
-        p = self.load_policy({
-            'name': 'account-s3-public-block',
-            'resource': 'account',
-            'filters': [{
-                'type': 's3-public-block',
-                'key': 'BlockPublicPolicy',
-                'value': 'empty'}]},
+        session_factory = self.replay_flight_data(
+            'test_account_filter_s3_public_block_missing'
+        )
+        p = self.load_policy(
+            {
+                'name': 'account-s3-public-block',
+                'resource': 'account',
+                'filters': [
+                    {
+                        'type': 's3-public-block',
+                        'key': 'BlockPublicPolicy',
+                        'value': 'empty',
+                    }
+                ],
+            },
             config={'account_id': '644160558196'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['c7n:s3-public-block'], {})
 
     def test_s3_set_public_block_action(self):
         session_factory = self.replay_flight_data('test_account_action_s3_public_block')
-        p = self.load_policy({
-            'name': 'account-s3-public-block',
-            'resource': 'account',
-            'filters': [{
-                'type': 's3-public-block',
-                'key': 'BlockPublicPolicy',
-                'value': False}],
-            'actions': [{
-                'type': 'set-s3-public-block',
-                'BlockPublicPolicy': True}]},
+        p = self.load_policy(
+            {
+                'name': 'account-s3-public-block',
+                'resource': 'account',
+                'filters': [
+                    {
+                        'type': 's3-public-block',
+                        'key': 'BlockPublicPolicy',
+                        'value': False,
+                    }
+                ],
+                'actions': [{'type': 'set-s3-public-block', 'BlockPublicPolicy': True}],
+            },
             config={'account_id': '644160558196'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -218,14 +253,18 @@ class AccountTests(BaseTest):
             time.sleep(2)
 
         client = session_factory().client('s3control')
-        block = client.get_public_access_block(
-            AccountId='644160558196')['PublicAccessBlockConfiguration']
+        block = client.get_public_access_block(AccountId='644160558196')[
+            'PublicAccessBlockConfiguration'
+        ]
         self.assertEqual(
             block,
-            {'BlockPublicAcls': True,
-             'BlockPublicPolicy': True,
-             'IgnorePublicAcls': False,
-             'RestrictPublicBuckets': False})
+            {
+                'BlockPublicAcls': True,
+                'BlockPublicPolicy': True,
+                'IgnorePublicAcls': False,
+                'RestrictPublicBuckets': False,
+            },
+        )
 
     def test_cloudtrail_enabled(self):
         session_factory = self.replay_flight_data("test_account_trail")
@@ -377,17 +416,17 @@ class AccountTests(BaseTest):
         client = mock.MagicMock()
         client.describe_trusted_advisor_check_result.side_effect = [
             {'result': {'status': 'not_available'}},
-            {'result': True}]
+            {'result': True},
+        ]
         client.describe_trusted_advisor_check_refresh_statuses.return_value = {
-            'statuses': [{'status': 'success'}]}
+            'statuses': [{'status': 'success'}]
+        }
 
         def time_sleep(interval):
             return
 
         self.patch(account.time, 'sleep', time_sleep)
-        self.assertEqual(
-            account.ServiceLimit.get_check_result(client, 'bogusid'),
-            True)
+        self.assertEqual(account.ServiceLimit.get_check_result(client, 'bogusid'), True)
 
     def test_service_limit_specific_check(self):
         session_factory = self.replay_flight_data("test_account_service_limit")
@@ -424,7 +463,9 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources[0]["c7n:ServiceLimitsExceeded"]), 1)
 
     def test_service_limit_specific_service(self):
-        session_factory = self.replay_flight_data("test_account_service_limit_specific_service")
+        session_factory = self.replay_flight_data(
+            "test_account_service_limit_specific_service"
+        )
         p = self.load_policy(
             {
                 "name": "service-limit",
@@ -527,9 +568,7 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        assert(
-            resources[0]['c7n:password_policy']['PasswordPolicyConfigured'] is False
-        )
+        assert resources[0]['c7n:password_policy']['PasswordPolicyConfigured'] is False
 
     def test_account_password_policy_update(self):
         factory = self.replay_flight_data("test_account_password_policy_update")
@@ -546,18 +585,18 @@ class AccountTests(BaseTest):
                                         "type": "password-policy",
                                         "key": "MinimumPasswordLength",
                                         "value": 12,
-                                        "op": "ge"
+                                        "op": "ge",
                                     },
                                     {
                                         "type": "password-policy",
                                         "key": "RequireSymbols",
-                                        "value": True
+                                        "value": True,
                                     },
                                     {
                                         "type": "password-policy",
                                         "key": "RequireNumbers",
-                                        "value": True
-                                    }
+                                        "value": True,
+                                    },
                                 ]
                             }
                         ]
@@ -569,10 +608,10 @@ class AccountTests(BaseTest):
                         "policy": {
                             "MinimumPasswordLength": 12,
                             "RequireSymbols": True,
-                            "RequireNumbers": True
-                        }
+                            "RequireNumbers": True,
+                        },
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -591,11 +630,13 @@ class AccountTests(BaseTest):
                 12,
                 True,
                 True,
-            ]
+            ],
         )
 
     def test_account_password_policy_update_first_time(self):
-        factory = self.replay_flight_data("test_account_password_policy_update_first_time")
+        factory = self.replay_flight_data(
+            "test_account_password_policy_update_first_time"
+        )
         p = self.load_policy(
             {
                 "name": "set-password-policy",
@@ -610,11 +651,9 @@ class AccountTests(BaseTest):
                 "actions": [
                     {
                         "type": "set-password-policy",
-                        "policy": {
-                            "MinimumPasswordLength": 12
-                        }
+                        "policy": {"MinimumPasswordLength": 12},
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -622,9 +661,7 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 1)
         client = local_session(factory).client('iam')
         policy = client.get_account_password_policy().get('PasswordPolicy')
-        assert(
-            policy['MinimumPasswordLength'] == 12
-        )
+        assert policy['MinimumPasswordLength'] == 12
         # assert defaults being set
         self.assertEqual(
             [
@@ -632,7 +669,7 @@ class AccountTests(BaseTest):
                 policy['RequireNumbers'],
                 policy['RequireUppercaseCharacters'],
                 policy['RequireLowercaseCharacters'],
-                policy['AllowUsersToChangePassword']
+                policy['AllowUsersToChangePassword'],
             ],
             [
                 False,
@@ -640,7 +677,7 @@ class AccountTests(BaseTest):
                 False,
                 False,
                 False,
-            ]
+            ],
         )
 
     def test_create_trail(self):
@@ -735,7 +772,9 @@ class AccountTests(BaseTest):
         self.assertTrue(found)
 
     def test_raise_service_limit_percent(self):
-        magic_string = "Programmatic test--PLEASE IGNORE {account} {service} in {region}"
+        magic_string = (
+            "Programmatic test--PLEASE IGNORE {account} {service} in {region}"
+        )
 
         session_factory = self.replay_flight_data(
             "test_account_raise_service_limit_percent"
@@ -775,9 +814,9 @@ class AccountTests(BaseTest):
         for case in cases["cases"]:
             if case["subject"].startswith("Programmatic test--PLEASE IGNORE"):
                 self.assertTrue(
-                    "VPC" in case["subject"] or
-                    "RDS" in case["subject"] and
-                    "644160558196" in case["subject"]
+                    "VPC" in case["subject"]
+                    or "RDS" in case["subject"]
+                    and "644160558196" in case["subject"]
                 )
                 found.append(case)
 
@@ -852,7 +891,8 @@ class AccountTests(BaseTest):
             ],
         }
         self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True)
+            PolicyValidationError, self.load_policy, policy, validate=True
+        )
 
     def test_enable_trail(self):
         factory = self.replay_flight_data("test_cloudtrail_enable")
@@ -895,10 +935,14 @@ class AccountTests(BaseTest):
             {
                 "name": "account-access-analyzer",
                 "resource": "account",
-                "filters": [{"type": "access-analyzer",
-                             "key": "status",
-                             "value": "ACTIVE",
-                             "op": "eq"}],
+                "filters": [
+                    {
+                        "type": "access-analyzer",
+                        "key": "status",
+                        "value": "ACTIVE",
+                        "op": "eq",
+                    }
+                ],
             },
             session_factory=session_factory,
         )
@@ -947,10 +991,12 @@ class AccountTests(BaseTest):
             {
                 "name": "glue-security-config",
                 "resource": "account",
-                'filters': [{
-                    'type': 'glue-security-config',
-                    'CatalogEncryptionMode': 'SSE-KMS'},
-                ]
+                'filters': [
+                    {
+                        'type': 'glue-security-config',
+                        'CatalogEncryptionMode': 'SSE-KMS',
+                    },
+                ],
             },
             session_factory=session_factory,
         )
@@ -965,10 +1011,12 @@ class AccountTests(BaseTest):
             {
                 "name": "glue-security-config",
                 "resource": "account",
-                'filters': [{
-                    'type': 'glue-security-config',
-                    'SseAwsKmsKeyId': 'alias/aws/glue'},
-                ]
+                'filters': [
+                    {
+                        'type': 'glue-security-config',
+                        'SseAwsKmsKeyId': 'alias/aws/glue',
+                    },
+                ],
             },
             session_factory=session_factory,
         )
@@ -978,15 +1026,19 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_glue_connection_password_encryption(self):
-        session_factory = self.replay_flight_data("test_account_glue_connection_password_filter")
+        session_factory = self.replay_flight_data(
+            "test_account_glue_connection_password_filter"
+        )
         p = self.load_policy(
             {
                 "name": "glue-security-config",
                 "resource": "account",
-                'filters': [{
-                    'type': 'glue-security-config',
-                    'AwsKmsKeyId': 'alias/skunk/trails'},
-                ]
+                'filters': [
+                    {
+                        'type': 'glue-security-config',
+                        'AwsKmsKeyId': 'alias/skunk/trails',
+                    },
+                ],
             },
             session_factory=session_factory,
         )
@@ -996,57 +1048,79 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_get_emr_block_public_access_configuration(self):
-        session_factory = self.replay_flight_data("test_emr_block_public_access_configuration")
+        session_factory = self.replay_flight_data(
+            "test_emr_block_public_access_configuration"
+        )
         p = self.load_policy(
             {
                 'name': 'get-emr-block-public-access-configuration',
                 'resource': 'account',
-                'filters': [{
-                    'type': 'emr-block-public-access',
-                    'key': 'BlockPublicAccessConfiguration',
-                    'value': 'not-null'
-                }]
+                'filters': [
+                    {
+                        'type': 'emr-block-public-access',
+                        'key': 'BlockPublicAccessConfiguration',
+                        'value': 'not-null',
+                    }
+                ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["c7n:emr-block-public-access"]
-            ['BlockPublicAccessConfigurationMetadata']['CreatedByArn'],
-            "arn:aws:iam::12345678901:user/test")
+        self.assertEqual(
+            resources[0]["c7n:emr-block-public-access"][
+                'BlockPublicAccessConfigurationMetadata'
+            ]['CreatedByArn'],
+            "arn:aws:iam::12345678901:user/test",
+        )
 
     def test_set_emr_block_public_access_configuration(self):
-        session_factory = self.replay_flight_data("test_set_emr_block_public_access_configuration")
+        session_factory = self.replay_flight_data(
+            "test_set_emr_block_public_access_configuration"
+        )
         p = self.load_policy(
             {
                 'name': 'emr',
                 'resource': 'account',
-                'actions': [{
-                    "type": "set-emr-block-public-access",
-                    "config": {
-                        "BlockPublicSecurityGroupRules": True,
-                        "PermittedPublicSecurityGroupRuleRanges": [{
-                            "MinRange": 23,
-                            "MaxRange": 23,
-                        }]
+                'actions': [
+                    {
+                        "type": "set-emr-block-public-access",
+                        "config": {
+                            "BlockPublicSecurityGroupRules": True,
+                            "PermittedPublicSecurityGroupRuleRanges": [
+                                {
+                                    "MinRange": 23,
+                                    "MaxRange": 23,
+                                }
+                            ],
+                        },
                     }
-                }],
+                ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
         client = local_session(session_factory).client("emr")
         resp = client.get_block_public_access_configuration()
 
-        self.assertEqual(resp["BlockPublicAccessConfiguration"]
-            ["PermittedPublicSecurityGroupRuleRanges"][0]['MinRange'], 23)
-        self.assertEqual(resp["BlockPublicAccessConfiguration"]
-            ["PermittedPublicSecurityGroupRuleRanges"][0]['MaxRange'], 23)
+        self.assertEqual(
+            resp["BlockPublicAccessConfiguration"][
+                "PermittedPublicSecurityGroupRuleRanges"
+            ][0]['MinRange'],
+            23,
+        )
+        self.assertEqual(
+            resp["BlockPublicAccessConfiguration"][
+                "PermittedPublicSecurityGroupRuleRanges"
+            ][0]['MaxRange'],
+            23,
+        )
 
 
 class AccountDataEvents(BaseTest):
-
     def make_bucket(self, session_factory, name):
         client = session_factory().client("s3")
 
@@ -1195,7 +1269,8 @@ class AccountDataEvents(BaseTest):
                 "name": "s3-data-check",
                 "resource": "s3",
                 "filters": [
-                    {"Name": bucket_name}, {"type": "data-events", "state": "present"}
+                    {"Name": bucket_name},
+                    {"type": "data-events", "state": "present"},
                 ],
             },
             session_factory=session_factory,
@@ -1209,11 +1284,9 @@ class AccountDataEvents(BaseTest):
             {
                 'name': 'enable-sechub',
                 'resource': 'account',
-                'filters': [{
-                    'type': 'securityhub',
-                    'enabled': False
-                }],
+                'filters': [{'type': 'securityhub', 'enabled': False}],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

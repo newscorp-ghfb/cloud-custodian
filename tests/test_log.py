@@ -9,7 +9,6 @@ from .common import BaseTest
 
 
 class LogTest(BaseTest):
-
     def test_existing_stream(self):
         session_factory = self.replay_flight_data("test_log_existing_stream")
         client = session_factory().client("logs")

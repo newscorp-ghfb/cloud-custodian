@@ -23,16 +23,13 @@ def handler(event, context):
 
 
 class FunctionTest(BaseTest):
-
     def get_function(self, events=(), factory=None, **kw):
         if not events:
             assert factory
             events = [mu.HTTPEvent(factory)]
         config = dict(
-            name="custodian-dev",
-            labels=[],
-            runtime='python37',
-            events=events)
+            name="custodian-dev", labels=[], runtime='python37', events=events
+        )
         config.update(kw)
         archive = mu.custodian_archive()
         archive.close()
@@ -48,7 +45,8 @@ class FunctionTest(BaseTest):
         self.assertEqual(func_info['status'], 'DEPLOY_IN_PROGRESS')
         self.assertEqual(
             func_info['name'],
-            'projects/cloud-custodian/locations/us-central1/functions/custodian-dev')
+            'projects/cloud-custodian/locations/us-central1/functions/custodian-dev',
+        )
 
     def test_handler_run(self):
         func_cwd = self.get_temp_dir()
@@ -56,9 +54,8 @@ class FunctionTest(BaseTest):
         pdata = {
             'name': 'dataset-created',
             'resource': 'gcp.bq-dataset',
-            'mode': {
-                'type': 'gcp-audit',
-                'methods': ['datasetservice.insert']}}
+            'mode': {'type': 'gcp-audit', 'methods': ['datasetservice.insert']},
+        }
 
         with open(os.path.join(func_cwd, 'config.json'), 'w') as fh:
             fh.write(json.dumps({'policies': [pdata]}))
@@ -67,6 +64,7 @@ class FunctionTest(BaseTest):
         p = self.load_policy(pdata)
 
         from c7n.policy import PolicyCollection
+
         self.patch(PolicyCollection, 'from_data', staticmethod(lambda *args, **kw: [p]))
         self.patch(p, 'push', lambda evt, ctx: None)
         self.patch(handler, 'get_tmp_output_dir', lambda: output_temp)
@@ -85,40 +83,45 @@ class FunctionTest(BaseTest):
     def test_abstract_gcp_mode(self):
         # this will fetch a discovery
         factory = self.replay_flight_data('mu-gcp-abstract')
-        p = self.load_policy({
-            'name': 'instance', 'resource': 'gcp.instance'},
-            session_factory=factory)
+        p = self.load_policy(
+            {'name': 'instance', 'resource': 'gcp.instance'}, session_factory=factory
+        )
         exec_mode = policy.FunctionMode(p)
         self.assertRaises(NotImplementedError, exec_mode.run)
         self.assertRaises(NotImplementedError, exec_mode.provision)
         self.assertEqual(None, exec_mode.validate())
 
     def test_policy_context_deps(self):
-        p = self.load_policy({
-            'name': 'check',
-            'resource': 'gcp.instance',
-            'mode': {
-                'type': 'gcp-periodic',
-                'schedule': 'every 2 hours'}},
+        p = self.load_policy(
+            {
+                'name': 'check',
+                'resource': 'gcp.instance',
+                'mode': {'type': 'gcp-periodic', 'schedule': 'every 2 hours'},
+            },
             output_dir='gs://somebucket/some-prefix',
             log_group='gcp',
-            config={'metrics': 'gcp'})
+            config={'metrics': 'gcp'},
+        )
         pf = mu.PolicyFunction(p, archive=True)
         self.assertEqual(
             pf.get_output_deps(),
-            ['google-cloud-monitoring',
-             'google-cloud-storage',
-             'google-cloud-logging'])
+            ['google-cloud-monitoring', 'google-cloud-storage', 'google-cloud-logging'],
+        )
 
     def test_periodic_validate_tz(self):
         self.assertRaises(
             PolicyValidationError,
             self.load_policy,
-            {'name': 'instance-off',
-             'resource': 'gcp.instance',
-             'mode': {'type': 'gcp-periodic',
-                      'schedule': 'every 2 hours',
-                      'tz': 'zulugold'}})
+            {
+                'name': 'instance-off',
+                'resource': 'gcp.instance',
+                'mode': {
+                    'type': 'gcp-periodic',
+                    'schedule': 'every 2 hours',
+                    'tz': 'zulugold',
+                },
+            },
+        )
 
     def test_periodic_update_schedule(self):
         factory = self.replay_flight_data('mu-perodic-update-schedule')
@@ -126,34 +129,50 @@ class FunctionTest(BaseTest):
         project_id = 'cloud-custodian'
         region = 'us-central1'
 
-        sched_client = session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
+        sched_client = session.client(
+            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
+        )
         job_v1 = sched_client.execute_query(
             'get',
-            {'name': 'projects/{}/locations/{}/jobs/{}'.format(
-                project_id, region, 'custodian-auto-gcp-find-instances')})
+            {
+                'name': 'projects/{}/locations/{}/jobs/{}'.format(
+                    project_id, region, 'custodian-auto-gcp-find-instances'
+                )
+            },
+        )
 
-        p = self.load_policy({
-            'name': 'gcp-find-instances',
-            'resource': 'gcp.instance',
-            'mode': {'type': 'gcp-periodic', 'schedule': 'every 2 hours'}},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'gcp-find-instances',
+                'resource': 'gcp.instance',
+                'mode': {'type': 'gcp-periodic', 'schedule': 'every 2 hours'},
+            },
+            session_factory=factory,
+        )
         p.run()
 
         job_v2 = sched_client.execute_query(
             'get',
-            {'name': 'projects/{}/locations/{}/jobs/{}'.format(
-                project_id, region, 'custodian-auto-gcp-find-instances')})
+            {
+                'name': 'projects/{}/locations/{}/jobs/{}'.format(
+                    project_id, region, 'custodian-auto-gcp-find-instances'
+                )
+            },
+        )
         self.assertEqual(job_v1['schedule'], 'every 3 hours')
         self.assertEqual(job_v2['schedule'], 'every 2 hours')
 
     @functional
     def test_periodic_subscriber(self):
         factory = self.replay_flight_data('mu-perodic')
-        p = self.load_policy({
-            'name': 'instance-off',
-            'resource': 'gcp.instance',
-            'mode': {'type': 'gcp-periodic', 'schedule': 'every 2 hours'}},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'instance-off',
+                'resource': 'gcp.instance',
+                'mode': {'type': 'gcp-periodic', 'schedule': 'every 2 hours'},
+            },
+            session_factory=factory,
+        )
 
         p.provision()
 
@@ -161,22 +180,37 @@ class FunctionTest(BaseTest):
         project_id = 'cloud-custodian'
         region = 'us-central1'
 
-        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
+        func_client = session.client(
+            'cloudfunctions', 'v1', 'projects.locations.functions'
+        )
 
         # check function exists
         func_info = func_client.execute_command(
-            'get', {'name': 'projects/{}/locations/{}/functions/instance-off'.format(
-                project_id, region)})
+            'get',
+            {
+                'name': 'projects/{}/locations/{}/functions/instance-off'.format(
+                    project_id, region
+                )
+            },
+        )
         self.assertEqual(
             "https://{}-{}.cloudfunctions.net/{}".format(
-                region, project_id, 'instance-off'),
-            func_info['httpsTrigger']['url'])
+                region, project_id, 'instance-off'
+            ),
+            func_info['httpsTrigger']['url'],
+        )
 
-        sched_client = session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
+        sched_client = session.client(
+            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
+        )
         job = sched_client.execute_query(
             'get',
-            {'name': 'projects/{}/locations/{}/jobs/{}'.format(
-                project_id, region, 'custodian-auto-instance-off')})
+            {
+                'name': 'projects/{}/locations/{}/jobs/{}'.format(
+                    project_id, region, 'custodian-auto-instance-off'
+                )
+            },
+        )
         self.assertEqual(job['schedule'], 'every 2 hours')
         self.assertEqual(job['timeZone'], 'Etc/UTC')
 
@@ -186,13 +220,14 @@ class FunctionTest(BaseTest):
 
     def test_api_subscriber_run(self):
         factory = self.replay_flight_data('mu-api-subscriber-run')
-        p = self.load_policy({
-            'name': 'dataset-created',
-            'resource': 'gcp.bq-dataset',
-            'mode': {
-                'type': 'gcp-audit',
-                'methods': ['datasetservice.insert']}},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'dataset-created',
+                'resource': 'gcp.bq-dataset',
+                'mode': {'type': 'gcp-audit', 'methods': ['datasetservice.insert']},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         self.assertTrue(isinstance(exec_mode, policy.ApiAuditMode))
         event = event_data('bq-dataset-create.json')
@@ -206,12 +241,16 @@ class FunctionTest(BaseTest):
 
         factory = self.replay_flight_data('mu-api-subscriber')
         p = self.load_policy(
-            {'name': 'topic-created',
-             'resource': 'gcp.pubsub-topic',
-             'mode': {
-                 'type': 'gcp-audit',
-                 'methods': ['google.pubsub.v1.Publisher.CreateTopic']}},
-            session_factory=factory)
+            {
+                'name': 'topic-created',
+                'resource': 'gcp.pubsub-topic',
+                'mode': {
+                    'type': 'gcp-audit',
+                    'methods': ['google.pubsub.v1.Publisher.CreateTopic'],
+                },
+            },
+            session_factory=factory,
+        )
 
         # Create all policy resources.
         p.provision()
@@ -219,7 +258,9 @@ class FunctionTest(BaseTest):
         session = factory()
         project_id = 'cloud-custodian'
         region = 'us-central1'
-        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
+        func_client = session.client(
+            'cloudfunctions', 'v1', 'projects.locations.functions'
+        )
         pubsub_client = session.client('pubsub', 'v1', 'projects.topics')
         sink_client = session.client('logging', 'v2', 'projects.sinks')
 
@@ -227,33 +268,56 @@ class FunctionTest(BaseTest):
 
         # check function exists
         func_info = func_client.execute_command(
-            'get', {'name': 'projects/{}/locations/{}/functions/topic-created'.format(
-                project_id, region)})
+            'get',
+            {
+                'name': 'projects/{}/locations/{}/functions/topic-created'.format(
+                    project_id, region
+                )
+            },
+        )
         self.assertEqual(
             func_info['eventTrigger']['eventType'],
-            'providers/cloud.pubsub/eventTypes/topic.publish')
+            'providers/cloud.pubsub/eventTypes/topic.publish',
+        )
         self.assertEqual(
             func_info['eventTrigger']['resource'],
-            'projects/{}/topics/custodian-auto-audit-topic-created'.format(
-                project_id))
+            'projects/{}/topics/custodian-auto-audit-topic-created'.format(project_id),
+        )
 
         # check sink exists
         sink = sink_client.execute_command(
-            'get', {'sinkName': 'projects/{}/sinks/custodian-auto-audit-topic-created'.format(
-                project_id)})
+            'get',
+            {
+                'sinkName': 'projects/{}/sinks/custodian-auto-audit-topic-created'.format(
+                    project_id
+                )
+            },
+        )
         self.assertEqual(
             sink['destination'],
             'pubsub.googleapis.com/projects/{}/topics/custodian-auto-audit-topic-created'.format(
-                project_id))
+                project_id
+            ),
+        )
 
         # check the topic iam policy
         topic_policy = pubsub_client.execute_command(
-            'getIamPolicy', {
+            'getIamPolicy',
+            {
                 'resource': 'projects/{}/topics/custodian-auto-audit-topic-created'.format(
-                    project_id)})
+                    project_id
+                )
+            },
+        )
         self.assertEqual(
             topic_policy['bindings'],
-            [{u'role': u'roles/pubsub.publisher', u'members': [sink['writerIdentity']]}])
+            [
+                {
+                    u'role': u'roles/pubsub.publisher',
+                    u'members': [sink['writerIdentity']],
+                }
+            ],
+        )
 
         # todo set this up as test cleanups, dependent on ordering at the moment, fifo atm
         # it appears, we want lifo.
@@ -270,52 +334,58 @@ class FunctionTest(BaseTest):
         org = 111111111111
         factory = self.replay_flight_data('mu-scc-subscriber', project_id=project_id)
         p = self.load_policy(
-            {'name': 'test-scc',
-             'resource': 'gcp.bucket',
-             'mode': {
-                 'type': 'gcp-scc',
-                 'org': org}},
-            session_factory=factory)
+            {
+                'name': 'test-scc',
+                'resource': 'gcp.bucket',
+                'mode': {'type': 'gcp-scc', 'org': org},
+            },
+            session_factory=factory,
+        )
 
         # Create all policy resources.
         p.provision()
 
         session = factory()
         region = 'us-central1'
-        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
+        func_client = session.client(
+            'cloudfunctions', 'v1', 'projects.locations.functions'
+        )
         pubsub_client = session.client('pubsub', 'v1', 'projects.topics')
-        notification_client = session.client('securitycenter', 'v1',
-            'organizations.notificationConfigs')
+        notification_client = session.client(
+            'securitycenter', 'v1', 'organizations.notificationConfigs'
+        )
 
         # Check on the resources for the scc subscription
 
-        pubsub_topic = 'projects/{}/topics/custodian-auto-scc-bucket'.format(
-            project_id)
+        pubsub_topic = 'projects/{}/topics/custodian-auto-scc-bucket'.format(project_id)
         # check function exists
         func_info = func_client.execute_command(
-            'get', {'name': 'projects/{}/locations/{}/functions/test-scc'.format(
-                project_id, region)})
+            'get',
+            {
+                'name': 'projects/{}/locations/{}/functions/test-scc'.format(
+                    project_id, region
+                )
+            },
+        )
         self.assertEqual(
             func_info['eventTrigger']['eventType'],
-            'providers/cloud.pubsub/eventTypes/topic.publish')
-        self.assertEqual(
-            func_info['eventTrigger']['resource'],
-            pubsub_topic)
+            'providers/cloud.pubsub/eventTypes/topic.publish',
+        )
+        self.assertEqual(func_info['eventTrigger']['resource'], pubsub_topic)
 
         # check notification config exists
-        config_name = "organizations/{}/notificationConfigs/{}".format(org,
-         "custodian-auto-scc-bucket")
+        config_name = "organizations/{}/notificationConfigs/{}".format(
+            org, "custodian-auto-scc-bucket"
+        )
 
         notification_config = notification_client.execute_command(
-            'get', {'name': config_name})
-        self.assertEqual(
-            notification_config['pubsubTopic'], pubsub_topic)
+            'get', {'name': config_name}
+        )
+        self.assertEqual(notification_config['pubsubTopic'], pubsub_topic)
 
         # check topic exists
-        topic_info = pubsub_client.execute_command(
-            'get', {'topic': pubsub_topic})
-        self.assertEqual(
-            topic_info['name'], pubsub_topic)
+        topic_info = pubsub_client.execute_command('get', {'topic': pubsub_topic})
+        self.assertEqual(topic_info['name'], pubsub_topic)
 
         if self.recording:
             # we sleep to allow time for in progress operations on creation to complete
@@ -325,14 +395,17 @@ class FunctionTest(BaseTest):
 
     def test_scc_subscriber_run(self):
         project_id = "cloud-custodian"
-        factory = self.replay_flight_data('mu-scc-subscriber-run', project_id=project_id)
-        p = self.load_policy({
-            'name': 'test-scc-run',
-            'resource': 'gcp.subnet',
-            'mode': {
-                'type': 'gcp-scc',
-                'org': 111111111111}},
-            session_factory=factory)
+        factory = self.replay_flight_data(
+            'mu-scc-subscriber-run', project_id=project_id
+        )
+        p = self.load_policy(
+            {
+                'name': 'test-scc-run',
+                'resource': 'gcp.subnet',
+                'mode': {'type': 'gcp-scc', 'org': 111111111111},
+            },
+            session_factory=factory,
+        )
         exec_mode = p.get_execution_mode()
         self.assertTrue(isinstance(exec_mode, policy.SecurityCenterMode))
         event = event_data('network-finding.json')

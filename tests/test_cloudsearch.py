@@ -5,7 +5,6 @@ from .common import BaseTest
 
 
 class CloudSearch(BaseTest):
-
     def test_resource_manager(self):
         factory = self.replay_flight_data("test_cloudsearch_query")
         p = self.load_policy(

@@ -219,8 +219,8 @@ def resolve_source_deps(poetry, package, reqs, frozen=False):
 def locked_deps(package, poetry, exclude=(), remove=()):
     reqs = []
     deps = poetry.locker.get_project_dependency_packages(
-        project_requires=package.all_requires,
-        dev=False, extras=[])
+        project_requires=package.all_requires, dev=False, extras=[]
+    )
 
     project_deps = {r.name: r for r in poetry.package.requires}
     for dep_pkg in deps:

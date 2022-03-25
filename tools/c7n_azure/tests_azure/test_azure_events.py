@@ -15,7 +15,9 @@ class AzureEventsTest(BaseTest):
     def test_get_returns_event_dict(self):
         event_dic = AzureEvents.get('VmWrite')
         self.assertEqual(event_dic['event'], 'write')
-        self.assertEqual(event_dic['resource_provider'], 'Microsoft.Compute/virtualMachines')
+        self.assertEqual(
+            event_dic['resource_provider'], 'Microsoft.Compute/virtualMachines'
+        )
 
     def test_get_event_operations_one_string(self):
         event_string = 'VmWrite'
@@ -26,7 +28,7 @@ class AzureEventsTest(BaseTest):
     def test_get_event_operations_one_event_object(self):
         event_dictionary = {
             'resourceProvider': 'Microsoft.Compute/virtualMachines',
-            'event': 'write'
+            'event': 'write',
         }
         event_operations = AzureEvents.get_event_operations([event_dictionary])
         self.assertEqual(len(event_operations), 1)
@@ -36,17 +38,21 @@ class AzureEventsTest(BaseTest):
         event_string = 'AppServicePlanWrite'
         event_dict = {
             'resourceProvider': 'Microsoft.Compute/virtualMachines',
-            'event': 'write'
+            'event': 'write',
         }
         event_operations = AzureEvents.get_event_operations([event_string, event_dict])
         self.assertEqual(len(event_operations), 2)
         self.assertTrue('Microsoft.Compute/virtualMachines/write' in event_operations)
         self.assertTrue('Microsoft.Web/serverFarms/write' in event_operations)
 
-    @patch('azure.mgmt.eventgrid.operations.''EventSubscriptionsOperations.begin_create_or_update')
+    @patch(
+        'azure.mgmt.eventgrid.operations.'
+        'EventSubscriptionsOperations.begin_create_or_update'
+    )
     def test_create_azure_event_subscription(self, create_mock):
-        sub_destination = StorageQueueEventSubscriptionDestination(resource_id="cctestid",
-                                                                   queue_name="cctestevensub")
+        sub_destination = StorageQueueEventSubscriptionDestination(
+            resource_id="cctestid", queue_name="cctestevensub"
+        )
         sub_name = 'custodiantestsubscription'
         sub_id = self.session.get_subscription_id()
         AzureEventSubscription.create(sub_destination, sub_name, sub_id)

@@ -5,82 +5,106 @@ from .common import BaseTest
 
 
 class ConfigRecorderTest(BaseTest):
-
     def test_config_recorder(self):
         factory = self.replay_flight_data('test_config_recorder')
-        p = self.load_policy({
-            'name': 'recorder',
-            'resource': 'aws.config-recorder',
-            'filters': [
-                {'recordingGroup.allSupported': True},
-                {'recordingGroup.includeGlobalResourceTypes': True},
-                {'deliveryChannel.name': 'default'}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'recorder',
+                'resource': 'aws.config-recorder',
+                'filters': [
+                    {'recordingGroup.allSupported': True},
+                    {'recordingGroup.includeGlobalResourceTypes': True},
+                    {'deliveryChannel.name': 'default'},
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['name'], 'default')
 
     def test_config_recorder_cross_account(self):
         factory = self.replay_flight_data('test_config_recorder_cross_account')
-        p = self.load_policy({
-            'name': 'recorder',
-            'resource': 'aws.config-recorder',
-            'filters': ['cross-account']},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'recorder',
+                'resource': 'aws.config-recorder',
+                'filters': ['cross-account'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         assert len(resources) == 1
         assert 'CrossAccountViolations' in resources[0]
-        assert [(cav['AuthorizedAwsRegion'], cav['AuthorizedAccountId'])
-                for cav in resources[0]['CrossAccountViolations']] == [
-                    ('us-east-1', '123456890123'),
-                    ('us-east-2', '123456890123')]
+        assert [
+            (cav['AuthorizedAwsRegion'], cav['AuthorizedAccountId'])
+            for cav in resources[0]['CrossAccountViolations']
+        ] == [('us-east-1', '123456890123'), ('us-east-2', '123456890123')]
 
 
 class ConfigComplianceTest(BaseTest):
-
     def test_config_with_inconsistent_hub_rule(self):
         factory = self.replay_flight_data('test_config_inconsistent_hub_rule')
-        p = self.load_policy({
-            'name': 'compliance',
-            'resource': 'aws.cloudtrail',
-            'filters': [
-                {'type': 'config-compliance',
-                 'states': ['NON_COMPLIANT'],
-                 'rules': ['securityhub-cloud-trail-encryption-enabled-dadfg6']}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'compliance',
+                'resource': 'aws.cloudtrail',
+                'filters': [
+                    {
+                        'type': 'config-compliance',
+                        'states': ['NON_COMPLIANT'],
+                        'rules': ['securityhub-cloud-trail-encryption-enabled-dadfg6'],
+                    }
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 3)
 
     def test_compliance(self):
         factory = self.replay_flight_data('test_config_compliance')
-        p = self.load_policy({
-            'name': 'compliance',
-            'resource': 'ebs',
-            'filters': [
-                {'type': 'config-compliance',
-                 'eval_filters': [{
-                     'EvaluationResultIdentifier.EvaluationResultQualifier.ResourceType': 'AWS::EC2::Volume'}], # noqa
-                 'rules': ['custodian-good-vol']}
-            ]}, session_factory=factory, config={'region': 'us-east-2'})
+        p = self.load_policy(
+            {
+                'name': 'compliance',
+                'resource': 'ebs',
+                'filters': [
+                    {
+                        'type': 'config-compliance',
+                        'eval_filters': [
+                            {
+                                'EvaluationResultIdentifier.EvaluationResultQualifier.ResourceType': 'AWS::EC2::Volume'
+                            }
+                        ],  # noqa
+                        'rules': ['custodian-good-vol'],
+                    }
+                ],
+            },
+            session_factory=factory,
+            config={'region': 'us-east-2'},
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['VolumeId'], 'vol-0c6efd2a9f5677a03')
-        self.assertEqual(resources[0]['c7n:config-compliance'][0]['Annotation'],
-                         'Resource is not compliant with policy:good-vol')
+        self.assertEqual(
+            resources[0]['c7n:config-compliance'][0]['Annotation'],
+            'Resource is not compliant with policy:good-vol',
+        )
 
 
 class ConfigRuleTest(BaseTest):
-
     def test_validate(self):
         with self.assertRaises(PolicyValidationError) as ecm:
-            self.load_policy({
-                'name': 'rule',
-                'resource': 'ebs-snapshot',
-                'mode': {
-                    'role': 'arn:aws:iam',
-                    'type': 'config-rule'}})
-        self.assertIn('AWS Config does not support resource-type:ebs-snapshot',
-                      str(ecm.exception))
+            self.load_policy(
+                {
+                    'name': 'rule',
+                    'resource': 'ebs-snapshot',
+                    'mode': {'role': 'arn:aws:iam', 'type': 'config-rule'},
+                }
+            )
+        self.assertIn(
+            'AWS Config does not support resource-type:ebs-snapshot', str(ecm.exception)
+        )
 
     def test_status(self):
         session_factory = self.replay_flight_data("test_config_rule_status")
@@ -122,7 +146,5 @@ class ConfigRuleTest(BaseTest):
         client = session_factory().client("config")
         rules = client.describe_config_rules(
             ConfigRuleNames=[cr["ConfigRuleName"]]
-        ).get(
-            "ConfigRules", []
-        )
+        ).get("ConfigRules", [])
         self.assertEqual(rules[0]["ConfigRuleState"], "DELETING")

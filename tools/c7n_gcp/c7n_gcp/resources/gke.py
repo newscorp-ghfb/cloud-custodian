@@ -3,8 +3,12 @@
 import re
 
 from c7n_gcp.provider import resources
-from c7n_gcp.query import (QueryResourceManager, TypeInfo, ChildTypeInfo,
-                           ChildResourceManager)
+from c7n_gcp.query import (
+    QueryResourceManager,
+    TypeInfo,
+    ChildTypeInfo,
+    ChildResourceManager,
+)
 from c7n.utils import type_schema, local_session
 from c7n_gcp.actions import MethodAction
 
@@ -25,8 +29,14 @@ class KubernetesCluster(QueryResourceManager):
         scope_template = "projects/{}/locations/-"
         name = id = "name"
         default_report_fields = [
-            'name', 'description', 'status', 'currentMasterVersion', 'currentNodeVersion',
-            'currentNodeCount', 'location']
+            'name',
+            'description',
+            'status',
+            'currentMasterVersion',
+            'currentNodeVersion',
+            'currentNodeCount',
+            'location',
+        ]
         asset_type = 'container.googleapis.com/Cluster'
         scc_type = 'google.container.Cluster'
         metric_key = 'resource.labels.cluster_name'
@@ -34,11 +44,15 @@ class KubernetesCluster(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', verb_arguments={
+                'get',
+                verb_arguments={
                     'name': 'projects/{}/locations/{}/clusters/{}'.format(
                         resource_info['project_id'],
                         resource_info['location'],
-                        resource_info['cluster_name'])})
+                        resource_info['cluster_name'],
+                    )
+                },
+            )
 
 
 @resources.register('gke-nodepool')
@@ -63,7 +77,7 @@ class KubernetesClusterNodePool(ChildResourceManager):
             'parent': 'projects/{}/locations/{}/clusters/{}'.format(
                 local_session(self.session_factory).get_default_project(),
                 parent_instance['location'],
-                parent_instance['name']
+                parent_instance['name'],
             )
         }
 
@@ -84,15 +98,19 @@ class KubernetesClusterNodePool(ChildResourceManager):
             cluster_name = resource_info['cluster_name']
             name = re.match(
                 r".*{}-(.*)-[^-]+-[^-]?".format(cluster_name),
-                resource_info['resourceName']).group(1)
+                resource_info['resourceName'],
+            ).group(1)
 
             return client.execute_command(
-                'get', verb_arguments={
+                'get',
+                verb_arguments={
                     'name': 'projects/{}/locations/{}/clusters/{}/nodePools/{}'.format(
                         resource_info['project_id'],
                         resource_info['location'],
                         resource_info['cluster_name'],
-                        name)}
+                        name,
+                    )
+                },
             )
 
 
@@ -122,9 +140,12 @@ class Delete(MethodAction):
     method_spec = {'op': 'delete'}
 
     def get_resource_params(self, model, resource_info):
-        project = local_session(self.manager.source.query.session_factory).get_default_project()
+        project = local_session(
+            self.manager.source.query.session_factory
+        ).get_default_project()
 
-        return {'name': 'projects/{}/locations/{}/clusters/{}'.format(
-                        project,
-                        resource_info['location'],
-                        resource_info['name'])}
+        return {
+            'name': 'projects/{}/locations/{}/clusters/{}'.format(
+                project, resource_info['location'], resource_info['name']
+            )
+        }

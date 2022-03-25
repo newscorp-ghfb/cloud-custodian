@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class TestOpsworksCM(BaseTest):
-
     def test_query_CM(self):
         factory = self.replay_flight_data("test_opswork-cm_query")
         p = self.load_policy(
@@ -35,7 +34,6 @@ class TestOpsworksCM(BaseTest):
 
 
 class TestOpsWorksStack(BaseTest):
-
     def test_query_opsworks_stacks(self):
         factory = self.replay_flight_data("test_opswork-stack_query")
         p = self.load_policy(

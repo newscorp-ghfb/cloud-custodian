@@ -6,7 +6,6 @@ import unittest
 
 
 class Foo:
-
     def __init__(self, state):
         self.state = state
 
@@ -26,7 +25,6 @@ class Foo:
 
 
 class ExecutorBase:
-
     def test_map_instance(self):
         with self.executor_factory(max_workers=3) as w:
             self.assertEqual(

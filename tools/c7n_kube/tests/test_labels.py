@@ -11,18 +11,10 @@ class TestLabelAction(KubeTest):
             {
                 'name': 'label-namespace',
                 'resource': 'k8s.namespace',
-                'filters': [
-                    {'metadata.labels': None},
-                    {'metadata.name': 'test'}
-                ],
-                'actions': [
-                    {
-                        'type': 'label',
-                        'labels': {'test': 'value'}
-                    }
-                ]
+                'filters': [{'metadata.labels': None}, {'metadata.name': 'test'}],
+                'actions': [{'type': 'label', 'labels': {'test': 'value'}}],
             },
-            session_factory=factory
+            session_factory=factory,
         )
         resources = p.run()
         self.assertTrue(resources)
@@ -41,16 +33,11 @@ class TestLabelAction(KubeTest):
                 'resource': 'k8s.service',
                 'filters': [
                     {'metadata.labels.test': 'absent'},
-                    {'metadata.name': 'hello-node'}
+                    {'metadata.name': 'hello-node'},
                 ],
-                'actions': [
-                    {
-                        'type': 'label',
-                        'labels': {'test': 'value'}
-                    }
-                ]
+                'actions': [{'type': 'label', 'labels': {'test': 'value'}}],
             },
-            session_factory=factory
+            session_factory=factory,
         )
         resources = p.run()
         self.assertTrue(resources)

@@ -40,9 +40,10 @@ class KmsRelatedFilter(RelatedResourceFilter):
     """
 
     schema = type_schema(
-        'kms-key', rinherit=ValueFilter.schema,
-        **{'match-resource': {'type': 'boolean'},
-           'operator': {'enum': ['and', 'or']}})
+        'kms-key',
+        rinherit=ValueFilter.schema,
+        **{'match-resource': {'type': 'boolean'}, 'operator': {'enum': ['and', 'or']}}
+    )
     RelatedResource = "c7n.resources.kms.Key"
     AnnotationKey = "matched-kms-key"
 

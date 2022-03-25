@@ -29,7 +29,8 @@ from c7n.output import (
     metrics_outputs,
     BlobOutput,
     Metrics,
-    LogOutput)
+    LogOutput,
+)
 from c7n.utils import local_session
 
 
@@ -40,10 +41,9 @@ class StackDriverMetrics(Metrics):
 
     DESCRIPTOR_COMMON = {
         'metricsKind': 'GAUGE',
-        'labels': [{
-            'key': 'policy',
-            'valueType': 'STRING',
-            'description': 'Custodian Policy'}],
+        'labels': [
+            {'key': 'policy', 'valueType': 'STRING', 'description': 'Custodian Policy'}
+        ],
     }
 
     METRICS_DESCRIPTORS = {
@@ -84,12 +84,20 @@ class StackDriverMetrics(Metrics):
         # tbd - unclear if this adding significant value.
         """
         client = local_session(self.ctx.session_factory).client(
-            'monitoring', 'v3', 'projects.metricDescriptors')
+            'monitoring', 'v3', 'projects.metricDescriptors'
+        )
         descriptor_map = {
-            n['type'].rsplit('/', 1)[-1]: n for n in client.execute_command('list', {
-                'name': 'projects/%s' % self.project_id,
-                'filter': 'metric.type=startswith("{}")'.format(self.METRICS_PREFIX)}).get(
-                    'metricsDescriptors', [])}
+            n['type'].rsplit('/', 1)[-1]: n
+            for n in client.execute_command(
+                'list',
+                {
+                    'name': 'projects/%s' % self.project_id,
+                    'filter': 'metric.type=startswith("{}")'.format(
+                        self.METRICS_PREFIX
+                    ),
+                },
+            ).get('metricsDescriptors', [])
+        }
         created = False
         for name in self.METRICS_DESCRIPTORS:
             if name in descriptor_map:
@@ -98,7 +106,8 @@ class StackDriverMetrics(Metrics):
             md = self.METRICS_DESCRIPTORS[name]
             md.update(self.DESCRIPTOR_COMMON)
             client.execute_command(
-                'create', {'name': 'projects/%s' % self.project_id, 'body': md})
+                'create', {'name': 'projects/%s' % self.project_id, 'body': md}
+            )
 
         if created:
             self.log.info("Initializing StackDriver Metrics Descriptors")
@@ -114,7 +123,7 @@ class StackDriverMetrics(Metrics):
                 'type': 'custom.googleapis.com/custodian/policy/%s' % key.lower(),
                 'labels': {
                     'policy': self.ctx.policy.name,
-                    'project_id': self.project_id
+                    'project_id': self.project_id,
                 },
             },
             'metricKind': 'GAUGE',
@@ -122,25 +131,30 @@ class StackDriverMetrics(Metrics):
             'resource': {
                 'type': 'global',
             },
-            'points': [{
-                'interval': {
-                    'endTime': now.isoformat('T') + 'Z',
-                    'startTime': now.isoformat('T') + 'Z'},
-                'value': {'int64Value': int(value)}}]
+            'points': [
+                {
+                    'interval': {
+                        'endTime': now.isoformat('T') + 'Z',
+                        'startTime': now.isoformat('T') + 'Z',
+                    },
+                    'value': {'int64Value': int(value)},
+                }
+            ],
         }
         return metrics_series
 
     def _put_metrics(self, ns, metrics):
         session = local_session(self.ctx.session_factory)
         client = session.client('monitoring', 'v3', 'projects.timeSeries')
-        params = {'name': "projects/{}".format(self.write_metrics_project_id),
-                  'body': {'timeSeries': metrics}}
+        params = {
+            'name': "projects/{}".format(self.write_metrics_project_id),
+            'body': {'timeSeries': metrics},
+        }
         client.execute_command('create', params)
 
 
 @log_outputs.register('gcp', condition=bool(LogClient))
 class StackDriverLogging(LogOutput):
-
     def get_log_group(self):
         log_group = self.config.netloc
         if log_group:
@@ -161,8 +175,10 @@ class StackDriverLogging(LogOutput):
             log_group,
             labels={
                 'policy': self.ctx.policy.name,
-                'resource': self.ctx.policy.resource_type},
-            resource=Resource(type='project', labels={'project_id': project_id}))
+                'resource': self.ctx.policy.resource_type,
+            },
+            resource=Resource(type='project', labels={'project_id': project_id}),
+        )
 
     def leave_log(self):
         super(StackDriverLogging, self).leave_log()
@@ -173,7 +189,6 @@ class StackDriverLogging(LogOutput):
 
 @blob_outputs.register('gs', condition=bool(StorageClient))
 class GCPStorageOutput(BlobOutput):
-
     def __init__(self, ctx, config=None):
         super().__init__(ctx, config)
         self.bucket = Bucket(StorageClient(), self.bucket)

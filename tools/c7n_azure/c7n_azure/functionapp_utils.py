@@ -17,8 +17,7 @@ class FunctionAppUtilities:
     log = logging.getLogger('custodian.azure.function_app_utils')
 
     class FunctionAppInfrastructureParameters:
-        def __init__(self, app_insights, service_plan, storage_account,
-                     function_app):
+        def __init__(self, app_insights, service_plan, storage_account, function_app):
             self.app_insights = app_insights
             self.service_plan = service_plan
             self.storage_account = storage_account
@@ -28,13 +27,16 @@ class FunctionAppUtilities:
     def get_storage_account_connection_string(id):
         rg_name = ResourceIdParser.get_resource_group(id)
         name = ResourceIdParser.get_resource_name(id)
-        client = local_session(Session).client('azure.mgmt.storage.StorageManagementClient')
+        client = local_session(Session).client(
+            'azure.mgmt.storage.StorageManagementClient'
+        )
         obj = client.storage_accounts.list_keys(rg_name, name, expand=None)
 
-        connection_string = 'DefaultEndpointsProtocol={};AccountName={};AccountKey={}'.format(
-            'https',
-            name,
-            obj.keys[0].value)
+        connection_string = (
+            'DefaultEndpointsProtocol={};AccountName={};AccountKey={}'.format(
+                'https', name, obj.keys[0].value
+            )
+        )
 
         return connection_string
 
@@ -55,7 +57,9 @@ class FunctionAppUtilities:
             app_id = function_app.server_farm_id
             app_name = ResourceIdParser.get_resource_name(app_id)
             app_resource_group_name = ResourceIdParser.get_resource_group(app_id)
-            app_service_plan = web_client.app_service_plans.get(app_resource_group_name, app_name)
+            app_service_plan = web_client.app_service_plans.get(
+                app_resource_group_name, app_name
+            )
 
             # update the sku tier to properly reflect what is provisioned in Azure
             parameters.service_plan['sku_tier'] = app_service_plan.sku.tier
@@ -72,23 +76,35 @@ class FunctionAppUtilities:
         app_insights = ai_unit.provision_if_not_exists(parameters.app_insights)
 
         sa_unit = StorageAccountUnit()
-        storage_account_id = sa_unit.provision_if_not_exists(parameters.storage_account).id
-        con_string = FunctionAppUtilities.get_storage_account_connection_string(storage_account_id)
+        storage_account_id = sa_unit.provision_if_not_exists(
+            parameters.storage_account
+        ).id
+        con_string = FunctionAppUtilities.get_storage_account_connection_string(
+            storage_account_id
+        )
 
         function_app_params.update(
-            {'location': app_service_plan.location,
-             'app_service_plan_id': app_service_plan.id,
-             'app_insights_key': app_insights.instrumentation_key,
-             'is_consumption_plan': FunctionAppUtilities.is_consumption_plan(parameters),
-             'storage_account_connection_string': con_string})
+            {
+                'location': app_service_plan.location,
+                'app_service_plan_id': app_service_plan.id,
+                'app_insights_key': app_insights.instrumentation_key,
+                'is_consumption_plan': FunctionAppUtilities.is_consumption_plan(
+                    parameters
+                ),
+                'storage_account_connection_string': con_string,
+            }
+        )
 
         return function_app_unit.provision(function_app_params)
 
     @staticmethod
     def validate_function_name(function_name):
-        if (function_name is None or len(function_name) > 60 or len(function_name) < 1):
-            raise ValueError('Function name must be between 1-60 characters. Given name: "' +
-                             str(function_name) + '"')
+        if function_name is None or len(function_name) > 60 or len(function_name) < 1:
+            raise ValueError(
+                'Function name must be between 1-60 characters. Given name: "'
+                + str(function_name)
+                + '"'
+            )
 
     @staticmethod
     def get_function_name(policy_name, suffix):
@@ -104,7 +120,8 @@ class FunctionAppUtilities:
 
         publish_creds = web_client.web_apps.begin_list_publishing_credentials(
             function_params.function_app['resource_group_name'],
-            function_params.function_app['name']).result()
+            function_params.function_app['name'],
+        ).result()
 
         if package.wait_for_status(publish_creds):
             package.publish(publish_creds)

@@ -31,8 +31,7 @@ class Provider(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def initialize(self, options):
-        """Perform any provider specific initialization
-        """
+        """Perform any provider specific initialization"""
 
     @abc.abstractmethod
     def initialize_policies(self, policy_collection, options):
@@ -50,7 +49,8 @@ class Provider(metaclass=abc.ABCMeta):
     def get_resource_types(cls, resource_types):
         """Return the resource classes for the given type names"""
         resource_classes, not_found = import_resource_classes(
-            cls.resource_map, resource_types)
+            cls.resource_map, resource_types
+        )
         for r in resource_classes:
             cls.resources.notify(r)
         return resource_classes, not_found
@@ -110,12 +110,12 @@ def get_resource_class(resource_type):
 
     provider = clouds.get(provider_name)
     if provider is None:
-        raise KeyError(
-            "Invalid cloud provider: %s" % provider_name)
+        raise KeyError("Invalid cloud provider: %s" % provider_name)
 
     if resource_type not in provider.resource_map:
-        raise KeyError("Invalid resource: %s for provider: %s" % (
-            resource, provider_name))
+        raise KeyError(
+            "Invalid resource: %s for provider: %s" % (resource, provider_name)
+        )
     factory = provider.resources.get(resource)
     assert factory, "Resource:%s not loaded" % resource_type
     return factory

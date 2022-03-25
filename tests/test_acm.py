@@ -4,13 +4,12 @@ from .common import BaseTest
 
 
 class CertificateTest(BaseTest):
-
     def test_certificate_augment(self):
         factory = self.replay_flight_data("test_acm_certificate_augment")
-        p = self.load_policy({
-            'name': 'acm-cert-get',
-            'resource': 'acm-certificate'},
-            session_factory=factory)
+        p = self.load_policy(
+            {'name': 'acm-cert-get', 'resource': 'acm-certificate'},
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertTrue('NotAfter' in resources[0])
@@ -21,7 +20,9 @@ class CertificateTest(BaseTest):
             {
                 "name": "acm-certificate-delete",
                 "resource": "acm-certificate",
-                "filters": [{"type": "value", "key": "DomainName", "value": "foobar.com"}],
+                "filters": [
+                    {"type": "value", "key": "DomainName", "value": "foobar.com"}
+                ],
                 "actions": ["delete"],
             },
             session_factory=factory,
@@ -36,7 +37,9 @@ class CertificateTest(BaseTest):
             {
                 "name": "acm-certificate-delete",
                 "resource": "acm-certificate",
-                "filters": [{"type": "value", "key": "DomainName", "value": "foobar.com"}],
+                "filters": [
+                    {"type": "value", "key": "DomainName", "value": "foobar.com"}
+                ],
                 "actions": ["delete"],
             },
             session_factory=factory,
@@ -56,13 +59,21 @@ class CertificateTest(BaseTest):
                 "filters": [{"tag:target-tag": "present"}],
                 "actions": [
                     {"type": "remove-tag", "tags": ["target-tag"]},
-                    {"type": "mark-for-op", "tag": "custodian_cleanup", "op": "delete", "days": 1}],
+                    {
+                        "type": "mark-for-op",
+                        "tag": "custodian_cleanup",
+                        "op": "delete",
+                        "days": 1,
+                    },
+                ],
             },
             session_factory=factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("acm")
-        tag = client.list_tags_for_certificate(CertificateArn=resources[0]['CertificateArn'])
+        tag = client.list_tags_for_certificate(
+            CertificateArn=resources[0]['CertificateArn']
+        )
         self.assertEqual(len(tag.get('Tags')), 1)
         self.assertEqual(tag.get('Tags')[0]['Key'], "custodian_cleanup")

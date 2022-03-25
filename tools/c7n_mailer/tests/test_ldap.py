@@ -11,7 +11,6 @@ SKIP_REASON = "Azure Pipelines still broken"
 
 
 class MailerLdapTest(unittest.TestCase):
-
     def setUp(self):
         if not have_sqlite:
             return
@@ -36,7 +35,7 @@ class MailerLdapTest(unittest.TestCase):
             'mail': 'john_oconnor@initech.com',
             'manager': 'uid=bill_lumbergh,cn=users,dc=initech,dc=com',
             'displayName': "John O'Connor",
-            'uid': 'john_oconnor'
+            'uid': 'john_oconnor',
         }
         set_result = self.ldap_lookup.caching.set(irish_guy['uid'], irish_guy)
         self.assertEqual(set_result, None)
@@ -55,7 +54,9 @@ class MailerLdapTest(unittest.TestCase):
         self.assertEqual(to_addr, ['michael_bolton@initech.com'])
 
     def test_sqlite_cached_get_email_to_addrs_with_manager(self):
-        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid('michael_bolton', manager=True)
+        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid(
+            'michael_bolton', manager=True
+        )
         self.assertEqual(to_addr, ['michael_bolton@initech.com', 'milton@initech.com'])
 
     def test_uid_ldap_lookup(self):
@@ -93,8 +94,12 @@ class MailerLdapTest(unittest.TestCase):
     def test_random_string_dont_hit_ldap_twice_uid_lookup(self):
         # if we query ldap and get no result, we should never query ldap again
         # for that result, we should query the cache and just return {}
-        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid('doesnotexist', manager=True)
+        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid(
+            'doesnotexist', manager=True
+        )
         self.assertEqual(to_addr, [])
         self.ldap_lookup.connection = None
-        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid('doesnotexist', manager=True)
+        to_addr = self.ldap_lookup.get_email_to_addrs_from_uid(
+            'doesnotexist', manager=True
+        )
         self.assertEqual(to_addr, [])

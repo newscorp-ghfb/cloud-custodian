@@ -12,7 +12,6 @@ from c7n_azure.utils import ResourceIdParser, is_resource_group_id
 
 
 class GenericArmResourceQuery(ResourceQuery):
-
     def filter(self, resource_manager, **params):
         client = resource_manager.get_client()
         results = [r.serialize(True) for r in client.resources.list()]
@@ -58,12 +57,7 @@ class GenericArmResource(ArmResourceManager):
         resource_type = 'armresource'
         diagnostic_settings_enabled = False
 
-        default_report_fields = (
-            'name',
-            'type',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'type', 'location', 'resourceGroup')
 
     def get_resources(self, resource_ids):
         client = self.get_client()
@@ -72,10 +66,14 @@ class GenericArmResource(ArmResourceManager):
         for rid in resource_ids:
             resource = None
             if is_resource_group_id(rid):
-                resource = client.resource_groups.get(ResourceIdParser.get_resource_group(rid))
+                resource = client.resource_groups.get(
+                    ResourceIdParser.get_resource_group(rid)
+                )
                 resource.type = RESOURCE_GROUPS_TYPE
             else:
-                resource = client.resources.get_by_id(rid, self._session.resource_api_version(rid))
+                resource = client.resources.get_by_id(
+                    rid, self._session.resource_api_version(rid)
+                )
             result.append(resource)
 
         return self.augment([r.serialize(True) for r in result])
@@ -87,9 +85,11 @@ class GenericArmResource(ArmResourceManager):
 
 @GenericArmResource.filter_registry.register('resource-type')
 class ResourceTypeFilter(Filter):
-    schema = type_schema('resource-type',
-                         required=['values'],
-                         values={'type': 'array', 'items': {'type': 'string'}})
+    schema = type_schema(
+        'resource-type',
+        required=['values'],
+        values={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     def __init__(self, data, manager=None):
         super(ResourceTypeFilter, self).__init__(data, manager)

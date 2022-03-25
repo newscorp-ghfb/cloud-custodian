@@ -6,13 +6,11 @@ from mock import Mock
 
 
 class FirewallBypassFilterMock(FirewallBypassFilter):
-
     def _query_bypass(self, resource):
         return resource['bypass']
 
 
 class FirewallBypassFilterTest(BaseTest):
-
     def test_include_empty(self):
         satisfying_resources = [
             {'bypass': ['AzureServices']},
@@ -40,7 +38,9 @@ class FirewallBypassFilterTest(BaseTest):
             {'bypass': [required_rules[0], 'Extra']},
         ]
 
-        mock = FirewallBypassFilterMock({'mode': 'include', 'list': required_rules}, Mock())
+        mock = FirewallBypassFilterMock(
+            {'mode': 'include', 'list': required_rules}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -61,7 +61,9 @@ class FirewallBypassFilterTest(BaseTest):
             {'bypass': required_rules + ['Extra']},
         ]
 
-        mock = FirewallBypassFilterMock({'mode': 'only', 'list': required_rules}, Mock())
+        mock = FirewallBypassFilterMock(
+            {'mode': 'only', 'list': required_rules}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -120,7 +122,9 @@ class FirewallBypassFilterTest(BaseTest):
             {'bypass': [required_rules[0], 'Extra']},
         ]
 
-        mock = FirewallBypassFilterMock({'mode': 'equal', 'list': required_rules}, Mock())
+        mock = FirewallBypassFilterMock(
+            {'mode': 'equal', 'list': required_rules}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)

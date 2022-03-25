@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class AppFlowTests(BaseTest):
-
     def test_appflow_tag(self):
         session_factory = self.replay_flight_data('test_appflow_tag')
         new_tag = {'lob': 'overhead'}
@@ -12,15 +11,10 @@ class AppFlowTests(BaseTest):
             {
                 'name': 'app-flow',
                 'resource': 'app-flow',
-                'filters': [{
-                    'tag:lob': 'absent'
-                }],
-                'actions': [{
-                    'type': 'tag',
-                    'tags': new_tag
-                }]
+                'filters': [{'tag:lob': 'absent'}],
+                'actions': [{'type': 'tag', 'tags': new_tag}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(1, len(resources))
@@ -35,15 +29,10 @@ class AppFlowTests(BaseTest):
             {
                 'name': 'app-flow',
                 'resource': 'app-flow',
-                'filters': [{
-                    'tag:lob': 'overhead'
-                }],
-                'actions': [{
-                    'type': 'remove-tag',
-                    'tags': ['lob']
-                }],
+                'filters': [{'tag:lob': 'overhead'}],
+                'actions': [{'type': 'remove-tag', 'tags': ['lob']}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(1, len(resources))
@@ -58,12 +47,9 @@ class AppFlowTests(BaseTest):
             {
                 'name': 'app-flow',
                 'resource': 'app-flow',
-                'actions': [{
-                    'type': 'delete',
-                    'force': True
-                }]
+                'actions': [{'type': 'delete', 'force': True}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(1, len(resources))

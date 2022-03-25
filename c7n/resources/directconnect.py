@@ -7,7 +7,6 @@ from c7n.tags import universal_augment
 
 @resources.register('directconnect')
 class DirectConnect(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'directconnect'
         enum_spec = ('describe_connections', 'connections', None)

@@ -10,7 +10,6 @@ from c7n.utils import local_session, type_schema
 
 @resources.register('ml-model')
 class MLModel(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'machinelearning'
         enum_spec = ('describe_ml_models', 'Results', None)
@@ -57,10 +56,8 @@ class DeleteMLModel(BaseAction):
             list(w.map(self.process_model, models))
 
     def process_model(self, model):
-        client = local_session(
-            self.manager.session_factory).client('machinelearning')
+        client = local_session(self.manager.session_factory).client('machinelearning')
         try:
             client.delete_ml_model(MLModelId=model['MLModelId'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting ML model:\n %s" % e)
+            self.log.exception("Exception deleting ML model:\n %s" % e)

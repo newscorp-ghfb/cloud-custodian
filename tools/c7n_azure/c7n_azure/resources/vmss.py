@@ -37,6 +37,6 @@ class VMScaleSet(ArmResourceManager):
             'location',
             'resourceGroup',
             'sku.name',
-            'sku.capacity'
+            'sku.capacity',
         )
         resource_type = 'Microsoft.Compute/virtualMachineScaleSets'

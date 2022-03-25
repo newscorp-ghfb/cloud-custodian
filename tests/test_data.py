@@ -105,8 +105,8 @@ def test_bad_source(test):
 
     with pytest.raises(PolicyValidationError, match="invalid source dask"):
         test.load_policy(
-            {"name": "snack", "resource": "c7n.data", "source": "dask"},
-            validate=False)
+            {"name": "snack", "resource": "c7n.data", "source": "dask"}, validate=False
+        )
 
 
 def test_provider_initialize(test):

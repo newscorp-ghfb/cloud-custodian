@@ -6,7 +6,6 @@ import botocore.exceptions as b_exc
 
 
 class TestNotebookInstance(BaseTest):
-
     def test_list_notebook_instances(self):
         session_factory = self.replay_flight_data("test_sagemaker_notebook_instances")
         p = self.load_policy(
@@ -216,22 +215,22 @@ class TestNotebookInstance(BaseTest):
         self.assertEqual(resources[0]["NotebookInstanceName"], nb)
 
     def test_sagemaker_notebook_kms_alias(self):
-        session_factory = self.replay_flight_data("test_sagemaker_notebook_kms_key_filter")
+        session_factory = self.replay_flight_data(
+            "test_sagemaker_notebook_kms_key_filter"
+        )
         kms = session_factory().client('kms')
         p = self.load_policy(
             {
                 "name": "sagemaker-kms-alias",
                 "resource": "aws.sagemaker-notebook",
                 "filters": [
-                    {
-                        'NotebookInstanceName': "test-kms"
-                    },
+                    {'NotebookInstanceName': "test-kms"},
                     {
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "alias/skunk/trails",
-                    }
-                ]
+                    },
+                ],
             },
             session_factory=session_factory,
         )
@@ -242,7 +241,6 @@ class TestNotebookInstance(BaseTest):
 
 
 class TestModelInstance(BaseTest):
-
     def test_list_model(self):
         session_factory = self.replay_flight_data("test_sagemaker_model")
         p = self.load_policy(
@@ -372,7 +370,6 @@ class TestModelInstance(BaseTest):
 
 
 class TestSagemakerJob(BaseTest):
-
     def test_sagemaker_training_job_query(self):
         session_factory = self.replay_flight_data("test_sagemaker_training_job_query")
         p = self.load_policy(
@@ -450,7 +447,6 @@ class TestSagemakerJob(BaseTest):
 
 
 class TestSagemakerTransformJob(BaseTest):
-
     def test_sagemaker_transform_job_query(self):
         session_factory = self.replay_flight_data("test_sagemaker_transform_job_query")
         p = self.load_policy(
@@ -528,7 +524,6 @@ class TestSagemakerTransformJob(BaseTest):
 
 
 class TestSagemakerEndpoint(BaseTest):
-
     def test_sagemaker_endpoints(self):
         session_factory = self.replay_flight_data("test_sagemaker_endpoints")
         p = self.load_policy(
@@ -642,7 +637,6 @@ class TestSagemakerEndpoint(BaseTest):
 
 
 class TestSagemakerEndpointConfig(BaseTest):
-
     def test_sagemaker_endpoint_config(self):
         session_factory = self.replay_flight_data("test_sagemaker_endpoint_config")
         p = self.load_policy(
@@ -774,22 +768,22 @@ class TestSagemakerEndpointConfig(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_sagemaker_endpoint_config_kms_alias(self):
-        session_factory = self.replay_flight_data("test_sagemaker_endpoint_config_kms_key_filter")
+        session_factory = self.replay_flight_data(
+            "test_sagemaker_endpoint_config_kms_key_filter"
+        )
         kms = session_factory().client('kms')
         p = self.load_policy(
             {
                 "name": "sagemaker-kms-alias",
                 "resource": "aws.sagemaker-endpoint-config",
                 "filters": [
-                    {
-                        "EndpointConfigName": "kms-test"
-                    },
+                    {"EndpointConfigName": "kms-test"},
                     {
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "alias/skunk/trails",
-                    }
-                ]
+                    },
+                ],
             },
             session_factory=session_factory,
         )

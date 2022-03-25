@@ -40,6 +40,6 @@ class AdvisorRecommendation(ArmResourceManager):
             'properties.impactedField',
             'properties.impactedValue',
             'properties.shortDescription.problem',
-            'properties.lastUpdated'
+            'properties.lastUpdated',
         )
         resource_type = 'Microsoft.Advisor/recommendations'

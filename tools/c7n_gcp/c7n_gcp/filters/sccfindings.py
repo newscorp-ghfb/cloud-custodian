@@ -22,8 +22,12 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
           value: HIGH
     """
 
-    schema = type_schema('scc-findings', rinherit=ValueFilter.schema,
-    org={'type': 'integer'}, required=['org'])
+    schema = type_schema(
+        'scc-findings',
+        rinherit=ValueFilter.schema,
+        org={'type': 'integer'},
+        required=['org'],
+    )
     required_keys = {}
     permissions = ("securitycenter.findings.list",)
     annotation_key = 'c7n:matched-findings'
@@ -37,14 +41,20 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
 
     def get_findings(self, resources):
         self.findings_by_resource = {}
-        query_params = {
-            'filter': self.get_resource_filter(resources),
-            'pageSize': 1000
-        }
+        query_params = {'filter': self.get_resource_filter(resources), 'pageSize': 1000}
         session = local_session(self.manager.session_factory)
-        client = session.client("securitycenter", "v1", "organizations.sources.findings")
-        findings_paged_list = list(client.execute_paged_query('list',
-            {'parent': 'organizations/{}/sources/-'.format(self.data['org']), **query_params}))
+        client = session.client(
+            "securitycenter", "v1", "organizations.sources.findings"
+        )
+        findings_paged_list = list(
+            client.execute_paged_query(
+                'list',
+                {
+                    'parent': 'organizations/{}/sources/-'.format(self.data['org']),
+                    **query_params,
+                },
+            )
+        )
         findings_list = []
         for findings_page in findings_paged_list:
             if findings_page.get('listFindingsResults'):
@@ -54,7 +64,9 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
     def get_resource_filter(self, resources):
         resource_filter = []
         for r in resources:
-            resource_filter.append('resourceName:"{}"'.format(r[self.manager.resource_type.name]))
+            resource_filter.append(
+                'resourceName:"{}"'.format(r[self.manager.resource_type.name])
+            )
             resource_filter.append(' OR ')
         resource_filter.pop()
 
@@ -70,11 +82,16 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
     def process_resource(self, resource):
         if not resource.get(self.annotation_key):
             resource_name = resource[self.manager.resource_type.name]
-            resource[self.annotation_key] = self.findings_by_resource.get(resource_name, [])
+            resource[self.annotation_key] = self.findings_by_resource.get(
+                resource_name, []
+            )
 
         if self.data.get('key'):
             resource[self.annotation_key] = [
-                finding for finding in resource[self.annotation_key] if self.match(finding)]
+                finding
+                for finding in resource[self.annotation_key]
+                if self.match(finding)
+            ]
         return len(resource[self.annotation_key]) > 0
 
     @classmethod

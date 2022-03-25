@@ -11,7 +11,6 @@ from c7n import utils
 
 @resources.register('opswork-stack')
 class OpsworkStack(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'opsworks'
         enum_spec = ('describe_stacks', 'Stacks', None)
@@ -42,37 +41,50 @@ class DeleteStack(BaseAction):
                   - delete
     """
 
-    valid_origin_states = ('terminating', 'stopping', 'shutting_down', 'terminated', 'stopped')
+    valid_origin_states = (
+        'terminating',
+        'stopping',
+        'shutting_down',
+        'terminated',
+        'stopped',
+    )
 
     schema = type_schema('delete')
-    permissions = ("opsworks:DescribeApps", "opsworks:DescribeLayers",
-        "opsworks:DescribeInstances", "opsworks:DeleteStack",
-        "opsworks:DeleteApp", "opsworks:DeleteLayer",
-        "opsworks:DeleteInstance")
+    permissions = (
+        "opsworks:DescribeApps",
+        "opsworks:DescribeLayers",
+        "opsworks:DescribeInstances",
+        "opsworks:DeleteStack",
+        "opsworks:DeleteApp",
+        "opsworks:DeleteLayer",
+        "opsworks:DeleteInstance",
+    )
 
     def process(self, stacks):
         with self.executor_factory(max_workers=2) as w:
             list(w.map(self.process_stack, stacks))
 
     def process_stack(self, stack):
-        client = local_session(
-            self.manager.session_factory).client('opsworks')
+        client = local_session(self.manager.session_factory).client('opsworks')
         try:
             stack_id = stack['StackId']
             for app in client.describe_apps(StackId=stack_id)['Apps']:
                 client.delete_app(AppId=app['AppId'])
             instances = client.describe_instances(StackId=stack_id)['Instances']
             orig_length = len(instances)
-            instances = self.filter_resources(instances, 'Status', self.valid_origin_states)
-            if(len(instances) != orig_length):
+            instances = self.filter_resources(
+                instances, 'Status', self.valid_origin_states
+            )
+            if len(instances) != orig_length:
                 self.log.exception(
-                    "All instances must be stopped before deletion. Stack Id: %s Name: %s." %
-                    (stack_id, stack['Name']))
+                    "All instances must be stopped before deletion. Stack Id: %s Name: %s."
+                    % (stack_id, stack['Name'])
+                )
                 return
             for instance in instances:
                 instance_id = instance['InstanceId']
                 # Validation Exception raised for instances that are stopping when delete is called
-                retryable = ('ValidationException'),
+                retryable = (('ValidationException'),)
                 retry = utils.get_retry(retryable, max_attempts=8)
                 try:
                     retry(client.delete_instance, InstanceId=instance_id)
@@ -84,8 +96,7 @@ class DeleteStack(BaseAction):
                 client.delete_layer(LayerId=layer['LayerId'])
             client.delete_stack(StackId=stack_id)
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting stack:\n %s" % e)
+            self.log.exception("Exception deleting stack:\n %s" % e)
 
 
 @OpsworkStack.action_registry.register('stop')
@@ -113,19 +124,16 @@ class StopStack(BaseAction):
             list(w.map(self.process_stack, stacks))
 
     def process_stack(self, stack):
-        client = local_session(
-            self.manager.session_factory).client('opsworks')
+        client = local_session(self.manager.session_factory).client('opsworks')
         try:
             stack_id = stack['StackId']
             client.stop_stack(StackId=stack_id)
         except ClientError as e:
-            self.log.exception(
-                "Exception stopping stack:\n %s" % e)
+            self.log.exception("Exception stopping stack:\n %s" % e)
 
 
 @resources.register('opswork-cm')
 class OpsworksCM(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "opsworkscm"
         enum_spec = ('describe_servers', 'Servers', None)
@@ -163,10 +171,8 @@ class CMDelete(BaseAction):
             list(w.map(self.process_server, servers))
 
     def process_server(self, server):
-        client = local_session(
-            self.manager.session_factory).client('opsworkscm')
+        client = local_session(self.manager.session_factory).client('opsworkscm')
         try:
             client.delete_server(ServerName=server['ServerName'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting server:\n %s" % e)
+            self.log.exception("Exception deleting server:\n %s" % e)

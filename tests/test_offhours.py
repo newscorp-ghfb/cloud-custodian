@@ -286,9 +286,7 @@ class OffHoursFilterTest(BaseTest):
             p = f.get_tag_value(i)
             self.assertEqual(p, "tz=est")
             tz = f.get_tz("est")
-            self.assertTrue(
-                'America/New_York' in str(tz) or
-                'US/Eastern' in str(tz))
+            self.assertTrue('America/New_York' in str(tz) or 'US/Eastern' in str(tz))
             self.assertEqual(datetime.datetime.now(tz), t)
             self.assertEqual(t.hour, 19)
 
@@ -328,8 +326,10 @@ class OffHoursFilterTest(BaseTest):
         self.assertTrue(off.parser.has_resource_schedule(off.get_tag_value(i), "off"))
         self.assertTrue(off.parser.has_resource_schedule(off.get_tag_value(i), "on"))
         self.assertTrue(off.parser.keys_are_valid(off.get_tag_value(i)))
-        self.assertEqual(off.parser.raw_data(off.get_tag_value(i)),
-                        {'off': '[(s,1)]', 'on': '[(m,6)]', 'tz': 'pst'})
+        self.assertEqual(
+            off.parser.raw_data(off.get_tag_value(i)),
+            {'off': '[(s,1)]', 'on': '[(m,6)]', 'tz': 'pst'},
+        )
 
     def test_offhours(self):
         t = datetime.datetime(
@@ -495,21 +495,11 @@ class OffHoursFilterTest(BaseTest):
         nzt = tzutil.gettz("Pacific/Auckland")
         gmt = tzutil.gettz("Etc/GMT")
         easter_island = tzutil.gettz("Chile/EasterIsland")
-        self.assertEqual(
-            OnHour({}).get_tz('america/los_angeles'),
-            pacific)
-        self.assertEqual(
-            OnHour({}).get_tz('pst'),
-            pacific)
-        self.assertEqual(
-            OnHour({}).get_tz('pacific/auckland'),
-            nzt)
-        self.assertEqual(
-            OnHour({}).get_tz('gmt'),
-            gmt)
-        self.assertEqual(
-            OnHour({}).get_tz('chile/easterisland'),
-            easter_island)
+        self.assertEqual(OnHour({}).get_tz('america/los_angeles'), pacific)
+        self.assertEqual(OnHour({}).get_tz('pst'), pacific)
+        self.assertEqual(OnHour({}).get_tz('pacific/auckland'), nzt)
+        self.assertEqual(OnHour({}).get_tz('gmt'), gmt)
+        self.assertEqual(OnHour({}).get_tz('chile/easterisland'), easter_island)
 
     def test_empty_tag(self):
         t = datetime.datetime.now(tzutil.gettz("America/New_York"))

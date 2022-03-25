@@ -9,23 +9,27 @@ class PublicIpAddressTest(BaseTest):
 
     def test_public_ip_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-public-ip',
-                'resource': 'azure.publicip'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-public-ip', 'resource': 'azure.publicip'}, validate=True
+            )
             self.assertTrue(p)
 
     @arm_template('vm.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-public-ip',
-            'resource': 'azure.publicip',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'mypublicip'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-public-ip',
+                'resource': 'azure.publicip',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'mypublicip',
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

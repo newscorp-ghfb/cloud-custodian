@@ -6,7 +6,6 @@ from c7n.query import QueryResourceManager, TypeInfo
 
 @resources.register('gamelift-build')
 class GameLiftBuild(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'gamelift'
         enum_spec = ('list_builds', 'Builds', None)
@@ -19,7 +18,6 @@ class GameLiftBuild(QueryResourceManager):
 
 @resources.register('gamelift-fleet')
 class GameLiftFleet(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'gamelift'
         enum_spec = ('list_fleets', 'FleetIds', None)
@@ -28,5 +26,10 @@ class GameLiftFleet(QueryResourceManager):
         name = 'Name'
         date = 'CreationTime'
         batch_detail_spec = (
-            "describe_fleet_attributes", "FleetIds", None, "FleetAttributes", None)
+            "describe_fleet_attributes",
+            "FleetIds",
+            None,
+            "FleetAttributes",
+            None,
+        )
         cfn_type = 'AWS::GameLift::Fleet'

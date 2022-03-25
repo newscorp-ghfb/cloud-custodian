@@ -68,8 +68,12 @@ RETRYABLE_EXCEPTIONS = (
 
 
 def get_default_project():
-    for k in ('GOOGLE_PROJECT', 'GCLOUD_PROJECT',
-              'GOOGLE_CLOUD_PROJECT', 'CLOUDSDK_CORE_PROJECT'):
+    for k in (
+        'GOOGLE_PROJECT',
+        'GCLOUD_PROJECT',
+        'GOOGLE_CLOUD_PROJECT',
+        'CLOUDSDK_CORE_PROJECT',
+    ):
         if k in os.environ:
             return os.environ[k]
 
@@ -90,12 +94,20 @@ def is_retryable_exception(e):
     return isinstance(e, RETRYABLE_EXCEPTIONS)
 
 
-@retry(retry_on_exception=is_retryable_exception,
-       wait_exponential_multiplier=1000,
-       wait_exponential_max=10000,
-       stop_max_attempt_number=5)
-def _create_service_api(credentials, service_name, version, developer_key=None,
-                        cache_discovery=False, http=None):
+@retry(
+    retry_on_exception=is_retryable_exception,
+    wait_exponential_multiplier=1000,
+    wait_exponential_max=10000,
+    stop_max_attempt_number=5,
+)
+def _create_service_api(
+    credentials,
+    service_name,
+    version,
+    developer_key=None,
+    cache_discovery=False,
+    http=None,
+):
     """Builds and returns a cloud API service object.
 
     Args:
@@ -133,30 +145,29 @@ def _create_service_api(credentials, service_name, version, developer_key=None,
 
 
 def _build_http(http=None):
-    """Construct an http client suitable for googleapiclient usage w/ user agent.
-    """
+    """Construct an http client suitable for googleapiclient usage w/ user agent."""
     if not http:
-        http = httplib2.Http(
-            timeout=HTTP_REQUEST_TIMEOUT, ca_certs=HTTPLIB_CA_BUNDLE)
+        http = httplib2.Http(timeout=HTTP_REQUEST_TIMEOUT, ca_certs=HTTPLIB_CA_BUNDLE)
 
     user_agent = 'Python-httplib2/{} (gzip), {}/{}'.format(
-        httplib2.__version__,
-        'custodian-gcp',
-        '0.1')
+        httplib2.__version__, 'custodian-gcp', '0.1'
+    )
     return set_user_agent(http, user_agent)
 
 
 class Session:
     """Base class for API repository for a specified Cloud API."""
 
-    def __init__(self,
-                 credentials=None,
-                 quota_max_calls=None,
-                 quota_period=None,
-                 use_rate_limiter=False,
-                 http=None,
-                 project_id=None,
-                 **kwargs):
+    def __init__(
+        self,
+        credentials=None,
+        quota_max_calls=None,
+        quota_period=None,
+        use_rate_limiter=False,
+        http=None,
+        project_id=None,
+        **kwargs
+    ):
         """Constructor.
 
         Args:
@@ -175,12 +186,14 @@ class Session:
         if not credentials:
             # Only share the http object when using the default credentials.
             self._use_cached_http = True
-            credentials, _ = google.auth.default(quota_project_id=project_id or
-            get_default_project())
+            credentials, _ = google.auth.default(
+                quota_project_id=project_id or get_default_project()
+            )
         self._credentials = with_scopes_if_required(credentials, list(CLOUD_SCOPES))
         if use_rate_limiter:
-            self._rate_limiter = RateLimiter(max_calls=quota_max_calls,
-                                             period=quota_period)
+            self._rate_limiter = RateLimiter(
+                max_calls=quota_max_calls, period=quota_period
+            )
         else:
             self._rate_limiter = None
         self._http = http
@@ -230,7 +243,8 @@ class Session:
             version,
             kw.get('developer_key'),
             kw.get('cache_discovery', False),
-            self._http or _build_http())
+            self._http or _build_http(),
+        )
 
         return ServiceClient(
             gcp_service=service,
@@ -238,18 +252,30 @@ class Session:
             credentials=self._credentials,
             rate_limiter=self._rate_limiter,
             use_cached_http=self._use_cached_http,
-            http=self._http)
+            http=self._http,
+        )
 
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class ServiceClient:
     """Base class for GCP APIs."""
 
-    def __init__(self, gcp_service, credentials, component=None,
-                 num_retries=NUM_HTTP_RETRIES, key_field='project',
-                 entity_field=None, list_key_field=None, get_key_field=None,
-                 max_results_field='maxResults', search_query_field='query',
-                 rate_limiter=None, use_cached_http=True, http=None):
+    def __init__(
+        self,
+        gcp_service,
+        credentials,
+        component=None,
+        num_retries=NUM_HTTP_RETRIES,
+        key_field='project',
+        entity_field=None,
+        list_key_field=None,
+        get_key_field=None,
+        max_results_field='maxResults',
+        search_query_field='query',
+        rate_limiter=None,
+        use_cached_http=True,
+        http=None,
+    ):
         """Constructor.
 
         Args:
@@ -322,7 +348,8 @@ class ServiceClient:
         else:
             http = _build_http()
         authorized_http = google_auth_httplib2.AuthorizedHttp(
-            self._credentials, http=http)
+            self._credentials, http=http
+        )
         if self._use_cached_http:
             self._local.http = authorized_http
         return authorized_http
@@ -466,10 +493,12 @@ class ServiceClient:
         request = self._build_request(verb, verb_arguments)
         return self._execute(request)
 
-    @retry(retry_on_exception=is_retryable_exception,
-           wait_exponential_multiplier=1000,
-           wait_exponential_max=10000,
-           stop_max_attempt_number=5)
+    @retry(
+        retry_on_exception=is_retryable_exception,
+        wait_exponential_multiplier=1000,
+        wait_exponential_max=10000,
+        stop_max_attempt_number=5,
+    )
     def _execute(self, request):
         """Run execute with retries and rate limiting.
 
@@ -484,7 +513,5 @@ class ServiceClient:
             # interface the code has to be duplicated to handle the case where
             # no rate limiter is defined.
             with self._rate_limiter:
-                return request.execute(http=self.http,
-                                       num_retries=self._num_retries)
-        return request.execute(http=self.http,
-                               num_retries=self._num_retries)
+                return request.execute(http=self.http, num_retries=self._num_retries)
+        return request.execute(http=self.http, num_retries=self._num_retries)

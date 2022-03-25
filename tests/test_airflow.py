@@ -6,7 +6,9 @@ import jmespath
 
 class TestApacheAirflow(BaseTest):
     def test_airflow_environment_value_filter(self):
-        session_factory = self.replay_flight_data('test_airflow_environment_value_filter')
+        session_factory = self.replay_flight_data(
+            'test_airflow_environment_value_filter'
+        )
         p = self.load_policy(
             {
                 "name": "airflow-name-filter",
@@ -18,7 +20,7 @@ class TestApacheAirflow(BaseTest):
                         "op": "eq",
                         "value": "testEnvironment",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -41,7 +43,7 @@ class TestApacheAirflow(BaseTest):
                         "key": "c7n:AliasName",
                         "value": "alias/mwaa",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -57,15 +59,10 @@ class TestApacheAirflow(BaseTest):
             {
                 'name': 'airflow-tag',
                 'resource': 'airflow',
-                'filters': [{
-                    'tag:env': 'absent'
-                }],
-                'actions': [{
-                    'type': 'tag',
-                    'tags': new_tag
-                }]
+                'filters': [{'tag:env': 'absent'}],
+                'actions': [{'type': 'tag', 'tags': new_tag}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(1, len(resources))
@@ -80,15 +77,10 @@ class TestApacheAirflow(BaseTest):
             {
                 'name': 'airflow-untag',
                 'resource': 'airflow',
-                'filters': [{
-                    'tag:env': 'dev'
-                }],
-                'actions': [{
-                    'type': 'remove-tag',
-                    'tags': ['env']
-                }]
+                'filters': [{'tag:env': 'dev'}],
+                'actions': [{'type': 'remove-tag', 'tags': ['env']}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(1, len(resources))

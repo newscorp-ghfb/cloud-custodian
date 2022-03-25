@@ -8,7 +8,6 @@ REGION = "us-west-2"
 
 
 class DataPipelineTest(BaseTest):
-
     def test_reporting(self):
         factory = self.replay_flight_data("test_datapipeline_reporting")
 

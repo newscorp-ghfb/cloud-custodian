@@ -15,14 +15,12 @@ setup(
     long_description=description,
     classifiers=[
         "Topic :: System :: Systems Administration",
-        "Topic :: System :: Distributed Computing"
+        "Topic :: System :: Distributed Computing",
     ],
     url="https://github.com/cloud-custodian/cloud-custodian",
     author="Kapil Thangavelu",
     license="Apache-2.0",
     packages=find_packages(),
-    entry_points={
-        'console_scripts': [
-            'c7n-salactus = c7n_salactus.cli:cli']},
+    entry_points={'console_scripts': ['c7n-salactus = c7n_salactus.cli:cli']},
     install_requires=["c7n", "click", "rq", "redis"],
 )

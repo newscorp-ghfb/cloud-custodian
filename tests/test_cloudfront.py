@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 
 
 class CloudFrontWaf(BaseTest):
-
     def test_waf(self):
         factory = self.replay_flight_data("test_distribution_waf")
         p = self.load_policy(
@@ -34,7 +33,6 @@ class CloudFrontWaf(BaseTest):
 
 
 class CloudFront(BaseTest):
-
     def test_shield_metric_filter(self):
         factory = self.replay_flight_data("test_distribution_shield_metrics")
         p = self.load_policy(
@@ -136,28 +134,20 @@ class CloudFront(BaseTest):
         self.assertEqual(
             resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
                 "CustomOriginConfig"
-            ][
-                "OriginProtocolPolicy"
-            ],
+            ]["OriginProtocolPolicy"],
             "https-only",
         )
         self.assertTrue(
-            "TLSv1.2" in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
+            "TLSv1.2"
+            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
                 "CustomOriginConfig"
-            ][
-                "OriginSslProtocols"
-            ][
-                "Items"
-            ]
+            ]["OriginSslProtocols"]["Items"]
         )
         self.assertFalse(
-            "TLSv1" in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
+            "TLSv1"
+            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
                 "CustomOriginConfig"
-            ][
-                "OriginSslProtocols"
-            ][
-                "Items"
-            ]
+            ]["OriginSslProtocols"]["Items"]
         )
 
     def test_distribution_disable(self):
@@ -188,7 +178,9 @@ class CloudFront(BaseTest):
         self.assertEqual(resp["DistributionList"]["Items"][0]["Enabled"], False)
 
     def test_distribution_check_s3_origin_missing_bucket(self):
-        factory = self.replay_flight_data("test_distribution_check_s3_origin_missing_bucket")
+        factory = self.replay_flight_data(
+            "test_distribution_check_s3_origin_missing_bucket"
+        )
 
         p = self.load_policy(
             {
@@ -198,7 +190,7 @@ class CloudFront(BaseTest):
                     {
                         "type": "mismatch-s3-origin",
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -218,9 +210,9 @@ class CloudFront(BaseTest):
                     {
                         "type": "distribution-config",
                         "key": "Logging.Enabled",
-                        "value": True
+                        "value": True,
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -228,7 +220,9 @@ class CloudFront(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]['c7n:distribution-config']['Logging']['Enabled'], True)
+        self.assertEqual(
+            resources[0]['c7n:distribution-config']['Logging']['Enabled'], True
+        )
 
     def test_distribution_check_logging_enabled_error(self):
         factory = self.replay_flight_data("test_distribution_check_logging_enabled")
@@ -237,13 +231,14 @@ class CloudFront(BaseTest):
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
-            'cloudfront').exceptions.NoSuchDistribution = (
-                client.exceptions.NoSuchDistribution)
+            'cloudfront'
+        ).exceptions.NoSuchDistribution = client.exceptions.NoSuchDistribution
 
-        mock_factory().client('cloudfront').get_distribution_config.side_effect = (
-            client.exceptions.NoSuchDistribution(
-                {'Error': {'Code': 'xyz'}},
-                operation_name='get_distribution_config'))
+        mock_factory().client(
+            'cloudfront'
+        ).get_distribution_config.side_effect = client.exceptions.NoSuchDistribution(
+            {'Error': {'Code': 'xyz'}}, operation_name='get_distribution_config'
+        )
         p = self.load_policy(
             {
                 "name": "test_distribution_logging_enabled",
@@ -252,22 +247,23 @@ class CloudFront(BaseTest):
                     {
                         "type": "distribution-config",
                         "key": "Logging.Enabled",
-                        "value": True
+                        "value": True,
                     }
-                ]
+                ],
             },
             session_factory=mock_factory,
         )
 
         try:
-            p.resource_manager.filters[0].process(
-                [{'Id': 'abc'}])
+            p.resource_manager.filters[0].process([{'Id': 'abc'}])
         except client.exceptions.NoSuchDistribution:
             self.fail('should not raise')
         mock_factory().client('cloudfront').get_distribution_config.assert_called_once()
 
     def test_streaming_distribution_check_logging_enabled(self):
-        factory = self.replay_flight_data("test_streaming_distribution_check_logging_enabled")
+        factory = self.replay_flight_data(
+            "test_streaming_distribution_check_logging_enabled"
+        )
 
         p = self.load_policy(
             {
@@ -277,9 +273,9 @@ class CloudFront(BaseTest):
                     {
                         "type": "distribution-config",
                         "key": "Logging.Enabled",
-                        "value": True
+                        "value": True,
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -287,23 +283,30 @@ class CloudFront(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]['c7n:distribution-config']['Logging']['Enabled'],
-            True)
+        self.assertEqual(
+            resources[0]['c7n:distribution-config']['Logging']['Enabled'], True
+        )
 
     def test_streaming_distribution_check_logging_enabled_error(self):
-        factory = self.replay_flight_data("test_streaming_distribution_check_logging_enabled")
+        factory = self.replay_flight_data(
+            "test_streaming_distribution_check_logging_enabled"
+        )
 
         client = factory().client("cloudfront")
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
-            'cloudfront').exceptions.NoSuchStreamingDistribution = (
-                client.exceptions.NoSuchStreamingDistribution)
+            'cloudfront'
+        ).exceptions.NoSuchStreamingDistribution = (
+            client.exceptions.NoSuchStreamingDistribution
+        )
 
-        mock_factory().client('cloudfront').get_streaming_distribution_config.side_effect = (
-            client.exceptions.NoSuchStreamingDistribution(
-                {'Error': {'Code': 'xyz'}},
-                operation_name='get_streaming_distribution_config'))
+        mock_factory().client(
+            'cloudfront'
+        ).get_streaming_distribution_config.side_effect = client.exceptions.NoSuchStreamingDistribution(
+            {'Error': {'Code': 'xyz'}},
+            operation_name='get_streaming_distribution_config',
+        )
         p = self.load_policy(
             {
                 "name": "test_streaming_distribution_logging_enabled",
@@ -312,19 +315,20 @@ class CloudFront(BaseTest):
                     {
                         "type": "distribution-config",
                         "key": "Logging.Enabled",
-                        "value": True
+                        "value": True,
                     }
-                ]
+                ],
             },
             session_factory=mock_factory,
         )
 
         try:
-            p.resource_manager.filters[0].process(
-                [{'Id': 'abc'}])
+            p.resource_manager.filters[0].process([{'Id': 'abc'}])
         except client.exceptions.NoSuchDistribution:
             self.fail('should not raise')
-        mock_factory().client('cloudfront').get_streaming_distribution_config.assert_called_once()
+        mock_factory().client(
+            'cloudfront'
+        ).get_streaming_distribution_config.assert_called_once()
 
     def test_distribution_tag(self):
         factory = self.replay_flight_data("test_distrbution_tag")
@@ -398,7 +402,7 @@ class CloudFront(BaseTest):
             {
                 "name": "cloudfront-tagging-us-east-1",
                 "resource": "distribution",
-                "filters": [{"tag:tag": "present"}]
+                "filters": [{"tag:tag": "present"}],
             },
             config=dict(region='us-east-1'),
             session_factory=factory,
@@ -408,7 +412,7 @@ class CloudFront(BaseTest):
             {
                 "name": "cloudfront-tagging-us-west-2",
                 "resource": "distribution",
-                "filters": [{"tag:tag": "present"}]
+                "filters": [{"tag:tag": "present"}],
             },
             config=dict(region='us-west-2'),
             session_factory=factory,
@@ -443,8 +447,8 @@ class CloudFront(BaseTest):
                                 "IncludeCookies": False,
                                 "Bucket": 'test-logging.s3.amazonaws.com',
                                 "Prefix": '',
-                            }
-                        }
+                            },
+                        },
                     }
                 ],
             },
@@ -459,12 +463,12 @@ class CloudFront(BaseTest):
         client = local_session(factory).client("cloudfront")
         dist_id = resources[0]['Id']
         resp = client.get_distribution_config(Id=dist_id)
-        self.assertEqual(
-            resp['DistributionConfig']['Logging']['Enabled'], True
-        )
+        self.assertEqual(resp['DistributionConfig']['Logging']['Enabled'], True)
 
     def test_cloudfront_update_streaming_distribution(self):
-        factory = self.replay_flight_data("test_distribution_update_streaming_distribution")
+        factory = self.replay_flight_data(
+            "test_distribution_update_streaming_distribution"
+        )
         p = self.load_policy(
             {
                 "name": "cloudfront-tagging-us-east-1",
@@ -485,7 +489,7 @@ class CloudFront(BaseTest):
                                 "Bucket": 'test-streaming-distribution-logging.s3.amazonaws.com',
                                 "Prefix": '',
                             }
-                        }
+                        },
                     }
                 ],
             },

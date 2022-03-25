@@ -9,7 +9,6 @@ from c7n_gcp.filters import IamPolicyFilter
 
 @resources.register('bucket')
 class Bucket(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'storage'
         version = 'v1'
@@ -17,8 +16,7 @@ class Bucket(QueryResourceManager):
         scope = 'project'
         enum_spec = ('list', 'items[]', {'projection': 'full'})
         name = id = 'name'
-        default_report_fields = [
-            "name", "timeCreated", "location", "storageClass"]
+        default_report_fields = ["name", "timeCreated", "location", "storageClass"]
         asset_type = "storage.googleapis.com/Bucket"
         scc_type = "google.cloud.storage.Bucket"
         metric_key = 'resource.labels.bucket_name'
@@ -26,7 +24,8 @@ class Bucket(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'bucket': resource_info['bucket_name']})
+                'get', {'bucket': resource_info['bucket_name']}
+            )
 
 
 @Bucket.filter_registry.register('iam-policy')
@@ -34,6 +33,7 @@ class BucketIamPolicyFilter(IamPolicyFilter):
     """
     Overrides the base implementation to process bucket resources correctly.
     """
+
     permissions = ('storage.buckets.getIamPolicy',)
 
     def _verb_arguments(self, resource):
@@ -78,7 +78,11 @@ class BucketLevelAccess(MethodAction):
     #
     def get_resource_params(self, model, resource):
         enabled = self.data.get('state', True)
-        return {'bucket': resource['name'],
-                'fields': 'iamConfiguration',
-                'projection': 'noAcl',  # not documented but
-                'body': {'iamConfiguration': {'uniformBucketLevelAccess': {'enabled': enabled}}}}
+        return {
+            'bucket': resource['name'],
+            'fields': 'iamConfiguration',
+            'projection': 'noAcl',  # not documented but
+            'body': {
+                'iamConfiguration': {'uniformBucketLevelAccess': {'enabled': enabled}}
+            },
+        }

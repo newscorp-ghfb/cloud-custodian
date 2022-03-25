@@ -57,11 +57,17 @@ class FunctionalActionsTagsTest(BaseTest):
 
     @arm_template('vm.json')
     def test_mark_for_op(self):
-        self._run_policy([{'type': 'mark-for-op',
-                           'tag': 'cctest_mark',
-                           'op': 'delete',
-                           'msg': '{op}, {action_date}',
-                           'days': self.DAYS}])
+        self._run_policy(
+            [
+                {
+                    'type': 'mark-for-op',
+                    'tag': 'cctest_mark',
+                    'op': 'delete',
+                    'msg': '{op}, {action_date}',
+                    'days': self.DAYS,
+                }
+            ]
+        )
 
         expected_date = utils.utcnow() + datetime.timedelta(days=self.DAYS)
         expected = 'delete, ' + expected_date.strftime('%Y/%m/%d')
@@ -69,8 +75,12 @@ class FunctionalActionsTagsTest(BaseTest):
 
     @arm_template('vm.json')
     def test_autotag_user_and_date(self):
-        self._run_policy([{'type': 'auto-tag-user', 'tag': 'cctest_email', 'days': 1},
-                          {'type': 'auto-tag-date', 'tag': 'cctest_date', 'days': 1}])
+        self._run_policy(
+            [
+                {'type': 'auto-tag-user', 'tag': 'cctest_email', 'days': 1},
+                {'type': 'auto-tag-date', 'tag': 'cctest_date', 'days': 1},
+            ]
+        )
         self.assertIsNotNone(self._get_tags().get('cctest_email'))
         self.assertIsNotNone(self._get_tags().get('cctest_date'))
 
@@ -81,15 +91,19 @@ class FunctionalActionsTagsTest(BaseTest):
         tools.set_tags(self.client, self.rg_name, self.vm_name, tags)
 
     def _run_policy(self, actions):
-        return self.load_policy({
-            'name': 'test-tag',
-            'resource': 'azure.vm',
-            'filters': [{
-                'type': 'value',
-                'key': 'name',
-                'op': 'eq',
-                'value_type': 'normalize',
-                'value': self.vm_name
-            }],
-            'actions': actions
-        }).run()
+        return self.load_policy(
+            {
+                'name': 'test-tag',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': self.vm_name,
+                    }
+                ],
+                'actions': actions,
+            }
+        ).run()
