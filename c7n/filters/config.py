@@ -36,19 +36,29 @@ class ConfigCompliance(Filter):
     Also note, custodian has direct support for deploying policies as config
     rules see https://cloudcustodian.io/docs/policy/lambda.html#config-rules
     """
+
     permissions = ('config:DescribeComplianceByConfigRule',)
     schema = type_schema(
         'config-compliance',
         required=('rules',),
         op={'enum': ['or', 'and']},
-        eval_filters={'type': 'array', 'items': {
-            'oneOf': [
-                {'$ref': '#/definitions/filters/valuekv'},
-                {'$ref': '#/definitions/filters/value'}]}},
-        states={'type': 'array', 'items': {'enum': [
-            'COMPLIANT', 'NON_COMPLIANT',
-            'NOT_APPLICABLE', 'INSUFFICIENT_DATA']}},
-        rules={'type': 'array', 'items': {'type': 'string'}})
+        eval_filters={
+            'type': 'array',
+            'items': {
+                'oneOf': [
+                    {'$ref': '#/definitions/filters/valuekv'},
+                    {'$ref': '#/definitions/filters/value'},
+                ]
+            },
+        },
+        states={
+            'type': 'array',
+            'items': {
+                'enum': ['COMPLIANT', 'NON_COMPLIANT', 'NOT_APPLICABLE', 'INSUFFICIENT_DATA']
+            },
+        },
+        rules={'type': 'array', 'items': {'type': 'string'}},
+    )
     schema_alias = True
     annotation_key = 'c7n:config-compliance'
 
@@ -62,29 +72,26 @@ class ConfigCompliance(Filter):
 
         for rid in rule_ids:
             pager = client.get_paginator('get_compliance_details_by_config_rule')
-            for page in pager.paginate(
-                    ConfigRuleName=rid, ComplianceTypes=states):
+            for page in pager.paginate(ConfigRuleName=rid, ComplianceTypes=states):
                 evaluations = page.get('EvaluationResults', ())
 
                 for e in evaluations:
-                    rident = e['EvaluationResultIdentifier'][
-                        'EvaluationResultQualifier']
+                    rident = e['EvaluationResultIdentifier']['EvaluationResultQualifier']
                     # for multi resource type rules, only look at
                     # results for the resource type currently being
                     # processed.
                     if rident['ResourceType'] not in (
-                            resource_model.config_type,
-                            resource_model.cfn_type):
+                        resource_model.config_type,
+                        resource_model.cfn_type,
+                    ):
                         continue
 
                     if not filters:
-                        resource_map.setdefault(
-                            rident['ResourceId'], []).append(e)
+                        resource_map.setdefault(rident['ResourceId'], []).append(e)
                         continue
 
                     if op([f.match(e) for f in filters]):
-                        resource_map.setdefault(
-                            rident['ResourceId'], []).append(e)
+                        resource_map.setdefault(rident['ResourceId'], []).append(e)
 
         return resource_map
 
@@ -100,6 +107,7 @@ class ConfigCompliance(Filter):
 
         # Avoid static/import time dep on boto in filters package
         from c7n.resources.aws import Arn
+
         results = []
         for arn, r in zip(self.manager.get_arns(resources), resources):
             # many aws provided rules are inconsistent in their
@@ -129,8 +137,10 @@ class ConfigCompliance(Filter):
         supported by aws config, automatically, register the
         config-compliance filter.
         """
-        if (resource_class.resource_type.cfn_type is None and
-                resource_class.resource_type.config_type is None):
+        if (
+            resource_class.resource_type.cfn_type is None
+            and resource_class.resource_type.config_type is None
+        ):
             return
         resource_class.filter_registry.register('config-compliance', klass)
 

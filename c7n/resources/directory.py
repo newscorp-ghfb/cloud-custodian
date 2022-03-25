@@ -9,7 +9,6 @@ from c7n.tags import Tag, RemoveTag, universal_augment, TagDelayedAction, TagAct
 
 @resources.register('directory')
 class Directory(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "ds"
         enum_spec = ("describe_directories", "DirectoryDescriptions", None)
@@ -24,8 +23,7 @@ class Directory(QueryResourceManager):
         client = local_session(self.session_factory).client('ds')
 
         def _add_tags(d):
-            d['Tags'] = client.list_tags_for_resource(
-                ResourceId=d['DirectoryId']).get('Tags', [])
+            d['Tags'] = client.list_tags_for_resource(ResourceId=d['DirectoryId']).get('Tags', [])
             return d
 
         return list(map(_add_tags, directories))
@@ -67,13 +65,13 @@ class DirectoryTag(Tag):
                     key: desired-tag
                     value: desired-value
     """
+
     permissions = ('ds:AddTagsToResource',)
 
     def process_resource_set(self, client, directories, tags):
         for d in directories:
             try:
-                client.add_tags_to_resource(
-                    ResourceId=d['DirectoryId'], Tags=tags)
+                client.add_tags_to_resource(ResourceId=d['DirectoryId'], Tags=tags)
             except client.exceptions.EntityDoesNotExistException:
                 continue
 
@@ -95,13 +93,13 @@ class DirectoryRemoveTag(RemoveTag):
                   - type: remove-tag
                     tags: ["desired-tag"]
     """
+
     permissions = ('ds:RemoveTagsFromResource',)
 
     def process_resource_set(self, client, directories, tags):
         for d in directories:
             try:
-                client.remove_tags_from_resource(
-                    ResourceId=d['DirectoryId'], TagKeys=tags)
+                client.remove_tags_from_resource(ResourceId=d['DirectoryId'], TagKeys=tags)
             except client.exceptions.EntityDoesNotExistException:
                 continue
 
@@ -112,7 +110,6 @@ Directory.action_registry.register('mark-for-op', TagDelayedAction)
 
 @resources.register('cloud-directory')
 class CloudDirectory(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "clouddirectory"
         enum_spec = ("list_directories", "Directories", {'state': 'ENABLED'})

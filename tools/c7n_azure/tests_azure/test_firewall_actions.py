@@ -6,7 +6,6 @@ import pytest
 
 
 class FirewallActionsTest(BaseTest):
-
     def test_build_bypass_rules(self):
         data = {
             'type': 'set-firewall-rules',
@@ -23,9 +22,7 @@ class FirewallActionsTest(BaseTest):
         self.assertEqual('Logging,Metrics,Hello,World', rules)
 
     def test_build_vnet_rules(self):
-        data = {
-            'virtual-network-rules': ['id1', 'id2']
-        }
+        data = {'virtual-network-rules': ['id1', 'id2']}
 
         action = StorageSetFirewallAction(data)
         action.append = False
@@ -37,9 +34,7 @@ class FirewallActionsTest(BaseTest):
         self.assertEqual(sorted(['id1', 'id2', 'Hello', 'World']), sorted(rules))
 
     def test_build_ip_rules(self):
-        data = {
-            'ip-rules': ['1.1.1.1', '6.0.0.0/16']
-        }
+        data = {'ip-rules': ['1.1.1.1', '6.0.0.0/16']}
 
         action = StorageSetFirewallAction(data)
         action.append = False
@@ -53,9 +48,7 @@ class FirewallActionsTest(BaseTest):
     # Service Tag IP lists are dynamic and will always be changing in live tests
     @pytest.mark.skiplive
     def test_build_ip_rules_alias(self):
-        data = {
-            'ip-rules': ['ServiceTags.ApiManagement.WestUS', '6.0.0.0/16']
-        }
+        data = {'ip-rules': ['ServiceTags.ApiManagement.WestUS', '6.0.0.0/16']}
 
         action = StorageSetFirewallAction(data)
         action.append = False

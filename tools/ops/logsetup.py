@@ -48,13 +48,13 @@ def get_groups(session_factory, options):
     groups = list(itertools.chain(*[rp['logGroups'] for rp in results]))
 
     if options.group:
-        log.info("Filtering on %s for %d groups" % (
-            options.group,
-            len([g['logGroupName'] for g in groups])))
+        log.info(
+            "Filtering on %s for %d groups"
+            % (options.group, len([g['logGroupName'] for g in groups]))
+        )
         groups = [g for g in groups if g['logGroupName'] in options.group]
 
-    log.info("Subscribing to groups: %s" % (
-        " \n".join([g['logGroupName'] for g in groups])))
+    log.info("Subscribing to groups: %s" % (" \n".join([g['logGroupName'] for g in groups])))
     return groups
 
 
@@ -69,8 +69,7 @@ def main():
         print("Error: Either group or prefix must be specified")
         sys.exit(1)
 
-    session_factory = SessionFactory(
-        options.region, options.profile, options.assume)
+    session_factory = SessionFactory(options.region, options.profile, options.assume)
 
     groups = get_groups(session_factory, options)
     func = logsub.get_function(
@@ -80,13 +79,15 @@ def main():
         sns_topic=options.topic,
         subject=options.subject,
         log_groups=groups,
-        pattern=options.pattern)
+        pattern=options.pattern,
+    )
     manager = LambdaManager(session_factory)
 
     try:
         manager.publish(func)
     except Exception:
         import traceback, pdb, sys
+
         traceback.print_exc()
         pdb.post_mortem(sys.exc_info()[-1])
 

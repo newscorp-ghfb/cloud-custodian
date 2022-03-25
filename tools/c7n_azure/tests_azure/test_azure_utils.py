@@ -7,12 +7,20 @@ import types
 import pytest
 from azure.mgmt.managementgroups.models import DescendantInfo
 from c7n_azure.tags import TagHelper
-from c7n_azure.utils import (AppInsightsHelper, ManagedGroupHelper, Math,
-                             PortsRangeHelper, ResourceIdParser, StringUtils,
-                             custodian_azure_send_override,
-                             get_keyvault_auth_endpoint, get_keyvault_secret,
-                             get_service_tag_ip_space, is_resource_group,
-                             is_resource_group_id)
+from c7n_azure.utils import (
+    AppInsightsHelper,
+    ManagedGroupHelper,
+    Math,
+    PortsRangeHelper,
+    ResourceIdParser,
+    StringUtils,
+    custodian_azure_send_override,
+    get_keyvault_auth_endpoint,
+    get_keyvault_secret,
+    get_service_tag_ip_space,
+    is_resource_group,
+    is_resource_group_id,
+)
 from mock import Mock, patch
 from msrestazure.azure_cloud import AZURE_CHINA_CLOUD, AZURE_PUBLIC_CLOUD
 
@@ -25,13 +33,15 @@ except Exception:
 
 RESOURCE_ID = (
     "/subscriptions/%s/resourceGroups/"
-    "rgtest/providers/Microsoft.Compute/virtualMachines/nametest" % DEFAULT_SUBSCRIPTION_ID)
+    "rgtest/providers/Microsoft.Compute/virtualMachines/nametest" % DEFAULT_SUBSCRIPTION_ID
+)
 
 
 RESOURCE_ID_CHILD = (
     "/subscriptions/%s/resourceGroups/"
     "rgtest/providers/Microsoft.Sql/servers/testserver/"
-    "databases/testdb" % DEFAULT_SUBSCRIPTION_ID)
+    "databases/testdb" % DEFAULT_SUBSCRIPTION_ID
+)
 
 GUID = '00000000-0000-0000-0000-000000000000'
 
@@ -63,8 +73,9 @@ class UtilsTest(BaseTest):
         self.assertEqual(ResourceIdParser.get_resource_type(RESOURCE_ID_CHILD), "servers/databases")
 
     def test_get_full_type(self):
-        self.assertEqual(ResourceIdParser.get_full_type(RESOURCE_ID),
-                         "Microsoft.Compute/virtualMachines")
+        self.assertEqual(
+            ResourceIdParser.get_full_type(RESOURCE_ID), "Microsoft.Compute/virtualMachines"
+        )
 
     def test_resource_name(self):
         self.assertEqual(ResourceIdParser.get_resource_name(RESOURCE_ID), "nametest")
@@ -130,56 +141,90 @@ class UtilsTest(BaseTest):
         self.assertEqual(PortsRangeHelper.validate_ports_string('65536-65537'), False)
 
     def test_get_ports_strings_from_list(self):
-        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([]),
-                         [])
-        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([10, 11]),
-                         ['10-11'])
-        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([10, 12, 13, 14]),
-                         ['10', '12-14'])
-        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([10, 12, 13, 14, 20, 21, 22]),
-                         ['10', '12-14', '20-22'])
+        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([]), [])
+        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([10, 11]), ['10-11'])
+        self.assertEqual(
+            PortsRangeHelper.get_ports_strings_from_list([10, 12, 13, 14]), ['10', '12-14']
+        )
+        self.assertEqual(
+            PortsRangeHelper.get_ports_strings_from_list([10, 12, 13, 14, 20, 21, 22]),
+            ['10', '12-14', '20-22'],
+        )
 
     def test_build_ports_dict(self):
         securityRules = [
-            {'properties': {'destinationPortRange': '80-84',
-                            'priority': 100,
-                            'direction': 'Outbound',
-                            'access': 'Allow',
-                            'protocol': 'TCP'}},
-            {'properties': {'destinationPortRange': '85-89',
-                            'priority': 110,
-                            'direction': 'Outbound',
-                            'access': 'Allow',
-                            'protocol': 'UDP'}},
-            {'properties': {'destinationPortRange': '80-84',
-                            'priority': 120,
-                            'direction': 'Inbound',
-                            'access': 'Deny',
-                            'protocol': 'TCP'}},
-            {'properties': {'destinationPortRange': '85-89',
-                            'priority': 130,
-                            'direction': 'Inbound',
-                            'access': 'Deny',
-                            'protocol': 'UDP'}},
-            {'properties': {'destinationPortRange': '80-89',
-                            'priority': 140,
-                            'direction': 'Inbound',
-                            'access': 'Allow',
-                            'protocol': '*'}}]
+            {
+                'properties': {
+                    'destinationPortRange': '80-84',
+                    'priority': 100,
+                    'direction': 'Outbound',
+                    'access': 'Allow',
+                    'protocol': 'TCP',
+                }
+            },
+            {
+                'properties': {
+                    'destinationPortRange': '85-89',
+                    'priority': 110,
+                    'direction': 'Outbound',
+                    'access': 'Allow',
+                    'protocol': 'UDP',
+                }
+            },
+            {
+                'properties': {
+                    'destinationPortRange': '80-84',
+                    'priority': 120,
+                    'direction': 'Inbound',
+                    'access': 'Deny',
+                    'protocol': 'TCP',
+                }
+            },
+            {
+                'properties': {
+                    'destinationPortRange': '85-89',
+                    'priority': 130,
+                    'direction': 'Inbound',
+                    'access': 'Deny',
+                    'protocol': 'UDP',
+                }
+            },
+            {
+                'properties': {
+                    'destinationPortRange': '80-89',
+                    'priority': 140,
+                    'direction': 'Inbound',
+                    'access': 'Allow',
+                    'protocol': '*',
+                }
+            },
+        ]
         nsg = {'properties': {'securityRules': securityRules}}
 
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Inbound', 'TCP'),
-                         {k: k > 84 for k in range(80, 90)})
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Inbound', 'UDP'),
-                         {k: k < 85 for k in range(80, 90)})
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Inbound', '*'),
-                         {k: False for k in range(80, 90)})
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Outbound', 'TCP'),
-                         {k: True for k in range(80, 85)})
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Outbound', 'UDP'),
-                         {k: True for k in range(85, 90)})
-        self.assertEqual(PortsRangeHelper.build_ports_dict(nsg, 'Outbound', '*'),
-                         {k: True for k in range(80, 90)})
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Inbound', 'TCP'),
+            {k: k > 84 for k in range(80, 90)},
+        )
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Inbound', 'UDP'),
+            {k: k < 85 for k in range(80, 90)},
+        )
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Inbound', '*'),
+            {k: False for k in range(80, 90)},
+        )
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Outbound', 'TCP'),
+            {k: True for k in range(80, 85)},
+        )
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Outbound', 'UDP'),
+            {k: True for k in range(85, 90)},
+        )
+        self.assertEqual(
+            PortsRangeHelper.build_ports_dict(nsg, 'Outbound', '*'),
+            {k: True for k in range(80, 90)},
+        )
 
     def test_snake_to_camel(self):
         self.assertEqual(StringUtils.snake_to_camel(""), "")
@@ -194,12 +239,15 @@ class UtilsTest(BaseTest):
         self.assertEqual(StringUtils.naming_hash(source, 10), '16aba5393a')
         self.assertNotEqual(StringUtils.naming_hash(source), StringUtils.naming_hash(source2))
 
-    @patch('azure.mgmt.applicationinsights.v2015_05_01.operations.ComponentsOperations.get',
-           return_value=type(str('result_data'), (), {'instrumentation_key': GUID}))
+    @patch(
+        'azure.mgmt.applicationinsights.v2015_05_01.operations.ComponentsOperations.get',
+        return_value=type(str('result_data'), (), {'instrumentation_key': GUID}),
+    )
     def test_app_insights_get_instrumentation_key(self, mock_handler_run):
         self.assertEqual(AppInsightsHelper.get_instrumentation_key('azure://' + GUID), GUID)
-        self.assertEqual(AppInsightsHelper.get_instrumentation_key('azure://resourceGroup/name'),
-                         GUID)
+        self.assertEqual(
+            AppInsightsHelper.get_instrumentation_key('azure://resourceGroup/name'), GUID
+        )
         mock_handler_run.assert_called_once_with('resourceGroup', 'name')
 
     @patch('c7n_azure.utils.send_logger.debug')
@@ -209,7 +257,7 @@ class UtilsTest(BaseTest):
 
         response_dict = {
             'headers': {'x-ms-ratelimit-remaining-subscription-reads': '12000'},
-            'status_code': 200
+            'status_code': 200,
         }
         mock.orig_send.return_value = type(str('response'), (), response_dict)
         mock.send('')
@@ -223,10 +271,7 @@ class UtilsTest(BaseTest):
         mock = Mock()
         mock.send = types.MethodType(custodian_azure_send_override, mock)
 
-        response_dict = {
-            'headers': {'Retry-After': 0},
-            'status_code': 429
-        }
+        response_dict = {'headers': {'Retry-After': 0}, 'status_code': 429}
         mock.orig_send.return_value = type(str('response'), (), response_dict)
         mock.send('')
 
@@ -239,10 +284,7 @@ class UtilsTest(BaseTest):
         mock = Mock()
         mock.send = types.MethodType(custodian_azure_send_override, mock)
 
-        response_dict = {
-            'headers': {'Retry-After': 60},
-            'status_code': 429
-        }
+        response_dict = {'headers': {'Retry-After': 60}, 'status_code': 429}
         mock.orig_send.return_value = type(str('response'), (), response_dict)
         mock.send('')
 
@@ -255,10 +297,7 @@ class UtilsTest(BaseTest):
         mock = Mock()
         mock.send = types.MethodType(custodian_azure_send_override, mock)
 
-        response_dict = {
-            'headers': {},
-            'status_code': 429
-        }
+        response_dict = {'headers': {}, 'status_code': 429}
         mock.orig_send.return_value = type(str('response'), (), response_dict)
 
         with patch('time.sleep', new_callable=time.sleep(0)):
@@ -271,13 +310,13 @@ class UtilsTest(BaseTest):
     managed_group_return_value = [
         _get_descendant_info(type='managementGroups/subscriptions', name=DEFAULT_SUBSCRIPTION_ID),
         _get_descendant_info(type='Microsoft.Management/managementGroups'),
-        _get_descendant_info(type='Microsoft.Management/managementGroups/subscriptions', name=GUID)
+        _get_descendant_info(type='Microsoft.Management/managementGroups/subscriptions', name=GUID),
     ]
 
-    @patch((
-        'azure.mgmt.managementgroups.operations'
-        '.ManagementGroupsOperations.get_descendants'),
-        return_value=managed_group_return_value)
+    @patch(
+        ('azure.mgmt.managementgroups.operations' '.ManagementGroupsOperations.get_descendants'),
+        return_value=managed_group_return_value,
+    )
     def test_managed_group_helper(self, _1):
         sub_ids = ManagedGroupHelper.get_subscriptions_list('test-group', self.session)
         self.assertEqual(sub_ids, [DEFAULT_SUBSCRIPTION_ID, GUID])
@@ -285,9 +324,9 @@ class UtilsTest(BaseTest):
     def test_get_keyvault_secret(self):
         mock = Mock()
         mock.value = '{"client_id": "client", "client_secret": "secret"}'
-        with patch('azure.common.credentials.ServicePrincipalCredentials.__init__',
-                   return_value=None), \
-                patch('azure.keyvault.secrets.SecretClient.get_secret', return_value=mock):
+        with patch(
+            'azure.common.credentials.ServicePrincipalCredentials.__init__', return_value=None
+        ), patch('azure.keyvault.secrets.SecretClient.get_secret', return_value=mock):
 
             reload(sys.modules['c7n_azure.utils'])
 
@@ -300,18 +339,21 @@ class UtilsTest(BaseTest):
         # Get with region
         result = get_service_tag_ip_space('ApiManagement', 'WestUS')
         self.assertEqual(3, len(result))
-        self.assertEqual({"13.64.39.16/32",
-                          "40.112.242.148/31",
-                          "40.112.243.240/28"}, set(result))
+        self.assertEqual({"13.64.39.16/32", "40.112.242.148/31", "40.112.243.240/28"}, set(result))
 
         # Get without region
         result = get_service_tag_ip_space('ApiManagement')
         self.assertEqual(5, len(result))
-        self.assertEqual({"13.69.64.76/31",
-                          "13.69.66.144/28",
-                          "23.101.67.140/32",
-                          "51.145.179.78/32",
-                          "137.117.160.56/32"}, set(result))
+        self.assertEqual(
+            {
+                "13.69.64.76/31",
+                "13.69.66.144/28",
+                "23.101.67.140/32",
+                "51.145.179.78/32",
+                "137.117.160.56/32",
+            },
+            set(result),
+        )
 
         # Invalid tag
         result = get_service_tag_ip_space('foo')

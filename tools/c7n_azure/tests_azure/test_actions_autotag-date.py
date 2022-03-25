@@ -15,18 +15,22 @@ class ActionsAutotagDateTest(BaseTest):
 
     existing_tags = {'pre-existing-1': 'unmodified', 'pre-existing-2': 'unmodified'}
 
-    vm_id = "/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourcegroups/" \
-            "TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm"
+    vm_id = (
+        "/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourcegroups/"
+        "TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm"
+    )
 
-    first_event = EventData.from_dict({
-        "caller": "cloud@custodian.com",
-        "id": vm_id + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
-        "operationName": {
-            "value": "Microsoft.Compute/virtualMachines/write",
-            "localizedValue": "Create or Update Virtual Machine"
-        },
-        "eventTimestamp": "2019-05-01T15:20:04.8336028Z"
-    })
+    first_event = EventData.from_dict(
+        {
+            "caller": "cloud@custodian.com",
+            "id": vm_id + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
+            "operationName": {
+                "value": "Microsoft.Compute/virtualMachines/write",
+                "localizedValue": "Create or Update Virtual Machine",
+            },
+            "eventTimestamp": "2019-05-01T15:20:04.8336028Z",
+        }
+    )
 
     def __init__(self, *args, **kwargs):
         super(ActionsAutotagDateTest, self).__init__(*args, **kwargs)
@@ -38,44 +42,48 @@ class ActionsAutotagDateTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'auto-tag-date',
-                     'tag': 'CreatedDate'},
-                ]),
-                validate=True))
+                tools.get_policy(
+                    [
+                        {'type': 'auto-tag-date', 'tag': 'CreatedDate'},
+                    ]
+                ),
+                validate=True,
+            )
+        )
 
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'auto-tag-date',
-                     'tag': 'CreatedDate',
-                     'format': '%m-%d-%Y'},
-                ]),
-                validate=True))
+                tools.get_policy(
+                    [
+                        {'type': 'auto-tag-date', 'tag': 'CreatedDate', 'format': '%m-%d-%Y'},
+                    ]
+                ),
+                validate=True,
+            )
+        )
 
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
-            self.load_policy(tools.get_policy([
-                {'type': 'auto-tag-date',
-                 'tag': 'CreatedDate',
-                 'days': 91}
-            ]), validate=True)
+            self.load_policy(
+                tools.get_policy([{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 91}]),
+                validate=True,
+            )
 
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
-            self.load_policy(tools.get_policy([
-                {'type': 'auto-tag-date',
-                 'tag': 'CreatedDate',
-                 'days': 0}
-            ]), validate=True)
+            self.load_policy(
+                tools.get_policy([{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 0}]),
+                validate=True,
+            )
 
         with self.assertRaises(PolicyValidationError):
             # Event grid mode is incompatible with days
-            self.load_policy(tools.get_policy_event_grid([
-                {'type': 'auto-tag-date',
-                 'tag': 'CreatedDate',
-                 'days': 40}
-            ]), validate=True)
+            self.load_policy(
+                tools.get_policy_event_grid(
+                    [{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 40}]
+                ),
+                validate=True,
+            )
 
     @patch.object(AutoTagBase, '_get_first_event', return_value=first_event)
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')

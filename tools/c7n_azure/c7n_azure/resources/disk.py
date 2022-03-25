@@ -36,6 +36,6 @@ class Disk(ArmResourceManager):
             'location',
             'resourceGroup',
             'properties.diskState',
-            'sku.name'
+            'sku.name',
         )
         resource_type = 'Microsoft.Compute/disks'

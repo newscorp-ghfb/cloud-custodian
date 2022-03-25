@@ -27,10 +27,5 @@ class RouteTable(ArmResourceManager):
         service = 'azure.mgmt.network'
         client = 'NetworkManagementClient'
         enum_spec = ('route_tables', 'list_all', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'properties.subnets[].id'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'properties.subnets[].id')
         resource_type = 'Microsoft.Network/routeTables'

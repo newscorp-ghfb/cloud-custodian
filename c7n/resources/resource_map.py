@@ -66,7 +66,8 @@ ResourceMap = {
     "aws.eks-nodegroup": "c7n.resources.eks.NodeGroup",
     "aws.elasticbeanstalk": "c7n.resources.elasticbeanstalk.ElasticBeanstalk",
     "aws.elasticbeanstalk-environment": (
-        "c7n.resources.elasticbeanstalk.ElasticBeanstalkEnvironment"),
+        "c7n.resources.elasticbeanstalk.ElasticBeanstalkEnvironment"
+    ),
     "aws.elasticache-group": "c7n.resources.elasticache.ElastiCacheReplicationGroup",
     "aws.elasticsearch": "c7n.resources.elasticsearch.ElasticSearchDomain",
     "aws.elasticsearch-reserved": "c7n.resources.elasticsearch.ReservedInstances",
@@ -213,5 +214,5 @@ ResourceMap = {
     "aws.waf-regional": "c7n.resources.waf.RegionalWAF",
     "aws.workspaces": "c7n.resources.workspaces.Workspace",
     "aws.workspaces-directory": "c7n.resources.workspaces.WorkspaceDirectory",
-    "aws.workspaces-image": "c7n.resources.workspaces.WorkspaceImage"
+    "aws.workspaces-image": "c7n.resources.workspaces.WorkspaceImage",
 }

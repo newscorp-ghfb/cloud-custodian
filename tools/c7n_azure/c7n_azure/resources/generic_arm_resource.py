@@ -12,7 +12,6 @@ from c7n_azure.utils import ResourceIdParser, is_resource_group_id
 
 
 class GenericArmResourceQuery(ResourceQuery):
-
     def filter(self, resource_manager, **params):
         client = resource_manager.get_client()
         results = [r.serialize(True) for r in client.resources.list()]
@@ -58,12 +57,7 @@ class GenericArmResource(ArmResourceManager):
         resource_type = 'armresource'
         diagnostic_settings_enabled = False
 
-        default_report_fields = (
-            'name',
-            'type',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'type', 'location', 'resourceGroup')
 
     def get_resources(self, resource_ids):
         client = self.get_client()
@@ -87,9 +81,9 @@ class GenericArmResource(ArmResourceManager):
 
 @GenericArmResource.filter_registry.register('resource-type')
 class ResourceTypeFilter(Filter):
-    schema = type_schema('resource-type',
-                         required=['values'],
-                         values={'type': 'array', 'items': {'type': 'string'}})
+    schema = type_schema(
+        'resource-type', required=['values'], values={'type': 'array', 'items': {'type': 'string'}}
+    )
 
     def __init__(self, data, manager=None):
         super(ResourceTypeFilter, self).__init__(data, manager)

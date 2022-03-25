@@ -11,8 +11,8 @@ from c7n.utils import type_schema
 
 @resources.register('vpc')
 class Network(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/networks
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/networks"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
@@ -20,24 +20,27 @@ class Network(QueryResourceManager):
         scope_template = "{}"
         name = id = "name"
         default_report_fields = [
-            "name", "description", "creationTimestamp",
-            "autoCreateSubnetworks", "IPv4Range", "gatewayIPv4"]
+            "name",
+            "description",
+            "creationTimestamp",
+            "autoCreateSubnetworks",
+            "IPv4Range",
+            "gatewayIPv4",
+        ]
         asset_type = "compute.googleapis.com/Network"
         scc_type = "google.compute.Network"
 
         @staticmethod
         def get(client, resource_info):
             path_param_re = re.compile('.*?/projects/(.*?)/global/networks/(.*)')
-            project, network = path_param_re.match(
-                resource_info["resourceName"]).groups()
-            return client.execute_query(
-                'get', {'project': project, 'network': network})
+            project, network = path_param_re.match(resource_info["resourceName"]).groups()
+            return client.execute_query('get', {'project': project, 'network': network})
 
 
 @resources.register('subnet')
 class Subnet(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
@@ -45,8 +48,14 @@ class Subnet(QueryResourceManager):
         enum_spec = ('aggregatedList', 'items.*.subnetworks[]', None)
         name = id = "name"
         default_report_fields = [
-            "name", "description", "creationTimestamp", "ipCidrRange",
-            "gatewayAddress", "region", "state"]
+            "name",
+            "description",
+            "creationTimestamp",
+            "ipCidrRange",
+            "gatewayAddress",
+            "region",
+            "state",
+        ]
         asset_type = "compute.googleapis.com/Subnetwork"
         scc_type = "google.compute.Subnetwork"
         metric_key = "resource.labels.subnetwork_name"
@@ -54,22 +63,19 @@ class Subnet(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
 
-            path_param_re = re.compile(
-                '.*?projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
-            project, region, subnet = path_param_re.match(
-                resource_info["resourceName"]).groups()
+            path_param_re = re.compile('.*?projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
+            project, region, subnet = path_param_re.match(resource_info["resourceName"]).groups()
             return client.execute_query(
-                'get', {'project': project, 'region': region, 'subnetwork': subnet})
+                'get', {'project': project, 'region': region, 'subnetwork': subnet}
+            )
 
 
 class SubnetAction(MethodAction):
 
-    path_param_re = re.compile(
-        '.*?/projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
+    path_param_re = re.compile('.*?/projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
 
     def get_resource_params(self, model, resource):
-        project, region, subnet = self.path_param_re.match(
-            resource['selfLink']).groups()
+        project, region, subnet = self.path_param_re.match(resource['selfLink']).groups()
         return {'project': project, 'region': region, 'subnetwork': subnet}
 
 
@@ -91,9 +97,7 @@ class SetFlowLog(SubnetAction):
 
     """
 
-    schema = type_schema(
-        'set-flow-log',
-        state={'type': 'boolean', 'default': True})
+    schema = type_schema('set-flow-log', state={'type': 'boolean', 'default': True})
     method_spec = {'op': 'patch'}
     method_perm = 'update'
 
@@ -105,7 +109,8 @@ class SetFlowLog(SubnetAction):
             'subnetwork': params['subnetwork'],
             'body': {
                 'fingerprint': r['fingerprint'],
-                'enableFlowLogs': self.data.get('state', True)}
+                'enableFlowLogs': self.data.get('state', True),
+            },
         }
 
 
@@ -113,30 +118,33 @@ class SetFlowLog(SubnetAction):
 class SetGcpPrivateAccess(SubnetAction):
     """Enable/Disable GCP Private IP Access for a subnet"""
 
-    schema = type_schema(
-        'set-gcp-private',
-        state={'type': 'boolean', 'default': True})
+    schema = type_schema('set-gcp-private', state={'type': 'boolean', 'default': True})
     method_spec = {'op': 'setPrivateIpGoogleAccess'}
 
     def get_resource_params(self, m, r):
         params = super(SetGcpPrivateAccess, self).get_resource_params(m, r)
-        params['body'] = {
-            'privateIpGoogleAccess': self.data.get('state', True)}
+        params['body'] = {'privateIpGoogleAccess': self.data.get('state', True)}
         return params
 
 
 @resources.register('firewall')
 class Firewall(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/firewalls
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/firewalls"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
         component = 'firewalls'
         name = id = "name"
         default_report_fields = [
-            name, "description", "network", "priority", "creationTimestamp",
-            "logConfig.enabled", "disabled"]
+            name,
+            "description",
+            "network",
+            "priority",
+            "creationTimestamp",
+            "logConfig.enabled",
+            "disabled",
+        ]
         asset_type = "compute.googleapis.com/Firewall"
         scc_type = "google.compute.Firewall"
         metric_key = 'metric.labels.firewall_name'
@@ -144,8 +152,12 @@ class Firewall(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', {'project': resource_info['project_id'],
-                        'firewall': resource_info['resourceName'].rsplit('/', 1)[-1]})
+                'get',
+                {
+                    'project': resource_info['project_id'],
+                    'firewall': resource_info['resourceName'].rsplit('/', 1)[-1],
+                },
+            )
 
 
 @Firewall.action_registry.register('delete')
@@ -174,8 +186,7 @@ class DeleteFirewall(MethodAction):
     path_param_re = re.compile('.*?/projects/(.*?)/global/firewalls/(.*)')
 
     def get_resource_params(self, m, r):
-        project, resource_name = self.path_param_re.match(
-            r['selfLink']).groups()
+        project, resource_name = self.path_param_re.match(r['selfLink']).groups()
         return {'project': project, 'firewall': resource_name}
 
 
@@ -202,50 +213,55 @@ class ModifyFirewall(MethodAction):
 
     schema = type_schema(
         'modify',
-        **{'description': {'type': 'string'},
-           'network': {'type': 'string'},
-           'priority': {'type': 'number'},
-           'sourceRanges': {'type': 'array', 'items': {'type': 'string'}},
-           'destinationRanges': {'type': 'array', 'items': {'type': 'string'}},
-           'sourceTags': {'type': 'array', 'items': {'type': 'string'}},
-           'targetTags': {'type': 'array', 'items': {'type': 'string'}},
-           'sourceServiceAccounts': {'type': 'array', 'items': {'type': 'string'}},
-           'targetServiceAccounts': {'type': 'array', 'items': {'type': 'string'}},
-           'allowed': {'type': 'array', 'items': {'type': 'object'}},
-           'denied': {'type': 'array', 'items': {'type': 'object'}},
-           'direction': {'enum': ['INGRESS', 'EGRESS']},
-           'logConfig': {'type': 'object'},
-           'disabled': {'type': 'boolean'}})
+        **{
+            'description': {'type': 'string'},
+            'network': {'type': 'string'},
+            'priority': {'type': 'number'},
+            'sourceRanges': {'type': 'array', 'items': {'type': 'string'}},
+            'destinationRanges': {'type': 'array', 'items': {'type': 'string'}},
+            'sourceTags': {'type': 'array', 'items': {'type': 'string'}},
+            'targetTags': {'type': 'array', 'items': {'type': 'string'}},
+            'sourceServiceAccounts': {'type': 'array', 'items': {'type': 'string'}},
+            'targetServiceAccounts': {'type': 'array', 'items': {'type': 'string'}},
+            'allowed': {'type': 'array', 'items': {'type': 'object'}},
+            'denied': {'type': 'array', 'items': {'type': 'object'}},
+            'direction': {'enum': ['INGRESS', 'EGRESS']},
+            'logConfig': {'type': 'object'},
+            'disabled': {'type': 'boolean'},
+        }
+    )
     method_spec = {'op': 'patch'}
     permissions = ('compute.networks.updatePolicy', 'compute.firewalls.update')
     path_param_re = re.compile('.*?/projects/(.*?)/global/firewalls/(.*)')
 
     def get_resource_params(self, m, r):
-        project, resource_name = self.path_param_re.match(
-            r['selfLink']).groups()
+        project, resource_name = self.path_param_re.match(r['selfLink']).groups()
         return {'project': project, 'firewall': resource_name, 'body': self.data}
 
 
 @resources.register('router')
 class Router(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/routers
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/routers"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
         component = 'routers'
         enum_spec = ('aggregatedList', 'items.*.routers[]', None)
         name = id = 'name'
-        default_report_fields = [
-            "name", "description", "creationTimestamp", "region", "network"]
+        default_report_fields = ["name", "description", "creationTimestamp", "region", "network"]
         asset_type = "compute.googleapis.com/Router"
 
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'project': resource_info['project_id'],
-                        'region': resource_info['region'],
-                        'router': resource_info['resourceName'].rsplit('/', 1)[-1]})
+                'get',
+                {
+                    'project': resource_info['project_id'],
+                    'region': resource_info['region'],
+                    'router': resource_info['resourceName'].rsplit('/', 1)[-1],
+                },
+            )
 
 
 @Router.action_registry.register('delete')
@@ -279,8 +295,8 @@ class DeleteRouter(MethodAction):
 
 @resources.register('route')
 class Route(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/routes
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/routes"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
@@ -288,20 +304,30 @@ class Route(QueryResourceManager):
         enum_spec = ('list', 'items[]', None)
         name = id = 'name'
         default_report_fields = [
-            "name", "description", "creationTimestamp", "network", "priority", "destRange"]
+            "name",
+            "description",
+            "creationTimestamp",
+            "network",
+            "priority",
+            "destRange",
+        ]
         asset_type = "compute.googleapis.com/Route"
 
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'project': resource_info['project_id'],
-                        'route': resource_info['resourceName'].rsplit('/', 1)[-1]})
+                'get',
+                {
+                    'project': resource_info['project_id'],
+                    'route': resource_info['resourceName'].rsplit('/', 1)[-1],
+                },
+            )
 
 
 @resources.register('interconnect')
 class Interconnect(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/interconnects
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/interconnects"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
@@ -309,21 +335,30 @@ class Interconnect(QueryResourceManager):
         enum_spec = ('list', 'items[]', None)
         name = id = 'name'
         default_report_fields = [
-            "name", "description", "creationTimestamp", "operationalStatus",
-            "linkType", "location"]
+            "name",
+            "description",
+            "creationTimestamp",
+            "operationalStatus",
+            "linkType",
+            "location",
+        ]
         asset_type = "compute.googleapis.com/Interconnect"
 
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'project': resource_info['project_id'],
-                        'interconnect': resource_info['resourceName'].rsplit('/', 1)[-1]})
+                'get',
+                {
+                    'project': resource_info['project_id'],
+                    'interconnect': resource_info['resourceName'].rsplit('/', 1)[-1],
+                },
+            )
 
 
 @resources.register('interconnect-attachment')
 class InterconnectAttachment(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/interconnectAttachments
-    """
+    """GCP resource: https://cloud.google.com/compute/docs/reference/rest/v1/interconnectAttachments"""
+
     class resource_type(TypeInfo):
         service = 'compute'
         version = 'v1'
@@ -331,17 +366,23 @@ class InterconnectAttachment(QueryResourceManager):
         enum_spec = ('aggregatedList', 'items.*.interconnectAttachments[]', None)
         name = id = 'name'
         default_report_fields = [
-            "name", "description", "creationTimestamp", "interconnect",
-            "router", "region", "operationalStatus"]
+            "name",
+            "description",
+            "creationTimestamp",
+            "interconnect",
+            "router",
+            "region",
+            "operationalStatus",
+        ]
         asset_type = "compute.googleapis.com/InterconnectAttachment"
 
         @staticmethod
         def get(client, resource_info):
             project, region, name = re.match(
                 'projects/(.*?)/regions/(.*?)/interconnectAttachments/(.*?)',
-                resource_info['resourceName']).groups()
+                resource_info['resourceName'],
+            ).groups()
 
             return client.execute_command(
-                'get', {'project': project,
-                        'interconnectAttachment': name,
-                        'region': region})
+                'get', {'project': project, 'interconnectAttachment': name, 'region': region}
+            )

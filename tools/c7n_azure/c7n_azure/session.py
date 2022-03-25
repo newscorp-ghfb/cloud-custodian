@@ -11,19 +11,23 @@ import types
 
 from azure.common.credentials import BasicTokenAuthentication
 from azure.core.credentials import AccessToken
-from azure.identity import (AzureCliCredential, ClientSecretCredential,
-                            ManagedIdentityCredential)
+from azure.identity import AzureCliCredential, ClientSecretCredential, ManagedIdentityCredential
 from azure.identity._credentials.azure_cli import _run_command
 from msrestazure.azure_cloud import AZURE_PUBLIC_CLOUD
 from requests import HTTPError
 
 from c7n_azure import constants
-from c7n_azure.utils import (C7nRetryPolicy, ManagedGroupHelper,
-                             ResourceIdParser, StringUtils,
-                             cost_query_override_api_version,
-                             custodian_azure_send_override,
-                             get_keyvault_auth_endpoint, get_keyvault_secret,
-                             log_response_data)
+from c7n_azure.utils import (
+    C7nRetryPolicy,
+    ManagedGroupHelper,
+    ResourceIdParser,
+    StringUtils,
+    cost_query_override_api_version,
+    custodian_azure_send_override,
+    get_keyvault_auth_endpoint,
+    get_keyvault_secret,
+    log_response_data,
+)
 
 from functools import lru_cache
 
@@ -47,7 +51,7 @@ class AzureCredential:
                 'subscription_id': os.environ.get(constants.ENV_SUB_ID),
                 'keyvault_client_id': os.environ.get(constants.ENV_KEYVAULT_CLIENT_ID),
                 'keyvault_secret_id': os.environ.get(constants.ENV_KEYVAULT_SECRET_ID),
-                'enable_cli_auth': True
+                'enable_cli_auth': True,
             }
 
         self._auth_params['authority'] = cloud_endpoints.endpoints.active_directory
@@ -59,34 +63,36 @@ class AzureCredential:
         try:
             if keyvault_secret_id:
                 self._auth_params.update(
-                    json.loads(
-                        get_keyvault_secret(
-                            keyvault_client_id,
-                            keyvault_secret_id)
-                    ))
+                    json.loads(get_keyvault_secret(keyvault_client_id, keyvault_secret_id))
+                )
         except HTTPError as e:
-            e.message = 'Failed to retrieve SP credential ' \
-                        'from Key Vault with client id: {0}'.format(keyvault_client_id)
+            e.message = (
+                'Failed to retrieve SP credential '
+                'from Key Vault with client id: {0}'.format(keyvault_client_id)
+            )
             raise
 
         self._credential = None
         if self._auth_params.get('access_token') is not None:
             auth_name = 'Access Token'
             pass
-        elif (self._auth_params.get('client_id') and
-              self._auth_params.get('client_secret') and
-              self._auth_params.get('tenant_id')
-              ):
+        elif (
+            self._auth_params.get('client_id')
+            and self._auth_params.get('client_secret')
+            and self._auth_params.get('tenant_id')
+        ):
             auth_name = 'Principal'
             self._credential = ClientSecretCredential(
                 client_id=self._auth_params['client_id'],
                 client_secret=self._auth_params['client_secret'],
                 tenant_id=self._auth_params['tenant_id'],
-                authority=self._auth_params['authority'])
+                authority=self._auth_params['authority'],
+            )
         elif self._auth_params.get('use_msi'):
             auth_name = 'MSI'
             self._credential = ManagedIdentityCredential(
-                client_id=self._auth_params.get('client_id'))
+                client_id=self._auth_params.get('client_id')
+            )
         elif self._auth_params.get('enable_cli_auth'):
             auth_name = 'Azure CLI'
             self._credential = AzureCliCredential()
@@ -100,15 +106,18 @@ class AzureCredential:
 
         self._subscription_id = self._auth_params['subscription_id']
         self._tenant_id = self._auth_params['tenant_id']
-        log.info('Authenticated [%s | %s%s]',
-                 auth_name, self.subscription_id,
-                 ' | Authorization File' if authorization_file else '')
+        log.info(
+            'Authenticated [%s | %s%s]',
+            auth_name,
+            self.subscription_id,
+            ' | Authorization File' if authorization_file else '',
+        )
 
     def get_token(self, *scopes, **kwargs):
         # Access Token is used only in tests realistically because
         # KeyVault, Storage and mgmt plane requires separate tokens.
         # TODO: Should we scope this to tests only?
-        if (self._auth_params.get('access_token')):
+        if self._auth_params.get('access_token'):
             return AccessToken(self._auth_params['access_token'], expires_on=0)
         try:
             return self._credential.get_token(*scopes, **kwargs)
@@ -143,9 +152,13 @@ class AzureCredential:
 
 
 class Session:
-
-    def __init__(self, subscription_id=None, authorization_file=None,
-                 cloud_endpoints=None, resource_endpoint_type=constants.DEFAULT_AUTH_ENDPOINT):
+    def __init__(
+        self,
+        subscription_id=None,
+        authorization_file=None,
+        cloud_endpoints=None,
+        resource_endpoint_type=constants.DEFAULT_AUTH_ENDPOINT,
+    ):
         """
         :param subscription_id: If provided overrides environment variables.
         :param authorization_file: Path to file populated from 'get_functions_auth_string'
@@ -175,7 +188,8 @@ class Session:
             self.credentials = AzureCredential(
                 self.cloud_endpoints,
                 authorization_file=self.authorization_file,
-                subscription_id_override=self.subscription_id_override)
+                subscription_id_override=self.subscription_id_override,
+            )
         except Exception as e:
             if hasattr(e, 'message'):
                 log.error(e.message)
@@ -192,7 +206,8 @@ class Session:
             subscription_id=self.subscription_id_override,
             authorization_file=self.authorization_file,
             cloud_endpoints=self.cloud_endpoints,
-            resource_endpoint_type=resource)
+            resource_endpoint_type=resource,
+        )
 
     @lru_cache()
     def client(self, client, vault_url=None):
@@ -206,21 +221,25 @@ class Session:
         legacy = False
 
         if 'credentials' in klass_parameters and 'tenant_id' in klass_parameters:
-            client = klass(credentials=self.credentials.legacy_credentials(self.resource_endpoint),
-                           tenant_id=self.credentials.tenant_id,
-                           base_url=self.resource_endpoint)
+            client = klass(
+                credentials=self.credentials.legacy_credentials(self.resource_endpoint),
+                tenant_id=self.credentials.tenant_id,
+                base_url=self.resource_endpoint,
+            )
             legacy = True
         elif 'credentials' in klass_parameters:
-            client = klass(credentials=self.credentials.legacy_credentials(self.resource_endpoint),
-                           subscription_id=self.credentials.subscription_id,
-                           base_url=self.cloud_endpoints.endpoints.resource_manager)
+            client = klass(
+                credentials=self.credentials.legacy_credentials(self.resource_endpoint),
+                subscription_id=self.credentials.subscription_id,
+                base_url=self.cloud_endpoints.endpoints.resource_manager,
+            )
             legacy = True
         else:
             client_args = {
                 'credential': self.credentials,
                 'raw_response_hook': log_response_data,
                 'retry_policy': C7nRetryPolicy(),
-                'credential_scopes': [self.resource_endpoint + ".default"]
+                'credential_scopes': [self.resource_endpoint + ".default"],
             }
 
             # TODO: remove when fixed: https://github.com/Azure/azure-sdk-for-python/issues/17351
@@ -272,12 +291,13 @@ class Session:
 
         if constants.ENV_FUNCTION_MANAGEMENT_GROUP_NAME in os.environ:
             return ManagedGroupHelper.get_subscriptions_list(
-                os.environ[constants.ENV_FUNCTION_MANAGEMENT_GROUP_NAME], self)
+                os.environ[constants.ENV_FUNCTION_MANAGEMENT_GROUP_NAME], self
+            )
 
         return [os.environ.get(constants.ENV_FUNCTION_SUB_ID, self.subscription_id)]
 
     def resource_api_version(self, resource_id):
-        """ latest non-preview api version for resource """
+        """latest non-preview api version for resource"""
 
         namespace = ResourceIdParser.get_namespace(resource_id)
         resource_type = ResourceIdParser.get_resource_type(resource_id)
@@ -294,8 +314,14 @@ class Session:
         if not provider.resource_types and resource_client.providers.api_version:
             return resource_client.providers.api_version
 
-        rt = next((t for t in provider.resource_types
-                   if StringUtils.equal(t.resource_type, resource_type)), None)
+        rt = next(
+            (
+                t
+                for t in provider.resource_types
+                if StringUtils.equal(t.resource_type, resource_type)
+            ),
+            None,
+        )
 
         if rt and rt.api_versions:
             versions = [v for v in rt.api_versions if 'preview' not in v.lower()]
@@ -319,13 +345,16 @@ class Session:
         function_auth_variables = [
             constants.ENV_FUNCTION_TENANT_ID,
             constants.ENV_FUNCTION_CLIENT_ID,
-            constants.ENV_FUNCTION_CLIENT_SECRET
+            constants.ENV_FUNCTION_CLIENT_SECRET,
         ]
 
         required_params = ['client_id', 'client_secret', 'tenant_id']
 
-        function_auth_params = {k: v for k, v in self.credentials.auth_params.items()
-                                if k in required_params and v is not None}
+        function_auth_params = {
+            k: v
+            for k, v in self.credentials.auth_params.items()
+            if k in required_params and v is not None
+        }
         function_auth_params['subscription_id'] = target_subscription_id
 
         # Use dedicated function env vars if available
@@ -338,7 +367,8 @@ class Session:
         if any(k not in function_auth_params.keys() for k in required_params):
             raise NotImplementedError(
                 "Service Principal credentials are the only "
-                "supported auth mechanism for deploying functions.")
+                "supported auth mechanism for deploying functions."
+            )
 
         return json.dumps(function_auth_params, indent=2)
 

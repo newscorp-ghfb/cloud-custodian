@@ -88,9 +88,7 @@ def test_dir_missing_glob(tmpdir, test):
 
 
 def test_invalid_static_record(test):
-    with pytest.raises(
-        PolicyValidationError, match="invalid static data source `records`"
-    ):
+    with pytest.raises(PolicyValidationError, match="invalid static data source `records`"):
         test.load_policy(
             {
                 "name": "smack",
@@ -105,8 +103,8 @@ def test_bad_source(test):
 
     with pytest.raises(PolicyValidationError, match="invalid source dask"):
         test.load_policy(
-            {"name": "snack", "resource": "c7n.data", "source": "dask"},
-            validate=False)
+            {"name": "snack", "resource": "c7n.data", "source": "dask"}, validate=False
+        )
 
 
 def test_provider_initialize(test):

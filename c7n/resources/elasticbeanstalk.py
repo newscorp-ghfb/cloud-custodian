@@ -15,7 +15,6 @@ log = logging.getLogger('custodian.elasticbeanstalk')
 
 @resources.register('elasticbeanstalk')
 class ElasticBeanstalk(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'elasticbeanstalk'
         enum_spec = ('describe_applications', 'Applications', None)
@@ -23,26 +22,20 @@ class ElasticBeanstalk(QueryResourceManager):
         id = "ApplicationName"
         arn = "ApplicationArn"
         arn_type = 'application'
-        default_report_fields = (
-            'ApplicationName',
-            'DateCreated',
-            'DateUpdated'
-        )
+        default_report_fields = ('ApplicationName', 'DateCreated', 'DateUpdated')
         filter_name = 'ApplicationNames'
         filter_type = 'list'
         cfn_type = config_type = 'AWS::ElasticBeanstalk::Application'
 
 
 class DescribeEnvironment(DescribeSource):
-
     def augment(self, resources):
         return _eb_env_tags(resources, self.manager.session_factory, self.manager.retry)
 
 
 @resources.register('elasticbeanstalk-environment')
 class ElasticBeanstalkEnvironment(QueryResourceManager):
-    """ Resource manager for Elasticbeanstalk Environments
-    """
+    """Resource manager for Elasticbeanstalk Environments"""
 
     class resource_type(TypeInfo):
         service = 'elasticbeanstalk'
@@ -60,16 +53,11 @@ class ElasticBeanstalkEnvironment(QueryResourceManager):
         cfn_type = config_type = 'AWS::ElasticBeanstalk::Environment'
 
     permissions = ('elasticbeanstalk:ListTagsForResource',)
-    source_mapping = {
-        'describe': DescribeEnvironment,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeEnvironment, 'config': ConfigSource}
 
 
-ElasticBeanstalkEnvironment.filter_registry.register(
-    'tag-count', tags.TagCountFilter)
-ElasticBeanstalkEnvironment.filter_registry.register(
-    'marked-for-op', tags.TagActionFilter)
+ElasticBeanstalkEnvironment.filter_registry.register('tag-count', tags.TagCountFilter)
+ElasticBeanstalkEnvironment.filter_registry.register('marked-for-op', tags.TagActionFilter)
 
 
 def _eb_env_tags(envs, session_factory, retry):
@@ -80,8 +68,8 @@ def _eb_env_tags(envs, session_factory, retry):
     def process_tags(eb_env):
         try:
             eb_env['Tags'] = retry(
-                client.list_tags_for_resource,
-                ResourceArn=eb_env['EnvironmentArn'])['ResourceTags']
+                client.list_tags_for_resource, ResourceArn=eb_env['EnvironmentArn']
+            )['ResourceTags']
         except client.exceptions.ResourceNotFoundException:
             return
         return eb_env
@@ -144,9 +132,7 @@ class Tag(tags.Tag):
 
     def process_resource_set(self, client, envs, ts):
         for env in envs:
-            client.update_tags_for_resource(
-                ResourceArn=env['EnvironmentArn'],
-                TagsToAdd=ts)
+            client.update_tags_for_resource(ResourceArn=env['EnvironmentArn'], TagsToAdd=ts)
 
 
 @ElasticBeanstalkEnvironment.action_registry.register('remove-tag')
@@ -176,13 +162,13 @@ class RemoveTag(tags.RemoveTag):
     def process_resource_set(self, client, envs, tag_keys):
         for env in envs:
             client.update_tags_for_resource(
-                ResourceArn=env['EnvironmentArn'],
-                TagsToRemove=tag_keys)
+                ResourceArn=env['EnvironmentArn'], TagsToRemove=tag_keys
+            )
 
 
 @ElasticBeanstalkEnvironment.action_registry.register('terminate')
 class Terminate(BaseAction):
-    """ Terminate an ElasticBeanstalk Environment.
+    """Terminate an ElasticBeanstalk Environment.
 
     :Example:
 
@@ -201,18 +187,17 @@ class Terminate(BaseAction):
     schema = type_schema(
         'terminate',
         force={'type': 'boolean', 'default': False},
-        terminate_resources={'type': 'boolean', 'default': True}
+        terminate_resources={'type': 'boolean', 'default': True},
     )
     permissions = ("elasticbeanstalk:TerminateEnvironment",)
 
     def process(self, envs):
         force_terminate = self.data.get('force', False)
         terminate_resources = self.data.get('terminate_resources', True)
-        client = utils.local_session(
-            self.manager.session_factory).client('elasticbeanstalk')
+        client = utils.local_session(self.manager.session_factory).client('elasticbeanstalk')
         for e in envs:
             client.terminate_environment(
                 EnvironmentName=e["EnvironmentName"],
                 TerminateResources=terminate_resources,
-                ForceTerminate=force_terminate
+                ForceTerminate=force_terminate,
             )

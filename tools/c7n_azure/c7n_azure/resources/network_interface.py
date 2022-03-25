@@ -67,6 +67,7 @@ class EffectiveRouteTableFilter(ValueFilter):
                   - None
                   - VirtualAppliance
     """
+
     schema = type_schema('effective-route-table', rinherit=ValueFilter.schema)
 
     def process(self, resources, event=None):
@@ -78,7 +79,7 @@ class EffectiveRouteTableFilter(ValueFilter):
             executor_factory=self.executor_factory,
             log=log,
             max_workers=max_workers,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
         )
         return resources
 
@@ -90,15 +91,14 @@ class EffectiveRouteTableFilter(ValueFilter):
             try:
                 if 'routes' not in resource:
                     rg = resource['resourceGroup']
-                    route_table = (
-                        client.network_interfaces
-                        .begin_get_effective_route_table(rg, resource['name'])
-                        .result()
-                    )
+                    route_table = client.network_interfaces.begin_get_effective_route_table(
+                        rg, resource['name']
+                    ).result()
 
                     resource['routes'] = route_table.serialize()
-                    filtered_effective_route_table = super(EffectiveRouteTableFilter, self)\
-                        .process([resource], event)
+                    filtered_effective_route_table = super(EffectiveRouteTableFilter, self).process(
+                        [resource], event
+                    )
 
                     if filtered_effective_route_table:
                         matched.append(resource)

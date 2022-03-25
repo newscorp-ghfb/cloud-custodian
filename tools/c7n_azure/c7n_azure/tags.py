@@ -16,9 +16,7 @@ class TagHelper:
 
         # resource group type
         if is_resource_group(resource):
-            params_patch = ResourceGroupPatchable(
-                tags=tags
-            )
+            params_patch = ResourceGroupPatchable(tags=tags)
             client.resource_groups.update(
                 resource['name'],
                 params_patch,
@@ -29,8 +27,9 @@ class TagHelper:
             az_resource = GenericResource.deserialize(resource)
 
             if not tag_action.manager.tag_operation_enabled(az_resource.type):
-                raise NotImplementedError('Cannot tag resource with type {0}'
-                                          .format(az_resource.type))
+                raise NotImplementedError(
+                    'Cannot tag resource with type {0}'.format(az_resource.type)
+                )
             api_version = tag_action.session.resource_api_version(resource['id'])
 
             # create a PATCH object with only updates to tags

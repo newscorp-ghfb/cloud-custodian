@@ -17,7 +17,8 @@ from c7n_azure.constants import (
     FUNCTION_EVENT_TRIGGER_MODE,
     FUNCTION_TIME_TRIGGER_MODE,
     FUNCTION_HOST_CONFIG,
-    FUNCTION_EXTENSION_BUNDLE_CONFIG)
+    FUNCTION_EXTENSION_BUNDLE_CONFIG,
+)
 from c7n_azure.session import Session
 
 from c7n.mu import PythonPackageArchive
@@ -46,10 +47,12 @@ class FunctionPackage:
         self.pkg = None
         self.name = name
         self.function_path = function_path or os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), 'function.py')
+            os.path.dirname(os.path.realpath(__file__)), 'function.py'
+        )
         self.cache_override_path = cache_override_path
         self.enable_ssl_cert = not distutils.util.strtobool(
-            os.environ.get(ENV_CUSTODIAN_DISABLE_SSL_CERT_VERIFICATION, 'no'))
+            os.environ.get(ENV_CUSTODIAN_DISABLE_SSL_CERT_VERIFICATION, 'no')
+        )
 
         if target_sub_ids is not None:
             self.target_sub_ids = target_sub_ids
@@ -60,45 +63,55 @@ class FunctionPackage:
             self.log.warning('SSL Certificate Validation is disabled')
 
     def _add_functions_required_files(
-            self, policy_data, requirements, queue_name=None, identity=None):
+        self, policy_data, requirements, queue_name=None, identity=None
+    ):
         s = local_session(Session)
 
-        self.pkg.add_contents(dest='requirements.txt',
-                              contents=requirements)
+        self.pkg.add_contents(dest='requirements.txt', contents=requirements)
 
         for target_sub_id in self.target_sub_ids:
             name = self.name + ("_" + target_sub_id if target_sub_id else "")
             # generate and add auth if using embedded service principal
-            identity = (identity
-                or jmespath.search(
-                    'mode."provision-options".identity', policy_data)
-                or {'type': AUTH_TYPE_EMBED})
+            identity = (
+                identity
+                or jmespath.search('mode."provision-options".identity', policy_data)
+                or {'type': AUTH_TYPE_EMBED}
+            )
 
             if identity['type'] == AUTH_TYPE_EMBED:
                 auth_contents = s.get_functions_auth_string(target_sub_id)
             elif identity['type'] == AUTH_TYPE_MSI:
-                auth_contents = json.dumps({
-                    'use_msi': True, 'subscription_id': target_sub_id,
-                    'tenant_id': s.get_tenant_id()})
+                auth_contents = json.dumps(
+                    {
+                        'use_msi': True,
+                        'subscription_id': target_sub_id,
+                        'tenant_id': s.get_tenant_id(),
+                    }
+                )
             elif identity['type'] == AUTH_TYPE_UAI:
-                auth_contents = json.dumps({
-                    'use_msi': True, 'subscription_id': target_sub_id,
-                    'client_id': identity['client_id'],
-                    'tenant_id': s.get_tenant_id()})
+                auth_contents = json.dumps(
+                    {
+                        'use_msi': True,
+                        'subscription_id': target_sub_id,
+                        'client_id': identity['client_id'],
+                        'tenant_id': s.get_tenant_id(),
+                    }
+                )
 
             self.pkg.add_contents(dest=name + '/auth.json', contents=auth_contents)
-            self.pkg.add_file(self.function_path,
-                              dest=name + '/function.py')
+            self.pkg.add_file(self.function_path, dest=name + '/function.py')
 
             self.pkg.add_contents(dest=name + '/__init__.py', contents='')
 
             if policy_data:
                 self.pkg.add_contents(
                     dest=name + '/function.json',
-                    contents=self.get_function_config(policy_data, queue_name))
+                    contents=self.get_function_config(policy_data, queue_name),
+                )
                 self.pkg.add_contents(
                     dest=name + '/config.json',
-                    contents=json.dumps({'policies': [policy_data]}, indent=2))
+                    contents=json.dumps({'policies': [policy_data]}, indent=2),
+                )
                 self._add_host_config(policy_data['mode']['type'])
             else:
                 self._add_host_config(None)
@@ -110,13 +123,7 @@ class FunctionPackage:
         self.pkg.add_contents(dest='host.json', contents=json.dumps(config))
 
     def get_function_config(self, policy, queue_name=None):
-        config = \
-            {
-                "scriptFile": "function.py",
-                "bindings": [{
-                    "direction": "in"
-                }]
-            }
+        config = {"scriptFile": "function.py", "bindings": [{"direction": "in"}]}
 
         mode_type = policy['mode']['type']
         binding = config['bindings'][0]
@@ -133,8 +140,7 @@ class FunctionPackage:
             binding['queueName'] = queue_name
 
         else:
-            self.log.error("Mode not yet supported for Azure functions (%s)"
-                           % mode_type)
+            self.log.error("Mode not yet supported for Azure functions (%s)" % mode_type)
 
         return json.dumps(config, indent=2)
 
@@ -149,8 +155,7 @@ class FunctionPackage:
     def build(self, policy, modules, requirements, queue_name=None, identity=None):
         self.pkg = AzurePythonPackageArchive()
 
-        self.pkg.add_modules(None,
-                             [m.replace('-', '_') for m in modules])
+        self.pkg.add_modules(None, [m.replace('-', '_') for m in modules])
 
         # add config and policy
         self._add_functions_required_files(policy, requirements, queue_name, identity)
@@ -160,8 +165,10 @@ class FunctionPackage:
             if self.status(deployment_creds):
                 return True
             else:
-                self.log.info('(%s/%s) Will retry Function App status check in %s seconds...'
-                              % (r + 1, retries, delay))
+                self.log.info(
+                    '(%s/%s) Will retry Function App status check in %s seconds...'
+                    % (r + 1, retries, delay)
+                )
                 time.sleep(delay)
         return False
 
@@ -170,8 +177,9 @@ class FunctionPackage:
 
         r = requests.get(status_url, verify=self.enable_ssl_cert)
         if r.status_code != 200:
-            self.log.error("Application service returned an error.\n%s\n%s"
-                           % (r.status_code, r.text))
+            self.log.error(
+                "Application service returned an error.\n%s\n%s" % (r.status_code, r.text)
+            )
             return False
 
         return True
@@ -188,11 +196,13 @@ class FunctionPackage:
         zip_file = self.pkg.get_bytes()
 
         try:
-            r = requests.post(zip_api_url,
-                              data=zip_file,
-                              headers=headers,
-                              timeout=300,
-                              verify=self.enable_ssl_cert)
+            r = requests.post(
+                zip_api_url,
+                data=zip_file,
+                headers=headers,
+                timeout=300,
+                verify=self.enable_ssl_cert,
+            )
         except requests.exceptions.ReadTimeout:
             self.log.error("Your Function App deployment timed out after 5 minutes. Try again.")
 

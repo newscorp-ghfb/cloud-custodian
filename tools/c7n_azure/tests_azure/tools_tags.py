@@ -5,8 +5,7 @@ from azure.mgmt.resource.resources.models import GenericResource
 
 
 def get_policy(actions=None, filters=None):
-    policy = {'name': 'test-tag',
-              'resource': 'azure.resourcegroup'}
+    policy = {'name': 'test-tag', 'resource': 'azure.resourcegroup'}
     if filters:
         policy['filters'] = filters
     if actions:
@@ -15,23 +14,28 @@ def get_policy(actions=None, filters=None):
 
 
 def get_policy_event_grid(actions):
-    return {'name': 'test-tag',
-            'resource': 'azure.resourcegroup',
-            'mode': {
-                'type': 'azure-event-grid',
-                'events': [
-                    {
-                        'resourceProvider': 'Microsoft.Resources/subscriptions/resourceGroups',
-                        'event': 'write'
-                    }
-                ]},
-            'actions': actions}
+    return {
+        'name': 'test-tag',
+        'resource': 'azure.resourcegroup',
+        'mode': {
+            'type': 'azure-event-grid',
+            'events': [
+                {
+                    'resourceProvider': 'Microsoft.Resources/subscriptions/resourceGroups',
+                    'event': 'write',
+                }
+            ],
+        },
+        'actions': actions,
+    }
 
 
 def get_resource(existing_tags):
     resource = GenericResource(tags=existing_tags).serialize()
-    resource['id'] = '/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourceGroups/' \
-                     'TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm'
+    resource['id'] = (
+        '/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourceGroups/'
+        'TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm'
+    )
     resource['name'] = 'cctestvm'
     resource['type'] = 'Microsoft.Compute/virtualMachines'
     resource['InstanceId'] = "testInstance"
@@ -47,8 +51,8 @@ def get_resource_group_resource(existing_tags):
 
 
 def get_tags_parameter(update_tags_mock):
-    assert(len(update_tags_mock.call_args_list) == 1)
-    assert(len(update_tags_mock.call_args_list[0][0]) == 3)
+    assert len(update_tags_mock.call_args_list) == 1
+    assert len(update_tags_mock.call_args_list[0][0]) == 3
     return update_tags_mock.call_args_list[0][0][2]
 
 

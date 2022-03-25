@@ -16,7 +16,6 @@ from c7n.resolver import ValuesFrom, URIResolver
 
 
 class FakeCache:
-
     def __init__(self):
         self.state = {}
         self.gets = 0
@@ -32,7 +31,6 @@ class FakeCache:
 
 
 class FakeResolver:
-
     def __init__(self, contents):
         if isinstance(contents, bytes):
             contents = contents.decode("utf8")
@@ -43,7 +41,6 @@ class FakeResolver:
 
 
 class ResolverTest(BaseTest):
-
     def test_resolve_s3(self):
         session_factory = self.replay_flight_data("test_s3_resolver")
         session = session_factory()
@@ -56,9 +53,7 @@ class ResolverTest(BaseTest):
 
         key = resource.Object(bname, "resource.json")
         content = json.dumps({"moose": {"soup": "duck"}})
-        key.put(
-            Body=content, ContentLength=len(content), ContentType="application/json"
-        )
+        key.put(Body=content, ContentLength=len(content), ContentType="application/json")
 
         cache = FakeCache()
         resolver = URIResolver(session_factory, cache)
@@ -91,7 +86,6 @@ class ResolverTest(BaseTest):
 
 
 class UrlValueTest(BaseTest):
-
     def setUp(self):
         self.old_dir = os.getcwd()
         os.chdir(tempfile.gettempdir())
@@ -145,9 +139,7 @@ class UrlValueTest(BaseTest):
             writer = csv.writer(out)
             writer.writerows([range(5) for r in range(5)])
         with open("test_expr.csv", "rb") as out:
-            values = self.get_values_from(
-                {"url": "sun.csv", "expr": "[*][2]"}, out.read()
-            )
+            values = self.get_values_from({"url": "sun.csv", "expr": "[*][2]"}, out.read())
         os.remove("test_expr.csv")
         self.assertEqual(values.get_values(), {"2"})
 
@@ -156,9 +148,7 @@ class UrlValueTest(BaseTest):
             writer = csv.writer(out)
             writer.writerows([range(5) for r in range(5)])
         with open("test_expr.csv", "rb") as out:
-            values = self.get_values_from(
-                {"url": "sun.csv", "expr": "DNE"}, out.read()
-            )
+            values = self.get_values_from({"url": "sun.csv", "expr": "DNE"}, out.read())
         os.remove("test_expr.csv")
         self.assertEqual(values.get_values(), None)
 
@@ -192,9 +182,7 @@ class UrlValueTest(BaseTest):
             writer.writerow(["aa", "bb", "cc", "dd", "ee"])  # header row
             writer.writerows([range(5) for r in range(5)])
         with open("test_dict.csv", "rb") as out:
-            values = self.get_values_from(
-                {"url": "sun.csv", "format": "csv2dict"}, out.read()
-            )
+            values = self.get_values_from({"url": "sun.csv", "format": "csv2dict"}, out.read())
         os.remove("test_dict.csv")
         self.assertEqual(values.get_values(), {"0", "1", "2", "3", "4"})
 

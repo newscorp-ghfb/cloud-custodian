@@ -19,18 +19,16 @@ class IamPolicyFilter(Filter):
         'properties': {
             'user': {'type': 'string'},
             'role': {'type': 'string'},
-            'has': {'type': 'boolean'}
-        }
+            'has': {'type': 'boolean'},
+        },
     }
 
     schema = type_schema(
-        'iam-policy',
-        **{'doc': value_filter_schema,
-        'user-role': user_role_schema})
+        'iam-policy', **{'doc': value_filter_schema, 'user-role': user_role_schema}
+    )
 
     def get_client(self, session, model):
-        return session.client(
-            model.service, model.version, model.component)
+        return session.client(model.service, model.version, model.component)
 
     def process(self, resources, event=None):
         if 'doc' in self.data:
@@ -46,8 +44,9 @@ class IamPolicyFilter(Filter):
             val = user_role['role']
             op = 'in' if user_role.get('has', True) else 'not-in'
             value_type = 'swap'
-            userRolePairFilter = IamPolicyUserRolePairFilter({'key': key, 'value': val,
-            'op': op, 'value_type': value_type}, self.manager)
+            userRolePairFilter = IamPolicyUserRolePairFilter(
+                {'key': key, 'value': val, 'op': op, 'value_type': value_type}, self.manager
+            )
             resources = userRolePairFilter.process(resources)
 
         return resources
@@ -74,16 +73,18 @@ class IamPolicyValueFilter(ValueFilter):
                 value: ["allUsers", "allAuthenticatedUsers"]
     """
 
-    schema = type_schema('iam-policy', rinherit=ValueFilter.schema,)
-#     permissions = 'GCP_SERVICE.GCP_RESOURCE.getIamPolicy',)
+    schema = type_schema(
+        'iam-policy',
+        rinherit=ValueFilter.schema,
+    )
+    #     permissions = 'GCP_SERVICE.GCP_RESOURCE.getIamPolicy',)
 
     def __init__(self, data, manager=None, identifier="resource"):
         super(IamPolicyValueFilter, self).__init__(data, manager)
         self.identifier = identifier
 
     def get_client(self, session, model):
-        return session.client(
-            model.service, model.version, model.component)
+        return session.client(model.service, model.version, model.component)
 
     def process(self, resources, event=None):
         model = self.manager.get_model()
@@ -129,11 +130,10 @@ class IamPolicyUserRolePairFilter(ValueFilter):
     """
 
     schema = type_schema('iam-user-roles', rinherit=ValueFilter.schema)
-#     permissions = ('resourcemanager.projects.getIamPolicy',)
+    #     permissions = ('resourcemanager.projects.getIamPolicy',)
 
     def get_client(self, session, model):
-        return session.client(
-            model.service, model.version, model.component)
+        return session.client(model.service, model.version, model.component)
 
     def process(self, resources, event=None):
         model = self.manager.get_model()

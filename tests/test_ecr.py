@@ -10,26 +10,29 @@ from c7n.resources.ecr import lifecycle_rule_validate
 
 
 class TestECR(BaseTest):
-
     def test_rule_validation(self):
         policy = Bag(name='xyz')
         with self.assertRaises(PolicyValidationError) as ecm:
-            lifecycle_rule_validate(
-                policy, {'selection': {'tagStatus': 'tagged'}})
+            lifecycle_rule_validate(policy, {'selection': {'tagStatus': 'tagged'}})
         self.assertIn('tagPrefixList required', str(ecm.exception))
         with self.assertRaises(PolicyValidationError) as ecm:
             lifecycle_rule_validate(
-                policy, {'selection': {
-                    'tagStatus': 'untagged',
-                    'countNumber': 10, 'countUnit': 'days',
-                    'countType': 'imageCountMoreThan'}})
+                policy,
+                {
+                    'selection': {
+                        'tagStatus': 'untagged',
+                        'countNumber': 10,
+                        'countUnit': 'days',
+                        'countType': 'imageCountMoreThan',
+                    }
+                },
+            )
         self.assertIn('countUnit invalid', str(ecm.exception))
 
     def create_repository(self, client, name):
-        """ Create the named repository. Delete existing one first if applicable. """
+        """Create the named repository. Delete existing one first if applicable."""
         existing_repos = {
-            r["repositoryName"]
-            for r in client.describe_repositories().get("repositories")
+            r["repositoryName"] for r in client.describe_repositories().get("repositories")
         }
         if name in existing_repos:
             client.delete_repository(repositoryName=name)
@@ -39,38 +42,41 @@ class TestECR(BaseTest):
 
     def test_ecr_set_scanning(self):
         factory = self.replay_flight_data('test_ecr_set_scanning')
-        p = self.load_policy({
-            'name': 'ecr-set-scanning',
-            'resource': 'aws.ecr',
-            'filters': [
-                {'repositoryName': 'testrepo'},
-                {'imageScanningConfiguration.scanOnPush': False}],
-            'actions': ['set-scanning']}, session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'ecr-set-scanning',
+                'resource': 'aws.ecr',
+                'filters': [
+                    {'repositoryName': 'testrepo'},
+                    {'imageScanningConfiguration.scanOnPush': False},
+                ],
+                'actions': ['set-scanning'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['repositoryName'], 'testrepo')
         client = factory().client('ecr')
-        repo = client.describe_repositories(repositoryNames=['testrepo'])[
-            'repositories'][0]
-        self.assertJmes(
-            'imageScanningConfiguration.scanOnPush', repo, True)
+        repo = client.describe_repositories(repositoryNames=['testrepo'])['repositories'][0]
+        self.assertJmes('imageScanningConfiguration.scanOnPush', repo, True)
 
     def test_ecr_set_immutability(self):
         factory = self.replay_flight_data('test_ecr_set_immutability')
-        p = self.load_policy({
-            'name': 'ecr-set-immutability',
-            'resource': 'aws.ecr',
-            'filters': [
-                {'repositoryName': 'testrepo'},
-                {'imageTagMutability': 'MUTABLE'}],
-            'actions': [{'type': 'set-immutability'}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'ecr-set-immutability',
+                'resource': 'aws.ecr',
+                'filters': [{'repositoryName': 'testrepo'}, {'imageTagMutability': 'MUTABLE'}],
+                'actions': [{'type': 'set-immutability'}],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['repositoryName'], 'testrepo')
         client = factory().client('ecr')
-        repo = client.describe_repositories(repositoryNames=['testrepo'])[
-            'repositories'][0]
+        repo = client.describe_repositories(repositoryNames=['testrepo'])['repositories'][0]
         self.assertEqual(repo['imageTagMutability'], 'IMMUTABLE')
 
     def test_ecr_lifecycle_policy(self):
@@ -82,81 +88,81 @@ class TestECR(BaseTest):
                 "tagStatus": "untagged",
                 "countType": "sinceImagePushed",
                 "countUnit": "days",
-                "countNumber": 14
+                "countNumber": 14,
             },
-            "action": {
-                "type": "expire"
-            }
+            "action": {"type": "expire"},
         }
-        p = self.load_policy({
-            'name': 'ecr-update',
-            'resource': 'aws.ecr',
-            'filters': [
-                {'repositoryName': 'c7n'},
-                {'type': 'lifecycle-rule',
-                 'state': False}],
-            'actions': [{
-                'type': 'set-lifecycle',
-                'rules': [rule]}]},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                'name': 'ecr-update',
+                'resource': 'aws.ecr',
+                'filters': [{'repositoryName': 'c7n'}, {'type': 'lifecycle-rule', 'state': False}],
+                'actions': [{'type': 'set-lifecycle', 'rules': [rule]}],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client('ecr')
         policy = json.loads(
-            client.get_lifecycle_policy(
-                repositoryName='c7n')['lifecyclePolicyText'])
+            client.get_lifecycle_policy(repositoryName='c7n')['lifecyclePolicyText']
+        )
         self.assertEqual(policy, {'rules': [rule]})
 
     def test_ecr_lifecycle_delete(self):
         session_factory = self.replay_flight_data('test_ecr_lifecycle_delete')
-        p = self.load_policy({
-            'name': 'ecr-update',
-            'resource': 'aws.ecr',
-            'filters': [
-                {'repositoryName': 'c7n'},
-                {'type': 'lifecycle-rule',
-                 'state': True,
-                 'match': [
-                     {'action.type': 'expire'},
-                     {'selection.tagStatus': 'untagged'}]}],
-            'actions': [{
-                'type': 'set-lifecycle',
-                'state': False}]},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                'name': 'ecr-update',
+                'resource': 'aws.ecr',
+                'filters': [
+                    {'repositoryName': 'c7n'},
+                    {
+                        'type': 'lifecycle-rule',
+                        'state': True,
+                        'match': [{'action.type': 'expire'}, {'selection.tagStatus': 'untagged'}],
+                    },
+                ],
+                'actions': [{'type': 'set-lifecycle', 'state': False}],
+            },
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client('ecr')
         self.assertRaises(
-            client.exceptions.ClientError,
-            client.get_lifecycle_policy,
-            repositoryName='c7n')
+            client.exceptions.ClientError, client.get_lifecycle_policy, repositoryName='c7n'
+        )
 
     def test_ecr_tags(self):
         factory = self.replay_flight_data('test_ecr_tags')
-        p = self.load_policy({
-            'name': 'ecr-tag',
-            'resource': 'ecr',
-            'filters': [{'tag:Role': 'Dev'}],
-            'actions': [
-                {'type': 'tag',
-                 'tags': {'Env': 'Dev'}},
-                {'type': 'remove-tag',
-                 'tags': ['Role']},
-                {'type': 'mark-for-op',
-                 'op': 'post-finding',
-                 'days': 2}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'ecr-tag',
+                'resource': 'ecr',
+                'filters': [{'tag:Role': 'Dev'}],
+                'actions': [
+                    {'type': 'tag', 'tags': {'Env': 'Dev'}},
+                    {'type': 'remove-tag', 'tags': ['Role']},
+                    {'type': 'mark-for-op', 'op': 'post-finding', 'days': 2},
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
         client = factory().client('ecr')
-        tags = {t['Key']: t['Value'] for t in
-                client.list_tags_for_resource(
-                    resourceArn=resources[0]['repositoryArn']).get('tags')}
+        tags = {
+            t['Key']: t['Value']
+            for t in client.list_tags_for_resource(resourceArn=resources[0]['repositoryArn']).get(
+                'tags'
+            )
+        }
         self.assertEqual(
             tags,
-            {'Env': 'Dev',
-             'maid_status': 'Resource does not meet policy: post-finding@2019/02/07'})
+            {'Env': 'Dev', 'maid_status': 'Resource does not meet policy: post-finding@2019/02/07'},
+        )
 
     @functional
     def test_ecr_no_policy(self):
@@ -231,15 +237,11 @@ class TestECR(BaseTest):
         resources = p.run()
         self.assertEqual([r["repositoryName"] for r in resources], [name])
         data = json.loads(
-            client.get_repository_policy(
-                repositoryName=resources[0]["repositoryName"]
-            ).get(
+            client.get_repository_policy(repositoryName=resources[0]["repositoryName"]).get(
                 "policyText"
             )
         )
-        self.assertEqual(
-            [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
-        )
+        self.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
 
     @functional
     def test_ecr_remove_named(self):
@@ -271,9 +273,7 @@ class TestECR(BaseTest):
                 "name": "ecr-stat",
                 "resource": "ecr",
                 "filters": [{"repositoryName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["WhatIsIt"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["WhatIsIt"]}],
             },
             session_factory=session_factory,
         )
@@ -299,23 +299,14 @@ class TestECR(BaseTest):
                     {
                         "type": "finding",
                         "query": {
-                            "RecordState": [
-                                {
-                                    "Value": "ACTIVE",
-                                    "Comparison": "EQUALS"
-                                }
-                            ],
-                            "Title": [
-                                {
-                                    "Value": "CVE-2021-44228",
-                                    "Comparison": "PREFIX"
-                                }
-                            ]
-                        }
+                            "RecordState": [{"Value": "ACTIVE", "Comparison": "EQUALS"}],
+                            "Title": [{"Value": "CVE-2021-44228", "Comparison": "PREFIX"}],
+                        },
                     }
-                ]
+                ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -325,11 +316,7 @@ class TestECR(BaseTest):
             {
                 "name": "modify-ecr-repo-policy-image-with-finding",
                 "resource": "aws.ecr-image",
-                "filters": [
-                    {
-                        "type": "finding"
-                    }
-                ],
+                "filters": [{"type": "finding"}],
                 "actions": [
                     {
                         "type": "modify-ecr-policy",
@@ -338,18 +325,15 @@ class TestECR(BaseTest):
                                 "Sid": "StatementAddedByC7N",
                                 "Effect": "Deny",
                                 "Principal": "*",
-                                "Action": [
-                                    "ecr:BatchGetImage"
-                                ]
+                                "Action": ["ecr:BatchGetImage"],
                             }
                         ],
-                        "remove-statements": [
-                            "OldStatementToDelete"
-                        ]
+                        "remove-statements": ["OldStatementToDelete"],
                     }
-                ]
+                ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -365,7 +349,7 @@ class TestECR(BaseTest):
                         "key": "createdAt",
                         "value_type": "date",
                         "op": "lt",
-                        "value": "2021/12/15"
+                        "value": "2021/12/15",
                     }
                 ],
                 "actions": [
@@ -376,14 +360,13 @@ class TestECR(BaseTest):
                                 "Sid": "StatementAddedByC7N",
                                 "Effect": "Deny",
                                 "Principal": "*",
-                                "Action": [
-                                    "ecr:BatchGetImage"
-                                ]
+                                "Action": ["ecr:BatchGetImage"],
                             }
-                        ]
+                        ],
                     }
-                ]
+                ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

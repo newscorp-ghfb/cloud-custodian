@@ -19,7 +19,6 @@ from c7n.filters.kms import KmsRelatedFilter
 
 @resources.register('glue-connection')
 class GlueConnection(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_connections', 'ConnectionList', {'HidePassword': True})
@@ -38,8 +37,7 @@ class ConnectionSubnetFilter(SubnetFilter):
 @GlueConnection.filter_registry.register('security-group')
 class ConnectionSecurityGroupFilter(SecurityGroupFilter):
 
-    RelatedIdsExpression = 'PhysicalConnectionRequirements.' \
-                           'SecurityGroupIdList[]'
+    RelatedIdsExpression = 'PhysicalConnectionRequirements.' 'SecurityGroupIdList[]'
 
 
 @GlueConnection.action_registry.register('delete')
@@ -58,6 +56,7 @@ class DeleteConnection(BaseAction):
             actions:
               - type: delete
     """
+
     schema = type_schema('delete')
     permissions = ('glue:DeleteConnection',)
 
@@ -76,7 +75,6 @@ class DeleteConnection(BaseAction):
 
 @resources.register('glue-dev-endpoint')
 class GlueDevEndpoint(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_dev_endpoints', 'DevEndpoints', None)
@@ -111,6 +109,7 @@ class DeleteDevEndpoint(BaseAction):
             actions:
               - type: delete
     """
+
     schema = type_schema('delete')
     permissions = ('glue:DeleteDevEndpoint',)
 
@@ -129,14 +128,11 @@ class DeleteDevEndpoint(BaseAction):
                 futures.append(w.submit(self.delete_dev_endpoint, client, endpoint_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting glue dev endpoint \n %s",
-                        f.exception())
+                    self.log.error("Exception deleting glue dev endpoint \n %s", f.exception())
 
 
 @resources.register('glue-job')
 class GlueJob(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_jobs', 'Jobs', None)
@@ -184,6 +180,7 @@ class GlueJobToggleMetrics(BaseAction):
               - type: toggle-metrics
                 enabled: true
     """
+
     schema = type_schema(
         'toggle-metrics',
         enabled={'type': 'boolean'},
@@ -223,7 +220,6 @@ class GlueJobToggleMetrics(BaseAction):
 
 @resources.register('glue-crawler')
 class GlueCrawler(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_crawlers', 'Crawlers', None)
@@ -263,7 +259,8 @@ class SecurityConfigFilter(RelatedResourceFilter):
     schema = type_schema(
         'security-config',
         missing={'type': 'boolean', 'default': False},
-        rinherit=ValueFilter.schema)
+        rinherit=ValueFilter.schema,
+    )
 
     def validate(self):
         if self.data.get('missing'):
@@ -313,7 +310,6 @@ class DeleteCrawler(BaseAction):
 
 @resources.register('glue-database')
 class GlueDatabase(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_databases', 'DatabaseList', None)
@@ -355,7 +351,6 @@ class GlueTable(query.ChildResourceManager):
 
 @query.sources.register('describe-table')
 class DescribeTable(query.ChildDescribeSource):
-
     def get_query(self):
         query = super(DescribeTable, self).get_query()
         query.capture_parent_id = True
@@ -386,7 +381,6 @@ class DeleteTable(BaseAction):
 
 @resources.register('glue-classifier')
 class GlueClassifier(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_classifiers', 'Classifiers', None)
@@ -416,7 +410,6 @@ class DeleteClassifier(BaseAction):
 
 @resources.register('glue-ml-transform')
 class GlueMLTransform(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_ml_transforms', 'Transforms', None)
@@ -449,7 +442,6 @@ class DeleteMLTransform(BaseAction):
 
 @resources.register('glue-security-configuration')
 class GlueSecurityConfiguration(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_security_configurations', 'SecurityConfigurations', None)
@@ -465,10 +457,12 @@ class KmsFilter(KmsRelatedFilter):
     schema = type_schema(
         'kms-key',
         rinherit=ValueFilter.schema,
-        **{'key-type': {'type': 'string', 'enum': [
-            's3', 'cloudwatch', 'job-bookmarks', 'all']},
+        **{
+            'key-type': {'type': 'string', 'enum': ['s3', 'cloudwatch', 'job-bookmarks', 'all']},
             'match-resource': {'type': 'boolean'},
-            'operator': {'enum': ['and', 'or']}})
+            'operator': {'enum': ['and', 'or']},
+        }
+    )
 
     RelatedIdsExpression = ''
 
@@ -478,7 +472,7 @@ class KmsFilter(KmsRelatedFilter):
             's3': 'EncryptionConfiguration.S3Encryption[].KmsKeyArn',
             'cloudwatch': 'EncryptionConfiguration.CloudWatchEncryption.KmsKeyArn',
             'job-bookmarks': 'EncryptionConfiguration.JobBookmarksEncryption.KmsKeyArn',
-            'all': 'EncryptionConfiguration.*[][].KmsKeyArn'
+            'all': 'EncryptionConfiguration.*[][].KmsKeyArn',
         }
         key_type = self.data.get('key_type', 'all')
         self.RelatedIdsExpression = key_type_to_related_ids[key_type]
@@ -501,7 +495,6 @@ class DeleteSecurityConfiguration(BaseAction):
 
 @resources.register('glue-trigger')
 class GlueTrigger(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('get_triggers', 'Triggers', None)
@@ -530,7 +523,6 @@ class DeleteTrigger(BaseAction):
 
 @resources.register('glue-workflow')
 class GlueWorkflow(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'glue'
         enum_spec = ('list_workflows', 'Workflows', None)
@@ -541,8 +533,7 @@ class GlueWorkflow(QueryResourceManager):
         cfn_type = 'AWS::Glue::Workflow'
 
     def augment(self, resources):
-        return universal_augment(
-            self, super(GlueWorkflow, self).augment(resources))
+        return universal_augment(self, super(GlueWorkflow, self).augment(resources))
 
 
 @GlueWorkflow.action_registry.register('delete')
@@ -642,8 +633,8 @@ class GlueDataCatalogEncryption(BaseAction):
                     'required': ['CatalogEncryptionMode'],
                     'properties': {
                         'CatalogEncryptionMode': {'enum': ['DISABLED', 'SSE-KMS']},
-                        'SseAwsKmsKeyId': {'type': 'string'}
-                    }
+                        'SseAwsKmsKeyId': {'type': 'string'},
+                    },
                 },
                 'ConnectionPasswordEncryption': {
                     'type': 'object',
@@ -651,11 +642,11 @@ class GlueDataCatalogEncryption(BaseAction):
                     'required': ['ReturnConnectionPasswordEncrypted'],
                     'properties': {
                         'ReturnConnectionPasswordEncrypted': {'type': 'boolean'},
-                        'AwsKmsKeyId': {'type': 'string'}
-                    }
-                }
-            }
-        }
+                        'AwsKmsKeyId': {'type': 'string'},
+                    },
+                },
+            },
+        },
     )
 
     permissions = ('glue:PutDataCatalogEncryptionSettings',)
@@ -664,7 +655,8 @@ class GlueDataCatalogEncryption(BaseAction):
         client = local_session(self.manager.session_factory).client('glue')
         # there is one glue data catalog per account
         client.put_data_catalog_encryption_settings(
-            DataCatalogEncryptionSettings=self.data['attributes'])
+            DataCatalogEncryptionSettings=self.data['attributes']
+        )
 
 
 @GlueDataCatalog.filter_registry.register('glue-security-config')
@@ -700,6 +692,7 @@ class GlueCatalogCrossAccount(CrossAccountAccessFilter):
             - type: cross-account
 
     """
+
     permissions = ('glue:GetResourcePolicy',)
     policy_annotation = "c7n:AccessPolicy"
 
@@ -732,6 +725,7 @@ class RemovePolicyStatement(RemovePolicyBase):
                   - type: remove-statements
                     statement_ids: matched
     """
+
     permissions = ('glue:PutResourcePolicy',)
     policy_annotation = "c7n:AccessPolicy"
 
@@ -741,7 +735,8 @@ class RemovePolicyStatement(RemovePolicyBase):
                 return self
         raise PolicyValidationError(
             '`remove-statements` may only be used in '
-            'conjunction with `cross-account` filter on %s' % (self.manager.data,))
+            'conjunction with `cross-account` filter on %s' % (self.manager.data,)
+        )
 
     def process(self, resources):
         resource = resources[0]
@@ -749,7 +744,8 @@ class RemovePolicyStatement(RemovePolicyBase):
         if resource.get(self.policy_annotation):
             p = json.loads(resource[self.policy_annotation])
             statements, found = self.process_policy(
-                p, resource, CrossAccountAccessFilter.annotation_key)
+                p, resource, CrossAccountAccessFilter.annotation_key
+            )
             if not found:
                 return
             if statements:

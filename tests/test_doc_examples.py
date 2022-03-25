@@ -39,7 +39,7 @@ def get_doc_examples(resources):
 
 
 def get_doc_policies(resources):
-    """ Retrieve all unique policies from the list of resources.
+    """Retrieve all unique policies from the list of resources.
     Duplicate policy is a policy that uses same name but has different set of
     actions and/or filters.
 
@@ -58,16 +58,17 @@ def get_doc_policies(resources):
         for p in data.get('policies', []):
             if p['name'] in policies:
                 if policies[p['name']] != p:
-                    print('duplicate %s %s %s' % (
-                        resource_name, el_name, p['name']))
+                    print('duplicate %s %s %s' % (resource_name, el_name, p['name']))
                     duplicate_names.add(p['name'])
             else:
                 policies[p['name']] = p
 
     if duplicate_names:
-        print('If you see this error, there are some policies with the same name but different '
-              'set of filters and/or actions.\n'
-              'Please make sure you\'re using unique names for different policies.\n')
+        print(
+            'If you see this error, there are some policies with the same name but different '
+            'set of filters and/or actions.\n'
+            'Please make sure you\'re using unique names for different policies.\n'
+        )
         print('Duplicate policy names:')
         for d in duplicate_names:
             print('\t{0}'.format(d))
@@ -92,5 +93,4 @@ def test_doc_examples(provider_name):
         # lambda function names.  This applies to AWS and GCP, and
         # afaict Azure.
         if len(p['name']) >= 54 and 'mode' in p:
-            raise ValueError(
-                "doc policy exceeds name limit policy:%s" % (p['name']))
+            raise ValueError("doc policy exceeds name limit policy:%s" % (p['name']))

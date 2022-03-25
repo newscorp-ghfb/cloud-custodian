@@ -59,8 +59,8 @@ class PostgresqlServer(ArmResourceManager):
 class PostgresqlServerFirewallRulesFilter(FirewallRulesFilter):
     def _query_rules(self, resource):
         query = self.client.firewall_rules.list_by_server(
-            resource['resourceGroup'],
-            resource['name'])
+            resource['resourceGroup'], resource['name']
+        )
         resource_rules = IPSet()
         for r in query:
             rule = IPRange(r.start_ip_address, r.end_ip_address)

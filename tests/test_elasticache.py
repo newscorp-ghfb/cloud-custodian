@@ -6,19 +6,20 @@ from .common import BaseTest
 
 
 class TestElastiCacheCluster(BaseTest):
-
     def test_eligibility_snapshot(self):
         # so black box testing, due to use of private interface.
 
         self.assertTrue(
-            _cluster_eligible_for_snapshot(
-                {'Engine': 'redis', 'CacheNodeType': 'cache.t2.medium'}))
+            _cluster_eligible_for_snapshot({'Engine': 'redis', 'CacheNodeType': 'cache.t2.medium'})
+        )
+        self.assertFalse(
+            _cluster_eligible_for_snapshot({'Engine': 'redis', 'CacheNodeType': 'cache.t1.medium'})
+        )
         self.assertFalse(
             _cluster_eligible_for_snapshot(
-                {'Engine': 'redis', 'CacheNodeType': 'cache.t1.medium'}))
-        self.assertFalse(
-            _cluster_eligible_for_snapshot(
-                {'Engine': 'memcached', 'CacheNodeType': 'cache.t2.medium'}))
+                {'Engine': 'memcached', 'CacheNodeType': 'cache.t2.medium'}
+            )
+        )
 
     def test_elasticache_security_group(self):
         session_factory = self.replay_flight_data("test_elasticache_security_group")
@@ -26,9 +27,7 @@ class TestElastiCacheCluster(BaseTest):
             {
                 "name": "elasticache-cluster-simple",
                 "resource": "cache-cluster",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -40,16 +39,12 @@ class TestElastiCacheCluster(BaseTest):
         )
 
     def test_elasticache_subnet_filter(self):
-        session_factory = self.replay_flight_data(
-            "test_elasticache_subnet_group_filter"
-        )
+        session_factory = self.replay_flight_data("test_elasticache_subnet_group_filter")
         p = self.load_policy(
             {
                 "name": "elasticache-cluster-simple",
                 "resource": "cache-cluster",
-                "filters": [
-                    {"type": "subnet", "key": "MapPublicIpOnLaunch", "value": False}
-                ],
+                "filters": [{"type": "subnet", "key": "MapPublicIpOnLaunch", "value": False}],
             },
             session_factory=session_factory,
         )
@@ -89,9 +84,7 @@ class TestElastiCacheCluster(BaseTest):
             t["Key"]: t["Value"]
             for t in client.list_tags_for_resource(
                 ResourceName="arn:aws:elasticache:us-east-2:644160558196:snapshot:zero-bytes"
-            )[
-                "TagList"
-            ]
+            )["TagList"]
         }
         self.assertEqual(snap_tags, {"App": "MegaCache"})
         p = self.load_policy(
@@ -113,8 +106,7 @@ class TestElastiCacheCluster(BaseTest):
         self.assertEqual(resources[0]["SnapshotName"], "zero-bytes")
         arn = p.resource_manager.get_arns(resources)[0]
         snap_tags = {
-            t["Key"]: t["Value"]
-            for t in client.list_tags_for_resource(ResourceName=arn)["TagList"]
+            t["Key"]: t["Value"] for t in client.list_tags_for_resource(ResourceName=arn)["TagList"]
         }
         self.assertEqual(
             snap_tags, {"App": "MegaCache", "Color": "Blue", "Env": "Dev", "Zone": "12"}
@@ -125,9 +117,7 @@ class TestElastiCacheCluster(BaseTest):
         client = session_factory().client("elasticache")
         results = client.list_tags_for_resource(
             ResourceName="arn:aws:elasticache:us-east-1:644160558196:snapshot:myec-backup"
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         tags = {t["Key"]: t["Value"] for t in results}
         self.assertEqual(tags, {})
 
@@ -153,9 +143,7 @@ class TestElastiCacheCluster(BaseTest):
             {
                 "name": "elasticache-cluster-available",
                 "resource": "cache-cluster",
-                "filters": [
-                    {"type": "value", "key": "CacheClusterStatus", "value": "available"}
-                ],
+                "filters": [{"type": "value", "key": "CacheClusterStatus", "value": "available"}],
             },
             session_factory=session_factory,
         )
@@ -230,7 +218,6 @@ class TestElastiCacheCluster(BaseTest):
 
 
 class TestElastiCacheSubnetGroup(BaseTest):
-
     def test_elasticache_subnet_group(self):
         session_factory = self.replay_flight_data("test_elasticache_subnet_group")
         p = self.load_policy(
@@ -242,7 +229,6 @@ class TestElastiCacheSubnetGroup(BaseTest):
 
 
 class TestElastiCacheSnapshot(BaseTest):
-
     def test_elasticache_snapshot(self):
         session_factory = self.replay_flight_data("test_elasticache_snapshot")
         p = self.load_policy(
@@ -331,7 +317,6 @@ class TestElastiCacheSnapshot(BaseTest):
 
 
 class TestModifyVpcSecurityGroupsAction(BaseTest):
-
     def test_elasticache_remove_matched_security_groups(self):
         #
         # Test conditions:
@@ -343,9 +328,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #        - translates to 3 clusters marked non-compliant
         #
         # Results in 6 clusters with default Security Group attached
-        session_factory = self.replay_flight_data(
-            "test_elasticache_remove_matched_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_elasticache_remove_matched_security_groups")
         client = session_factory().client("elasticache", region_name="ca-central-1")
 
         p = self.load_policy(
@@ -374,9 +357,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
             {
                 "name": "elasticache-verifyremove-matched-security-groups",
                 "resource": "cache-cluster",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -412,9 +393,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
             {
                 "name": "add-sg-to-prod-elasticache",
                 "resource": "cache-cluster",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
                 "actions": [{"type": "modify-security-groups", "add": "sg-6360920a"}],
             },
             session_factory=session_factory,
@@ -448,12 +427,12 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
 
 
 class TestElastiCacheReplicationGroup(BaseTest):
-
     def test_elasticache_replication_group(self):
         session_factory = self.replay_flight_data("test_elasticache_replication_group")
         p = self.load_policy(
             {"name": "elasticache-rg", "resource": "elasticache-group"},
-            session_factory=session_factory,)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ReplicationGroupId'], 'test-c7n-rg')
@@ -467,7 +446,8 @@ class TestElastiCacheReplicationGroup(BaseTest):
                 "filters": [{"type": "value", "key": "AtRestEncryptionEnabled", "value": False}],
                 "actions": [{"type": "delete", "snapshot": True}],
             },
-            session_factory=session_factory,)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ReplicationGroupId'], 'c7n-delete')
@@ -478,8 +458,7 @@ class TestElastiCacheReplicationGroup(BaseTest):
     def test_elasticache_replication_group_tag(self):
         # the elasticache resource uses the universal_taggable wrapper for the AWS
         # resource tagging API - this test ensures that API works for RGs
-        session_factory = self.replay_flight_data(
-            "test_elasticache_replication_group_tag")
+        session_factory = self.replay_flight_data("test_elasticache_replication_group_tag")
         p = self.load_policy(
             {
                 "name": "tag-ElastiCacheReplicationGroup",
@@ -494,7 +473,7 @@ class TestElastiCacheReplicationGroup(BaseTest):
 
         client = session_factory().client("elasticache")
         response = client.describe_replication_groups(ReplicationGroupId='c7n-tagging')
-        while(response.get('ReplicationGroups')[0].get('Status') == 'modifying'):
+        while response.get('ReplicationGroups')[0].get('Status') == 'modifying':
             response = client.describe_replication_groups(ReplicationGroupId='c7n-tagging')
         arn = p.resource_manager.get_arns(resources)[0]
         tags = client.list_tags_for_resource(ResourceName=arn)["TagList"]

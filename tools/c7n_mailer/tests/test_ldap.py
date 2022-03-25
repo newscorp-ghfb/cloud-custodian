@@ -11,7 +11,6 @@ SKIP_REASON = "Azure Pipelines still broken"
 
 
 class MailerLdapTest(unittest.TestCase):
-
     def setUp(self):
         if not have_sqlite:
             return
@@ -36,7 +35,7 @@ class MailerLdapTest(unittest.TestCase):
             'mail': 'john_oconnor@initech.com',
             'manager': 'uid=bill_lumbergh,cn=users,dc=initech,dc=com',
             'displayName': "John O'Connor",
-            'uid': 'john_oconnor'
+            'uid': 'john_oconnor',
         }
         set_result = self.ldap_lookup.caching.set(irish_guy['uid'], irish_guy)
         self.assertEqual(set_result, None)

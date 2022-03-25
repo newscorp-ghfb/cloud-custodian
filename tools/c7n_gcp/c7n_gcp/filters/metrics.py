@@ -28,7 +28,8 @@ REDUCERS = [
     'REDUCE_PERCENTILE_99',
     'REDUCE_PERCENTILE_95',
     'REDUCE_PERCENTILE_50',
-    'REDUCE_PERCENTILE_05']
+    'REDUCE_PERCENTILE_05',
+]
 
 ALIGNERS = [
     'ALIGN_NONE',
@@ -49,7 +50,8 @@ ALIGNERS = [
     'ALIGN_PERCENTILE_95',
     'ALIGN_PERCENTILE_50',
     'ALIGN_PERCENTILE_05',
-    'ALIGN_PERCENT_CHANG']
+    'ALIGN_PERCENT_CHANG',
+]
 
 BATCH_SIZE = 10000
 
@@ -82,24 +84,30 @@ class GCPMetricsFilter(Filter):
 
     schema = type_schema(
         'metrics',
-        **{'name': {'type': 'string'},
-          'metric-key': {'type': 'string'},
-          'group-by-fields': {'type': 'array', 'items': {'type': 'string'}},
-          'days': {'type': 'number'},
-          'op': {'type': 'string', 'enum': list(OPERATORS.keys())},
-          'reducer': {'type': 'string', 'enum': REDUCERS},
-          'aligner': {'type': 'string', 'enum': ALIGNERS},
-          'value': {'type': 'number'},
-          'filter': {'type': 'string'},
-          'missing-value': {'type': 'number'},
-          'required': ('value', 'name', 'op')})
+        **{
+            'name': {'type': 'string'},
+            'metric-key': {'type': 'string'},
+            'group-by-fields': {'type': 'array', 'items': {'type': 'string'}},
+            'days': {'type': 'number'},
+            'op': {'type': 'string', 'enum': list(OPERATORS.keys())},
+            'reducer': {'type': 'string', 'enum': REDUCERS},
+            'aligner': {'type': 'string', 'enum': ALIGNERS},
+            'value': {'type': 'number'},
+            'filter': {'type': 'string'},
+            'missing-value': {'type': 'number'},
+            'required': ('value', 'name', 'op'),
+        }
+    )
     permissions = ("monitoring.timeSeries.list",)
 
     def validate(self):
-        if not self.data.get('metric-key') and \
-           not hasattr(self.manager.resource_type, 'metric_key'):
-            raise FilterValidationError("metric-key not defined for resource %s,"
-            "so must be provided in the policy" % (self.manager.type))
+        if not self.data.get('metric-key') and not hasattr(
+            self.manager.resource_type, 'metric_key'
+        ):
+            raise FilterValidationError(
+                "metric-key not defined for resource %s,"
+                "so must be provided in the policy" % (self.manager.type)
+            )
         return self
 
     def process(self, resources, event=None):
@@ -135,10 +143,11 @@ class GCPMetricsFilter(Filter):
                 "aggregation_perSeriesAligner": self.aligner,
                 "aggregation_crossSeriesReducer": self.reducer,
                 "aggregation_groupByFields": self.group_by_fields,
-                'view': 'FULL'
+                'view': 'FULL',
             }
-            metric_list = client.execute_query('list',
-                {'name': 'projects/' + project, **query_params})
+            metric_list = client.execute_query(
+                'list', {'name': 'projects/' + project, **query_params}
+            )
             time_series_data.extend(metric_list.get('timeSeries', []))
 
         if not time_series_data:
@@ -182,12 +191,9 @@ class GCPMetricsFilter(Filter):
             user_filter = " AND " + self.filter
 
         for batch in self.batch_resources(resources):
-            batched_filters.append(''.join([
-                metric_filter_type,
-                ''.join(batch),
-                ' ) ',
-                user_filter
-            ]))
+            batched_filters.append(
+                ''.join([metric_filter_type, ''.join(batch), ' ) ', user_filter])
+            )
         return batched_filters
 
     def split_by_resource(self, metric_list):

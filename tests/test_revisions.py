@@ -6,7 +6,6 @@ from .common import BaseTest
 
 
 class SGDiffLibTest(BaseTest):
-
     def test_sg_diff_remove_ingress(self):
         factory = self.replay_flight_data("test_sg_config_ingres_diff")
         p = self.load_policy(
@@ -100,9 +99,7 @@ class SGDiffLibTest(BaseTest):
                     u"Ipv6Ranges": [],
                     u"PrefixListIds": [],
                     u"ToPort": 8485,
-                    u"UserIdGroupPairs": [
-                        {u"GroupId": u"sg-a38ed1de", u"UserId": u"644160558196"}
-                    ],
+                    u"UserIdGroupPairs": [{u"GroupId": u"sg-a38ed1de", u"UserId": u"644160558196"}],
                 },
             },
             {
@@ -217,18 +214,14 @@ class SGDiffLibTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        current_resource = factory().client("ec2").describe_security_groups(
-            GroupIds=["sg-a38ed1de"]
-        )[
-            "SecurityGroups"
-        ][
-            0
-        ]
+        current_resource = (
+            factory()
+            .client("ec2")
+            .describe_security_groups(GroupIds=["sg-a38ed1de"])["SecurityGroups"][0]
+        )
 
         self.maxDiff = None
-        self.assertEqual(
-            current_resource, resources[0]["c7n:previous-revision"]["resource"]
-        )
+        self.assertEqual(current_resource, resources[0]["c7n:previous-revision"]["resource"])
 
     def test_sg_diff_patch(self):
         factory = self.replay_flight_data("test_security_group_revisions_delta")
@@ -237,9 +230,7 @@ class SGDiffLibTest(BaseTest):
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
         sg_id = client.create_security_group(
             GroupName="allow-access", VpcId=vpc_id, Description="inbound access"
-        )[
-            "GroupId"
-        ]
+        )["GroupId"]
         self.addCleanup(client.delete_security_group, GroupId=sg_id)
 
         client.create_tags(
@@ -329,9 +320,7 @@ class SGDiffLibTest(BaseTest):
                         }
                     ],
                 },
-                "tags": {
-                    "added": {"Stage": "production"}, "updated": {"App": "red-moon"}
-                },
+                "tags": {"added": {"Stage": "production"}, "updated": {"App": "red-moon"}},
             },
             SecurityGroupDiff().diff(s1, s2),
         )

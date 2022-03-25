@@ -25,12 +25,10 @@ from netaddr import IPNetwork, IPRange, IPSet
 
 from c7n_azure import constants
 
-resource_group_regex = re.compile(r'/subscriptions/[^/]+/resourceGroups/[^/]+(/)?$',
-                                  re.IGNORECASE)
+resource_group_regex = re.compile(r'/subscriptions/[^/]+/resourceGroups/[^/]+(/)?$', re.IGNORECASE)
 
 
 class ResourceIdParser:
-
     @staticmethod
     def get_namespace(resource_id):
         parsed = parse_resource_id(resource_id)
@@ -64,8 +62,12 @@ class ResourceIdParser:
 
     @staticmethod
     def get_full_type(resource_id):
-        return '/'.join([ResourceIdParser.get_namespace(resource_id),
-                         ResourceIdParser.get_resource_type(resource_id)])
+        return '/'.join(
+            [
+                ResourceIdParser.get_namespace(resource_id),
+                ResourceIdParser.get_resource_type(resource_id),
+            ]
+        )
 
 
 def is_resource_group_id(rid):
@@ -77,7 +79,6 @@ def is_resource_group(resource):
 
 
 class StringUtils:
-
     @staticmethod
     def equal(a, b, case_insensitive=True):
         if isinstance(a, str) and isinstance(b, str):
@@ -101,14 +102,12 @@ class StringUtils:
 
 
 def utcnow():
-    """The datetime object for the current time in UTC
-    """
+    """The datetime object for the current time in UTC"""
     return datetime.datetime.utcnow()
 
 
 def now(tz=None):
-    """The datetime object for the current time in UTC
-    """
+    """The datetime object for the current time in UTC"""
     return datetime.datetime.now(tz=tz)
 
 
@@ -120,8 +119,7 @@ send_logger = logging.getLogger('custodian.azure.utils.ServiceClient.send')
 
 
 def custodian_azure_send_override(self, request, headers=None, content=None, **kwargs):
-    """ Overrides ServiceClient.send() function to implement retries & log headers
-    """
+    """Overrides ServiceClient.send() function to implement retries & log headers"""
     retries = 0
     max_retries = 3
     while retries < max_retries:
@@ -141,17 +139,22 @@ def custodian_azure_send_override(self, request, headers=None, content=None, **k
             if retry_after is None:
                 # we want to attempt retries even when azure fails to send a header
                 # this has been a constant source of instability in larger environments
-                retry_after = (constants.DEFAULT_RETRY_AFTER * retries) + \
-                    random.randint(1, constants.DEFAULT_RETRY_AFTER)
+                retry_after = (constants.DEFAULT_RETRY_AFTER * retries) + random.randint(
+                    1, constants.DEFAULT_RETRY_AFTER
+                )
             if retry_after < constants.DEFAULT_MAX_RETRY_AFTER:
-                send_logger.warning('Received retriable error code %i. Retry-After: %i'
-                                    % (response.status_code, retry_after))
+                send_logger.warning(
+                    'Received retriable error code %i. Retry-After: %i'
+                    % (response.status_code, retry_after)
+                )
                 time.sleep(retry_after)
                 retries += 1
             else:
-                send_logger.error("Received throttling error, retry time is %i"
-                                  "(retry only if < %i seconds)."
-                                  % (retry_after or 0, constants.DEFAULT_MAX_RETRY_AFTER))
+                send_logger.error(
+                    "Received throttling error, retry time is %i"
+                    "(retry only if < %i seconds)."
+                    % (retry_after or 0, constants.DEFAULT_MAX_RETRY_AFTER)
+                )
                 break
         else:
             break
@@ -163,10 +166,16 @@ class ThreadHelper:
     disable_multi_threading = False
 
     @staticmethod
-    def execute_in_parallel(resources, event, execution_method, executor_factory, log,
-                            max_workers=constants.DEFAULT_MAX_THREAD_WORKERS,
-                            chunk_size=constants.DEFAULT_CHUNK_SIZE,
-                            **kwargs):
+    def execute_in_parallel(
+        resources,
+        event,
+        execution_method,
+        executor_factory,
+        log,
+        max_workers=constants.DEFAULT_MAX_THREAD_WORKERS,
+        chunk_size=constants.DEFAULT_CHUNK_SIZE,
+        **kwargs
+    ):
         futures = []
         results = []
         exceptions = []
@@ -185,8 +194,7 @@ class ThreadHelper:
 
                 for f in as_completed(futures):
                     if f.exception():
-                        log.error(
-                            "Execution failed with error: %s" % f.exception())
+                        log.error("Execution failed with error: %s" % f.exception())
                         exceptions.append(f.exception())
                     else:
                         result = f.result()
@@ -197,7 +205,6 @@ class ThreadHelper:
 
 
 class Math:
-
     @staticmethod
     def mean(numbers):
         clean_numbers = [e for e in numbers if e is not None]
@@ -236,8 +243,8 @@ class GraphHelper:
             return {}
 
         object_params = GetObjectsParameters(
-            include_directory_object_references=True,
-            object_ids=object_ids)
+            include_directory_object_references=True, object_ids=object_ids
+        )
 
         principal_dics = {object_id: DirectoryObject() for object_id in object_ids}
 
@@ -250,12 +257,14 @@ class GraphHelper:
             if e.status_code in [403, 401]:
                 GraphHelper.log.warning(
                     'Credentials not authorized for access to read from Microsoft Graph. \n '
-                    'Can not query on principalName, displayName, or aadType. \n')
+                    'Can not query on principalName, displayName, or aadType. \n'
+                )
             else:
                 GraphHelper.log.error(
                     'Exception in call to Microsoft Graph. \n '
                     'Can not query on principalName, displayName, or aadType. \n'
-                    'Error: {0}'.format(e))
+                    'Error: {0}'.format(e)
+                )
 
             if raise_on_graph_call_error:
                 raise
@@ -283,8 +292,8 @@ class PortsRangeHelper:
 
     @staticmethod
     def _get_port_range(range_str):
-        """ Given a string with a port or port range: '80', '80-120'
-            Returns tuple with range start and end ports: (80, 80), (80, 120)
+        """Given a string with a port or port range: '80', '80-120'
+        Returns tuple with range start and end ports: (80, 80), (80, 120)
         """
         if range_str == '*':
             return PortsRangeHelper.PortsRange(start=0, end=65535)
@@ -297,35 +306,36 @@ class PortsRangeHelper:
 
     @staticmethod
     def _get_string_port_ranges(ports):
-        """ Extracts ports ranges from the string
-            Returns an array of PortsRange tuples
+        """Extracts ports ranges from the string
+        Returns an array of PortsRange tuples
         """
         return [PortsRangeHelper._get_port_range(r) for r in ports.split(',') if r != '']
 
     @staticmethod
     def _get_rule_port_ranges(rule):
-        """ Extracts ports ranges from the NSG rule object
-            Returns an array of PortsRange tuples
+        """Extracts ports ranges from the NSG rule object
+        Returns an array of PortsRange tuples
         """
         properties = rule['properties']
         if 'destinationPortRange' in properties:
             return [PortsRangeHelper._get_port_range(properties['destinationPortRange'])]
         else:
-            return [PortsRangeHelper._get_port_range(r)
-                    for r in properties['destinationPortRanges']]
+            return [
+                PortsRangeHelper._get_port_range(r) for r in properties['destinationPortRanges']
+            ]
 
     @staticmethod
     def _port_ranges_to_set(ranges):
-        """ Converts array of port ranges to the set of integers
-            Example: [(10-12), (20,20)] -> {10, 11, 12, 20}
+        """Converts array of port ranges to the set of integers
+        Example: [(10-12), (20,20)] -> {10, 11, 12, 20}
         """
         return {i for r in ranges for i in range(r.start, r.end + 1)}
 
     @staticmethod
     def validate_ports_string(ports):
-        """ Validate that provided string has proper port numbers:
-            1. port number < 65535
-            2. range start < range end
+        """Validate that provided string has proper port numbers:
+        1. port number < 65535
+        2. range start < range end
         """
         pattern = re.compile('^\\d+(-\\d+)?(,\\d+(-\\d+)?)*$')
         if pattern.match(ports) is None:
@@ -339,23 +349,22 @@ class PortsRangeHelper:
 
     @staticmethod
     def get_ports_set_from_string(ports):
-        """ Convert ports range string to the set of integers
-            Example: "10-12, 20" -> {10, 11, 12, 20}
+        """Convert ports range string to the set of integers
+        Example: "10-12, 20" -> {10, 11, 12, 20}
         """
         ranges = PortsRangeHelper._get_string_port_ranges(ports)
         return PortsRangeHelper._port_ranges_to_set(ranges)
 
     @staticmethod
     def get_ports_set_from_rule(rule):
-        """ Extract port ranges from NSG rule and convert it to the set of integers
-        """
+        """Extract port ranges from NSG rule and convert it to the set of integers"""
         ranges = PortsRangeHelper._get_rule_port_ranges(rule)
         return PortsRangeHelper._port_ranges_to_set(ranges)
 
     @staticmethod
     def get_ports_strings_from_list(data):
-        """ Transform a list of port numbers to the list of strings with port ranges
-            Example: [10, 12, 13, 14, 15] -> ['10', '12-15']
+        """Transform a list of port numbers to the list of strings with port ranges
+        Example: [10, 12, 13, 14, 15] -> ['10', '12-15']
         """
         if len(data) == 0:
             return []
@@ -381,10 +390,11 @@ class PortsRangeHelper:
         return target_address in address_set or target_address == address
 
     @staticmethod
-    def build_ports_dict(nsg, direction_key, ip_protocol,
-                         source_address=None, destination_address=None):
-        """ Build entire ports array filled with True (Allow), False (Deny) and None(default - Deny)
-            based on the provided Network Security Group object, direction and protocol.
+    def build_ports_dict(
+        nsg, direction_key, ip_protocol, source_address=None, destination_address=None
+    ):
+        """Build entire ports array filled with True (Allow), False (Deny) and None(default - Deny)
+        based on the provided Network Security Group object, direction and protocol.
         """
         rules = nsg['properties']['securityRules']
         rules = sorted(rules, key=lambda k: k['properties']['priority'])
@@ -398,21 +408,25 @@ class PortsRangeHelper:
             # Check the protocol: possible values are 'TCP', 'UDP', '*' (both)
             # Skip only if rule and ip_protocol are 'TCP'/'UDP' pair.
             protocol = rule['properties']['protocol']
-            if not StringUtils.equal(protocol, "*") and \
-               not StringUtils.equal(ip_protocol, "*") and \
-               not StringUtils.equal(protocol, ip_protocol):
+            if (
+                not StringUtils.equal(protocol, "*")
+                and not StringUtils.equal(ip_protocol, "*")
+                and not StringUtils.equal(protocol, ip_protocol)
+            ):
                 continue
 
             if not PortsRangeHelper.check_address(
-                    source_address,
-                    rule['properties'].get('sourceAddressPrefixes'),
-                    rule['properties'].get('sourceAddressPrefix')):
+                source_address,
+                rule['properties'].get('sourceAddressPrefixes'),
+                rule['properties'].get('sourceAddressPrefix'),
+            ):
                 continue
 
             if not PortsRangeHelper.check_address(
-                    destination_address,
-                    rule['properties'].get('destinationAddressPrefixes'),
-                    rule['properties'].get('destinationAddressPrefix')):
+                destination_address,
+                rule['properties'].get('destinationAddressPrefixes'),
+                rule['properties'].get('destinationAddressPrefix'),
+            ):
                 continue
 
             IsAllowed = StringUtils.equal(rule['properties']['access'], 'allow')
@@ -426,7 +440,6 @@ class PortsRangeHelper:
 
 
 class IpRangeHelper:
-
     @staticmethod
     def parse_ip_ranges(data, key):
         '''
@@ -470,20 +483,22 @@ class AppInsightsHelper:
     @staticmethod
     def _get_instrumentation_key(resource_group_name, resource_name):
         from c7n_azure.session import Session
+
         s = local_session(Session)
         client = s.client('azure.mgmt.applicationinsights.ApplicationInsightsManagementClient')
         try:
             insights = client.components.get(resource_group_name, resource_name)
             return insights.instrumentation_key
         except Exception:
-            AppInsightsHelper.log.warning("Failed to retrieve App Insights instrumentation key."
-                                          "Resource Group name: %s, App Insights name: %s" %
-                                          (resource_group_name, resource_name))
+            AppInsightsHelper.log.warning(
+                "Failed to retrieve App Insights instrumentation key."
+                "Resource Group name: %s, App Insights name: %s"
+                % (resource_group_name, resource_name)
+            )
             return ''
 
 
 class ManagedGroupHelper:
-
     @staticmethod
     def get_subscriptions_list(managed_resource_group, session):
         client = session.client('azure.mgmt.managementgroups.ManagementGroupsAPI')
@@ -531,30 +546,37 @@ class RetentionPeriod:
         """
         match = re.match(RetentionPeriod.PATTERN, iso8601_retention_period)
         if match is None:
-            raise ValueError("Invalid iso8601_retention_period: {}. "
-            "This parser only accepts a single duration designator."
-            .format(iso8601_retention_period))
+            raise ValueError(
+                "Invalid iso8601_retention_period: {}. "
+                "This parser only accepts a single duration designator.".format(
+                    iso8601_retention_period
+                )
+            )
         period = int(match.group(1))
         iso8601_symbol = match.group(2)
-        units = next(units for units in RetentionPeriod.Units
-            if units.iso8601_symbol == iso8601_symbol)
+        units = next(
+            units for units in RetentionPeriod.Units if units.iso8601_symbol == iso8601_symbol
+        )
         return period, units
 
 
 @lru_cache()
 def get_keyvault_secret(user_identity_id, keyvault_secret_id):
     secret_id = SecretProperties(attributes=None, vault_id=keyvault_secret_id)
-    kv_client = SecretClient(vault_url=secret_id.vault_url,
-                             credential=ManagedIdentityCredential(client_id=user_identity_id))
+    kv_client = SecretClient(
+        vault_url=secret_id.vault_url,
+        credential=ManagedIdentityCredential(client_id=user_identity_id),
+    )
     return kv_client.get_secret(secret_id.name, secret_id.version).value
 
 
 @lru_cache()
 def get_service_tag_list():
-    """ Gets service tags, note that the region passed to the API
+    """Gets service tags, note that the region passed to the API
     doesn't seem to do anything, so we use a fixed one to improve caching"""
 
     from c7n_azure.session import Session
+
     s = local_session(Session)  # type: Session
 
     client = s.client('azure.mgmt.network._network_management_client.NetworkManagementClient')
@@ -563,7 +585,7 @@ def get_service_tag_list():
 
 
 def get_service_tag_ip_space(resource_name='AzureCloud', region=None):
-    """ Gets service tags, optionally filtered by resource name and region.
+    """Gets service tags, optionally filtered by resource name and region.
     Note that the region passed to the API doesn't seem to do anything, but
     you have to provide one.  Filtering is done on the result set."""
 
@@ -612,7 +634,6 @@ def serialize(data):
 
 
 class C7nRetryPolicy(RetryPolicy):
-
     def __init__(self, **kwargs):
         if 'retry_total' not in kwargs:
             kwargs['retry_total'] = 3
@@ -644,5 +665,5 @@ def log_response_data(response):
 # 2020-06-01 is not supported, but 2019-11-01 is working as expected.
 def cost_query_override_api_version(request):
     request.http_request.url = request.http_request.url.replace(
-        'query?api-version=2020-06-01',
-        'query?api-version=2019-11-01')
+        'query?api-version=2020-06-01', 'query?api-version=2019-11-01'
+    )

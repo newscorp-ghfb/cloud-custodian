@@ -6,21 +6,15 @@ from gcp_common import BaseTest
 
 
 class InventoryTest(BaseTest):
-
     def test_instance_query(self):
-        factory = self.replay_flight_data(
-            'instance-asset-query',
-            project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('instance-asset-query', project_id='cloud-custodian')
         inventory = self.load_policy(
-            {'name': 'fetch',
-             'source': 'inventory',
-             'resource': 'gcp.instance'},
-            session_factory=factory)
+            {'name': 'fetch', 'source': 'inventory', 'resource': 'gcp.instance'},
+            session_factory=factory,
+        )
         describe = self.load_policy(
-            {'name': 'fetch',
-             'resource': 'gcp.instance'},
-            session_factory=factory)
+            {'name': 'fetch', 'resource': 'gcp.instance'}, session_factory=factory
+        )
 
         results = inventory.resource_manager.resources()
         assert len(results) == 1
@@ -33,8 +27,14 @@ class InventoryTest(BaseTest):
         # couple of super minors on deltas on describe, mostly fingerprint
         # and kinds in the describe are mangled or removed as redundant in
         # the asset inventory.
-        delta = ('allocationAffinity', 'fingerprint', 'c7n:history',
-                 'kind', 'metadata', 'reservationAffinity')
+        delta = (
+            'allocationAffinity',
+            'fingerprint',
+            'c7n:history',
+            'kind',
+            'metadata',
+            'reservationAffinity',
+        )
         for d in delta:
             inventory_instance.pop(d, None)
             describe_instance.pop(d, None)

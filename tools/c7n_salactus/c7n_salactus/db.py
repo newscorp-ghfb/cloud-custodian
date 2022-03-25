@@ -10,7 +10,6 @@ from c7n_salactus.worker import connection as conn
 
 
 class Database:
-
     def __init__(self, path=None):
         if path:
             with open(os.path.expanduser(path)) as fh:
@@ -23,14 +22,18 @@ class Database:
         for k in self.data['bucket-size'].keys():
             a, b = k.split(':')
             accounts.setdefault(a, []).append(k)
-        return [Account(acct, [Bucket(bkt, self.data) for bkt in buckets])
-                for acct, buckets in accounts.items()]
+        return [
+            Account(acct, [Bucket(bkt, self.data) for bkt in buckets])
+            for acct, buckets in accounts.items()
+        ]
 
     def buckets(self, accounts=()):
         if accounts:
             return [
-                Bucket(k, self.data) for k in self.data['bucket-size'].keys()
-                if k.split(":")[0] in accounts]
+                Bucket(k, self.data)
+                for k in self.data['bucket-size'].keys()
+                if k.split(":")[0] in accounts
+            ]
         return [Bucket(k, self.data) for k in self.data['bucket-size'].keys()]
 
     def save(self, path):
@@ -85,18 +88,25 @@ class Account:
 
 
 class Bucket:
-
     def __init__(self, bucket_id, data):
         self.bucket_id = bucket_id
         self.data = data
 
     def __repr__(self):
-        return ("<bucket:%s size:%s percent:%s scanned:%s matched:%s "
-                "partitions:%d psize:%d denied:%s error:%d>") % (
-                    self.bucket_id, self.size, self.percent_scanned,
-                    self.scanned, self.matched, self.partitions,
-                    self.partition_size, str(self.denied).lower(),
-                    self.error_count)
+        return (
+            "<bucket:%s size:%s percent:%s scanned:%s matched:%s "
+            "partitions:%d psize:%d denied:%s error:%d>"
+        ) % (
+            self.bucket_id,
+            self.size,
+            self.percent_scanned,
+            self.scanned,
+            self.matched,
+            self.partitions,
+            self.partition_size,
+            str(self.denied).lower(),
+            self.error_count,
+        )
 
     @property
     def using_inventory(self):
@@ -127,8 +137,7 @@ class Bucket:
     @property
     def created(self):
         if 'bucket-age' in self.data:
-            return parse(
-                self.data['bucket-age'][self.bucket_id]).strftime("%Y-%m-%d")
+            return parse(self.data['bucket-age'][self.bucket_id]).strftime("%Y-%m-%d")
         return ''
 
     @property
@@ -167,14 +176,17 @@ class Bucket:
 
     @property
     def error_count(self):
-        return sum((
-            len(self.data.get('buckets-error', {}).get(self.bucket_id, ())),
-            int(self.data.get('keys-throttled', {}).get(self.bucket_id, 0)),
-            int(self.data.get('keys-connerr', {}).get(self.bucket_id, 0)),
-            int(self.data.get('keys-enderr', {}).get(self.bucket_id, 0)),
-            int(self.data.get('keys-sesserr', {}).get(self.bucket_id, 0)),
-            int(self.data.get('keys-error', {}).get(self.bucket_id, 0)),
-            int(self.data.get('keys-missing', {}).get(self.bucket_id, 0))))
+        return sum(
+            (
+                len(self.data.get('buckets-error', {}).get(self.bucket_id, ())),
+                int(self.data.get('keys-throttled', {}).get(self.bucket_id, 0)),
+                int(self.data.get('keys-connerr', {}).get(self.bucket_id, 0)),
+                int(self.data.get('keys-enderr', {}).get(self.bucket_id, 0)),
+                int(self.data.get('keys-sesserr', {}).get(self.bucket_id, 0)),
+                int(self.data.get('keys-error', {}).get(self.bucket_id, 0)),
+                int(self.data.get('keys-missing', {}).get(self.bucket_id, 0)),
+            )
+        )
 
     @property
     def gkrate(self):
@@ -183,54 +195,52 @@ class Bucket:
     @property
     def lrate(self):
         return int(
-            float(self.data['bucket-pages'].get(self.bucket_id, 0)) /
-            (float(
-                self.data['bucket-pages-time'].get(self.bucket_id, 1)) or 1))
+            float(self.data['bucket-pages'].get(self.bucket_id, 0))
+            / (float(self.data['bucket-pages-time'].get(self.bucket_id, 1)) or 1)
+        )
 
     @property
     def krate(self):
         return int(
-            float(self.data['keys-count'].get(self.bucket_id, 0)) /
-            (float(self.data['keys-time'].get(self.bucket_id, 1)) or 1))
+            float(self.data['keys-count'].get(self.bucket_id, 0))
+            / (float(self.data['keys-time'].get(self.bucket_id, 1)) or 1)
+        )
 
 
 def get_data():
     data = {}
     data['bucket-age'] = conn.hgetall('bucket-ages')
-    data['buckets-denied'] = list(
-        conn.smembers('buckets-denied'))
-    data['buckets-complete'] = list(
-        conn.smembers('buckets-complete'))
+    data['buckets-denied'] = list(conn.smembers('buckets-denied'))
+    data['buckets-complete'] = list(conn.smembers('buckets-complete'))
     data['buckets-start'] = conn.hgetall('buckets-starts')
     data['buckets-inventory'] = conn.hgetall('buckets-inventory')
-    data['bucket-partitions'] = {
-        k: int(v) for k, v in conn.hgetall('bucket-partition').items()}
-    data['buckets-error'] = conn.hgetall(
-        'buckets-unknown-errors')
+    data['bucket-partitions'] = {k: int(v) for k, v in conn.hgetall('bucket-partition').items()}
+    data['buckets-error'] = conn.hgetall('buckets-unknown-errors')
 
-    data['bucket-size'] = {
-        k: float(v) for k, v in conn.hgetall('bucket-sizes').items()}
+    data['bucket-size'] = {k: float(v) for k, v in conn.hgetall('bucket-sizes').items()}
     data['bucket-region'] = conn.hgetall('bucket-regions')
-    data['bucket-versions'] = {
-        k: bool(int(v)) for k, v in conn.hgetall('bucket-versions').items()}
+    data['bucket-versions'] = {k: bool(int(v)) for k, v in conn.hgetall('bucket-versions').items()}
 
     # key stats
-    for k in ('keys-scanned', 'keys-matched',
-              'keys-denied', 'keys-missing', 'keys-throttled',
-              'keys-sesserr', 'keys-connerr', 'keys-enderr', 'keys-error'):
-        data[k] = {
-            k: float(v) for k, v in conn.hgetall(k).items()}
+    for k in (
+        'keys-scanned',
+        'keys-matched',
+        'keys-denied',
+        'keys-missing',
+        'keys-throttled',
+        'keys-sesserr',
+        'keys-connerr',
+        'keys-enderr',
+        'keys-error',
+    ):
+        data[k] = {k: float(v) for k, v in conn.hgetall(k).items()}
 
     # metric/rate stats per period
-    data['keys-count'] = {
-        k: float(v) for k, v in conn.hgetall('keys-count').items()}
-    data['keys-time'] = {
-        k: float(v) for k, v in conn.hgetall('keys-time').items()}
+    data['keys-count'] = {k: float(v) for k, v in conn.hgetall('keys-count').items()}
+    data['keys-time'] = {k: float(v) for k, v in conn.hgetall('keys-time').items()}
 
-    data['bucket-pages'] = {
-        k: float(v) for k, v in conn.hgetall('bucket-pages').items()}
-    data['bucket-pages-time'] = {
-        k: float(v) for k, v in conn.hgetall('bucket-pages-time').items()}
+    data['bucket-pages'] = {k: float(v) for k, v in conn.hgetall('bucket-pages').items()}
+    data['bucket-pages-time'] = {k: float(v) for k, v in conn.hgetall('bucket-pages-time').items()}
 
     return data
 

@@ -9,15 +9,16 @@ from c7n_gcp.provider import GoogleCloud
 
 
 class ReportMetadataTests(BaseTest):
-
     def test_report_metadata(self):
         load_resources(('gcp.*',))
 
         missing = set()
         for k, v in GoogleCloud.resources.items():
-            if (not v.resource_type.id or
-                not v.resource_type.name or
-                    not v.resource_type.default_report_fields):
+            if (
+                not v.resource_type.id
+                or not v.resource_type.name
+                or not v.resource_type.default_report_fields
+            ):
                 missing.add("%s~%s" % (k, v))
 
         if missing:

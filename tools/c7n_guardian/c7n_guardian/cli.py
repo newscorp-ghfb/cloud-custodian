@@ -31,20 +31,17 @@ def cli():
 
 
 @cli.command()
-@click.option('-c', '--config',
-              required=True, help="Accounts config file", type=click.Path())
+@click.option('-c', '--config', required=True, help="Accounts config file", type=click.Path())
 @click.option('-t', '--tags', multiple=True, default=None)
 @click.option('-a', '--accounts', multiple=True, default=None)
 @click.option('--master', help='Master account id or name')
 @click.option('--debug', help='Run single-threaded', is_flag=True)
 @click.option(
-    '-r', '--region',
-    default=['all'], help='Region to report on (default: all)',
-    multiple=True)
+    '-r', '--region', default=['all'], help='Region to report on (default: all)', multiple=True
+)
 def report(config, tags, accounts, master, debug, region):
     """report on guard duty enablement by account"""
-    accounts_config, master_info, executor = guardian_init(
-        config, debug, master, accounts, tags)
+    accounts_config, master_info, executor = guardian_init(config, debug, master, accounts, tags)
 
     regions = expand_regions(region)
 
@@ -52,13 +49,9 @@ def report(config, tags, accounts, master, debug, region):
     with executor(max_workers=WORKER_COUNT) as w:
         futures = {}
         for region in regions:
-            futures[w.submit(report_one_region,
-                             config,
-                             tags,
-                             accounts,
-                             master,
-                             debug,
-                             region)] = region
+            futures[
+                w.submit(report_one_region, config, tags, accounts, master, debug, region)
+            ] = region
 
         for f in as_completed(futures):
             region = futures[f]
@@ -82,8 +75,7 @@ def report_one_region(
     region,
 ):
     """report on guard duty enablement by account"""
-    accounts_config, master_info, executor = guardian_init(
-        config, debug, master, accounts, tags)
+    accounts_config, master_info, executor = guardian_init(config, debug, master, accounts, tags)
 
     master_session = get_session(
         master_info['role'],
@@ -124,34 +116,39 @@ def report_one_region(
 
 
 @cli.command()
-@click.option('-c', '--config',
-              required=True, help="Accounts config file", type=click.Path())
+@click.option('-c', '--config', required=True, help="Accounts config file", type=click.Path())
 @click.option('-t', '--tags', multiple=True, default=None)
 @click.option('-a', '--accounts', multiple=True, default=None)
 @click.option('--master', help='Master account id or name')
 @click.option('--debug', help='Run single-threaded', is_flag=True)
 @click.option('--suspend', help='Suspend monitoring in master', is_flag=True)
-@click.option('--disable-detector', help='Disable detector in member account',
-              is_flag=True)
-@click.option('--delete-detector', help='Disable detector in member account',
-              is_flag=True)
-@click.option('--dissociate', help='Disassociate member account',
-              is_flag=True)
+@click.option('--disable-detector', help='Disable detector in member account', is_flag=True)
+@click.option('--delete-detector', help='Disable detector in member account', is_flag=True)
+@click.option('--dissociate', help='Disassociate member account', is_flag=True)
 @click.option('--region')
-def disable(config, tags, accounts, master, debug,
-            suspend, disable_detector, delete_detector, dissociate, region):
+def disable(
+    config,
+    tags,
+    accounts,
+    master,
+    debug,
+    suspend,
+    disable_detector,
+    delete_detector,
+    dissociate,
+    region,
+):
     """suspend guard duty in the given accounts."""
-    accounts_config, master_info, executor = guardian_init(
-        config, debug, master, accounts, tags)
+    accounts_config, master_info, executor = guardian_init(config, debug, master, accounts, tags)
 
     if sum(map(int, (suspend, disable_detector, dissociate))) != 1:
-        raise ValueError((
-            "One and only of suspend, disable-detector, dissociate"
-            " can be specified."))
+        raise ValueError(
+            ("One and only of suspend, disable-detector, dissociate" " can be specified.")
+        )
 
     master_session = get_session(
-        master_info['role'], 'c7n-guardian',
-        master_info.get('profile'), region)
+        master_info['role'], 'c7n-guardian', master_info.get('profile'), region
+    )
     master_client = master_session.client('guardduty')
     detector_id = get_or_create_detector_id(master_client)
     if not detector_id:
@@ -161,28 +158,31 @@ def disable(config, tags, accounts, master, debug,
     if suspend:
         unprocessed = master_client.stop_monitoring_members(
             DetectorId=detector_id,
-            AccountIds=[a['account_id'] for a in accounts_config['accounts']]
+            AccountIds=[a['account_id'] for a in accounts_config['accounts']],
         ).get('UnprocessedAccounts', ())
 
         if unprocessed:
-            log.warning(f"""{region}\tFollowing accounts where
-                        unprocessed\n{format_event(unprocessed)}""")
-        log.info(f"""{region}\tStopped monitoring
-                 {len(accounts_config['accounts'])} accounts in master""")
+            log.warning(
+                f"""{region}\tFollowing accounts where
+                        unprocessed\n{format_event(unprocessed)}"""
+            )
+        log.info(
+            f"""{region}\tStopped monitoring
+                 {len(accounts_config['accounts'])} accounts in master"""
+        )
         return
 
     if dissociate:
         master_client.disassociate_members(
             DetectorId=detector_id,
-            AccountIds=[a['account_id'] for a in accounts_config['accounts']])
+            AccountIds=[a['account_id'] for a in accounts_config['accounts']],
+        )
 
     # Seems like there's a couple of ways to disable an account
     # delete the detector (member), disable the detector (master or member),
     # or disassociate members, or from member disassociate from master.
     for a in accounts_config['accounts']:
-        member_session = get_session(
-            a['role'], 'c7n-guardian',
-            a.get('profile'), region)
+        member_session = get_session(a['role'], 'c7n-guardian', a.get('profile'), region)
 
         member_client = member_session.client('guardduty')
         m_detector_id = get_or_create_detector_id(member_client)
@@ -190,14 +190,12 @@ def disable(config, tags, accounts, master, debug,
             # Couldn't get a detector in this region; perhaps region not opted-in
             continue
         if disable_detector:
-            member_client.update_detector(
-                DetectorId=m_detector_id, Enable=False)
+            member_client.update_detector(DetectorId=m_detector_id, Enable=False)
             log.info(f"{region}\tDisabled detector in account:{a['name']}")
         if dissociate:
             try:
                 log.info(f"{region}\tDisassociated member account:%s", a['name'])
-                result = member_client.disassociate_from_master_account(
-                    DetectorId=m_detector_id)
+                result = member_client.disassociate_from_master_account(DetectorId=m_detector_id)
                 log.info(f"{region}\tResult %s", format_event(result))
             except ClientError as e:
                 if e.response['Error']['Code'] == 'InvalidInputException':
@@ -230,33 +228,37 @@ def expand_regions(regions, partition='aws'):
 
 
 @cli.command()
-@click.option('-c', '--config',
-              required=True, help="Accounts config file", type=click.Path())
+@click.option('-c', '--config', required=True, help="Accounts config file", type=click.Path())
 @click.option('--master', help='Master account id or name')
 @click.option('-a', '--accounts', multiple=True, default=None)
 @click.option('-t', '--tags', multiple=True, default=None)
 @click.option('--debug', help='Run single-threaded', is_flag=True)
 @click.option('--message', help='Welcome Message for member accounts')
 @click.option(
-    '-r', '--region',
-    default=['all'], help='Region to enable (default: all)',
-    multiple=True)
+    '-r', '--region', default=['all'], help='Region to enable (default: all)', multiple=True
+)
 @click.option(
-    '--enable-email-notification',
-    help='Email account owners when inviting',
-    is_flag=True)
+    '--enable-email-notification', help='Email account owners when inviting', is_flag=True
+)
 def enable(config, master, tags, accounts, debug, message, region, enable_email_notification):
     """enable guard duty on a set of accounts"""
-    accounts_config, master_info, executor = guardian_init(
-        config, debug, master, accounts, tags)
+    accounts_config, master_info, executor = guardian_init(config, debug, master, accounts, tags)
     regions = expand_regions(region)
 
     with executor(max_workers=WORKER_COUNT) as w:
         futures = []
         for region in regions:
-            futures.append(w.submit(enable_region, master_info, accounts_config,
-                                    executor, message, region,
-                                    enable_email_notification))
+            futures.append(
+                w.submit(
+                    enable_region,
+                    master_info,
+                    accounts_config,
+                    executor,
+                    message,
+                    region,
+                    enable_email_notification,
+                )
+            )
 
         for f in as_completed(futures):
             if f.exception():
@@ -267,31 +269,29 @@ def enable(config, master, tags, accounts, debug, message, region, enable_email_
 
 
 def enable_region(
-        master_info,
-        accounts_config,
-        executor,
-        message,
-        region,
-        enable_email_notification):
+    master_info, accounts_config, executor, message, region, enable_email_notification
+):
 
     master_session = get_session(
-        master_info.get('role'), 'c7n-guardian',
-        master_info.get('profile'),
-        region=region)
+        master_info.get('role'), 'c7n-guardian', master_info.get('profile'), region=region
+    )
 
     master_client = master_session.client('guardduty')
     detector_id = get_or_create_detector_id(master_client)
     if not detector_id:
         # Couldn't get a detector in this region; perhaps region not opted-in
-        log.info(f"""{region}\tCouldn't get or create GuardDuty detector with role
-                 {master_info.get('role')} - Perhaps the region isn't enabled?""")
+        log.info(
+            f"""{region}\tCouldn't get or create GuardDuty detector with role
+                 {master_info.get('role')} - Perhaps the region isn't enabled?"""
+        )
         return
 
     # The list gd_members contains active GuardDuty Member Accounts
     # If the account is in the specified account list (.yml) and not in gd_members,
     # we'll ensure it's emabled
-    results = master_client.get_paginator(
-        'list_members').paginate(DetectorId=detector_id, OnlyAssociated="True")
+    results = master_client.get_paginator('list_members').paginate(
+        DetectorId=detector_id, OnlyAssociated="True"
+    )
     gd_members = results.build_full_result().get('Members', ())
     gd_member_ids = {m['AccountId'] for m in gd_members}
 
@@ -317,25 +317,32 @@ def enable_region(
             # We should not re-invite, but should re-accept
             resigned_ids.append(m['AccountId'])
         else:
-            raise Exception(f'''GuardDuty member account {m["AccountId"]} had
+            raise Exception(
+                f'''GuardDuty member account {m["AccountId"]} had
                             unknown RelationshipStatus
-                            "{m["RelationshipStatus"]}" - bailing''')
+                            "{m["RelationshipStatus"]}" - bailing'''
+            )
     # Filter by accounts under consideration per config and cli flags
-    suspended_ids = {a['account_id'] for a in accounts_config['accounts']
-        if a['account_id'] in suspended_ids}
+    suspended_ids = {
+        a['account_id'] for a in accounts_config['accounts'] if a['account_id'] in suspended_ids
+    }
 
     if suspended_ids:
         unprocessed = master_client.start_monitoring_members(
-            DetectorId=detector_id,
-            AccountIds=list(suspended_ids)).get('UnprocessedAccounts')
+            DetectorId=detector_id, AccountIds=list(suspended_ids)
+        ).get('UnprocessedAccounts')
         if unprocessed:
-            log.warning(f"""{region}\tUnprocessed accounts on re-start monitoring
-                        {format_event(unprocessed)}""")
+            log.warning(
+                f"""{region}\tUnprocessed accounts on re-start monitoring
+                        {format_event(unprocessed)}"""
+            )
         log.info("{region}\tRestarted monitoring on {len(suspended_ids)} accounts")
 
-    accounts_not_members = [{'AccountId': account['account_id'], 'Email': account['email']}
-               for account in accounts_config['accounts']
-               if account['account_id'] not in gd_member_ids]
+    accounts_not_members = [
+        {'AccountId': account['account_id'], 'Email': account['email']}
+        for account in accounts_config['accounts']
+        if account['account_id'] not in gd_member_ids
+    ]
 
     if not accounts_not_members:
         if not suspended_ids and not invited_ids and not resigned_ids and not removed_ids:
@@ -343,27 +350,31 @@ def enable_region(
             return list(active_ids)
 
     if (len(accounts_not_members) + len(gd_member_ids)) > 1000:
-        raise ValueError(f"""{region}\tGuard Duty only supports 1000 member
-                         accounts per master account""")
+        raise ValueError(
+            f"""{region}\tGuard Duty only supports 1000 member
+                         accounts per master account"""
+        )
 
     log.info(f"{region}\tEnrolling {len(accounts_not_members)} accounts in guard duty")
 
     unprocessed = []
     for account_set in chunks(accounts_not_members, 25):
-        new_members = master_client.create_members(DetectorId=detector_id,
-                                                   AccountDetails=account_set)
+        new_members = master_client.create_members(
+            DetectorId=detector_id, AccountDetails=account_set
+        )
         unprocessed.extend(new_members.get('UnprocessedAccounts', []))
         # If the account was already a member, ignore
         unprocessed = list(filter(lambda x: x['Result'].find('already a membe') == -1, unprocessed))
     if unprocessed:
-        log.warning(f"""{region}\tAccounts were unprocessed - member create
-                    {format_event(unprocessed)}""")
+        log.warning(
+            f"""{region}\tAccounts were unprocessed - member create
+                    {format_event(unprocessed)}"""
+        )
 
     log.info(f"{region}\tInviting {len(accounts_not_members)} member accounts")
     unprocessed = []
     for account_set in chunks(
-        [m for m in accounts_not_members if not m['AccountId'] in invited_ids + resigned_ids],
-        25
+        [m for m in accounts_not_members if not m['AccountId'] in invited_ids + resigned_ids], 25
     ):
         params = {
             'AccountIds': [m['AccountId'] for m in account_set],
@@ -372,15 +383,18 @@ def enable_region(
         }
         if message:
             params['Message'] = message
-        unprocessed.extend(master_client.invite_members(
-            **params).get('UnprocessedAccounts', []))
+        unprocessed.extend(master_client.invite_members(**params).get('UnprocessedAccounts', []))
     if unprocessed:
-        log.warning(f"""{region}\tAccounts were unprocessed invite-members
-                    {format_event(unprocessed)}""")
+        log.warning(
+            f"""{region}\tAccounts were unprocessed invite-members
+                    {format_event(unprocessed)}"""
+        )
 
-    accounts_not_members = [{'AccountId': account['account_id'], 'Email': account['email']}
-               for account in accounts_config['accounts']
-               if account['account_id'] not in active_ids]
+    accounts_not_members = [
+        {'AccountId': account['account_id'], 'Email': account['email']}
+        for account in accounts_config['accounts']
+        if account['account_id'] not in active_ids
+    ]
 
     log.info(f"{region}\tAccepting {len(accounts_not_members)} invitations in members")
 
@@ -405,31 +419,33 @@ def enable_region(
 
 def enable_account(account, master_account_id, region):
     member_session = get_session(
-        account.get('role'), 'c7n-guardian',
-        profile=account.get('profile'),
-        region=region)
+        account.get('role'), 'c7n-guardian', profile=account.get('profile'), region=region
+    )
     member_client = member_session.client('guardduty')
     m_detector_id = get_or_create_detector_id(member_client)
     if not m_detector_id:
         # Couldn't get a detector in this region; perhaps region not opted-in
-        log.info(f"""{region}\tCouldn't get or create GuardDuty detector with role
-                 {account.get('role')} - Perhaps the region isn't enabled?""")
+        log.info(
+            f"""{region}\tCouldn't get or create GuardDuty detector with role
+                 {account.get('role')} - Perhaps the region isn't enabled?"""
+        )
         return
     all_invitations = member_client.list_invitations().get('Invitations', [])
-    invitations = [
-        i for i in all_invitations
-        if i['AccountId'] == master_account_id]
+    invitations = [i for i in all_invitations if i['AccountId'] == master_account_id]
     invitations.sort(key=operator.itemgetter('InvitedAt'))
     if not invitations:
-        log.warning(f"""{region}\tNo guard duty invitation found Account
+        log.warning(
+            f"""{region}\tNo guard duty invitation found Account
                     Name:{account['name']} ID: {account['account_id']} Detector
-                    ID:{m_detector_id}""")
+                    ID:{m_detector_id}"""
+        )
         return
 
     member_client.accept_invitation(
         DetectorId=m_detector_id,
         InvitationId=invitations[-1]['InvitationId'],
-        MasterId=master_account_id)
+        MasterId=master_account_id,
+    )
     return True
 
 
@@ -461,17 +477,18 @@ def get_master_info(accounts_config, master):
             break
 
     if master_info is None:
-        raise ValueError("Master account: %s not found in accounts config" % (
-            master))
+        raise ValueError("Master account: %s not found in accounts config" % (master))
     return master_info
 
 
 def guardian_init(config, debug, master, accounts, tags):
     accounts_config, custodian_config, executor = init(
-        config, None, debug, False, None, None, None, None)
+        config, None, debug, False, None, None, None, None
+    )
     master_info = get_master_info(accounts_config, master)
     filter_accounts(accounts_config, tags, accounts, not_accounts=[master_info['name']])
     return accounts_config, master_info, executor
+
 
 # AccountSet
 #

@@ -3,37 +3,38 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-packages = \
-['c7n_kube',
- 'c7n_kube.actions',
- 'c7n_kube.resources',
- 'c7n_kube.resources.apps',
- 'c7n_kube.resources.core']
+packages = [
+    'c7n_kube',
+    'c7n_kube.actions',
+    'c7n_kube.resources',
+    'c7n_kube.resources.apps',
+    'c7n_kube.resources.core',
+]
 
-package_data = \
-{'': ['*']}
+package_data = {'': ['*']}
 
-install_requires = \
-['argcomplete (>=2.0.0,<3.0.0)',
- 'attrs (>=21.4.0,<22.0.0)',
- 'boto3 (>=1.21.5,<2.0.0)',
- 'botocore (>=1.24.5,<2.0.0)',
- 'c7n (>=0.9.15,<0.10.0)',
- 'docutils (>=0.17.1,<0.18.0)',
- 'importlib-metadata (>=4.11.1,<5.0.0)',
- 'importlib-resources (>=5.4.0,<6.0.0)',
- 'jmespath (>=0.10.0,<0.11.0)',
- 'jsonschema (>=4.4.0,<5.0.0)',
- 'kubernetes>=10.0.1,<11.0.0',
- 'pyrsistent (>=0.18.1,<0.19.0)',
- 'python-dateutil (>=2.8.2,<3.0.0)',
- 'pyyaml (>=6.0,<7.0)',
- 's3transfer (>=0.5.1,<0.6.0)',
- 'six (>=1.16.0,<2.0.0)',
- 'tabulate (>=0.8.9,<0.9.0)',
- 'typing-extensions (>=4.1.1,<5.0.0)',
- 'urllib3 (>=1.26.8,<2.0.0)',
- 'zipp (>=3.7.0,<4.0.0)']
+install_requires = [
+    'argcomplete (>=2.0.0,<3.0.0)',
+    'attrs (>=21.4.0,<22.0.0)',
+    'boto3 (>=1.21.5,<2.0.0)',
+    'botocore (>=1.24.5,<2.0.0)',
+    'c7n (>=0.9.15,<0.10.0)',
+    'docutils (>=0.17.1,<0.18.0)',
+    'importlib-metadata (>=4.11.1,<5.0.0)',
+    'importlib-resources (>=5.4.0,<6.0.0)',
+    'jmespath (>=0.10.0,<0.11.0)',
+    'jsonschema (>=4.4.0,<5.0.0)',
+    'kubernetes>=10.0.1,<11.0.0',
+    'pyrsistent (>=0.18.1,<0.19.0)',
+    'python-dateutil (>=2.8.2,<3.0.0)',
+    'pyyaml (>=6.0,<7.0)',
+    's3transfer (>=0.5.1,<0.6.0)',
+    'six (>=1.16.0,<2.0.0)',
+    'tabulate (>=0.8.9,<0.9.0)',
+    'typing-extensions (>=4.1.1,<5.0.0)',
+    'urllib3 (>=1.26.8,<2.0.0)',
+    'zipp (>=3.7.0,<4.0.0)',
+]
 
 setup_kwargs = {
     'name': 'c7n-kube',
@@ -43,7 +44,7 @@ setup_kwargs = {
     'classifiers': [
         'License :: OSI Approved :: Apache Software License',
         'Topic :: System :: Systems Administration',
-        'Topic :: System :: Distributed Computing'
+        'Topic :: System :: Distributed Computing',
     ],
     'long_description': '# Custodian Kubernetes Support\n\n\nWork in Progress - Not Ready For Use.\n\n',
     'long_description_content_type': 'text/markdown',

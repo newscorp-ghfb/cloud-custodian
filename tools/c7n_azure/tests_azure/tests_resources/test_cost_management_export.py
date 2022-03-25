@@ -10,7 +10,6 @@ from c7n.exceptions import PolicyValidationError
 
 
 class CostManagementExportTest(BaseTest):
-
     class MockExecutionHistory:
         def __init__(self, submitted_time_list):
             self.value = []
@@ -19,13 +18,16 @@ class CostManagementExportTest(BaseTest):
                 self.value.append(MockExecutionItem(submitted_time=t, serialize=lambda b: ''))
 
     def test_schema_validate(self):
-        self.assertTrue(self._get_policy(filters=[{'type': 'last-execution', 'age': 30}],
-                                         actions=[{'type': 'execute'}],
-                                         validate=True))
+        self.assertTrue(
+            self._get_policy(
+                filters=[{'type': 'last-execution', 'age': 30}],
+                actions=[{'type': 'execute'}],
+                validate=True,
+            )
+        )
 
         with self.assertRaises(PolicyValidationError):
-            self._get_policy(filters=[{'type': 'last-execution', 'age': -1}],
-                             validate=True)
+            self._get_policy(filters=[{'type': 'last-execution', 'age': -1}], validate=True)
 
     @arm_template('cost-management-export.json')
     @cassette_name('common')
@@ -47,8 +49,10 @@ class CostManagementExportTest(BaseTest):
 
     # There is no guarantee we have or don't have some real execution, so we will simulate possible
     # scenarios using patch
-    @patch('azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
-           return_value=MockExecutionHistory([datetime.datetime.now()]))
+    @patch(
+        'azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
+        return_value=MockExecutionHistory([datetime.datetime.now()]),
+    )
     @arm_template('cost-management-export.json')
     @cassette_name('common')
     def test_last_execution_mock(self, _1):
@@ -56,8 +60,10 @@ class CostManagementExportTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-    @patch('azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
-           return_value=MockExecutionHistory([datetime.datetime.now()]))
+    @patch(
+        'azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
+        return_value=MockExecutionHistory([datetime.datetime.now()]),
+    )
     @arm_template('cost-management-export.json')
     @cassette_name('common')
     def test_last_execution_mock_large_age(self, _1):
@@ -65,8 +71,10 @@ class CostManagementExportTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 0)
 
-    @patch('azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
-           return_value=MockExecutionHistory([]))
+    @patch(
+        'azure.mgmt.costmanagement.operations.ExportsOperations.get_execution_history',
+        return_value=MockExecutionHistory([]),
+    )
     @arm_template('cost-management-export.json')
     @cassette_name('common')
     def test_last_execution_mock_no_executions(self, _1):
@@ -88,15 +96,12 @@ class CostManagementExportTest(BaseTest):
         self.assertEqual(args[1], 'cccostexport')
 
     def _get_policy(self, filters=[], actions=[], validate=False):
-        return self.load_policy({
-            'name': 'cost-management-export',
-            'resource': 'azure.cost-management-export',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'value': 'cccostexport'
-                }
-            ] + filters,
-            'actions': actions
-        }, validate=validate)
+        return self.load_policy(
+            {
+                'name': 'cost-management-export',
+                'resource': 'azure.cost-management-export',
+                'filters': [{'type': 'value', 'key': 'name', 'value': 'cccostexport'}] + filters,
+                'actions': actions,
+            },
+            validate=validate,
+        )

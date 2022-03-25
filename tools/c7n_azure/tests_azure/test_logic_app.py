@@ -13,7 +13,6 @@ from c7n.utils import local_session
 
 
 class LogicAppTest(BaseTest):
-
     def test_valid_schema(self):
         assert 'url' not in LogicAppAction.schema['properties']
 
@@ -25,7 +24,7 @@ class LogicAppTest(BaseTest):
                 {
                     "type": "logic-app",
                     "resource-group": "test_logic-app",
-                    "logic-app-name": "cclogicapp"
+                    "logic-app-name": "cclogicapp",
                 }
             ],
         }
@@ -41,9 +40,7 @@ class LogicAppTest(BaseTest):
                     "resource-group": "test_logic-app",
                     "logic-app-name": "cclogicapp",
                     "batch": True,
-                    "query-params": {
-                        "foo": "bar"
-                    }
+                    "query-params": {"foo": "bar"},
                 }
             ],
         }
@@ -55,12 +52,7 @@ class LogicAppTest(BaseTest):
         policy = {
             "name": "logic-app",
             "resource": "azure.vm",
-            "actions": [
-                {
-                    "type": "logic-app",
-                    "resource-group": "test_logic-app"
-                }
-            ],
+            "actions": [{"type": "logic-app", "resource-group": "test_logic-app"}],
         }
 
         with self.assertRaises(PolicyValidationError):
@@ -71,11 +63,7 @@ class LogicAppTest(BaseTest):
             "name": "logic-app",
             "resource": "azure.vm",
             "actions": [
-                {
-                    "type": "logic-app",
-                    "resource-group": "test_logic-app",
-                    "url": "http://foo.com"
-                }
+                {"type": "logic-app", "resource-group": "test_logic-app", "url": "http://foo.com"}
             ],
         }
 
@@ -86,20 +74,14 @@ class LogicAppTest(BaseTest):
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_get_callback(self, request_mock):
         resources = [
-            {
-                "name": "test1",
-                "value": "test_value"
-            },
-            {
-                "name": "test2",
-                "value": "test_value"
-            }
+            {"name": "test1", "value": "test_value"},
+            {"name": "test2", "value": "test_value"},
         ]
 
         suffix = local_session(Session).get_subscription_id()[-12:]
         data = {
             "resource-group": "test_logic-app",
-            "logic-app-name": "cclogicapp{0}".format(suffix)
+            "logic-app-name": "cclogicapp{0}".format(suffix),
         }
 
         la = LogicAppAction(data=data, manager=self._get_manager())
@@ -107,8 +89,10 @@ class LogicAppTest(BaseTest):
         req1 = request_mock.call_args_list[0][1]
         req2 = request_mock.call_args_list[1][1]
 
-        regex = r'https://.*/workflows/.*/triggers/manual/paths/invoke' \
-                + r'\?api-version=.*triggers%2Fmanual%2Frun'
+        regex = (
+            r'https://.*/workflows/.*/triggers/manual/paths/invoke'
+            + r'\?api-version=.*triggers%2Fmanual%2Frun'
+        )
 
         self.assertTrue(re.search(regex, req1['url']))
         self.assertTrue(re.search(regex, req2['url']))
@@ -118,14 +102,18 @@ class LogicAppTest(BaseTest):
         but they do need a valid manager with
         policy metadata so we just make one here to use"""
 
-        policy = self.load_policy({
-            "name": "webhook_policy",
-            "resource": "azure.vm",
-            "actions": [
-                {
-                    "type": "logic-app",
-                    "resource-group": "test_logic-app",
-                    "logic-app-name": "cclogicapp"}
-            ]})
+        policy = self.load_policy(
+            {
+                "name": "webhook_policy",
+                "resource": "azure.vm",
+                "actions": [
+                    {
+                        "type": "logic-app",
+                        "resource-group": "test_logic-app",
+                        "logic-app-name": "cclogicapp",
+                    }
+                ],
+            }
+        )
 
         return policy.resource_manager

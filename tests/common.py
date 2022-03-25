@@ -8,7 +8,7 @@ import unittest
 import uuid
 from c7n.config import Bag
 
-from c7n.testing import TestUtils, TextTestIO, functional # NOQA
+from c7n.testing import TestUtils, TextTestIO, functional  # NOQA
 
 from .zpill import PillTest, ACCOUNT_ID
 
@@ -19,9 +19,7 @@ logging.getLogger("botocore").setLevel(logging.WARNING)
 
 C7N_VALIDATE = bool(os.environ.get("C7N_VALIDATE", ""))
 
-skip_if_not_validating = unittest.skipIf(
-    not C7N_VALIDATE, reason="We are not validating schemas."
-)
+skip_if_not_validating = unittest.skipIf(not C7N_VALIDATE, reason="We are not validating schemas.")
 
 
 # Set this so that if we run nose directly the tests will not fail
@@ -91,15 +89,12 @@ class ConfigTest(BaseTest):
         queue_url = sqs.create_queue(QueueName=queue).get("QueueUrl")
         self.addCleanup(sqs.delete_queue, QueueUrl=queue_url)
 
-        attrs = sqs.get_queue_attributes(
-            QueueUrl=queue_url, AttributeNames=("Policy", "QueueArn")
-        )
+        attrs = sqs.get_queue_attributes(QueueUrl=queue_url, AttributeNames=("Policy", "QueueArn"))
         queue_arn = attrs["Attributes"]["QueueArn"]
         policy = json.loads(
             attrs["Attributes"].get(
                 "Policy",
-                '{"Version":"2008-10-17","Id":"%s/SQSDefaultPolicy","Statement":[]}'
-                % queue_arn,
+                '{"Version":"2008-10-17","Id":"%s/SQSDefaultPolicy","Statement":[]}' % queue_arn,
             )
         )
         policy["Statement"].append(
@@ -112,12 +107,8 @@ class ConfigTest(BaseTest):
                 "Condition": {"ArnEquals": {"aws:SourceArn": topic}},
             }
         )
-        sqs.set_queue_attributes(
-            QueueUrl=queue_url, Attributes={"Policy": json.dumps(policy)}
-        )
-        subscription = sns.subscribe(
-            TopicArn=topic, Protocol="sqs", Endpoint=queue_arn
-        ).get(
+        sqs.set_queue_attributes(QueueUrl=queue_url, Attributes={"Policy": json.dumps(policy)})
+        subscription = sns.subscribe(TopicArn=topic, Protocol="sqs", Endpoint=queue_arn).get(
             "SubscriptionArn"
         )
         self.addCleanup(sns.unsubscribe, SubscriptionArn=subscription)
@@ -140,9 +131,7 @@ def event_data(name, event_type="cwe"):
 def load_data(file_name, state=None, **kw):
 
     fopen = file_name.endswith('gz') and gzip.open or open
-    data = json.loads(
-        fopen(os.path.join(os.path.dirname(__file__), "data", file_name)).read()
-    )
+    data = json.loads(fopen(os.path.join(os.path.dirname(__file__), "data", file_name)).read())
     if state:
         data.update(state)
     if kw:
@@ -163,7 +152,6 @@ class Reservation(Bag):
 
 
 class Client:
-
     def __init__(self, instances):
         self.instances = instances
         self.filters = None

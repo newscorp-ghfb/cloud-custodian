@@ -41,30 +41,27 @@ class StorageContainer(ChildArmResourceManager):
         diagnostic_settings_enabled = False
         resource_type = 'Microsoft.Storage/storageAccounts/blobServices/containers'
         raise_on_exception = False
-        default_report_fields = (
-            'name',
-            'properties.publicAccess',
-            '"c7n:parent-id"'
-        )
+        default_report_fields = ('name', 'properties.publicAccess', '"c7n:parent-id"')
 
         @classmethod
         def extra_args(cls, parent_resource):
-            return {'resource_group_name': parent_resource['resourceGroup'],
-                    'account_name': parent_resource['name']}
+            return {
+                'resource_group_name': parent_resource['resourceGroup'],
+                'account_name': parent_resource['name'],
+            }
 
     def get_resources(self, resource_ids):
         client = self.get_client()
-        data = [
-            self.get_storage_container(rid, client)
-            for rid in resource_ids
-        ]
+        data = [self.get_storage_container(rid, client) for rid in resource_ids]
         return self.augment([r.serialize(True) for r in data])
 
     def get_storage_container(self, resource_id, client):
         parsed = parse_resource_id(resource_id)
-        return client.blob_containers.get(parsed.get('resource_group'),
-                                          parsed.get('name'),             # Account name
-                                          parsed.get('resource_name'))    # Container name
+        return client.blob_containers.get(
+            parsed.get('resource_group'),
+            parsed.get('name'),  # Account name
+            parsed.get('resource_name'),
+        )  # Container name
 
 
 @StorageContainer.action_registry.register('set-public-access')
@@ -90,12 +87,11 @@ class StorageContainerSetPublicAccessAction(AzureBaseAction):
                 - type: set-public-access
                   value: None
     """
+
     schema = type_schema(
         'set-public-access',
         required=['value'],
-        **{
-            'value': {'enum': ['Container', 'Blob', 'None']}
-        }
+        **{'value': {'enum': ['Container', 'Blob', 'None']}}
     )
 
     def _prepare_processing(self):
@@ -106,8 +102,5 @@ class StorageContainerSetPublicAccessAction(AzureBaseAction):
         account_name = ResourceIdParser.get_resource_name(resource['c7n:parent-id'])
 
         self.client.blob_containers.update(
-            resource_group,
-            account_name,
-            resource['name'],
-            public_access=self.data['value']
+            resource_group, account_name, resource['name'], public_access=self.data['value']
         )

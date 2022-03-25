@@ -18,20 +18,23 @@ class NotifyTest(BaseTest):
 
     def test_notify_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-notify-for-keyvault',
-                'resource': 'azure.keyvault',
-                'actions': [
-                    {'type': 'notify',
-                     'template': 'default',
-                     'priority_header': '2',
-                     'subject': 'testing notify action',
-                     'to': ['user@domain.com'],
-                     'transport':
-                         {'type': 'asq',
-                          'queue': ''}
-                     }
-                ]}, validate=True)
+            p = self.load_policy(
+                {
+                    'name': 'test-notify-for-keyvault',
+                    'resource': 'azure.keyvault',
+                    'actions': [
+                        {
+                            'type': 'notify',
+                            'template': 'default',
+                            'priority_header': '2',
+                            'subject': 'testing notify action',
+                            'to': ['user@domain.com'],
+                            'transport': {'type': 'asq', 'queue': ''},
+                        }
+                    ],
+                },
+                validate=True,
+            )
             self.assertTrue(p)
 
     @arm_template('keyvault.json')
@@ -44,27 +47,31 @@ class NotifyTest(BaseTest):
         queue, name = StorageUtilities.get_queue_client_by_uri(queue_url, self.session)
         queue.clear_messages(name)
 
-        p = self.load_policy({
-            'name': 'test-notify-for-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cckeyvault1*'}],
-            'actions': [
-                {'type': 'notify',
-                 'template': 'default',
-                 'priority_header': '2',
-                 'subject': 'testing notify action',
-                 'to': ['user@domain.com'],
-                 'transport':
-                     {'type': 'asq',
-                      'queue': queue_url}
-                 }
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-notify-for-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cckeyvault1*',
+                    }
+                ],
+                'actions': [
+                    {
+                        'type': 'notify',
+                        'template': 'default',
+                        'priority_header': '2',
+                        'subject': 'testing notify action',
+                        'to': ['user@domain.com'],
+                        'transport': {'type': 'asq', 'queue': queue_url},
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -75,10 +82,7 @@ class NotifyTest(BaseTest):
     @patch('c7n_azure.storage_utils.StorageUtilities.put_queue_message')
     @patch('c7n_azure.storage_utils.StorageUtilities.get_queue_client_by_uri')
     @patch('logging.Logger.error')
-    def test_access_error(self,
-                          logger_mock,
-                          get_queue_client_by_uri,
-                          put_queue_message):
+    def test_access_error(self, logger_mock, get_queue_client_by_uri, put_queue_message):
         put_queue_message.side_effect = AzureHttpError('forbidden', 403)
         get_queue_client_by_uri.return_value = 'service', 'name'
 
@@ -93,10 +97,7 @@ class NotifyTest(BaseTest):
     @patch('c7n_azure.storage_utils.StorageUtilities.put_queue_message')
     @patch('c7n_azure.storage_utils.StorageUtilities.get_queue_client_by_uri')
     @patch('logging.Logger.error')
-    def test_error_putting_to_queue(self,
-                                    logger_mock,
-                                    get_queue_client_by_uri,
-                                    put_queue_message):
+    def test_error_putting_to_queue(self, logger_mock, get_queue_client_by_uri, put_queue_message):
         put_queue_message.side_effect = AzureHttpError('not found', 404)
         get_queue_client_by_uri.return_value = 'service', 'name'
 

@@ -54,7 +54,7 @@ METRIC_UNITS = [
     # Other Scalars
     'Percent',
     'Count',
-    'None'
+    'None',
 ]
 
 
@@ -82,15 +82,22 @@ class PutMetric(BaseAction):
 
     op and units are optional and will default to simple Counts.
     """
+
     # permissions are typically lowercase servicename:TitleCaseActionName
-    permissions = {'cloudwatch:PutMetricData', }
+    permissions = {
+        'cloudwatch:PutMetricData',
+    }
     schema_alias = True
     schema = {
         'type': 'object',
         'required': ['type', 'key', 'namespace', 'metric_name'],
         'additionalProperties': False,
         'properties': {
-            'type': {'enum': ['put-metric', ]},
+            'type': {
+                'enum': [
+                    'put-metric',
+                ]
+            },
             'key': {'type': 'string'},  # jmes path
             'namespace': {'type': 'string'},
             'metric_name': {'type': 'string'},
@@ -99,8 +106,8 @@ class PutMetric(BaseAction):
                 'items': {'type': 'object'},
             },
             'op': {'enum': list(METRIC_OPS.keys())},
-            'units': {'enum': METRIC_UNITS}
-        }
+            'units': {'enum': METRIC_UNITS},
+        },
     }
 
     def process(self, resources):
@@ -118,8 +125,7 @@ class PutMetric(BaseAction):
         values = []
         self.log.debug("searching for %s in %s", key_expression, resources)
         try:
-            values = jmespath.search("Resources[]." + key_expression,
-                                     {'Resources': resources})
+            values = jmespath.search("Resources[]." + key_expression, {'Resources': resources})
             # I had to wrap resourses in a dict like this in order to not have jmespath expressions
             # start with [] in the yaml files.  It fails to parse otherwise.
         except TypeError as oops:
@@ -139,9 +145,9 @@ class PutMetric(BaseAction):
         metrics_data = [
             {
                 'MetricName': metric_name,
-                'Dimensions': [{'Name': i[0], 'Value': i[1]}
-                               for d in dimensions
-                               for i in d.items()],
+                'Dimensions': [
+                    {'Name': i[0], 'Value': i[1]} for d in dimensions for i in d.items()
+                ],
                 'Timestamp': now,
                 'Value': value,
                 # TODO: support an operation of 'stats' to include this
@@ -157,8 +163,7 @@ class PutMetric(BaseAction):
             },
         ]
 
-        client = utils.local_session(
-            self.manager.session_factory).client('cloudwatch')
+        client = utils.local_session(self.manager.session_factory).client('cloudwatch')
         client.put_metric_data(Namespace=ns, MetricData=metrics_data)
 
         return resources

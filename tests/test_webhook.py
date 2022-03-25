@@ -12,7 +12,6 @@ import os
 
 
 class WebhookTest(BaseTest):
-
     def test_valid_policy(self):
         policy = {
             "name": "webhook-batch",
@@ -35,9 +34,7 @@ class WebhookTest(BaseTest):
                     "type": "webhook",
                     "url": "http://foo.com",
                     "batch": True,
-                    "query-params": {
-                        "foo": "bar"
-                    }
+                    "query-params": {"foo": "bar"},
                 }
             ],
         }
@@ -49,11 +46,7 @@ class WebhookTest(BaseTest):
         policy = {
             "name": "webhook-batch",
             "resource": "ec2",
-            "actions": [
-                {
-                    "type": "webhook"
-                }
-            ],
+            "actions": [{"type": "webhook"}],
         }
 
         with self.assertRaises(PolicyValidationError):
@@ -63,13 +56,7 @@ class WebhookTest(BaseTest):
         policy = {
             "name": "webhook-batch",
             "resource": "ec2",
-            "actions": [
-                {
-                    "type": "webhook",
-                    "url": "http://foo.com",
-                    "method": "CREATE"
-                }
-            ],
+            "actions": [{"type": "webhook", "url": "http://foo.com", "method": "CREATE"}],
         }
 
         with self.assertRaises(PolicyValidationError):
@@ -78,35 +65,18 @@ class WebhookTest(BaseTest):
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_batch(self, request_mock):
         resources = [
-            {
-                "name": "test_name",
-                "value": "test_value"
-            },
-            {
-                "name": "test_name",
-                "value": "test_value"
-            },
-            {
-                "name": "test_name",
-                "value": "test_value"
-            },
-            {
-                "name": "test_name",
-                "value": "test_value"
-            },
-            {
-                "name": "test_name",
-                "value": "test_value"
-            }
+            {"name": "test_name", "value": "test_value"},
+            {"name": "test_name", "value": "test_value"},
+            {"name": "test_name", "value": "test_value"},
+            {"name": "test_name", "value": "test_value"},
+            {"name": "test_name", "value": "test_value"},
         ]
 
         data = {
             "url": "http://foo.com",
             "batch": True,
             "batch-size": 2,
-            "query-params": {
-                "foo": "resources[0].name"
-            }
+            "query-params": {"foo": "resources[0].name"},
         }
 
         wh = Webhook(data=data, manager=self._get_manager())
@@ -123,24 +93,15 @@ class WebhookTest(BaseTest):
 
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_batch_body(self, request_mock):
-        resources = [
-            {
-                "name": "test_name",
-                "value": "test_value"
-            }
-        ]
+        resources = [{"name": "test_name", "value": "test_value"}]
 
         data = {
             "url": "http://foo.com",
             "batch": True,
             "body": "resources[].name",
             "body-size": 10,
-            "headers": {
-                "test": "'header'"
-            },
-            "query-params": {
-                "foo": "resources[0].name"
-            }
+            "headers": {"test": "'header'"},
+            "query-params": {"foo": "resources[0].name"},
         }
 
         wh = Webhook(data=data, manager=self._get_manager())
@@ -150,18 +111,13 @@ class WebhookTest(BaseTest):
         self.assertEqual("http://foo.com?foo=test_name", req['url'])
         self.assertEqual("POST", req['method'])
         self.assertEqual(b'[\n"test_name"\n]', req['body'])
-        self.assertEqual(
-            {"test": "header", "Content-Type": "application/json"},
-            req['headers'])
+        self.assertEqual({"test": "header", "Content-Type": "application/json"}, req['headers'])
 
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_date_serializer(self, request_mock):
         current = datetime.datetime.utcnow()
         resources = [
-            {
-                "name": "test1",
-                "value": current
-            },
+            {"name": "test1", "value": current},
         ]
 
         data = {
@@ -173,29 +129,16 @@ class WebhookTest(BaseTest):
         wh = Webhook(data=data, manager=self._get_manager())
         wh.process(resources)
         req1 = request_mock.call_args_list[0][1]
-        self.assertEqual(
-            json.loads(req1['body'])[0]['value'],
-            current.isoformat())
+        self.assertEqual(json.loads(req1['body'])[0]['value'], current.isoformat())
 
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_no_batch(self, request_mock):
         resources = [
-            {
-                "name": "test1",
-                "value": "test_value"
-            },
-            {
-                "name": "test2",
-                "value": "test_value"
-            }
+            {"name": "test1", "value": "test_value"},
+            {"name": "test2", "value": "test_value"},
         ]
 
-        data = {
-            "url": "http://foo.com",
-            "query-params": {
-                "foo": "resource.name"
-            }
-        }
+        data = {"url": "http://foo.com", "query-params": {"foo": "resource.name"}}
 
         wh = Webhook(data=data, manager=self._get_manager())
         wh.process(resources)
@@ -208,22 +151,11 @@ class WebhookTest(BaseTest):
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_existing_query_string(self, request_mock):
         resources = [
-            {
-                "name": "test1",
-                "value": "test_value"
-            },
-            {
-                "name": "test2",
-                "value": "test_value"
-            }
+            {"name": "test1", "value": "test_value"},
+            {"name": "test2", "value": "test_value"},
         ]
 
-        data = {
-            "url": "http://foo.com?existing=test",
-            "query-params": {
-                "foo": "resource.name"
-            }
-        }
+        data = {"url": "http://foo.com?existing=test", "query-params": {"foo": "resource.name"}}
 
         wh = Webhook(data=data, manager=self._get_manager())
         wh.process(resources)
@@ -239,22 +171,11 @@ class WebhookTest(BaseTest):
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_policy_metadata(self, request_mock):
         resources = [
-            {
-                "name": "test1",
-                "value": "test_value"
-            },
-            {
-                "name": "test2",
-                "value": "test_value"
-            }
+            {"name": "test1", "value": "test_value"},
+            {"name": "test2", "value": "test_value"},
         ]
 
-        data = {
-            "url": "http://foo.com",
-            "query-params": {
-                "policy": "policy.name"
-            }
-        }
+        data = {"url": "http://foo.com", "query-params": {"policy": "policy.name"}}
 
         wh = Webhook(data=data, manager=self._get_manager())
         wh.process(resources)
@@ -267,19 +188,12 @@ class WebhookTest(BaseTest):
     @mock.patch('c7n.actions.webhook.urllib3.ProxyManager.request')
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_with_http_proxy(self, pool_request_mock, proxy_request_mock):
-        with mock.patch.dict(os.environ,
-                             {'HTTP_PROXY': 'http://mock.http.proxy.server:8000'},
-                             clear=True):
-            resources = [
-                {
-                    "name": "test_name",
-                    "value": "test_value"
-                }
-            ]
+        with mock.patch.dict(
+            os.environ, {'HTTP_PROXY': 'http://mock.http.proxy.server:8000'}, clear=True
+        ):
+            resources = [{"name": "test_name", "value": "test_value"}]
 
-            data = {
-                "url": "http://foo.com"
-            }
+            data = {"url": "http://foo.com"}
 
             wh = Webhook(data=data, manager=self._get_manager())
             wh.process(resources)
@@ -296,13 +210,12 @@ class WebhookTest(BaseTest):
         or recordings, but they do need a valid manager with
         policy metadata so we just make one here to use"""
 
-        policy = self.load_policy({
-            "name": "webhook_policy",
-            "resource": "ec2",
-            "actions": [
-                {
-                    "type": "webhook",
-                    "url": "http://foo.com"}
-            ]})
+        policy = self.load_policy(
+            {
+                "name": "webhook_policy",
+                "resource": "ec2",
+                "actions": [{"type": "webhook", "url": "http://foo.com"}],
+            }
+        )
 
         return policy.resource_manager

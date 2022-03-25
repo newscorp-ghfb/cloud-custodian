@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class SimpleDB(BaseTest):
-
     def test_delete(self):
         session_factory = self.replay_flight_data("test_simpledb_delete")
         p = self.load_policy(

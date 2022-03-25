@@ -5,20 +5,15 @@ from .common import BaseTest
 
 
 class ReplInstance(BaseTest):
-
     def test_describe_augment_no_tags(self):
-        session_factory = self.replay_flight_data(
-            "test_dms_repl_instance_describe_sans_tags"
-        )
+        session_factory = self.replay_flight_data("test_dms_repl_instance_describe_sans_tags")
         p = self.load_policy(
             {"name": "dms-replinstance", "resource": "dms-instance"},
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1"
-        )
+        self.assertEqual(resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1")
 
     def test_describe_get_resources(self):
         session_factory = self.replay_flight_data("test_dms_repl_instance_delete")
@@ -28,9 +23,7 @@ class ReplInstance(BaseTest):
         )
         resources = p.resource_manager.get_resources(["replication-instance-1"])
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1"
-        )
+        self.assertEqual(resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1")
 
     def test_delete(self):
         session_factory = self.replay_flight_data("test_dms_repl_instance_delete")
@@ -45,9 +38,7 @@ class ReplInstance(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1"
-        )
+        self.assertEqual(resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1")
         instances = client.describe_replication_instances().get("ReplicationInstances")
         self.assertEqual(instances[0]["ReplicationInstanceStatus"], "deleting")
 
@@ -89,7 +80,6 @@ class ReplInstance(BaseTest):
 
 
 class ReplicationInstanceTagging(BaseTest):
-
     def test_replication_instance_tag(self):
         session_factory = self.replay_flight_data("test_dms_tag")
         p = self.load_policy(
@@ -97,9 +87,7 @@ class ReplicationInstanceTagging(BaseTest):
                 "name": "tag-dms-instance",
                 "resource": "dms-instance",
                 "filters": [{"tag:RequiredTag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "RequiredTag", "value": "RequiredValue"}
-                ],
+                "actions": [{"type": "tag", "key": "RequiredTag", "value": "RequiredValue"}],
             },
             session_factory=session_factory,
         )
@@ -108,9 +96,7 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         tag_value = [t["Value"] for t in tag_list if t["Key"] == "RequiredTag"]
         self.assertEqual(tag_value[0], "RequiredValue")
 
@@ -130,9 +116,7 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
+        )["TagList"]
         self.assertFalse([t for t in tag_list if t["Key"] == "RequiredTag"])
 
     def test_replication_instance_markforop(self):
@@ -158,12 +142,8 @@ class ReplicationInstanceTagging(BaseTest):
         client = session_factory(region="us-east-1").client("dms")
         tag_list = client.list_tags_for_resource(
             ResourceArn=resources[0]["ReplicationInstanceArn"]
-        )[
-            "TagList"
-        ]
-        self.assertTrue(
-            [t["Value"] for t in tag_list if t["Key"] == "custodian_cleanup"]
-        )
+        )["TagList"]
+        self.assertTrue([t["Value"] for t in tag_list if t["Key"] == "custodian_cleanup"])
 
     def test_replication_instance_markedforop(self):
         session_factory = self.replay_flight_data("test_dms_marked_for_op")
@@ -184,13 +164,10 @@ class ReplicationInstanceTagging(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1"
-        )
+        self.assertEqual(resources[0]["ReplicationInstanceIdentifier"], "replication-instance-1")
 
 
 class DmsEndpointTests(BaseTest):
-
     def test_resource_query(self):
         session_factory = self.replay_flight_data("test_dms_resource_query")
         p = self.load_policy(
@@ -247,7 +224,7 @@ class DmsEndpointTests(BaseTest):
                 "resource": "dms-endpoint",
                 "filters": [
                     {"tag:Owner": "pikachu"},
-                ]
+                ],
             },
             session_factory=session_factory,
         )
@@ -268,13 +245,7 @@ class DmsEndpointTests(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
         client = session_factory(region="us-east-1").client("dms")
-        ep = client.describe_endpoints(
-            Filters=[{"Name": "endpoint-id", "Values": ["c7n-test"]}]
-        )[
+        ep = client.describe_endpoints(Filters=[{"Name": "endpoint-id", "Values": ["c7n-test"]}])[
             "Endpoints"
-        ][
-            0
-        ]
-        self.assertEqual(
-            [ep["EndpointIdentifier"], ep["Status"]], ["c7n-test", "deleting"]
-        )
+        ][0]
+        self.assertEqual([ep["EndpointIdentifier"], ep["Status"]], ["c7n-test", "deleting"])

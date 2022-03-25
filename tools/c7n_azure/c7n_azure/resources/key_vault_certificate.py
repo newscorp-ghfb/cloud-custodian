@@ -45,9 +45,6 @@ class KeyVaultCertificate(ChildResourceManager):
         parent_manager_name = 'keyvault'
         raise_on_exception = False
 
-        default_report_fields = (
-            'id',
-            'attributes.expires'
-        )
+        default_report_fields = ('id', 'attributes.expires')
 
         keyvault_child = True

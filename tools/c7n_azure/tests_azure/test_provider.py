@@ -4,16 +4,21 @@ from .azure_common import BaseTest, DEFAULT_SUBSCRIPTION_ID
 from mock import patch
 from c7n_azure.provider import Azure
 from c7n.config import Config
-from msrestazure.azure_cloud import (AZURE_CHINA_CLOUD, AZURE_GERMAN_CLOUD,
-                                     AZURE_PUBLIC_CLOUD, AZURE_US_GOV_CLOUD)
+from msrestazure.azure_cloud import (
+    AZURE_CHINA_CLOUD,
+    AZURE_GERMAN_CLOUD,
+    AZURE_PUBLIC_CLOUD,
+    AZURE_US_GOV_CLOUD,
+)
 import pytest
 
 
 class ProviderTest(BaseTest):
     def test_initialize_default_account_id(self):
         # Patch get_subscription_id during provider initialization
-        with patch('c7n_azure.session.Session.get_subscription_id',
-                   return_value=DEFAULT_SUBSCRIPTION_ID):
+        with patch(
+            'c7n_azure.session.Session.get_subscription_id', return_value=DEFAULT_SUBSCRIPTION_ID
+        ):
             options = Config.empty()
             azure = Azure()
             azure.initialize(options)
@@ -42,8 +47,9 @@ class ProviderTest(BaseTest):
             self.assertEqual(AZURE_PUBLIC_CLOUD.name, options['region'])
             session = azure.get_session_factory(options)()
 
-        self.assertEqual(AZURE_PUBLIC_CLOUD.endpoints.active_directory_resource_id,
-                         session.resource_endpoint)
+        self.assertEqual(
+            AZURE_PUBLIC_CLOUD.endpoints.active_directory_resource_id, session.resource_endpoint
+        )
 
     def test_initialize_azure_cloud(self):
 
@@ -56,8 +62,10 @@ class ProviderTest(BaseTest):
                 self.assertEqual(cloud_endpoints, azure.cloud_endpoints)
                 self.assertEqual(cloud_endpoints.name, options['region'])
                 session = azure.get_session_factory(options)()
-                self.assertEqual(cloud_endpoints.endpoints.active_directory_resource_id,
-                         session.resource_endpoint)
+                self.assertEqual(
+                    cloud_endpoints.endpoints.active_directory_resource_id,
+                    session.resource_endpoint,
+                )
 
     def test_exit_on_nonexistent_azure_cloud(self):
         with patch('c7n_azure.session.Session.get_subscription_id'):

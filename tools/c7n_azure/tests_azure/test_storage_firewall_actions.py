@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import re
 
-from azure.mgmt.storage.models import (DefaultAction,
-                                       StorageAccountUpdateParameters)
+from azure.mgmt.storage.models import DefaultAction, StorageAccountUpdateParameters
 from c7n.utils import local_session
 from c7n_azure.session import Session
 
@@ -25,28 +24,35 @@ class StorageTestFirewallActions(BaseTest):
             self.client.storage_accounts.update(
                 rg_name,
                 resource.name,
-                StorageAccountUpdateParameters(network_rule_set=resource.network_rule_set))
+                StorageAccountUpdateParameters(network_rule_set=resource.network_rule_set),
+            )
         super(StorageTestFirewallActions, self).tearDown()
 
     @arm_template('storage.json')
     def test_network_ip_rules_action(self):
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny',
-                 'bypass-rules': ['Logging', 'Metrics'],
-                 'ip-rules': ['11.12.13.14', '21.22.23.24']
-                 }
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctstorage*',
+                    }
+                ],
+                'actions': [
+                    {
+                        'type': 'set-firewall-rules',
+                        'default-action': 'Deny',
+                        'bypass-rules': ['Logging', 'Metrics'],
+                        'ip-rules': ['11.12.13.14', '21.22.23.24'],
+                    }
+                ],
+            }
+        )
 
         self.restore = ['cctstorage']
         p_add.run()
@@ -63,30 +69,42 @@ class StorageTestFirewallActions(BaseTest):
     def test_virtual_network_rules_action(self):
         subscription_id = local_session(Session).get_subscription_id()
 
-        id1 = '/subscriptions/' + subscription_id + \
-              '/resourceGroups/test_storage/providers/Microsoft.Network/virtualNetworks/' \
-              'cctstoragevnet1/subnets/testsubnet1'
-        id2 = '/subscriptions/' + subscription_id + \
-              '/resourceGroups/test_storage/providers/Microsoft.Network/virtualNetworks/'\
-              'cctstoragevnet2/subnets/testsubnet2'
+        id1 = (
+            '/subscriptions/'
+            + subscription_id
+            + '/resourceGroups/test_storage/providers/Microsoft.Network/virtualNetworks/'
+            'cctstoragevnet1/subnets/testsubnet1'
+        )
+        id2 = (
+            '/subscriptions/'
+            + subscription_id
+            + '/resourceGroups/test_storage/providers/Microsoft.Network/virtualNetworks/'
+            'cctstoragevnet2/subnets/testsubnet2'
+        )
 
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny',
-                 'bypass-rules': ['Logging', 'Metrics'],
-                 'virtual-network-rules': [id1, id2]
-                 }
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctstorage*',
+                    }
+                ],
+                'actions': [
+                    {
+                        'type': 'set-firewall-rules',
+                        'default-action': 'Deny',
+                        'bypass-rules': ['Logging', 'Metrics'],
+                        'virtual-network-rules': [id1, id2],
+                    }
+                ],
+            }
+        )
 
         self.restore = ['cctstorage']
         p_add.run()
@@ -101,21 +119,24 @@ class StorageTestFirewallActions(BaseTest):
 
     @arm_template('storage.json')
     def test_empty_bypass_network_rules_action(self):
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny',
-                 'bypass-rules': []}
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctstorage*',
+                    }
+                ],
+                'actions': [
+                    {'type': 'set-firewall-rules', 'default-action': 'Deny', 'bypass-rules': []}
+                ],
+            }
+        )
 
         self.restore = ['cctstorage']
         p_add.run()
@@ -126,20 +147,22 @@ class StorageTestFirewallActions(BaseTest):
 
     @arm_template('storage.json')
     def test_missing_bypass_network_rules_action(self):
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny'}
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctstorage*',
+                    }
+                ],
+                'actions': [{'type': 'set-firewall-rules', 'default-action': 'Deny'}],
+            }
+        )
 
         self.restore = ['cctstorage']
         p_add.run()
@@ -153,21 +176,28 @@ class StorageTestFirewallActions(BaseTest):
 
     @arm_template('storage.json')
     def test_bypass_network_rules_action(self):
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny',
-                 'bypass-rules': ['Metrics', 'AzureServices']}
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctstorage*',
+                    }
+                ],
+                'actions': [
+                    {
+                        'type': 'set-firewall-rules',
+                        'default-action': 'Deny',
+                        'bypass-rules': ['Metrics', 'AzureServices'],
+                    }
+                ],
+            }
+        )
 
         self.restore = ['cctstorage']
         p_add.run()
@@ -178,23 +208,29 @@ class StorageTestFirewallActions(BaseTest):
 
     @arm_template('storage.json')
     def test_network_ip_rules_append_action(self):
-        p_add = self.load_policy({
-            'name': 'test-azure-storage-add-ips',
-            'resource': 'azure.storage',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'ccipstorage*'}],
-            'actions': [
-                {'type': 'set-firewall-rules',
-                 'default-action': 'Deny',
-                 'bypass-rules': ['Logging', 'Metrics'],
-                 'ip-rules': ['11.12.13.14', '21.22.23.24']
-                 }
-            ]
-        })
+        p_add = self.load_policy(
+            {
+                'name': 'test-azure-storage-add-ips',
+                'resource': 'azure.storage',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'ccipstorage*',
+                    }
+                ],
+                'actions': [
+                    {
+                        'type': 'set-firewall-rules',
+                        'default-action': 'Deny',
+                        'bypass-rules': ['Logging', 'Metrics'],
+                        'ip-rules': ['11.12.13.14', '21.22.23.24'],
+                    }
+                ],
+            }
+        )
 
         self.restore = ['ccipstorage']
         p_add.run()
@@ -202,16 +238,16 @@ class StorageTestFirewallActions(BaseTest):
         resource = self._get_resource('ccipstorage')
         ip_rules = resource.network_rule_set.ip_rules
         self.assertEqual(len(ip_rules), 4)
-        self.assertListEqual([r.ip_address_or_range for r in ip_rules],
-                             ['11.12.13.14', '21.22.23.24', '3.1.1.1', '1.2.2.128/25'])
+        self.assertListEqual(
+            [r.ip_address_or_range for r in ip_rules],
+            ['11.12.13.14', '21.22.23.24', '3.1.1.1', '1.2.2.128/25'],
+        )
 
     def _get_resources(self):
         return [r for r in self.client.storage_accounts.list_by_resource_group(rg_name)]
 
     def _get_resource(self, prefix):
-        resources = [
-            r for r in self._get_resources()
-            if r.name.startswith(prefix)]
+        resources = [r for r in self._get_resources() if r.name.startswith(prefix)]
         self.assertEqual(1, len(resources))
         return resources[0]
 

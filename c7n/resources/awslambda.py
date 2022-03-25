@@ -25,10 +25,8 @@ ErrAccessDenied = "AccessDeniedException"
 
 
 class DescribeLambda(query.DescribeSource):
-
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeLambda, self).augment(resources))
+        return universal_augment(self.manager, super(DescribeLambda, self).augment(resources))
 
     def get_resources(self, ids):
         client = local_session(self.manager.session_factory).client('lambda')
@@ -41,24 +39,20 @@ class DescribeLambda(query.DescribeSource):
             config = func.pop('Configuration')
             config.update(func)
             if 'Tags' in config:
-                config['Tags'] = [
-                    {'Key': k, 'Value': v} for k, v in config['Tags'].items()]
+                config['Tags'] = [{'Key': k, 'Value': v} for k, v in config['Tags'].items()]
             resources.append(config)
         return resources
 
 
 class ConfigLambda(query.ConfigSource):
-
     def load_resource(self, item):
         resource = super(ConfigLambda, self).load_resource(item)
-        resource['c7n:Policy'] = item[
-            'supplementaryConfiguration'].get('Policy')
+        resource['c7n:Policy'] = item['supplementaryConfiguration'].get('Policy')
         return resource
 
 
 @resources.register('lambda')
 class AWSLambda(query.QueryResourceManager):
-
     class resource_type(query.TypeInfo):
         service = 'lambda'
         arn = 'FunctionArn'
@@ -72,10 +66,7 @@ class AWSLambda(query.QueryResourceManager):
         cfn_type = 'AWS::Lambda::Function'
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeLambda,
-        'config': ConfigLambda
-    }
+    source_mapping = {'describe': DescribeLambda, 'config': ConfigLambda}
 
     def get_resources(self, ids, cache=True, augment=False):
         return super(AWSLambda, self).get_resources(ids, cache, augment)
@@ -104,7 +95,6 @@ AWSLambda.filter_registry.register('network-location', net_filters.NetworkLocati
 
 @AWSLambda.filter_registry.register('check-permissions')
 class LambdaPermissions(CheckPermissions):
-
     def get_iam_arns(self, resources):
         return [r['Role'] for r in resources]
 
@@ -129,13 +119,12 @@ class ReservedConcurrency(ValueFilter):
         def _augment(r):
             try:
                 r[self.annotation_key] = self.manager.retry(
-                    client.get_function, FunctionName=r['FunctionArn'])
+                    client.get_function, FunctionName=r['FunctionArn']
+                )
                 r[self.annotation_key].pop('ResponseMetadata')
             except ClientError as e:
                 if e.response['Error']['Code'] == ErrAccessDenied:
-                    self.log.warning(
-                        "Access denied getting lambda:%s",
-                        r['FunctionName'])
+                    self.log.warning("Access denied getting lambda:%s", r['FunctionName'])
                 raise
             return r
 
@@ -145,18 +134,14 @@ class ReservedConcurrency(ValueFilter):
 
 
 def get_lambda_policies(client, executor_factory, resources, log):
-
     def _augment(r):
         try:
-            r['c7n:Policy'] = client.get_policy(
-                FunctionName=r['FunctionName'])['Policy']
+            r['c7n:Policy'] = client.get_policy(FunctionName=r['FunctionName'])['Policy']
         except client.exceptions.ResourceNotFoundException:
             return None
         except ClientError as e:
             if e.response['Error']['Code'] == 'AccessDeniedException':
-                log.warning(
-                    "Access denied getting policy lambda:%s",
-                    r['FunctionName'])
+                log.warning("Access denied getting policy lambda:%s", r['FunctionName'])
         return r
 
     results = []
@@ -171,8 +156,7 @@ def get_lambda_policies(client, executor_factory, resources, log):
 
         for f in as_completed(futures):
             if f.exception():
-                log.warning("Error getting policy for:%s err:%s",
-                            r['FunctionName'], f.exception())
+                log.warning("Error getting policy for:%s err:%s", r['FunctionName'], f.exception())
                 r = futures[f]
                 continue
             results.append(f.result())
@@ -193,8 +177,7 @@ class LambdaEventSource(ValueFilter):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('lambda')
         self.log.debug("fetching policy for %d lambdas" % len(resources))
-        resources = get_lambda_policies(
-            client, self.executor_factory, resources, self.log)
+        resources = get_lambda_policies(client, self.executor_factory, resources, self.log)
         self.data['key'] = self.annotation_key
         return super(LambdaEventSource, self).process(resources, event)
 
@@ -236,6 +219,7 @@ class LambdaCrossAccountAccessFilter(CrossAccountAccessFilter):
                       - 'IAM-Policy-Cross-Account-Access'
 
     """
+
     permissions = ('lambda:GetPolicy',)
 
     policy_attribute = 'c7n:Policy'
@@ -243,10 +227,8 @@ class LambdaCrossAccountAccessFilter(CrossAccountAccessFilter):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('lambda')
         self.log.debug("fetching policy for %d lambdas" % len(resources))
-        resources = get_lambda_policies(
-            client, self.executor_factory, resources, self.log)
-        return super(LambdaCrossAccountAccessFilter, self).process(
-            resources, event)
+        resources = get_lambda_policies(client, self.executor_factory, resources, self.log)
+        return super(LambdaCrossAccountAccessFilter, self).process(resources, event)
 
 
 @AWSLambda.filter_registry.register('kms-key')
@@ -263,34 +245,36 @@ class LambdaPostFinding(PostFinding):
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
         # security hub formatting beggars belief
-        details = self.filter_empty(select_keys(r,
-            ['CodeSha256',
-             'DeadLetterConfig',
-             'Environment',
-             'Handler',
-             'KMSKeyArn',
-             'LastModified',
-             'MemorySize',
-             'MasterArn',
-             'RevisionId',
-             'Role',
-             'Runtime',
-             'TracingConfig',
-             'Timeout',
-             'Version',
-             'VpcConfig']))
+        details = self.filter_empty(
+            select_keys(
+                r,
+                [
+                    'CodeSha256',
+                    'DeadLetterConfig',
+                    'Environment',
+                    'Handler',
+                    'KMSKeyArn',
+                    'LastModified',
+                    'MemorySize',
+                    'MasterArn',
+                    'RevisionId',
+                    'Role',
+                    'Runtime',
+                    'TracingConfig',
+                    'Timeout',
+                    'Version',
+                    'VpcConfig',
+                ],
+            )
+        )
         # do the brain dead parts Layers, Code, TracingConfig
         if 'Layers' in r:
-            r['Layers'] = {
-                'Arn': r['Layers'][0]['Arn'],
-                'CodeSize': r['Layers'][0]['CodeSize']}
+            r['Layers'] = {'Arn': r['Layers'][0]['Arn'], 'CodeSize': r['Layers'][0]['CodeSize']}
         details.get('VpcConfig', {}).pop('VpcId', None)
 
         if 'Code' in r and r['Code'].get('RepositoryType') == "S3":
             parsed = urlparse(r['Code']['Location'])
-            details['Code'] = {
-                'S3Bucket': parsed.netloc.split('.', 1)[0],
-                'S3Key': parsed.path[1:]}
+            details['Code'] = {'S3Bucket': parsed.netloc.split('.', 1)[0], 'S3Key': parsed.path[1:]}
             params = parse_qs(parsed.query)
             if params['versionId']:
                 details['Code']['S3ObjectVersion'] = params['versionId'][0]
@@ -328,14 +312,21 @@ class VersionTrim(Action):
     code, rather than just the $LATEST alias pointer which will
     be automatically updated.
     """
-    permissions = ('lambda:ListAliases', 'lambda:ListVersionsByFunction',
-                   'lambda:DeleteFunction',)
+
+    permissions = (
+        'lambda:ListAliases',
+        'lambda:ListVersionsByFunction',
+        'lambda:DeleteFunction',
+    )
 
     schema = type_schema(
         'trim-versions',
-        **{'exclude-aliases': {'default': True, 'type': 'boolean'},
-           'retain-latest': {'default': True, 'type': 'boolean'},
-           'older-than': {'type': 'number'}})
+        **{
+            'exclude-aliases': {'default': True, 'type': 'boolean'},
+            'retain-latest': {'default': True, 'type': 'boolean'},
+            'older-than': {'type': 'number'},
+        }
+    )
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('lambda')
@@ -344,19 +335,23 @@ class VersionTrim(Action):
             fmatched, ftotal = self.process_lambda(client, r)
             matched += fmatched
             total += ftotal
-        self.log.info('trim-versions cleaned %s of %s lambda storage' % (
-            get_human_size(matched), get_human_size(total)))
+        self.log.info(
+            'trim-versions cleaned %s of %s lambda storage'
+            % (get_human_size(matched), get_human_size(total))
+        )
 
     def get_aliased_versions(self, client, r):
         aliases_pager = client.get_paginator('list_aliases')
         aliases_pager.PAGE_ITERATOR_CLASS = query.RetryPageIterator
-        aliases = aliases_pager.paginate(
-            FunctionName=r['FunctionName']).build_full_result().get('Aliases')
+        aliases = (
+            aliases_pager.paginate(FunctionName=r['FunctionName'])
+            .build_full_result()
+            .get('Aliases')
+        )
 
         aliased_versions = set()
         for a in aliases:
-            aliased_versions.add("%s:%s" % (
-                a['AliasArn'].rsplit(':', 1)[0], a['FunctionVersion']))
+            aliased_versions.add("%s:%s" % (a['AliasArn'].rsplit(':', 1)[0], a['FunctionVersion']))
         return aliased_versions
 
     def process_lambda(self, client, r):
@@ -364,9 +359,10 @@ class VersionTrim(Action):
         retain_latest = self.data.get('retain-latest', False)
         date_threshold = self.data.get('older-than')
         date_threshold = (
-            date_threshold and
-            parse_date(datetime.utcnow()) - timedelta(days=date_threshold) or
-            None)
+            date_threshold
+            and parse_date(datetime.utcnow()) - timedelta(days=date_threshold)
+            or None
+        )
         aliased_versions = ()
 
         if exclude_aliases:
@@ -395,8 +391,7 @@ class VersionTrim(Action):
                 if retain_latest and latest_sha and v['CodeSha256'] == latest_sha:
                     continue
                 matched += v['CodeSize']
-                self.manager.retry(
-                    client.delete_function, FunctionName=v['FunctionArn'])
+                self.manager.retry(client.delete_function, FunctionName=v['FunctionArn'])
         return (matched, total)
 
 
@@ -421,9 +416,10 @@ class RemovePolicyStatement(RemovePolicyBase):
     schema = type_schema(
         'remove-statements',
         required=['statement_ids'],
-        statement_ids={'oneOf': [
-            {'enum': ['matched']},
-            {'type': 'array', 'items': {'type': 'string'}}]})
+        statement_ids={
+            'oneOf': [{'enum': ['matched']}, {'type': 'array', 'items': {'type': 'string'}}]
+        },
+    )
 
     permissions = ("lambda:GetPolicy", "lambda:RemovePermission")
 
@@ -435,15 +431,15 @@ class RemovePolicyStatement(RemovePolicyBase):
                 if self.process_resource(client, r):
                     results.append(r)
             except Exception:
-                self.log.exception(
-                    "Error processing lambda %s", r['FunctionArn'])
+                self.log.exception("Error processing lambda %s", r['FunctionArn'])
         return results
 
     def process_resource(self, client, resource):
         if 'c7n:Policy' not in resource:
             try:
                 resource['c7n:Policy'] = client.get_policy(
-                    FunctionName=resource['FunctionName']).get('Policy')
+                    FunctionName=resource['FunctionName']
+                ).get('Policy')
             except ClientError as e:
                 if e.response['Error']['Code'] != ErrAccessDenied:
                     raise
@@ -455,14 +451,13 @@ class RemovePolicyStatement(RemovePolicyBase):
         p = json.loads(resource['c7n:Policy'])
 
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
         if not found:
             return
 
         for f in found:
-            client.remove_permission(
-                FunctionName=resource['FunctionName'],
-                StatementId=f['Sid'])
+            client.remove_permission(FunctionName=resource['FunctionName'], StatementId=f['Sid'])
 
 
 @AWSLambda.action_registry.register('set-concurrency')
@@ -477,14 +472,13 @@ class SetConcurrency(Action):
     schema = type_schema(
         'set-concurrency',
         required=('value',),
-        **{'expr': {'type': 'boolean'},
-           'value': {'oneOf': [
-               {'type': 'string'},
-               {'type': 'integer'},
-               {'type': 'null'}]}})
+        **{
+            'expr': {'type': 'boolean'},
+            'value': {'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}]},
+        }
+    )
 
-    permissions = ('lambda:DeleteFunctionConcurrency',
-                   'lambda:PutFunctionConcurrency')
+    permissions = ('lambda:DeleteFunctionConcurrency', 'lambda:PutFunctionConcurrency')
 
     def validate(self):
         if self.data.get('expr', False) and not isinstance(self.data['value'], str):
@@ -509,15 +503,16 @@ class SetConcurrency(Action):
                 if isinstance(value, int) or isinstance(value, none_type):
                     self.policy.log.warning(
                         "Function: %s Invalid expression value for concurrency: %s",
-                        function['FunctionName'], fvalue)
+                        function['FunctionName'],
+                        fvalue,
+                    )
                     continue
             if fvalue is None:
-                client.delete_function_concurrency(
-                    FunctionName=function['FunctionName'])
+                client.delete_function_concurrency(FunctionName=function['FunctionName'])
             else:
                 client.put_function_concurrency(
-                    FunctionName=function['FunctionName'],
-                    ReservedConcurrentExecutions=fvalue)
+                    FunctionName=function['FunctionName'], ReservedConcurrentExecutions=fvalue
+                )
 
 
 @AWSLambda.action_registry.register('delete')
@@ -536,6 +531,7 @@ class Delete(Action):
                 actions:
                   - delete
     """
+
     schema = type_schema('delete')
     permissions = ("lambda:DeleteFunction",)
 
@@ -558,15 +554,15 @@ class LambdaModifyVpcSecurityGroups(ModifyVpcSecurityGroupsAction):
 
     def process(self, functions):
         client = local_session(self.manager.session_factory).client('lambda')
-        groups = super(LambdaModifyVpcSecurityGroups, self).get_groups(
-            functions)
+        groups = super(LambdaModifyVpcSecurityGroups, self).get_groups(functions)
 
         for idx, i in enumerate(functions):
             if 'VpcConfig' not in i:  # only continue if Lambda func is VPC-enabled
                 continue
             try:
-                client.update_function_configuration(FunctionName=i['FunctionName'],
-                                            VpcConfig={'SecurityGroupIds': groups[idx]})
+                client.update_function_configuration(
+                    FunctionName=i['FunctionName'], VpcConfig={'SecurityGroupIds': groups[idx]}
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -618,8 +614,7 @@ class LambdaLayerVersion(query.QueryResourceManager):
         versions = []
         for layer_name in layer_names:
             pager = get_layer_version_paginator(client)
-            for v in pager.paginate(
-                    LayerName=layer_name).build_full_result().get('LayerVersions'):
+            for v in pager.paginate(LayerName=layer_name).build_full_result().get('LayerVersions'):
                 v['LayerName'] = layer_name
                 versions.append(v)
         return versions
@@ -628,10 +623,9 @@ class LambdaLayerVersion(query.QueryResourceManager):
 def get_layer_version_paginator(client):
     pager = Paginator(
         client.list_layer_versions,
-        {'input_token': 'NextToken',
-         'output_token': 'NextToken',
-         'result_key': 'LayerVersions'},
-        client.meta.service_model.operation_model('ListLayerVersions'))
+        {'input_token': 'NextToken', 'output_token': 'NextToken', 'result_key': 'LayerVersions'},
+        client.meta.service_model.operation_model('ListLayerVersions'),
+    )
     pager.PAGE_ITERATOR_CLS = query.RetryPageIterator
     return pager
 
@@ -650,7 +644,8 @@ class LayerCrossAccount(CrossAccountAccessFilter):
                 rpolicy = self.manager.retry(
                     client.get_layer_version_policy,
                     LayerName=r['LayerName'],
-                    VersionNumber=r['Version']).get('Policy')
+                    VersionNumber=r['Version'],
+                ).get('Policy')
             except client.exceptions.ResourceNotFoundException:
                 rpolicy = {}
             r['c7n:Policy'] = rpolicy
@@ -666,13 +661,12 @@ class LayerRemovePermissions(RemovePolicyBase):
     schema = type_schema(
         'remove-statements',
         required=['statement_ids'],
-        statement_ids={'oneOf': [
-            {'enum': ['matched']},
-            {'type': 'array', 'items': {'type': 'string'}}]})
+        statement_ids={
+            'oneOf': [{'enum': ['matched']}, {'type': 'array', 'items': {'type': 'string'}}]
+        },
+    )
 
-    permissions = (
-        "lambda:GetLayerVersionPolicy",
-        "lambda:RemoveLayerVersionPermission")
+    permissions = ("lambda:GetLayerVersionPolicy", "lambda:RemoveLayerVersionPermission")
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('lambda')
@@ -685,14 +679,14 @@ class LayerRemovePermissions(RemovePolicyBase):
                 r['c7n:Policy'] = self.manager.retry(
                     client.get_layer_version_policy,
                     LayerName=r['LayerName'],
-                    VersionNumber=r['Version'])
+                    VersionNumber=r['Version'],
+                )
             except client.exceptions.ResourceNotFound:
                 return
 
         p = json.loads(r['c7n:Policy'])
 
-        statements, found = self.process_policy(
-            p, r, CrossAccountAccessFilter.annotation_key)
+        statements, found = self.process_policy(p, r, CrossAccountAccessFilter.annotation_key)
 
         if not found:
             return
@@ -702,7 +696,8 @@ class LayerRemovePermissions(RemovePolicyBase):
                 client.remove_layer_version_permission,
                 LayerName=r['LayerName'],
                 StatementId=f['Sid'],
-                VersionNumber=r['Version'])
+                VersionNumber=r['Version'],
+            )
 
 
 @LambdaLayerVersion.action_registry.register('delete')
@@ -712,15 +707,15 @@ class DeleteLayerVersion(Action):
     permissions = ('lambda:DeleteLayerVersion',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('lambda')
+        client = local_session(self.manager.session_factory).client('lambda')
 
         for r in resources:
             try:
                 self.manager.retry(
                     client.delete_layer_version,
                     LayerName=r['LayerName'],
-                    VersionNumber=r['Version'])
+                    VersionNumber=r['Version'],
+                )
             except client.exceptions.ResourceNotFound:
                 continue
 
@@ -732,6 +727,7 @@ class LayerPostFinding(PostFinding):
 
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
-        payload.update(self.filter_empty(
-            select_keys(r, ['Version', 'CreatedDate', 'CompatibleRuntimes'])))
+        payload.update(
+            self.filter_empty(select_keys(r, ['Version', 'CreatedDate', 'CompatibleRuntimes']))
+        )
         return envelope

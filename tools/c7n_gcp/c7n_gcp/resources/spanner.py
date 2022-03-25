@@ -11,6 +11,7 @@ class SpannerInstance(QueryResourceManager):
     """
     https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances
     """
+
     class resource_type(TypeInfo):
         service = 'spanner'
         version = 'v1'
@@ -19,8 +20,7 @@ class SpannerInstance(QueryResourceManager):
         scope_key = 'parent'
         scope_template = 'projects/{}'
         name = id = 'name'
-        default_report_fields = [
-            "name", "displayName", "nodeCount", "state", "config"]
+        default_report_fields = ["name", "displayName", "nodeCount", "state", "config"]
         labels = True
         labels_op = 'patch'
         asset_type = "spanner.googleapis.com/Instance"
@@ -28,18 +28,14 @@ class SpannerInstance(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'name': resource_info['resourceName']}
-            )
+            return client.execute_command('get', {'name': resource_info['resourceName']})
 
         @staticmethod
         def get_label_params(resource, all_labels):
-            return {'name': resource['name'],
-                    'body': {
-                        'instance': {
-                            'labels': all_labels
-                        },
-                        'field_mask': ', '.join(['labels'])}}
+            return {
+                'name': resource['name'],
+                'body': {'instance': {'labels': all_labels}, 'field_mask': ', '.join(['labels'])},
+            }
 
 
 @SpannerInstance.action_registry.register('delete')
@@ -63,6 +59,7 @@ class SpannerInstanceDelete(MethodAction):
             actions:
               - type: delete
     """
+
     schema = type_schema('delete')
     method_spec = {'op': 'delete'}
 
@@ -92,19 +89,19 @@ class SpannerInstancePatch(MethodAction):
               - type: set
                 nodeCount: 1
     """
-    schema = type_schema('set', required=['nodeCount'],
-                         **{'nodeCount': {'type': 'number'}})
+
+    schema = type_schema('set', required=['nodeCount'], **{'nodeCount': {'type': 'number'}})
     method_spec = {'op': 'patch'}
     method_perm = 'update'
 
     def get_resource_params(self, model, resource):
-        result = {'name': resource['name'],
-                  'body': {
-                      'instance': {
-                          'nodeCount': self.data['nodeCount']
-                      },
-                      'field_mask': ', '.join(['nodeCount'])}
-                  }
+        result = {
+            'name': resource['name'],
+            'body': {
+                'instance': {'nodeCount': self.data['nodeCount']},
+                'field_mask': ', '.join(['nodeCount']),
+            },
+        }
         return result
 
 
@@ -116,15 +113,14 @@ class SpannerDatabaseInstance(ChildResourceManager):
     """GCP resource:
     https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases
     """
+
     def _get_parent_resource_info(self, child_instance):
         resource_name = None
         if child_instance['name'] is not None:
             resource_names = child_instance['name'].split('/databases')
             if len(resource_names) > 0:
                 resource_name = resource_names[0]
-        return {
-            'resourceName': resource_name
-        }
+        return {'resourceName': resource_name}
 
     class resource_type(ChildTypeInfo):
         service = 'spanner'
@@ -133,21 +129,13 @@ class SpannerDatabaseInstance(ChildResourceManager):
         enum_spec = ('list', 'databases[]', None)
         name = id = 'name'
         scope = None
-        parent_spec = {
-            'resource': 'spanner-instance',
-            'child_enum_params': [
-                ('name', 'parent')
-            ]
-        }
+        parent_spec = {'resource': 'spanner-instance', 'child_enum_params': [('name', 'parent')]}
         default_report_fields = ["name", "state", "createTime"]
         asset_type = "spanner.googleapis.com/Database"
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {
-                    'name': resource_info['resourceName']}
-            )
+            return client.execute_command('get', {'name': resource_info['resourceName']})
 
 
 SpannerDatabaseInstance.action_registry.register('set-iam-policy', SetIamPolicy)
@@ -175,6 +163,7 @@ class SpannerDatabaseInstanceDropDatabase(MethodAction):
             actions:
               - type: delete
     """
+
     schema = type_schema('dropDatabase', **{'type': {'enum': ['delete']}})
     method_spec = {'op': 'dropDatabase'}
     method_perm = 'drop'

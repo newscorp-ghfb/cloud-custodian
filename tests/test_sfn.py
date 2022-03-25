@@ -5,18 +5,17 @@ from .common import BaseTest
 
 
 class TestStepFunction(BaseTest):
-
     def test_invoke_batch(self):
         factory = self.replay_flight_data('test_invoke_sfn_bulk')
-        p = self.load_policy({
-            'name': 'test-invoke-sfn-bulk',
-            'resource': 'step-machine',
-            'actions': [{
-                'type': 'invoke-sfn',
-                'bulk': True,
-                'state-machine': 'Helloworld'}]},
+        p = self.load_policy(
+            {
+                'name': 'test-invoke-sfn-bulk',
+                'resource': 'step-machine',
+                'actions': [{'type': 'invoke-sfn', 'bulk': True, 'state-machine': 'Helloworld'}],
+            },
             session_factory=factory,
-            config={'account_id': '644160558196'})
+            config={'account_id': '644160558196'},
+        )
 
         resources = p.run()
 
@@ -25,20 +24,21 @@ class TestStepFunction(BaseTest):
         self.assertTrue('c7n:execution-arn' in resources[0])
         client = factory().client('stepfunctions')
         self.assertEqual(
-            client.describe_execution(
-                executionArn=resources[0]['c7n:execution-arn'])['status'],
-            'SUCCEEDED')
+            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])['status'],
+            'SUCCEEDED',
+        )
 
     def test_invoke_sfn(self):
         factory = self.replay_flight_data('test_invoke_sfn')
-        p = self.load_policy({
-            'name': 'test-invoke-sfn',
-            'resource': 'step-machine',
-            'actions': [{
-                'type': 'invoke-sfn',
-                'state-machine': 'Helloworld'}]},
+        p = self.load_policy(
+            {
+                'name': 'test-invoke-sfn',
+                'resource': 'step-machine',
+                'actions': [{'type': 'invoke-sfn', 'state-machine': 'Helloworld'}],
+            },
             session_factory=factory,
-            config={'account_id': '644160558196'})
+            config={'account_id': '644160558196'},
+        )
 
         resources = p.run()
 
@@ -47,9 +47,9 @@ class TestStepFunction(BaseTest):
         self.assertTrue('c7n:execution-arn' in resources[0])
         client = factory().client('stepfunctions')
         self.assertEqual(
-            client.describe_execution(
-                executionArn=resources[0]['c7n:execution-arn'])['status'],
-            'SUCCEEDED')
+            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])['status'],
+            'SUCCEEDED',
+        )
 
     def test_sfn_resource(self):
         session_factory = self.replay_flight_data('test_sfn_resource')
@@ -57,16 +57,10 @@ class TestStepFunction(BaseTest):
             {
                 'name': 'test-sfn',
                 'resource': 'step-machine',
-                'filters': [
-                    {
-                        'type': 'value',
-                        'key': 'name',
-                        'value': 'test'
-                    }
-                ]
+                'filters': [{'type': 'value', 'key': 'name', 'value': 'test'}],
             },
             config={'account_id': '101010101111'},
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
@@ -78,16 +72,10 @@ class TestStepFunction(BaseTest):
             {
                 'name': 'test-tag-sfn',
                 'resource': 'step-machine',
-                'actions': [
-                    {
-                        'type': 'tag',
-                        'key': 'test',
-                        'value': 'test-value'
-                    }
-                ]
+                'actions': [{'type': 'tag', 'key': 'test', 'value': 'test-value'}],
             },
             config={'account_id': '101010101111'},
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -101,17 +89,10 @@ class TestStepFunction(BaseTest):
             {
                 'name': 'test-untag-sfn',
                 'resource': 'step-machine',
-                'actions': [
-                    {
-                        'type': 'remove-tag',
-                        'tags': [
-                            'test'
-                        ]
-                    }
-                ]
+                'actions': [{'type': 'remove-tag', 'tags': ['test']}],
             },
             config={'account_id': '101010101111'},
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)

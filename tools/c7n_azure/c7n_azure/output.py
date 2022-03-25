@@ -18,7 +18,7 @@ from c7n.output import (
     metrics_outputs,
     DirectoryOutput,
     LogOutput,
-    Metrics
+    Metrics,
 )
 from c7n.utils import local_session
 
@@ -49,8 +49,9 @@ class AzureStorageOutput(DirectoryOutput):
 
         self.root_dir = tempfile.mkdtemp()
         self.output_dir = self.get_output_path(self.ctx.options.output_dir)
-        self.blob_service, self.container, self.file_prefix = \
-            self.get_blob_client_wrapper(self.output_dir, ctx)
+        self.blob_service, self.container, self.file_prefix = self.get_blob_client_wrapper(
+            self.output_dir, ctx
+        )
 
     def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
         if exc_type is not None:
@@ -71,20 +72,22 @@ class AzureStorageOutput(DirectoryOutput):
     def upload(self):
         for root, dirs, files in os.walk(self.root_dir):
             for f in files:
-                blob_name = self.join(self.file_prefix, root[len(self.root_dir):], f)
+                blob_name = self.join(self.file_prefix, root[len(self.root_dir) :], f)
                 blob_name.strip('/')
                 try:
                     self.blob_service.create_blob_from_path(
-                        self.container,
-                        blob_name,
-                        os.path.join(root, f))
+                        self.container, blob_name, os.path.join(root, f)
+                    )
                 except AzureHttpError as e:
                     if e.status_code == 403:
-                        self.log.error("Access Error: Storage Blob Data Contributor Role "
-                                       "is required to write to Azure Blob Storage.")
+                        self.log.error(
+                            "Access Error: Storage Blob Data Contributor Role "
+                            "is required to write to Azure Blob Storage."
+                        )
                     else:
-                        self.log.exception("Error writing output. "
-                                           "Confirm output storage URL is correct.")
+                        self.log.exception(
+                            "Error writing output. " "Confirm output storage URL is correct."
+                        )
 
                 self.log.debug("%s uploaded" % blob_name)
 
@@ -101,8 +104,7 @@ class AzureStorageOutput(DirectoryOutput):
 
 @metrics_outputs.register('azure')
 class MetricsOutput(Metrics):
-    """Send metrics data to app insights
-    """
+    """Send metrics data to app insights"""
 
     def __init__(self, ctx, config=None):
         super(MetricsOutput, self).__init__(ctx, config)
@@ -127,8 +129,8 @@ class MetricsOutput(Metrics):
                 'SubscriptionId': self.subscription_id,
                 'ExecutionId': self.ctx.execution_id,
                 'ExecutionMode': self.ctx.policy.execution_mode,
-                'Unit': unit
-            }
+                'Unit': unit,
+            },
         }
         for k, v in dimensions.items():
             d['Dimensions'][k] = v
@@ -137,9 +139,7 @@ class MetricsOutput(Metrics):
     def _put_metrics(self, ns, metrics):
         self._initialize()
         for m in metrics:
-            self.tc.track_metric(name=m['Name'],
-                                 value=m['Value'],
-                                 properties=m['Dimensions'])
+            self.tc.track_metric(name=m['Name'], value=m['Value'], properties=m['Dimensions'])
         self.tc.flush()
 
 
@@ -161,7 +161,7 @@ class AppInsightsLogHandler(LoggingHandler):
             'Policy': self.policy_name,
             'SubscriptionId': self.subscription_id,
             'ResType': self.resource_type,
-            'ExecutionId': self.execution_id
+            'ExecutionId': self.execution_id,
         }
 
         if hasattr(record, 'properties'):
@@ -182,8 +182,10 @@ class AppInsightsLogOutput(LogOutput):
     def get_handler(self):
         self.instrumentation_key = AppInsightsHelper.get_instrumentation_key(self.config['url'])
         self.subscription_id = local_session(self.ctx.policy.session_factory).get_subscription_id()
-        return AppInsightsLogHandler(self.instrumentation_key,
-                                     self.ctx.policy.name,
-                                     self.subscription_id,
-                                     self.ctx.execution_id,
-                                     self.ctx.policy.resource_type)
+        return AppInsightsLogHandler(
+            self.instrumentation_key,
+            self.ctx.policy.name,
+            self.subscription_id,
+            self.ctx.execution_id,
+            self.ctx.policy.resource_type,
+        )

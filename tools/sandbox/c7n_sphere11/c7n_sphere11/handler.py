@@ -47,6 +47,7 @@ def lambda_handler(event, context=None):
     if app.config.get('sentry-dsn'):
         from raven import Client
         from raven.contrib.bottle import Sentry
+
         client = Client(app.config['sentry-dsn'])
         app.app.catchall = False
         wrapped_app = Sentry(app.app, client)

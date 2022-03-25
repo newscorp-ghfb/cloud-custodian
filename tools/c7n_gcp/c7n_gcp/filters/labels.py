@@ -49,25 +49,28 @@ class LabelActionFilter(Filter):
 
 
     """
+
     schema = type_schema(
         'marked-for-op',
         label={'type': 'string'},
         tz={'type': 'string'},
         skew={'type': 'number', 'minimum': 0},
         skew_hours={'type': 'number', 'minimum': 0},
-        op={'type': 'string'})
+        op={'type': 'string'},
+    )
 
     def validate(self):
         op = self.data.get('op')
         if self.manager and op not in self.manager.action_registry.keys():
             raise FilterValidationError(
-                "Invalid marked-for-op op:%s in %s" % (op, self.manager.data))
+                "Invalid marked-for-op op:%s in %s" % (op, self.manager.data)
+            )
 
         tz = Time.get_tz(self.data.get('tz', 'utc'))
         if not tz:
             raise FilterValidationError(
-                "Invalid timezone specified '%s' in %s" % (
-                    self.data.get('tz'), self.manager.data))
+                "Invalid timezone specified '%s' in %s" % (self.data.get('tz'), self.manager.data)
+            )
         return self
 
     def process(self, resources, event=None):
@@ -94,8 +97,7 @@ class LabelActionFilter(Filter):
         try:
             action_date = datetime.strptime(action_date_str, '%Y_%m_%d__%H_%M')
         except Exception:
-            self.log.error("could not parse label:%s value:%s on %s" % (
-                self.label, v, i['name']))
+            self.log.error("could not parse label:%s value:%s on %s" % (self.label, v, i['name']))
             return False
 
         # current_date must match timezones with the parsed date string

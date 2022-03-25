@@ -6,12 +6,10 @@ from c7n.query import QueryResourceManager, TypeInfo
 
 @resources.register('dlm-policy')
 class DLMPolicy(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'dlm'
         id = name = 'PolicyId'
-        enum_spec = (
-            'get_lifecycle_policies', 'Policies', None)
+        enum_spec = ('get_lifecycle_policies', 'Policies', None)
         detail_spec = ('get_lifecycle_policy', 'PolicyId', 'PolicyId', 'Policy')
         filter_name = 'PolicyIds'
         filter_type = 'list'

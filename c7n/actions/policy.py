@@ -10,16 +10,16 @@ class RemovePolicyBase(BaseAction):
     schema = utils.type_schema(
         'remove-statements',
         required=['statement_ids'],
-        statement_ids={'oneOf': [
-            {'enum': ['matched', "*"]},
-            {'type': 'array', 'items': {'type': 'string'}}]})
+        statement_ids={
+            'oneOf': [{'enum': ['matched', "*"]}, {'type': 'array', 'items': {'type': 'string'}}]
+        },
+    )
 
     def process_policy(self, policy, resource, matched_key):
         statements = policy.get('Statement', [])
         resource_statements = resource.get(matched_key, ())
 
-        return remove_statements(
-            self.data['statement_ids'], statements, resource_statements)
+        return remove_statements(self.data['statement_ids'], statements, resource_statements)
 
 
 def remove_statements(match_ids, statements, matched=()):
@@ -79,18 +79,15 @@ class ModifyPolicyBase(BaseAction):
                 'type': ['array', 'string'],
                 'oneOf': [
                     {'enum': ['matched', '*']},
-                    {'type': 'array', 'items': {'type': 'string'}}
+                    {'type': 'array', 'items': {'type': 'string'}},
                 ],
-            }
+            },
         }
     )
 
     def __init__(self, data=None, manager=None):
         if manager is not None:
-            config_args = {
-                'account_id': manager.config.account_id,
-                'region': manager.config.region
-            }
+            config_args = {'account_id': manager.config.account_id, 'region': manager.config.region}
             self.data = utils.format_string_values(data, **config_args)
         else:
             self.data = utils.format_string_values(data)
@@ -108,5 +105,4 @@ class ModifyPolicyBase(BaseAction):
         if len(statement_ids) == 0:
             return policy_statements, found
         resource_statements = resource.get(matched_key, ())
-        return remove_statements(
-            statement_ids, policy_statements, resource_statements)
+        return remove_statements(statement_ids, policy_statements, resource_statements)

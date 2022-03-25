@@ -9,8 +9,7 @@ from c7n_gcp.query import QueryResourceManager, TypeInfo
 
 @resources.register('dataflow-job')
 class DataflowJob(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.jobs
-    """
+    """GCP resource: https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.jobs"""
 
     class resource_type(TypeInfo):
         service = 'dataflow'
@@ -20,17 +19,17 @@ class DataflowJob(QueryResourceManager):
         scope_key = 'projectId'
         name = id = 'name'
         get_requires_event = True
-        default_report_fields = [
-            'name', 'currentState', 'createTime', 'location']
+        default_report_fields = ['name', 'currentState', 'createTime', 'location']
         permissions = ('dataflow.jobs.list',)
 
         @staticmethod
         def get(client, event):
             return client.execute_command(
-                'get', {
+                'get',
+                {
                     'projectId': jmespath.search('resource.labels.project_id', event),
-                    'jobId': jmespath.search('protoPayload.request.job_id', event)
-                }
+                    'jobId': jmespath.search('protoPayload.request.job_id', event),
+                },
             )
 
     def resources(self, query=None):
@@ -44,15 +43,9 @@ class DataflowJob(QueryResourceManager):
         client = self.get_client()
         results = []
         for r in resources:
-            ref = {
-                'jobId': r['id'],
-                'projectId': r['projectId'],
-                'view': 'JOB_VIEW_ALL'
-            }
+            ref = {'jobId': r['id'], 'projectId': r['projectId'], 'view': 'JOB_VIEW_ALL'}
             try:
-                results.append(
-                    client.execute_query(
-                        'get', verb_arguments=ref))
+                results.append(client.execute_query('get', verb_arguments=ref))
             except HttpError:
                 results.append(r)
         return results

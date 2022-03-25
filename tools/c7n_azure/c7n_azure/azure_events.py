@@ -8,105 +8,72 @@ from c7n.utils import local_session
 
 class AzureEvents:
     """A mapping of resource types to events.
-       Provides user friendly event names for common events."""
+    Provides user friendly event names for common events."""
 
     azure_events = {
-
-        'AppServicePlanWrite': {
-            'resource_provider': 'Microsoft.Web/serverFarms',
-            'event': 'write'},
-
-        'BatchWrite': {
-            'resource_provider': 'Microsoft.Batch/batchAccounts',
-            'event': 'write'},
-
-        'CdnProfileWrite': {
-            'resource_provider': 'Microsoft.Cdn/profiles',
-            'event': 'write'},
-
+        'AppServicePlanWrite': {'resource_provider': 'Microsoft.Web/serverFarms', 'event': 'write'},
+        'BatchWrite': {'resource_provider': 'Microsoft.Batch/batchAccounts', 'event': 'write'},
+        'CdnProfileWrite': {'resource_provider': 'Microsoft.Cdn/profiles', 'event': 'write'},
         'CognitiveServiceWrite': {
             'resource_provider': 'Microsoft.CognitiveServices/account',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'ContainerServiceWrite': {
             'resource_provider': 'Microsoft.ContainerService/managedClusters',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'CosmosDbWrite': {
             'resource_provider': 'Microsoft.DocumentDB/databaseAccounts',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'DataFactoryWrite': {
             'resource_provider': 'Microsoft.DataFactory/factories',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'DataLakeWrite': {
             'resource_provider': 'Microsoft.DataLakeStore/accounts',
-            'event': 'write'},
-
-        'DiskWrite': {
-            'resource_provider': 'Microsoft.Compute/disks',
-            'event': 'write'},
-
-        'IotHubWrite': {
-            'resource_provider': 'Microsoft.Devices/IotHubs',
-            'event': 'write'},
-
-        'KeyVaultWrite': {
-            'resource_provider': 'Microsoft.KeyVault/vaults',
-            'event': 'write'},
-
+            'event': 'write',
+        },
+        'DiskWrite': {'resource_provider': 'Microsoft.Compute/disks', 'event': 'write'},
+        'IotHubWrite': {'resource_provider': 'Microsoft.Devices/IotHubs', 'event': 'write'},
+        'KeyVaultWrite': {'resource_provider': 'Microsoft.KeyVault/vaults', 'event': 'write'},
         'LoadBalancerWrite': {
             'resource_provider': 'Microsoft.Network/loadBalancers',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'NetworkInterfaceWrite': {
             'resource_provider': 'Microsoft.Network/networkInterfaces',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'NetworkSecurityGroupWrite': {
             'resource_provider': 'Microsoft.Network/networkSecurityGroups',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'PublicIpWrite': {
             'resource_provider': 'Microsoft.Network/publicIPAddresses',
-            'event': 'write'},
-
-        'RedisWrite': {
-            'resource_provider': 'Microsoft.Cache/Redis',
-            'event': 'write'},
-
+            'event': 'write',
+        },
+        'RedisWrite': {'resource_provider': 'Microsoft.Cache/Redis', 'event': 'write'},
         'ResourceGroupWrite': {
             'resource_provider': 'Microsoft.Resources/subscriptions/resourceGroups',
-            'event': 'write'},
-
-        'SqlServerWrite': {
-            'resource_provider': 'Microsoft.Sql/servers',
-            'event': 'write'},
-
+            'event': 'write',
+        },
+        'SqlServerWrite': {'resource_provider': 'Microsoft.Sql/servers', 'event': 'write'},
         'StorageWrite': {
             'resource_provider': 'Microsoft.Storage/storageAccounts',
-            'event': 'write'},
-
+            'event': 'write',
+        },
         'StorageContainerWrite': {
             'resource_provider': 'Microsoft.Storage/storageAccounts/blobServices/containers',
-            'event': 'write'},
-
-        'VmWrite': {
-            'resource_provider': 'Microsoft.Compute/virtualMachines',
-            'event': 'write'},
-
+            'event': 'write',
+        },
+        'VmWrite': {'resource_provider': 'Microsoft.Compute/virtualMachines', 'event': 'write'},
         'VmssWrite': {
             'resource_provider': 'Microsoft.Compute/virtualMachineScaleSets',
-            'event': 'write'},
-
-        'VnetWrite': {
-            'resource_provider': 'Microsoft.Network/virtualNetworks',
-            'event': 'write'},
-
-        'WebAppWrite': {
-            'resource_provider': 'Microsoft.Web/sites',
-            'event': 'write'}
+            'event': 'write',
+        },
+        'VnetWrite': {'resource_provider': 'Microsoft.Network/virtualNetworks', 'event': 'write'},
+        'WebAppWrite': {'resource_provider': 'Microsoft.Web/sites', 'event': 'write'},
     }
 
     @classmethod
@@ -128,7 +95,6 @@ class AzureEvents:
 
 
 class AzureEventSubscription:
-
     @staticmethod
     def create(destination, name, subscription_id, session=None, event_filter=None):
 
@@ -139,6 +105,7 @@ class AzureEventSubscription:
         scope = '/subscriptions/%s' % subscription_id
 
         client = s.client('azure.mgmt.eventgrid.EventGridManagementClient')
-        event_subscription = \
-            client.event_subscriptions.begin_create_or_update(scope, name, event_info)
+        event_subscription = client.event_subscriptions.begin_create_or_update(
+            scope, name, event_info
+        )
         return event_subscription.result()

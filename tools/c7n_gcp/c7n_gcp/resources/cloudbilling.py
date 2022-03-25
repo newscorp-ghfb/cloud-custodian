@@ -8,7 +8,6 @@ import jmespath
 
 @resources.register('cloudbilling-account')
 class CloudBillingAccount(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudbilling'
         version = 'v1'
@@ -24,5 +23,10 @@ class CloudBillingAccount(QueryResourceManager):
         @staticmethod
         def get(client, event):
             return client.execute_query(
-                'get', {'name': jmespath.search(
-                    'protoPayload.response.billingAccountInfo.billingAccountName', event)})
+                'get',
+                {
+                    'name': jmespath.search(
+                        'protoPayload.response.billingAccountInfo.billingAccountName', event
+                    )
+                },
+            )

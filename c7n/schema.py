@@ -35,7 +35,7 @@ from c7n.filters.core import (
     OPERATORS,
     VALUE_TYPES,
 )
-from c7n.structure import StructureParser # noqa
+from c7n.structure import StructureParser  # noqa
 
 
 def validate(data, schema=None, resource_types=()):
@@ -49,20 +49,24 @@ def validate(data, schema=None, resource_types=()):
         return check_unique(data) or []
     try:
         resp = policy_error_scope(specific_error(errors[0]), data)
-        name = isinstance(
-            errors[0].instance,
-            dict) and errors[0].instance.get(
-            'name',
-            'unknown') or 'unknown'
+        name = (
+            isinstance(errors[0].instance, dict)
+            and errors[0].instance.get('name', 'unknown')
+            or 'unknown'
+        )
         return [resp, name]
     except Exception:
-        logging.exception(
-            "specific_error failed, traceback, followed by fallback")
+        logging.exception("specific_error failed, traceback, followed by fallback")
 
-    return list(filter(None, [
-        errors[0],
-        best_match(validator.iter_errors(data)),
-    ]))
+    return list(
+        filter(
+            None,
+            [
+                errors[0],
+                best_match(validator.iter_errors(data)),
+            ],
+        )
+    )
 
 
 def check_unique(data):
@@ -71,9 +75,10 @@ def check_unique(data):
         if v == 1:
             counter.pop(k)
     if counter:
-        return [ValueError(
-            "Only one policy with a given name allowed, duplicates: {}".format(counter)),
-            list(counter.keys())[0]]
+        return [
+            ValueError("Only one policy with a given name allowed, duplicates: {}".format(counter)),
+            list(counter.keys())[0],
+        ]
 
 
 def policy_error_scope(error, data):
@@ -83,8 +88,12 @@ def policy_error_scope(error, data):
         return error
     pdata = data['policies'][err_path[1]]
     pdata.get('name', 'unknown')
-    error.message = "Error on policy:{} resource:{}\n".format(
-        pdata.get('name', 'unknown'), pdata.get('resource', 'unknown')) + error.message
+    error.message = (
+        "Error on policy:{} resource:{}\n".format(
+            pdata.get('name', 'unknown'), pdata.get('resource', 'unknown')
+        )
+        + error.message
+    )
     return error
 
 
@@ -126,8 +135,7 @@ def specific_error(error):
     if t is not None:
         found = None
         for idx, v in enumerate(error.validator_value):
-            if ('$ref' in v and
-                    v['$ref'].rsplit('/', 2)[-1].rsplit('.', 1)[-1] == t):
+            if '$ref' in v and v['$ref'].rsplit('/', 2)[-1].rsplit('.', 1)[-1] == t:
                 found = idx
                 break
             elif 'type' in v and t in v['properties']['type']['enum']:
@@ -172,15 +180,13 @@ def generate(resource_types=()):
             'properties': {
                 'Sid': {'type': 'string'},
                 'Effect': {'type': 'string', 'enum': ['Allow', 'Deny']},
-                'Principal': {'anyOf': [
-                    {'type': 'string'},
-                    {'type': 'object'}, {'type': 'array'}]},
+                'Principal': {'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]},
                 'NotPrincipal': {'anyOf': [{'type': 'object'}, {'type': 'array'}]},
                 'Action': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
                 'NotAction': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
                 'Resource': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
                 'NotResource': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
-                'Condition': {'type': 'object'}
+                'Condition': {'type': 'object'},
             },
             'required': ['Sid', 'Effect'],
             'oneOf': [
@@ -191,8 +197,8 @@ def generate(resource_types=()):
                 {'required': ['Principal', 'Action', 'NotResource']},
                 {'required': ['NotPrincipal', 'Action', 'NotResource']},
                 {'required': ['Principal', 'NotAction', 'NotResource']},
-                {'required': ['NotPrincipal', 'NotAction', 'NotResource']}
-            ]
+                {'required': ['NotPrincipal', 'NotAction', 'NotResource']},
+            ],
         },
         'actions': {},
         'filters': {
@@ -203,57 +209,82 @@ def generate(resource_types=()):
             # Shortcut form of value filter as k=v
             'valuekv': {
                 'type': 'object',
-                'additionalProperties': {'oneOf': [{'type': 'number'}, {'type': 'null'},
-                    {'type': 'array', 'maxItems': 0}, {'type': 'string'}, {'type': 'boolean'}]},
+                'additionalProperties': {
+                    'oneOf': [
+                        {'type': 'number'},
+                        {'type': 'null'},
+                        {'type': 'array', 'maxItems': 0},
+                        {'type': 'string'},
+                        {'type': 'boolean'},
+                    ]
+                },
                 'minProperties': 1,
-                'maxProperties': 1},
+                'maxProperties': 1,
+            },
         },
         'filters_common': {
-            'comparison_operators': {
-                'enum': list(OPERATORS.keys())},
+            'comparison_operators': {'enum': list(OPERATORS.keys())},
             'value_types': {'enum': VALUE_TYPES},
             'value_from': ValuesFrom.schema,
-            'value': {'oneOf': [
-                {'type': 'array'},
-                {'type': 'string'},
-                {'type': 'boolean'},
-                {'type': 'number'},
-                {'type': 'null'}]},
+            'value': {
+                'oneOf': [
+                    {'type': 'array'},
+                    {'type': 'string'},
+                    {'type': 'boolean'},
+                    {'type': 'number'},
+                    {'type': 'null'},
+                ]
+            },
         },
         'policy': {
             'type': 'object',
             'required': ['name', 'resource'],
             'additionalProperties': False,
             'properties': {
-                'name': {
-                    'type': 'string',
-                    'pattern': "^[A-z][A-z0-9]*(-[A-z0-9]+)*$"},
+                'name': {'type': 'string', 'pattern': "^[A-z][A-z0-9]*(-[A-z0-9]+)*$"},
                 'conditions': {
                     'type': 'array',
-                    'items': {'anyOf': [
-                        {'type': 'object', 'additionalProperties': False,
-                         'properties': {'or': {
-                             '$ref': '#/definitions/policy/properties/conditions'}}},
-                        {'type': 'object', 'additionalProperties': False,
-                         'properties': {'not': {
-                             '$ref': '#/definitions/policy/properties/conditions'}}},
-                        {'type': 'object', 'additionalProperties': False,
-                         'properties': {'and': {
-                             '$ref': '#/definitions/policy/properties/conditions'}}},
-                        {'$ref': '#/definitions/filters/value'},
-                        {'$ref': '#/definitions/filters/event'},
-                        {'$ref': '#/definitions/filters/valuekv'}]}},
+                    'items': {
+                        'anyOf': [
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'or': {'$ref': '#/definitions/policy/properties/conditions'}
+                                },
+                            },
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'not': {'$ref': '#/definitions/policy/properties/conditions'}
+                                },
+                            },
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'and': {'$ref': '#/definitions/policy/properties/conditions'}
+                                },
+                            },
+                            {'$ref': '#/definitions/filters/value'},
+                            {'$ref': '#/definitions/filters/event'},
+                            {'$ref': '#/definitions/filters/valuekv'},
+                        ]
+                    },
+                },
                 # these should be deprecated for conditions
                 'region': {'type': 'string'},
                 'tz': {'type': 'string'},
                 'start': {'format': 'date-time'},
                 'end': {'format': 'date-time'},
-
                 'resource': {'type': 'string'},
-                'max-resources': {'anyOf': [
-                    {'type': 'integer', 'minimum': 1},
-                    {'$ref': '#/definitions/max-resources-properties'}
-                ]},
+                'max-resources': {
+                    'anyOf': [
+                        {'type': 'integer', 'minimum': 1},
+                        {'$ref': '#/definitions/max-resources-properties'},
+                    ]
+                },
                 'max-resources-percent': {'type': 'number', 'minimum': 0, 'maximum': 100},
                 'comment': {'type': 'string'},
                 'comments': {'type': 'string'},
@@ -265,9 +296,7 @@ def generate(resource_types=()):
                 'actions': {
                     'type': 'array',
                 },
-                'filters': {
-                    'type': 'array'
-                },
+                'filters': {'type': 'array'},
                 #
                 # TODO: source queries should really move under
                 # source. This was initially used for describe sources
@@ -275,9 +304,7 @@ def generate(resource_types=()):
                 # important to note it also prevents resource cache
                 # utilization between policies that have different
                 # queries.
-                'query': {
-                    'type': 'array', 'items': {'type': 'object'}}
-
+                'query': {'type': 'array', 'items': {'type': 'object'}},
             },
         },
         'policy-mode': {
@@ -289,9 +316,9 @@ def generate(resource_types=()):
             'properties': {
                 'amount': {"type": 'integer', 'minimum': 1},
                 'op': {'enum': ['or', 'and']},
-                'percent': {'type': 'number', 'minimum': 0, 'maximum': 100}
-            }
-        }
+                'percent': {'type': 'number', 'minimum': 0, 'maximum': 100},
+            },
+        },
     }
 
     resource_refs = []
@@ -301,9 +328,9 @@ def generate(resource_types=()):
             if resource_types and r_type_name not in resource_types:
                 if not resource_type.type_aliases:
                     continue
-                elif not {"%s.%s" % (cloud_name, ralias) for ralias
-                        in resource_type.type_aliases}.intersection(
-                        resource_types):
+                elif not {
+                    "%s.%s" % (cloud_name, ralias) for ralias in resource_type.type_aliases
+                }.intersection(resource_types):
                     continue
 
             aliases = []
@@ -319,13 +346,9 @@ def generate(resource_types=()):
 
             resource_refs.append(
                 process_resource(
-                    r_type_name,
-                    resource_type,
-                    resource_defs,
-                    aliases,
-                    definitions,
-                    cloud_name
-                ))
+                    r_type_name, resource_type, resource_defs, aliases, definitions, cloud_name
+                )
+            )
 
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -339,9 +362,9 @@ def generate(resource_types=()):
             'policies': {
                 'type': 'array',
                 'additionalItems': False,
-                'items': {'anyOf': resource_refs}
-            }
-        }
+                'items': {'anyOf': resource_refs},
+            },
+        },
     }
 
     # allow empty policies with lazy load
@@ -351,8 +374,8 @@ def generate(resource_types=()):
 
 
 def process_resource(
-        type_name, resource_type, resource_defs, aliases=None,
-        definitions=None, provider_name=None):
+    type_name, resource_type, resource_defs, aliases=None, definitions=None, provider_name=None
+):
 
     r = resource_defs.setdefault(type_name, {'actions': {}, 'filters': {}})
 
@@ -363,9 +386,10 @@ def process_resource(
             action_alias = "%s.%s" % (provider_name, action_name)
             if action_alias in definitions['actions']:
 
-                if definitions['actions'][action_alias] != a.schema: # NOQA
+                if definitions['actions'][action_alias] != a.schema:  # NOQA
                     msg = "Schema mismatch on type:{} action:{} w/ schema alias ".format(
-                        type_name, action_name)
+                        type_name, action_name
+                    )
                     raise SyntaxError(msg)
             else:
                 definitions['actions'][action_alias] = a.schema
@@ -373,12 +397,11 @@ def process_resource(
         else:
             r['actions'][action_name] = a.schema
             action_refs.append(
-                {'$ref': '#/definitions/resources/%s/actions/%s' % (
-                    type_name, action_name)})
+                {'$ref': '#/definitions/resources/%s/actions/%s' % (type_name, action_name)}
+            )
 
     # one word action shortcuts
-    action_refs.append(
-        {'enum': list(resource_type.action_registry.keys())})
+    action_refs.append({'enum': list(resource_type.action_registry.keys())})
 
     filter_refs = []
     for f in ElementSchema.elements(resource_type.filter_registry):
@@ -391,7 +414,9 @@ def process_resource(
         elif f.schema_alias:
             filter_alias = "%s.%s" % (provider_name, filter_name)
             if filter_alias in definitions['filters']:
-                assert definitions['filters'][filter_alias] == f.schema, "Schema mismatch on filter w/ schema alias" # NOQA
+                assert (
+                    definitions['filters'][filter_alias] == f.schema
+                ), "Schema mismatch on filter w/ schema alias"  # NOQA
             else:
                 definitions['filters'][filter_alias] = f.schema
             filter_refs.append({'$ref': '#/definitions/filters/%s' % filter_alias})
@@ -399,40 +424,48 @@ def process_resource(
         else:
             r['filters'][filter_name] = f.schema
             filter_refs.append(
-                {'$ref': '#/definitions/resources/%s/filters/%s' % (
-                    type_name, filter_name)})
+                {'$ref': '#/definitions/resources/%s/filters/%s' % (type_name, filter_name)}
+            )
 
     # one word filter shortcuts
-    filter_refs.append(
-        {'enum': list(resource_type.filter_registry.keys())})
+    filter_refs.append({'enum': list(resource_type.filter_registry.keys())})
 
-    block_fref = '#/definitions/resources/%s/policy/allOf/1/properties/filters' % (
-        type_name)
-    filter_refs.extend([
-        {'type': 'object', 'additionalProperties': False,
-         'properties': {'or': {'$ref': block_fref}}},
-        {'type': 'object', 'additionalProperties': False,
-         'properties': {'and': {'$ref': block_fref}}},
-        {'type': 'object', 'additionalProperties': False,
-         'properties': {'not': {'$ref': block_fref}}}])
+    block_fref = '#/definitions/resources/%s/policy/allOf/1/properties/filters' % (type_name)
+    filter_refs.extend(
+        [
+            {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {'or': {'$ref': block_fref}},
+            },
+            {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {'and': {'$ref': block_fref}},
+            },
+            {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {'not': {'$ref': block_fref}},
+            },
+        ]
+    )
 
     resource_policy = {
         'allOf': [
             {'$ref': '#/definitions/policy'},
-            {'properties': {
-                'resource': {'enum': [type_name]},
-                'filters': {
-                    'type': 'array',
-                    'items': {'anyOf': filter_refs}},
-                'actions': {
-                    'type': 'array',
-                    'items': {'anyOf': action_refs}}}},
+            {
+                'properties': {
+                    'resource': {'enum': [type_name]},
+                    'filters': {'type': 'array', 'items': {'anyOf': filter_refs}},
+                    'actions': {'type': 'array', 'items': {'anyOf': action_refs}},
+                }
+            },
         ]
     }
 
     if aliases:
-        resource_policy['allOf'][1]['properties'][
-            'resource']['enum'].extend(aliases)
+        resource_policy['allOf'][1]['properties']['resource']['enum'].extend(aliases)
 
     if type_name == 'ec2':
         resource_policy['allOf'][1]['properties']['query'] = {}
@@ -493,8 +526,7 @@ def resource_vocabulary(cloud_name=None, qualify_name=True, aliases=True):
         if aliases and resource_type.type_aliases:
             provider = type_name.split('.', 1)[0]
             for type_alias in resource_type.type_aliases:
-                vocabulary['aliases'][
-                    "{}.{}".format(provider, type_alias)] = vocabulary[type_name]
+                vocabulary['aliases']["{}.{}".format(provider, type_alias)] = vocabulary[type_name]
                 if provider == 'aws':
                     vocabulary['aliases'][type_alias] = vocabulary[type_name]
             vocabulary[type_name]['resource_type'] = type_name
@@ -507,13 +539,11 @@ def resource_vocabulary(cloud_name=None, qualify_name=True, aliases=True):
 
 
 class ElementSchema:
-    """Utility functions for working with resource's filters and actions.
-    """
+    """Utility functions for working with resource's filters and actions."""
 
     @staticmethod
     def elements(registry):
-        """Given a resource registry return sorted de-aliased values.
-        """
+        """Given a resource registry return sorted de-aliased values."""
         seen = {}
         for k, v in registry.items():
             if k in ('and', 'or', 'not'):
@@ -526,8 +556,7 @@ class ElementSchema:
 
     @staticmethod
     def resolve(vocabulary, schema_path):
-        """Given a resource vocabulary and a dotted path, resolve an element.
-        """
+        """Given a resource vocabulary and a dotted path, resolve an element."""
         current = vocabulary
         frag = None
         if schema_path.startswith('.'):
@@ -612,8 +641,9 @@ def pprint_schema_summary(vocabulary):
             non_providers[type_name] = len(rv)
         else:
             provider, name = type_name.split('.', 1)
-            stats = providers.setdefault(provider, {
-                'resources': 0, 'actions': Counter(), 'filters': Counter()})
+            stats = providers.setdefault(
+                provider, {'resources': 0, 'actions': Counter(), 'filters': Counter()}
+            )
             stats['resources'] += 1
             for a in rv.get('actions'):
                 stats['actions'][a] += 1

@@ -11,7 +11,7 @@ try:
     from .zpill import PillTest
     from c7n.testing import PyTestUtils, reset_session_cache
     from pytest_terraform.tf import LazyPluginCacheDir, LazyReplay
-except ImportError: # noqa
+except ImportError:  # noqa
     # docker tests run with minimial deps
     class PyTestUtils:
         pass
@@ -32,18 +32,18 @@ LazyPluginCacheDir.value = '../.tfcache'
 
 
 class TerraformAWSRewriteHooks:
-    """ Local pytest plugin
+    """Local pytest plugin
 
     Work around to allow for dynamic registration of hooks based on plugin availability
     """
+
     def pytest_terraform_modify_state(self, tfstate):
-        """ Sanitize functional testing account data """
+        """Sanitize functional testing account data"""
         tfstate.update(re.sub(r'\b\d{12}\b', ACCOUNT_ID, str(tfstate)))
 
 
 class CustodianAWSTesting(PyTestUtils, PillTest):
-    """Pytest AWS Testing Fixture
-    """
+    """Pytest AWS Testing Fixture"""
 
 
 def pytest_configure(config):

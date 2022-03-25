@@ -33,10 +33,5 @@ class CdnProfile(ArmResourceManager):
         service = 'azure.mgmt.cdn'
         client = 'CdnManagementClient'
         enum_spec = ('profiles', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name')
         resource_type = 'Microsoft.Cdn/profiles'

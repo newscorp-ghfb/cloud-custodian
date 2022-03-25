@@ -8,13 +8,17 @@ from c7n.filters.core import ValueFilter
 
 
 class TagsTest(BaseTest):
-
     def test_tag_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy(filters=[
-                    {'tag:Test': 'value'},
-                ]), validate=True))
+                tools.get_policy(
+                    filters=[
+                        {'tag:Test': 'value'},
+                    ]
+                ),
+                validate=True,
+            )
+        )
 
     def _get_filter(self, data):
         return ValueFilter(data=data, manager=Mock)
@@ -24,10 +28,12 @@ class TagsTest(BaseTest):
 
         resources = [tools.get_resource({'Pythontest': 'ItWorks', 'Another-Tag-1': 'value1'})]
 
-        config = [({'tag:Pythontest': 'present'}, 1),
-                  ({'tag:Pythontest': 'absent'}, 0),
-                  ({'tag:Pythontest': 'ItWorks'}, 1),
-                  ({'tag:Pythontest': 'ItDoesntWork'}, 0)]
+        config = [
+            ({'tag:Pythontest': 'present'}, 1),
+            ({'tag:Pythontest': 'absent'}, 0),
+            ({'tag:Pythontest': 'ItWorks'}, 1),
+            ({'tag:Pythontest': 'ItDoesntWork'}, 0),
+        ]
 
         for c in config:
             f = self._get_filter(c[0])

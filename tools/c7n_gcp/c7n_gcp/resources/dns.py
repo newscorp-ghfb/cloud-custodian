@@ -8,8 +8,8 @@ from c7n.utils import type_schema, local_session
 
 @resources.register('dns-managed-zone')
 class DnsManagedZone(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/dns/docs/reference/v1beta2/managedZones
-    """
+    """GCP resource: https://cloud.google.com/dns/docs/reference/v1beta2/managedZones"""
+
     class resource_type(TypeInfo):
         service = 'dns'
         version = 'v1beta2'
@@ -25,14 +25,15 @@ class DnsManagedZone(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', {'project': resource_info['project_id'],
-                        'managedZone': resource_info['zone_name']})
+                'get',
+                {'project': resource_info['project_id'], 'managedZone': resource_info['zone_name']},
+            )
 
 
 @resources.register('dns-policy')
 class DnsPolicy(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/dns/docs/reference/v1beta2/policies
-    """
+    """GCP resource: https://cloud.google.com/dns/docs/reference/v1beta2/policies"""
+
     class resource_type(TypeInfo):
         service = 'dns'
         version = 'v1beta2'
@@ -47,8 +48,9 @@ class DnsPolicy(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', {'project': resource_info['project_id'],
-                        'policy': resource_info['policy_name']})
+                'get',
+                {'project': resource_info['project_id'], 'policy': resource_info['policy_name']},
+            )
 
 
 @DnsManagedZone.action_registry.register('delete')
@@ -78,6 +80,4 @@ class Delete(MethodAction):
 
     def get_resource_params(self, model, resource):
         project = local_session(self.manager.source.query.session_factory).get_default_project()
-        return {
-            'project': project,
-            'managedZone': resource['name']}
+        return {'project': project, 'managedZone': resource['name']}

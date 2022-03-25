@@ -30,8 +30,7 @@ def run(event, context, subscription_id=None):
         log.error('Invalid policy config')
         return False
 
-    options_overrides = \
-        policy_config['policies'][0].get('mode', {}).get('execution-options', {})
+    options_overrides = policy_config['policies'][0].get('mode', {}).get('execution-options', {})
 
     options_overrides['authorization_file'] = context['auth_file']
 

@@ -43,7 +43,7 @@ class MailerSqsQueueIterator:
             WaitTimeSeconds=self.timeout,
             MaxNumberOfMessages=3,
             MessageAttributeNames=self.msg_attributes,
-            AttributeNames=['SentTimestamp']
+            AttributeNames=['SentTimestamp'],
         )
 
         msgs = response.get('Messages', [])
@@ -57,13 +57,10 @@ class MailerSqsQueueIterator:
     next = __next__  # python2.7
 
     def ack(self, m):
-        self.aws_sqs.delete_message(
-            QueueUrl=self.queue_url,
-            ReceiptHandle=m['ReceiptHandle'])
+        self.aws_sqs.delete_message(QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle'])
 
 
 class MailerSqsQueueProcessor:
-
     def __init__(self, config, session, logger, max_num_processes=16):
         self.config = config
         self.logger = logger
@@ -91,6 +88,7 @@ class MailerSqsQueueProcessor:
     - resource-owners has a list of tags, SnSTopic, we'll deliver an sns message for
         any resources with SnSTopic set with a value that is a valid sns topic.
     """
+
     def run(self, parallel=False):
         self.logger.info("Downloading messages from the SQS queue.")
         aws_sqs = self.session.client('sqs', endpoint_url=self.endpoint_url)
@@ -101,11 +99,13 @@ class MailerSqsQueueProcessor:
         # unless it's being run from CLI on a normal system with SHM
         if parallel:
             import multiprocessing
+
             process_pool = multiprocessing.Pool(processes=self.max_num_processes)
         for sqs_message in sqs_messages:
             self.logger.debug(
-                "Message id: %s received %s" % (
-                    sqs_message['MessageId'], sqs_message.get('MessageAttributes', '')))
+                "Message id: %s received %s"
+                % (sqs_message['MessageId'], sqs_message.get('MessageAttributes', ''))
+            )
             msg_kind = sqs_message.get('MessageAttributes', {}).get('mtype')
             if msg_kind:
                 msg_kind = msg_kind['StringValue']
@@ -136,13 +136,17 @@ class MailerSqsQueueProcessor:
             pass
         sqs_message = json.loads(zlib.decompress(base64.b64decode(body)))
 
-        self.logger.debug("Got account:%s message:%s %s:%d policy:%s recipients:%s" % (
-            sqs_message.get('account', 'na'),
-            encoded_sqs_message['MessageId'],
-            sqs_message['policy']['resource'],
-            len(sqs_message['resources']),
-            sqs_message['policy']['name'],
-            ', '.join(sqs_message['action'].get('to'))))
+        self.logger.debug(
+            "Got account:%s message:%s %s:%d policy:%s recipients:%s"
+            % (
+                sqs_message.get('account', 'na'),
+                encoded_sqs_message['MessageId'],
+                sqs_message['policy']['resource'],
+                len(sqs_message['resources']),
+                sqs_message['policy']['name'],
+                ', '.join(sqs_message['action'].get('to')),
+            )
+        )
 
         # get the map of email_to_addresses to mimetext messages (with resources baked in)
         # and send any emails (to SES or SMTP) if there are email addresses found
@@ -158,14 +162,17 @@ class MailerSqsQueueProcessor:
         sns_delivery.deliver_sns_messages(sns_message_packages, sqs_message)
 
         # this section sends a notification to the resource owner via Slack
-        if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
-                for e in sqs_message.get('action', ()).get('to', []) +
-                sqs_message.get('action', ()).get('owner_absent_contact', [])):
+        if any(
+            e.startswith('slack') or e.startswith('https://hooks.slack.com/')
+            for e in sqs_message.get('action', ()).get('to', [])
+            + sqs_message.get('action', ()).get('owner_absent_contact', [])
+        ):
             from .slack_delivery import SlackDelivery
 
             if self.config.get('slack_token'):
-                self.config['slack_token'] = \
-                    kms_decrypt(self.config, self.logger, self.session, 'slack_token')
+                self.config['slack_token'] = kms_decrypt(
+                    self.config, self.logger, self.session, 'slack_token'
+                )
 
             slack_delivery = SlackDelivery(self.config, self.logger, email_delivery)
             slack_messages = slack_delivery.get_to_addrs_slack_messages_map(sqs_message)
@@ -178,6 +185,7 @@ class MailerSqsQueueProcessor:
         # this section gets the map of metrics to send to datadog and delivers it
         if any(e.startswith('datadog') for e in sqs_message.get('action', ()).get('to')):
             from .datadog_delivery import DataDogDelivery
+
             datadog_delivery = DataDogDelivery(self.config, self.session, self.logger)
             datadog_message_packages = datadog_delivery.get_datadog_message_packages(sqs_message)
 
@@ -188,11 +196,9 @@ class MailerSqsQueueProcessor:
                 pass
 
         # this section sends the full event to a Splunk HTTP Event Collector (HEC)
-        if any(
-            e.startswith('splunkhec://')
-            for e in sqs_message.get('action', ()).get('to')
-        ):
+        if any(e.startswith('splunkhec://') for e in sqs_message.get('action', ()).get('to')):
             from .splunk_delivery import SplunkHecDelivery
+
             splunk_delivery = SplunkHecDelivery(self.config, self.session, self.logger)
             splunk_messages = splunk_delivery.get_splunk_payloads(
                 sqs_message, encoded_sqs_message['Attributes']['SentTimestamp']

@@ -14,47 +14,41 @@ from c7n.tags import RemoveTag, Tag, TagActionFilter, TagDelayedAction, universa
 
 
 class InstanceDescribe(DescribeSource):
-
     def get_resources(self, resource_ids):
         return self.query.filter(
             self.manager,
-            **{
-                'Filters': [
-                    {'Name': 'replication-instance-id', 'Values': resource_ids}]})
+            **{'Filters': [{'Name': 'replication-instance-id', 'Values': resource_ids}]}
+        )
 
     def augment(self, resources):
         client = local_session(self.manager.session_factory).client('dms')
         with self.manager.executor_factory(max_workers=2) as w:
             futures = []
             for resource_set in chunks(resources, 20):
-                futures.append(
-                    w.submit(self.process_resource_set, client, resources))
+                futures.append(w.submit(self.process_resource_set, client, resources))
 
             for f in as_completed(futures):
                 if f.exception():
                     self.manager.log.warning(
-                        "Error retrieving replinstance tags: %s",
-                        f.exception())
+                        "Error retrieving replinstance tags: %s", f.exception()
+                    )
         return resources
 
     def process_resource_set(self, client, resources):
         for arn, r in zip(self.manager.get_arns(resources), resources):
             self.manager.log.info("arn %s" % arn)
             try:
-                r['Tags'] = client.list_tags_for_resource(
-                    ResourceArn=arn).get('TagList', [])
+                r['Tags'] = client.list_tags_for_resource(ResourceArn=arn).get('TagList', [])
             except client.exceptions.ResourceNotFoundFault:
                 continue
 
 
 @resources.register('dms-instance')
 class ReplicationInstance(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'dms'
         arn_type = 'rep'
-        enum_spec = (
-            'describe_replication_instances', 'ReplicationInstances', None)
+        enum_spec = ('describe_replication_instances', 'ReplicationInstances', None)
         name = id = 'ReplicationInstanceIdentifier'
         arn = 'ReplicationInstanceArn'
         date = 'InstanceCreateTime'
@@ -65,15 +59,11 @@ class ReplicationInstance(QueryResourceManager):
     filter_registry = filters
     retry = staticmethod(get_retry(('Throttled',)))
 
-    source_mapping = {
-        'describe': InstanceDescribe,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': InstanceDescribe, 'config': ConfigSource}
 
 
 @resources.register('dms-endpoint')
 class DmsEndpoints(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'dms'
         enum_spec = ('describe_endpoints', 'Endpoints', None)
@@ -144,6 +134,7 @@ class ModifyReplicationInstance(BaseAction):
     AWS ModifyReplicationInstance Documentation:
       https://docs.aws.amazon.com/dms/latest/APIReference/API_ModifyReplicationInstance.html
     """
+
     schema = {
         'type': 'object',
         'additionalProperties': False,
@@ -153,16 +144,14 @@ class ModifyReplicationInstance(BaseAction):
             'AllocatedStorage': {'type': 'integer'},
             'ApplyImmediately': {'type': 'boolean'},
             'ReplicationInstanceClass': {'type': 'string'},
-            'VpcSecurityGroupIds': {
-                'type': 'array', 'items': {'type': 'string'}
-            },
+            'VpcSecurityGroupIds': {'type': 'array', 'items': {'type': 'string'}},
             'PreferredMaintenanceWindow': {'type': 'string'},
             'MultiAZ': {'type': 'boolean'},
             'EngineVersion': {'type': 'string'},
             'AllowMajorVersionUpgrade': {'type': 'boolean'},
             'AutoMinorVersionUpgrade': {'type': 'boolean'},
-            'ReplicationInstanceIdentifier': {'type': 'string'}
-        }
+            'ReplicationInstanceIdentifier': {'type': 'string'},
+        },
     }
     permissions = ('dms:ModifyReplicationInstance',)
 
@@ -174,10 +163,12 @@ class ModifyReplicationInstance(BaseAction):
             params['ReplicationInstanceArn'] = r['ReplicationInstanceArn']
             try:
                 client.modify_replication_instance(**params)
-            except (client.exceptions.InvalidResourceStateFault,
-                    client.exceptions.ResourceNotFoundFault,
-                    client.exceptions.ResourceAlreadyExistsFault,
-                    client.exceptions.UpgradeDependencyFailureFault):
+            except (
+                client.exceptions.InvalidResourceStateFault,
+                client.exceptions.ResourceNotFoundFault,
+                client.exceptions.ResourceAlreadyExistsFault,
+                client.exceptions.UpgradeDependencyFailureFault,
+            ):
                 continue
 
 
@@ -200,15 +191,14 @@ class InstanceTag(Tag):
                       key: RequiredTag
                       value: RequiredTagValue
     """
+
     permissions = ('dms:AddTagsToResource',)
 
     def process_resource_set(self, client, resources, tags):
         client = local_session(self.manager.session_factory).client('dms')
         for r in resources:
             try:
-                client.add_tags_to_resource(
-                    ResourceArn=r['ReplicationInstanceArn'],
-                    Tags=tags)
+                client.add_tags_to_resource(ResourceArn=r['ReplicationInstanceArn'], Tags=tags)
             except client.exceptions.ResourceNotFoundFault:
                 continue
 
@@ -231,14 +221,15 @@ class InstanceRemoveTag(RemoveTag):
                     - type: remove-tag
                       tags: ["InvalidTag"]
     """
+
     permissions = ('dms:RemoveTagsFromResource',)
 
     def process_resource_set(self, client, resources, tags):
         for r in resources:
             try:
                 client.remove_tags_from_resource(
-                    ResourceArn=r['ReplicationInstanceArn'],
-                    TagKeys=tags)
+                    ResourceArn=r['ReplicationInstanceArn'], TagKeys=tags
+                )
             except client.exceptions.ResourceNotFoundFault:
                 continue
 
@@ -286,6 +277,7 @@ class ModifyDmsEndpoint(BaseAction):
     AWS ModifyEndpoint Documentation
     https://docs.aws.amazon.com/dms/latest/APIReference/API_ModifyEndpoint.html
     """
+
     schema = {
         'type': 'object',
         'additionalProperties': False,
@@ -293,16 +285,25 @@ class ModifyDmsEndpoint(BaseAction):
             'type': {'enum': ['modify-endpoint']},
             'Port': {'type': 'integer', 'minimum': 1, 'maximum': 65536},
             'ServerName': {'type': 'string'},
-            'SslMode': {'type': 'string', 'enum': [
-                'none', 'require', 'verify-ca', 'verify-full']},
+            'SslMode': {'type': 'string', 'enum': ['none', 'require', 'verify-ca', 'verify-full']},
             'CertificateArn': {'type': 'string'},
             'DatabaseName': {'type': 'string'},
             'EndpointIdentifier': {'type': 'string'},
-            'EngineName': {'enum': [
-                'mysql', 'oracle', 'postgres',
-                'mariadb', 'aurora', 'redshift',
-                'S3', 'sybase', 'dynamodb', 'mongodb',
-                'sqlserver']},
+            'EngineName': {
+                'enum': [
+                    'mysql',
+                    'oracle',
+                    'postgres',
+                    'mariadb',
+                    'aurora',
+                    'redshift',
+                    'S3',
+                    'sybase',
+                    'dynamodb',
+                    'mongodb',
+                    'sqlserver',
+                ]
+            },
             'ExtraConnectionAttributes': {'type': 'string'},
             'Username': {'type': 'string'},
             'Password': {'type': 'string'},
@@ -310,7 +311,7 @@ class ModifyDmsEndpoint(BaseAction):
                 'type': 'object',
                 'additionalProperties': False,
                 'required': ['ServiceAccessRoleArn'],
-                'properties': {'ServiceAccessRoleArn': {'type': 'string'}}
+                'properties': {'ServiceAccessRoleArn': {'type': 'string'}},
             },
             'S3Settings': {
                 'type': 'object',
@@ -318,22 +319,20 @@ class ModifyDmsEndpoint(BaseAction):
                 'properties': {
                     'BucketFolder': {'type': 'string'},
                     'BucketName': {'type': 'string'},
-                    'CompressionType': {
-                        'type': 'string', 'enum': ['none', 'gzip']
-                    },
+                    'CompressionType': {'type': 'string', 'enum': ['none', 'gzip']},
                     'CsvDelimiter': {'type': 'string'},
                     'CsvRowDelimiter': {'type': 'string'},
                     'ExternalTableDefinition': {'type': 'string'},
-                    'ServiceAccessRoleArn': {'type': 'string'}
-                }
+                    'ServiceAccessRoleArn': {'type': 'string'},
+                },
             },
             'MongoDbSettings': {
                 'type': 'object',
                 'additionalProperties': False,
                 'properties': {
                     'AuthMechanism': {
-                        'type': 'string', 'enum': [
-                            'default', 'mongodb_cr', 'scram_sha_1']
+                        'type': 'string',
+                        'enum': ['default', 'mongodb_cr', 'scram_sha_1'],
                     },
                     'AuthSource': {'type': 'string'},
                     'Username': {'type': 'string'},
@@ -341,15 +340,12 @@ class ModifyDmsEndpoint(BaseAction):
                     'DatabaseName': {'type': 'string'},
                     'DocsToInvestigate': {'type': 'integer', 'minimum': 1},
                     'ExtractDocId': {'type': 'string'},
-                    'NestingLevel': {
-                        'type': 'string', 'enum': [
-                            'NONE', 'none', 'ONE', 'one']},
-                    'Port': {
-                        'type': 'integer', 'minimum': 1, 'maximum': 65535},
-                    'ServerName': {'type': 'string'}
-                }
-            }
-        }
+                    'NestingLevel': {'type': 'string', 'enum': ['NONE', 'none', 'ONE', 'one']},
+                    'Port': {'type': 'integer', 'minimum': 1, 'maximum': 65535},
+                    'ServerName': {'type': 'string'},
+                },
+            },
+        },
     }
     permissions = ('dms:ModifyEndpoint',)
 
@@ -359,14 +355,15 @@ class ModifyDmsEndpoint(BaseAction):
         params.pop('type')
         for e in endpoints:
             params['EndpointArn'] = e['EndpointArn']
-            params['EndpointIdentifier'] = params.get(
-                'EndpointIdentifier', e['EndpointIdentifier'])
+            params['EndpointIdentifier'] = params.get('EndpointIdentifier', e['EndpointIdentifier'])
             params['EngineName'] = params.get('EngineName', e['EngineName'])
             try:
                 client.modify_endpoint(**params)
-            except (client.exceptions.InvalidResourceStateFault,
-                    client.exceptions.ResourceAlreadyExistsFault,
-                    client.exceptions.ResourceNotFoundFault):
+            except (
+                client.exceptions.InvalidResourceStateFault,
+                client.exceptions.ResourceAlreadyExistsFault,
+                client.exceptions.ResourceNotFoundFault,
+            ):
                 continue
 
 
@@ -388,6 +385,7 @@ class DeleteDmsEndpoint(BaseAction):
                 - delete
 
     """
+
     schema = type_schema('delete')
     permissions = ('dms:DeleteEndpoint',)
 

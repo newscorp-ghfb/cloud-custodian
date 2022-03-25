@@ -14,10 +14,7 @@ from c7n.actions import Action
 from c7n.filters import Filter
 from c7n.exceptions import PolicyValidationError, PolicyExecutionError
 from c7n.policy import LambdaMode, execution
-from c7n.utils import (
-    local_session, type_schema,
-    chunks, dumps, filter_empty, get_partition
-)
+from c7n.utils import local_session, type_schema, chunks, dumps, filter_empty, get_partition
 from c7n.version import version
 
 from .aws import AWS
@@ -26,14 +23,15 @@ log = logging.getLogger('c7n.securityhub')
 
 
 class SecurityHubFindingFilter(Filter):
-    """Check if there are Security Hub Findings related to the resources
-    """
+    """Check if there are Security Hub Findings related to the resources"""
+
     schema = type_schema(
         'finding',
         # Many folks do an aggregator region, allow them to use that
         # for filtering.
         region={'type': 'string'},
-        query={'type': 'object'})
+        query={'type': 'object'},
+    )
     schema_alias = True
     permissions = ('securityhub:GetFindings',)
     annotation_key = 'c7n:finding-filter'
@@ -43,19 +41,21 @@ class SecurityHubFindingFilter(Filter):
         query = self.data.get('query')
         if query:
             from c7n.resources import aws
+
             aws.shape_validate(query, self.query_shape, 'securityhub')
 
     def process(self, resources, event=None):
-        client = local_session(
-            self.manager.session_factory).client(
-                'securityhub', region_name=self.data.get('region'))
+        client = local_session(self.manager.session_factory).client(
+            'securityhub', region_name=self.data.get('region')
+        )
         found = []
         params = dict(self.data.get('query', {}))
         for r_arn, resource in zip(self.manager.get_arns(resources), resources):
             params['ResourceId'] = [{"Value": r_arn, "Comparison": "EQUALS"}]
             if resource.get("InstanceId"):
                 params['ResourceId'].append(
-                    {"Value": resource["InstanceId"], "Comparison": "EQUALS"})
+                    {"Value": resource["InstanceId"], "Comparison": "EQUALS"}
+                )
             findings = client.get_findings(Filters=params).get("Findings")
             if len(findings) > 0:
                 resource[self.annotation_key] = findings
@@ -64,7 +64,7 @@ class SecurityHubFindingFilter(Filter):
 
     @classmethod
     def register_resources(klass, registry, resource_class):
-        """ meta model subscriber on resource registration.
+        """meta model subscriber on resource registration.
 
         SecurityHub Findings Filter
         """
@@ -110,9 +110,7 @@ class SecurityHub(LambdaMode):
 
     """
 
-    schema = type_schema(
-        'hub-finding', aliases=('hub-action',),
-        rinherit=LambdaMode.schema)
+    schema = type_schema('hub-finding', aliases=('hub-action',), rinherit=LambdaMode.schema)
 
     ActionFinding = 'Security Hub Findings - Custom Action'
     ActionInsight = 'Security Hub Insight Results'
@@ -121,7 +119,7 @@ class SecurityHub(LambdaMode):
     handlers = {
         ActionFinding: 'resolve_action_finding',
         ActionInsight: 'resolve_action_insight',
-        ImportFinding: 'resolve_import_finding'
+        ImportFinding: 'resolve_import_finding',
     }
 
     def resolve_findings(self, findings):
@@ -135,15 +133,20 @@ class SecurityHub(LambdaMode):
                         label = r['Details']['AwsIamAccessKey']['PrincipalName']
                     else:
                         label = r['Details']['AwsIamAccessKey']['UserName']
-                    rids.add('arn:{}:iam::{}:user/{}'.format(get_partition(r['Region']),
-                        f['AwsAccountId'], label))
+                    rids.add(
+                        'arn:{}:iam::{}:user/{}'.format(
+                            get_partition(r['Region']), f['AwsAccountId'], label
+                        )
+                    )
                 elif not r['Id'].startswith('arn'):
                     if r['Type'] == 'AwsEc2Instance':
-                        rids.add('arn:{}:ec2:{}:{}:instance/{}'.format(get_partition(r['Region']),
-                            r['Region'], f['AwsAccountId'], r['Id']))
+                        rids.add(
+                            'arn:{}:ec2:{}:{}:instance/{}'.format(
+                                get_partition(r['Region']), r['Region'], f['AwsAccountId'], r['Id']
+                            )
+                        )
                     else:
-                        log.warning("security hub unknown id:%s rtype:%s",
-                                r['Id'], r['Type'])
+                        log.warning("security hub unknown id:%s rtype:%s", r['Id'], r['Type'])
                 else:
                     rids.add(r['Id'])
         return rids
@@ -151,18 +154,16 @@ class SecurityHub(LambdaMode):
     def resolve_action_insight(self, event):
         rtype = event['detail']['resultType']
         rids = [list(i.keys())[0] for i in event['detail']['insightResults']]
-        client = local_session(
-            self.policy.session_factory).client('securityhub')
-        insights = client.get_insights(
-            InsightArns=[event['detail']['insightArn']]).get(
-                'Insights', ())
+        client = local_session(self.policy.session_factory).client('securityhub')
+        insights = client.get_insights(InsightArns=[event['detail']['insightArn']]).get(
+            'Insights', ()
+        )
         if not insights or len(insights) > 1:
             return []
         insight = insights.pop()
         params = {}
         params['Filters'] = insight['Filters']
-        params['Filters'][rtype] = [
-            {'Comparison': 'EQUALS', 'Value': r} for r in rids]
+        params['Filters'][rtype] = [{'Comparison': 'EQUALS', 'Value': r} for r in rids]
         findings = client.get_findings(**params).get('Findings', ())
         return self.resolve_findings(findings)
 
@@ -193,11 +194,13 @@ class SecurityHub(LambdaMode):
         for rarn in resource_arns:
             resource_sets.setdefault((rarn.account_id, rarn.region), []).append(rarn)
         # Warn if not configured for member-role and have multiple accounts resources.
-        if (not self.policy.data['mode'].get('member-role') and
-                {self.policy.options.account_id} != {
-                    rarn.account_id for rarn in resource_arns}):
-            msg = ('hub-mode not configured for multi-account member-role '
-                   'but multiple resource accounts found')
+        if not self.policy.data['mode'].get('member-role') and {self.policy.options.account_id} != {
+            rarn.account_id for rarn in resource_arns
+        }:
+            msg = (
+                'hub-mode not configured for multi-account member-role '
+                'but multiple resource accounts found'
+            )
             self.policy.log.warning(msg)
             raise PolicyExecutionError(msg)
         return resource_sets
@@ -208,6 +211,7 @@ class SecurityHub(LambdaMode):
         arns = arn_resolver(event)
         # Lazy import to avoid aws sdk runtime dep in core
         from c7n.resources.aws import Arn
+
         return {Arn.parse(r) for r in arns}
 
     def resolve_resources(self, event):
@@ -217,18 +221,20 @@ class SecurityHub(LambdaMode):
         # sanity check on finding resources matching policy resource
         # type's service.
         if self.policy.resource_manager.type != 'account':
-            log.info(
-                "mode:security-hub resolve resources %s", list(resource_map))
+            log.info("mode:security-hub resolve resources %s", list(resource_map))
             if not resource_map:
                 return []
             resource_arns = [
-                r for r in resource_map
-                if r.service == self.policy.resource_manager.resource_type.service]
+                r
+                for r in resource_map
+                if r.service == self.policy.resource_manager.resource_type.service
+            ]
             if not resource_arns:
                 log.info("mode:security-hub no matching resources arns")
                 return []
             resources = self.policy.resource_manager.get_resources(
-                [r.resource for r in resource_arns])
+                [r.resource for r in resource_arns]
+            )
         else:
             resources = self.policy.resource_manager.get_resources([])
             resources[0]['resource-arns'] = resource_arns
@@ -268,7 +274,7 @@ FindingTypes = {
     "TTPs",
     "Effects",
     "Unusual Behaviors",
-    "Sensitive Data Identifications"
+    "Sensitive Data Identifications",
 }
 
 # Mostly undocumented value size limit
@@ -312,11 +318,9 @@ class PostFinding(Action):
              confidence: 100
              compliance_status: FAILED
 
-    """ # NOQA
+    """  # NOQA
 
-    deprecations = (
-        deprecated.field('severity_normalized', 'severity_label'),
-    )
+    deprecations = (deprecated.field('severity_normalized', 'severity_label'),)
 
     FindingVersion = "2018-10-08"
 
@@ -329,12 +333,15 @@ class PostFinding(Action):
         "post-finding",
         required=["types"],
         title={"type": "string", 'default': 'policy.name'},
-        description={'type': 'string', 'default':
-            'policy.description, or if not defined in policy then policy.name'},
+        description={
+            'type': 'string',
+            'default': 'policy.description, or if not defined in policy then policy.name',
+        },
         severity={"type": "number", 'default': 0},
         severity_normalized={"type": "number", "min": 0, "max": 100, 'default': 0},
         severity_label={
-            "type": "string", 'default': 'INFORMATIONAL',
+            "type": "string",
+            'default': 'INFORMATIONAL',
             "enum": ["INFORMATIONAL", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
         },
         confidence={"type": "number", "min": 0, "max": 100},
@@ -355,7 +362,8 @@ class PostFinding(Action):
             "enum": ["PASSED", "WARNING", "FAILED", "NOT_AVAILABLE"],
         },
         record_state={
-            "type": "string", 'default': 'ACTIVE',
+            "type": "string",
+            'default': 'ACTIVE',
             "enum": ["ACTIVE", "ARCHIVED"],
         },
     )
@@ -368,14 +376,17 @@ class PostFinding(Action):
                 raise PolicyValidationError(
                     "Finding types must be in the format 'namespace/category/classifier'."
                     " Found {}. Valid namespace values are: {}.".format(
-                        finding_type, " | ".join([ns for ns in FindingTypes])))
+                        finding_type, " | ".join([ns for ns in FindingTypes])
+                    )
+                )
 
     def get_finding_tag(self, resource):
         finding_tag = None
         tags = resource.get('Tags', [])
 
-        finding_key = '{}:{}'.format('c7n:FindingId',
-            self.data.get('title', self.manager.ctx.policy.name))
+        finding_key = '{}:{}'.format(
+            'c7n:FindingId', self.data.get('title', self.manager.ctx.policy.name)
+        )
 
         # Support Tags as dictionary
         if isinstance(tags, dict):
@@ -398,9 +409,9 @@ class PostFinding(Action):
 
     def process(self, resources, event=None):
         region_name = self.data.get('region', self.manager.config.region)
-        client = local_session(
-            self.manager.session_factory).client(
-                "securityhub", region_name=region_name)
+        client = local_session(self.manager.session_factory).client(
+            "securityhub", region_name=region_name
+        )
 
         now = datetime.now(tzutc()).isoformat()
         # default batch size to one to work around security hub console issue
@@ -417,12 +428,10 @@ class PostFinding(Action):
                         created_at = now
                         updated_at = now
                     else:
-                        finding_id, created_at = self.get_finding_tag(
-                            resource).split(':', 1)
+                        finding_id, created_at = self.get_finding_tag(resource).split(':', 1)
                         updated_at = now
 
-                    finding = self.get_finding(
-                        [resource], finding_id, created_at, updated_at)
+                    finding = self.get_finding([resource], finding_id, created_at, updated_at)
                     findings.append(finding)
                     if key == self.NEW_FINDING:
                         stats['New'] += 1
@@ -430,30 +439,30 @@ class PostFinding(Action):
                         tag_action = self.manager.action_registry.get('tag')
                         if tag_action is None:
                             continue
-                        tag_action({
-                            'key': '{}:{}'.format(
-                                'c7n:FindingId',
-                                self.data.get(
-                                    'title', self.manager.ctx.policy.name)),
-                            'value': '{}:{}'.format(
-                                finding['Id'], created_at)},
-                            self.manager).process([resource])
+                        tag_action(
+                            {
+                                'key': '{}:{}'.format(
+                                    'c7n:FindingId',
+                                    self.data.get('title', self.manager.ctx.policy.name),
+                                ),
+                                'value': '{}:{}'.format(finding['Id'], created_at),
+                            },
+                            self.manager,
+                        ).process([resource])
                     else:
                         stats['Update'] += 1
-            import_response = self.manager.retry(
-                client.batch_import_findings, Findings=findings
-            )
+            import_response = self.manager.retry(client.batch_import_findings, Findings=findings)
             if import_response['FailedCount'] > 0:
                 stats['Failed'] += import_response['FailedCount']
-                self.log.error(
-                    "import_response=%s" % (import_response))
+                self.log.error("import_response=%s" % (import_response))
         self.log.debug(
             "policy:%s securityhub %d findings resources %d new %d updated %d failed",
             self.manager.ctx.policy.name,
             stats['Finding'],
             stats['New'],
             stats['Update'],
-            stats['Failed'])
+            stats['Failed'],
+        )
 
     def get_finding(self, resources, existing_finding_id, created_at, updated_at):
         policy = self.manager.ctx.policy
@@ -466,16 +475,17 @@ class PostFinding(Action):
             finding_id = '{}/{}/{}/{}'.format(  # nosec
                 self.manager.config.region,
                 self.manager.config.account_id,
-                hashlib.md5(json.dumps(  # nosemgrep
-                    policy.data).encode('utf8')).hexdigest(),
-                hashlib.md5(json.dumps(list(sorted(  # nosemgrep
-                    [r[model.id] for r in resources]))).encode(
-                        'utf8')).hexdigest())
+                hashlib.md5(json.dumps(policy.data).encode('utf8')).hexdigest(),  # nosemgrep
+                hashlib.md5(
+                    json.dumps(list(sorted([r[model.id] for r in resources]))).encode(  # nosemgrep
+                        'utf8'
+                    )
+                ).hexdigest(),
+            )
         finding = {
             "SchemaVersion": self.FindingVersion,
             "ProductArn": "arn:{}:securityhub:{}::product/cloud-custodian/cloud-custodian".format(
-                get_partition(self.manager.config.region),
-                region
+                get_partition(self.manager.config.region), region
             ),
             "AwsAccountId": self.manager.config.account_id,
             # Long search chain for description values, as this was
@@ -483,9 +493,8 @@ class PostFinding(Action):
             # use explicit description, or policy description, or
             # explicit title, or policy name, in that order.
             "Description": self.data.get(
-                "description", policy.data.get(
-                    "description",
-                    self.data.get('title', policy.name))).strip(),
+                "description", policy.data.get("description", self.data.get('title', policy.name))
+            ).strip(),
             "Title": self.data.get("title", policy.name),
             'Id': finding_id,
             "GeneratorId": policy.name,
@@ -525,7 +534,7 @@ class PostFinding(Action):
         fields = {
             'resource': policy.resource_type,
             'ProviderName': 'CloudCustodian',
-            'ProviderVersion': version
+            'ProviderVersion': version,
         }
 
         if "fields" in self.data:
@@ -552,14 +561,16 @@ class PostFinding(Action):
 
     def format_envelope(self, r):
         details = {}
-        envelope = filter_empty({
-            'Id': self.manager.get_arns([r])[0],
-            'Region': self.manager.config.region,
-            'Tags': {t['Key']: t['Value'] for t in r.get('Tags', [])},
-            'Partition': get_partition(self.manager.config.region),
-            'Details': {self.resource_type: details},
-            'Type': self.resource_type
-        })
+        envelope = filter_empty(
+            {
+                'Id': self.manager.get_arns([r])[0],
+                'Region': self.manager.config.region,
+                'Tags': {t['Key']: t['Value'] for t in r.get('Tags', [])},
+                'Partition': get_partition(self.manager.config.region),
+                'Details': {self.resource_type: details},
+                'Type': self.resource_type,
+            }
+        )
         return envelope, details
 
     filter_empty = staticmethod(filter_empty)
@@ -603,7 +614,7 @@ class OtherResourcePostFinding(PostFinding):
             'Id': self.manager.get_arns([r])[0],
             'Region': self.manager.config.region,
             'Partition': get_partition(self.manager.config.region),
-            'Details': {self.resource_type: filter_empty(details)}
+            'Details': {self.resource_type: filter_empty(details)},
         }
         tags = {t['Key']: t['Value'] for t in r.get('Tags', [])}
         if tags:

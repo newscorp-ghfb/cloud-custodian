@@ -8,7 +8,6 @@ REGION = "us-west-2"
 
 
 class DataPipelineTest(BaseTest):
-
     def test_reporting(self):
         factory = self.replay_flight_data("test_datapipeline_reporting")
 
@@ -102,9 +101,7 @@ class DataPipelineTest(BaseTest):
 
         session = factory()
         client = session.client("datapipeline")
-        pipeline = client.create_pipeline(
-            name="PipelineTagTest", uniqueId="PipelineTagTest1"
-        )
+        pipeline = client.create_pipeline(name="PipelineTagTest", uniqueId="PipelineTagTest1")
         pipe_id = pipeline["pipelineId"]
         self.addCleanup(client.delete_pipeline, pipelineId=pipe_id)
         p = self.load_policy(
@@ -129,9 +126,7 @@ class DataPipelineTest(BaseTest):
 
         session = factory()
         client = session.client("datapipeline")
-        pipeline = client.create_pipeline(
-            name="PipelineMarkTest", uniqueId="PipelineMarkTest1"
-        )
+        pipeline = client.create_pipeline(name="PipelineMarkTest", uniqueId="PipelineMarkTest1")
         pipe_id = pipeline["pipelineId"]
         self.addCleanup(client.delete_pipeline, pipelineId=pipe_id)
         p = self.load_policy(
@@ -189,15 +184,11 @@ class DataPipelineTest(BaseTest):
         )
         p.run()
         response2 = client.describe_pipelines(pipelineIds=[pipe_id])
-        self.assertEqual(
-            len(response2["pipelineDescriptionList"][0]["tags"]), num_tags - 1
-        )
+        self.assertEqual(len(response2["pipelineDescriptionList"][0]["tags"]), num_tags - 1)
 
     @functional
     def test_marked_for_op_datapipeline(self):
-        factory = self.replay_flight_data(
-            "test_datapipeline_marked_for_op", region=REGION
-        )
+        factory = self.replay_flight_data("test_datapipeline_marked_for_op", region=REGION)
 
         session = factory()
         client = session.client("datapipeline")

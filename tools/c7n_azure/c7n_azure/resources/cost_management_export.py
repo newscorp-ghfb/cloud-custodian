@@ -18,7 +18,7 @@ log = logging.getLogger('c7n.azure.cost-management-export')
 
 @resources.register('cost-management-export')
 class CostManagementExport(QueryResourceManager):
-    """ Cost Management Exports for current subscription (doesn't include Resource Group scopes)
+    """Cost Management Exports for current subscription (doesn't include Resource Group scopes)
 
     :example:
 
@@ -38,22 +38,20 @@ class CostManagementExport(QueryResourceManager):
         service = 'azure.mgmt.costmanagement'
         client = 'CostManagementClient'
         enum_spec = ('exports', 'list', None)
-        default_report_fields = (
-            'name',
-            'properties.deliveryInfo.destination.resourceId'
-        )
+        default_report_fields = ('name', 'properties.deliveryInfo.destination.resourceId')
         resource_type = 'Microsoft.CostManagement/exports'
 
         @classmethod
         def extra_args(cls, resource_manager):
-            scope = '/subscriptions/{0}'\
-                .format(resource_manager.get_session().get_subscription_id())
+            scope = '/subscriptions/{0}'.format(
+                resource_manager.get_session().get_subscription_id()
+            )
             return {'scope': scope}
 
 
 @CostManagementExport.filter_registry.register('last-execution')
 class CostManagementExportFilterLastExecution(Filter):
-    """ Find Cost Management Exports with last execution more than X days ago.
+    """Find Cost Management Exports with last execution more than X days ago.
 
     :example:
 
@@ -70,11 +68,7 @@ class CostManagementExportFilterLastExecution(Filter):
     """
 
     schema = type_schema(
-        'last-execution',
-        required=['age'],
-        **{
-            'age': {'type': 'integer', 'minimum': 0}
-        }
+        'last-execution', required=['age'], **{'age': {'type': 'integer', 'minimum': 0}}
     )
 
     def process(self, resources, event=None):
@@ -87,7 +81,7 @@ class CostManagementExportFilterLastExecution(Filter):
             event=event,
             execution_method=self._check_resources,
             executor_factory=self.executor_factory,
-            log=log
+            log=log,
         )
 
         return result
@@ -116,7 +110,7 @@ class CostManagementExportFilterLastExecution(Filter):
 
 @CostManagementExport.action_registry.register('execute')
 class CostManagementExportActionExecute(AzureBaseAction):
-    """ Trigger Cost Management Export execution
+    """Trigger Cost Management Export execution
 
     Known issues:
 

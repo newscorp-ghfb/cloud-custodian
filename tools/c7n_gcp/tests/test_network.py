@@ -7,28 +7,30 @@ from googleapiclient.errors import HttpError
 
 
 class FirewallTest(BaseTest):
-
     def test_firewall_get(self):
-        factory = self.replay_flight_data(
-            'firewall-get', project_id='cloud-custodian')
-        p = self.load_policy({'name': 'fw', 'resource': 'gcp.firewall'},
-                             session_factory=factory)
-        fw = p.resource_manager.get_resource({
-            'resourceName': 'projects/cloud-custodian/global/firewalls/allow-inbound-xyz',
-            'firewall_rule_id': '4746899906201084445',
-            'project_id': 'cloud-custodian'})
+        factory = self.replay_flight_data('firewall-get', project_id='cloud-custodian')
+        p = self.load_policy({'name': 'fw', 'resource': 'gcp.firewall'}, session_factory=factory)
+        fw = p.resource_manager.get_resource(
+            {
+                'resourceName': 'projects/cloud-custodian/global/firewalls/allow-inbound-xyz',
+                'firewall_rule_id': '4746899906201084445',
+                'project_id': 'cloud-custodian',
+            }
+        )
         self.assertEqual(fw['name'], 'allow-inbound-xyz')
 
     def test_firewall_modify(self):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('firewall-modify', project_id=project_id)
         p = self.load_policy(
-            {'name': 'fdelete',
-             'resource': 'gcp.firewall',
-             'filters': [{'name': 'test'}],
-             'actions': [{'type': 'modify', 'priority': 500, 'targetTags': ['newtag']}]
-             },
-            session_factory=factory)
+            {
+                'name': 'fdelete',
+                'resource': 'gcp.firewall',
+                'filters': [{'name': 'test'}],
+                'actions': [{'type': 'modify', 'priority': 500, 'targetTags': ['newtag']}],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         if self.recording:
@@ -42,66 +44,67 @@ class FirewallTest(BaseTest):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('firewall-delete', project_id=project_id)
         p = self.load_policy(
-            {'name': 'fdelete',
-             'resource': 'gcp.firewall',
-             'filters': [{'name': 'test'}],
-             'actions': ['delete']},
-            session_factory=factory)
+            {
+                'name': 'fdelete',
+                'resource': 'gcp.firewall',
+                'filters': [{'name': 'test'}],
+                'actions': ['delete'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         if self.recording:
             time.sleep(5)
         client = p.resource_manager.get_client()
         try:
-            result = client.execute_query(
-                'get', {'project': project_id,
-                        'firewall': 'test'})
+            result = client.execute_query('get', {'project': project_id, 'firewall': 'test'})
             self.fail('found deleted firewall: %s' % result)
         except HttpError as e:
             self.assertTrue("was not found" in str(e))
 
 
 class NetworkTest(BaseTest):
-
     def test_network_get(self):
-        factory = self.replay_flight_data(
-            'network-get-resource', project_id='cloud-custodian')
-        p = self.load_policy({'name': 'network', 'resource': 'gcp.vpc'},
-                             session_factory=factory)
-        network = p.resource_manager.get_resource({
-            "resourceName":
-                "//compute.googleapis.com/projects/cloud-custodian/"
-                "global/networks/default"})
+        factory = self.replay_flight_data('network-get-resource', project_id='cloud-custodian')
+        p = self.load_policy({'name': 'network', 'resource': 'gcp.vpc'}, session_factory=factory)
+        network = p.resource_manager.get_resource(
+            {
+                "resourceName": "//compute.googleapis.com/projects/cloud-custodian/"
+                "global/networks/default"
+            }
+        )
         self.assertEqual(network['name'], 'default')
         self.assertEqual(network['autoCreateSubnetworks'], True)
 
 
 class SubnetTest(BaseTest):
-
     def test_subnet_get(self):
-        factory = self.replay_flight_data(
-            'subnet-get-resource', project_id='cloud-custodian')
-        p = self.load_policy({'name': 'subnet', 'resource': 'gcp.subnet'},
-                             session_factory=factory)
-        subnet = p.resource_manager.get_resource({
-            "resourceName":
-                "//compute.googleapis.com/projects/cloud-custodian/"
+        factory = self.replay_flight_data('subnet-get-resource', project_id='cloud-custodian')
+        p = self.load_policy({'name': 'subnet', 'resource': 'gcp.subnet'}, session_factory=factory)
+        subnet = p.resource_manager.get_resource(
+            {
+                "resourceName": "//compute.googleapis.com/projects/cloud-custodian/"
                 "regions/us-central1/subnetworks/default",
-            "project_id": "cloud-custodian",
-            "subnetwork_name": "default"})
+                "project_id": "cloud-custodian",
+                "subnetwork_name": "default",
+            }
+        )
         self.assertEqual(subnet['name'], 'default')
         self.assertEqual(subnet['privateIpGoogleAccess'], True)
 
     def test_subnet_set_flow(self):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('subnet-set-flow', project_id=project_id)
-        p = self.load_policy({
-            'name': 'all-subnets',
-            'resource': 'gcp.subnet',
-            'filters': [
-                {"id": "4686700484947109325"},
-                {"enableFlowLogs": "empty"}],
-            'actions': ['set-flow-log']}, session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'all-subnets',
+                'resource': 'gcp.subnet',
+                'filters': [{"id": "4686700484947109325"}, {"enableFlowLogs": "empty"}],
+                'actions': ['set-flow-log'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
@@ -110,21 +113,22 @@ class SubnetTest(BaseTest):
 
         client = p.resource_manager.get_client()
         result = client.execute_query(
-            'get', {'project': project_id,
-                    'region': 'us-central1',
-                    'subnetwork': subnet['name']})
+            'get', {'project': project_id, 'region': 'us-central1', 'subnetwork': subnet['name']}
+        )
         self.assertEqual(result['enableFlowLogs'], True)
 
     def test_subnet_set_private_api(self):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('subnet-set-private-api', project_id=project_id)
-        p = self.load_policy({
-            'name': 'one-subnet',
-            'resource': 'gcp.subnet',
-            'filters': [
-                {"id": "4686700484947109325"},
-                {"privateIpGoogleAccess": False}],
-            'actions': ['set-private-api']}, session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'one-subnet',
+                'resource': 'gcp.subnet',
+                'filters': [{"id": "4686700484947109325"}, {"privateIpGoogleAccess": False}],
+                'actions': ['set-private-api'],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
@@ -133,9 +137,8 @@ class SubnetTest(BaseTest):
 
         client = p.resource_manager.get_client()
         result = client.execute_query(
-            'get', {'project': project_id,
-                    'region': 'us-central1',
-                    'subnetwork': subnet['name']})
+            'get', {'project': project_id, 'region': 'us-central1', 'subnetwork': subnet['name']}
+        )
         self.assertEqual(result['privateIpGoogleAccess'], True)
 
 
@@ -144,14 +147,9 @@ class RouterTest(BaseTest):
         project_id = 'cloud-custodian'
         session_factory = self.replay_flight_data('router-query', project_id=project_id)
 
-        policy = {
-            'name': 'all-routers',
-            'resource': 'gcp.router'
-        }
+        policy = {'name': 'all-routers', 'resource': 'gcp.router'}
 
-        policy = self.load_policy(
-            policy,
-            session_factory=session_factory)
+        policy = self.load_policy(policy, session_factory=session_factory)
 
         resources = policy.run()
         self.assertEqual(resources[0]['name'], 'test-router')
@@ -160,13 +158,14 @@ class RouterTest(BaseTest):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('router-get', project_id=project_id)
 
-        p = self.load_policy({
-            'name': 'router-created',
-            'resource': 'gcp.router',
-            'mode': {
-                'type': 'gcp-audit',
-                'methods': ['beta.compute.routers.insert']}},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'router-created',
+                'resource': 'gcp.router',
+                'mode': {'type': 'gcp-audit', 'methods': ['beta.compute.routers.insert']},
+            },
+            session_factory=factory,
+        )
 
         exec_mode = p.get_execution_mode()
         event = event_data('router-create.json')
@@ -180,11 +179,14 @@ class RouterTest(BaseTest):
         factory = self.replay_flight_data('router-delete', project_id=project_id)
 
         p = self.load_policy(
-            {'name': 'delete-router',
-             'resource': 'gcp.router',
-             'filters': [{'name': 'test-router'}],
-             'actions': ['delete']},
-            session_factory=factory)
+            {
+                'name': 'delete-router',
+                'resource': 'gcp.router',
+                'filters': [{'name': 'test-router'}],
+                'actions': ['delete'],
+            },
+            session_factory=factory,
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -194,9 +196,8 @@ class RouterTest(BaseTest):
 
         client = p.resource_manager.get_client()
         result = client.execute_query(
-            'list', {'project': project_id,
-                     'region': 'us-central1',
-                     'filter': 'name = test-router'})
+            'list', {'project': project_id, 'region': 'us-central1', 'filter': 'name = test-router'}
+        )
 
         self.assertEqual(result.get('items', []), [])
 
@@ -206,14 +207,9 @@ class RouteTest(BaseTest):
         project_id = 'cloud-custodian'
         session_factory = self.replay_flight_data('route-query', project_id=project_id)
 
-        policy = {
-            'name': 'all-routes',
-            'resource': 'gcp.route'
-        }
+        policy = {'name': 'all-routes', 'resource': 'gcp.route'}
 
-        policy = self.load_policy(
-            policy,
-            session_factory=session_factory)
+        policy = self.load_policy(policy, session_factory=session_factory)
 
         resources = policy.run()
         self.assertEqual(resources[0]['destRange'], '10.160.0.0/20')
@@ -222,13 +218,14 @@ class RouteTest(BaseTest):
         project_id = 'cloud-custodian'
         factory = self.replay_flight_data('route-get', project_id=project_id)
 
-        p = self.load_policy({
-            'name': 'route-created',
-            'resource': 'gcp.route',
-            'mode': {
-                'type': 'gcp-audit',
-                'methods': ['v1.compute.routes.insert']}},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'route-created',
+                'resource': 'gcp.route',
+                'mode': {'type': 'gcp-audit', 'methods': ['v1.compute.routes.insert']},
+            },
+            session_factory=factory,
+        )
 
         exec_mode = p.get_execution_mode()
         event = event_data('route-create.json')

@@ -9,7 +9,6 @@ from netaddr import IPRange, IPNetwork, IPSet
 
 
 class FirewallRulesFilterTest(BaseTest):
-
     def test_firewall_rules_include_empty(self):
         satisfying_resources = [
             {'rules': [IPRange('2.0.0.0', '2.0.0.20')]},
@@ -29,7 +28,8 @@ class FirewallRulesFilterTest(BaseTest):
         required_rules = [
             IPNetwork('1.0.0.20/10'),
             IPNetwork('0.0.0.0'),
-            IPRange('2.0.0.0', '2.0.0.10')]
+            IPRange('2.0.0.0', '2.0.0.10'),
+        ]
 
         satisfying_resources = [
             {'rules': required_rules},
@@ -47,11 +47,9 @@ class FirewallRulesFilterTest(BaseTest):
             {'rules': [required_rules[0], required_rules[1]]},
         ]
 
-        mock = FirewallRulesFilterMock({'include': [
-            '0.0.0.0-0.0.0.0',
-            '1.0.0.20/10',
-            '2.0.0.0-2.0.0.10'
-        ]}, Mock())
+        mock = FirewallRulesFilterMock(
+            {'include': ['0.0.0.0-0.0.0.0', '1.0.0.20/10', '2.0.0.0-2.0.0.10']}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -61,24 +59,22 @@ class FirewallRulesFilterTest(BaseTest):
         required_rules = [
             IPNetwork('1.0.0.20/10'),
             IPNetwork('0.0.0.0'),
-            IPRange('2.0.0.0', '2.0.0.10')]
+            IPRange('2.0.0.0', '2.0.0.10'),
+        ]
 
         satisfying_resources = [
             {'rules': required_rules},
-            {'rules': [required_rules[0], required_rules[1]]}
+            {'rules': [required_rules[0], required_rules[1]]},
         ]
 
         non_satisfying_resources = [
             {'rules': [IPNetwork('0.0.0.1')]},
-            {'rules': required_rules + [IPRange('2.0.0.0', '2.0.0.20')]}
+            {'rules': required_rules + [IPRange('2.0.0.0', '2.0.0.20')]},
         ]
 
-        mock = FirewallRulesFilterMock({'only': [
-            '0.0.0.0-0.0.0.0',
-            '1.0.0.20/10',
-            '2.0.0.0-2.0.0.10',
-            '8.8.8.8'
-        ]}, Mock())
+        mock = FirewallRulesFilterMock(
+            {'only': ['0.0.0.0-0.0.0.0', '1.0.0.20/10', '2.0.0.0-2.0.0.10', '8.8.8.8']}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -88,24 +84,20 @@ class FirewallRulesFilterTest(BaseTest):
         required_rules = [
             IPNetwork('1.0.0.20/10'),
             IPNetwork('0.0.0.0'),
-            IPRange('2.0.0.0', '2.0.0.10')]
+            IPRange('2.0.0.0', '2.0.0.10'),
+        ]
 
         satisfying_resources = [
             {'rules': required_rules},
             {'rules': [required_rules[0], required_rules[1]]},
-            {'rules': required_rules + [IPRange('2.0.0.0', '2.0.0.20')]}
+            {'rules': required_rules + [IPRange('2.0.0.0', '2.0.0.20')]},
         ]
 
-        non_satisfying_resources = [
-            {'rules': [IPNetwork('0.0.0.1')]}
-        ]
+        non_satisfying_resources = [{'rules': [IPNetwork('0.0.0.1')]}]
 
-        mock = FirewallRulesFilterMock({'any': [
-            '0.0.0.0-0.0.0.0',
-            '1.0.0.20/10',
-            '2.0.0.0-2.0.0.10',
-            '8.8.8.8'
-        ]}, Mock())
+        mock = FirewallRulesFilterMock(
+            {'any': ['0.0.0.0-0.0.0.0', '1.0.0.20/10', '2.0.0.0-2.0.0.10', '8.8.8.8']}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -132,7 +124,8 @@ class FirewallRulesFilterTest(BaseTest):
         required_rules = [
             IPNetwork('1.0.0.20/10'),
             IPNetwork('0.0.0.0'),
-            IPRange('2.0.0.0', '2.0.0.10')]
+            IPRange('2.0.0.0', '2.0.0.10'),
+        ]
 
         satisfying_resources = [
             {'rules': required_rules},
@@ -147,11 +140,9 @@ class FirewallRulesFilterTest(BaseTest):
             {'rules': required_rules + [IPNetwork('0.0.0.1')]},
         ]
 
-        mock = FirewallRulesFilterMock({'equal': [
-            '0.0.0.0-0.0.0.0',
-            '1.0.0.20/10',
-            '2.0.0.0-2.0.0.10'
-        ]}, Mock())
+        mock = FirewallRulesFilterMock(
+            {'equal': ['0.0.0.0-0.0.0.0', '1.0.0.20/10', '2.0.0.0-2.0.0.10']}, Mock()
+        )
 
         mock.validate()
         actual = mock.process(satisfying_resources + non_satisfying_resources)
@@ -159,7 +150,6 @@ class FirewallRulesFilterTest(BaseTest):
 
 
 class FirewallRulesFilterMock(FirewallRulesFilter):
-
     @property
     def log(self):
         return logging.Logger.root

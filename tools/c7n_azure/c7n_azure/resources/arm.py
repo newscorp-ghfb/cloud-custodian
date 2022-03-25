@@ -3,21 +3,36 @@
 
 from c7n_azure.actions.delete import DeleteAction
 from c7n_azure.actions.lock import LockAction
-from c7n_azure.actions.tagging import (AutoTagDate)
+from c7n_azure.actions.tagging import AutoTagDate
 from c7n_azure.actions.tagging import Tag, AutoTagUser, RemoveTag, TagTrim, TagDelayedAction
-from c7n_azure.filters import (CostFilter, MetricFilter, TagActionFilter,
-                               DiagnosticSettingsFilter, PolicyCompliantFilter, ResourceLockFilter,
-                               AzureOffHour, AzureOnHour)
+from c7n_azure.filters import (
+    CostFilter,
+    MetricFilter,
+    TagActionFilter,
+    DiagnosticSettingsFilter,
+    PolicyCompliantFilter,
+    ResourceLockFilter,
+    AzureOffHour,
+    AzureOnHour,
+)
 from c7n_azure.provider import resources
-from c7n_azure.query import QueryResourceManager, QueryMeta, ChildResourceManager, TypeInfo, \
-    ChildTypeInfo, TypeMeta
+from c7n_azure.query import (
+    QueryResourceManager,
+    QueryMeta,
+    ChildResourceManager,
+    TypeInfo,
+    ChildTypeInfo,
+    TypeMeta,
+)
 from c7n_azure.utils import ResourceIdParser
 
 # ARM resources which do not currently support tagging
 # for database it is a C7N known issue (#4543)
-arm_tags_unsupported = ['microsoft.network/dnszones/',
-                        'microsoft.sql/servers/databases',
-                        'microsoft.storage/storageaccounts/blobservices/containers']
+arm_tags_unsupported = [
+    'microsoft.network/dnszones/',
+    'microsoft.sql/servers/databases',
+    'microsoft.storage/storageaccounts/blobservices/containers',
+]
 
 
 class ArmTypeInfo(TypeInfo, metaclass=TypeMeta):
@@ -25,11 +40,7 @@ class ArmTypeInfo(TypeInfo, metaclass=TypeMeta):
     id = 'id'
     name = 'name'
     diagnostic_settings_enabled = True
-    default_report_fields = (
-        'name',
-        'location',
-        'resourceGroup'
-    )
+    default_report_fields = ('name', 'location', 'resourceGroup')
     resource_type = None
 
 
@@ -68,7 +79,8 @@ class ArmResourceManager(QueryResourceManager, metaclass=QueryMeta):
 
         # Register tag actions for everything except a few non-compliant resources
         if ArmResourceManager.generic_resource_supports_tagging(
-                resource_class.resource_type.resource_type):
+            resource_class.resource_type.resource_type
+        ):
             resource_class.action_registry.register('tag', Tag)
             resource_class.action_registry.register('untag', RemoveTag)
             resource_class.action_registry.register('auto-tag-user', AutoTagUser)
@@ -94,7 +106,6 @@ class ArmResourceManager(QueryResourceManager, metaclass=QueryMeta):
 
 
 class ChildArmResourceManager(ChildResourceManager, ArmResourceManager, metaclass=QueryMeta):
-
     class resource_type(ChildTypeInfo, ArmTypeInfo):
         pass
 

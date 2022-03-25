@@ -10,7 +10,6 @@ from c7n_gcp.query import QueryResourceManager, TypeInfo
 
 @resources.register('function')
 class Function(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cloudfunctions'
         version = 'v1'
@@ -22,20 +21,29 @@ class Function(QueryResourceManager):
         name = id = "name"
         metric_key = "resource.labels.function_name"
         default_report_fields = [
-            'name', 'runtime', 'eventTrigger.eventType', 'status', 'updateTime']
+            'name',
+            'runtime',
+            'eventTrigger.eventType',
+            'status',
+            'updateTime',
+        ]
 
         events = {
             'create': 'google.cloud.functions.v1.CloudFunctionsService.CreateFunction',
             'delete': 'google.cloud.functions.v1.CloudFunctionsService.DeleteFunction',
-            'update': 'google.cloud.functions.v1.CloudFunctionsService.UpdateFunction'}
+            'update': 'google.cloud.functions.v1.CloudFunctionsService.UpdateFunction',
+        }
 
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'name': (
-                    'projects/{project_id}/locations/'
-                    '{location_id}/functions/{function_name}').format(
-                        **resource_info)})
+                'get',
+                {
+                    'name': (
+                        'projects/{project_id}/locations/' '{location_id}/functions/{function_name}'
+                    ).format(**resource_info)
+                },
+            )
 
 
 @Function.action_registry.register('delete')

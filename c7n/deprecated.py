@@ -75,6 +75,7 @@ def optional_fields(names, removed_after=None, link=None):
 
 class Deprecation:
     """Base class for different deprecation types."""
+
     _id = 0
 
     def __init__(self, removed_after, link):
@@ -174,6 +175,7 @@ class DeprecatedOptionality(Deprecation):
 
 class Context:
     """Adds extra context to a deprecation."""
+
     def __init__(self, context, deprecation):
         self.context = context
         self.deprecation = deprecation
@@ -219,15 +221,22 @@ def report(policy):
         filters.extend(f.get_deprecations())
     for a in rm.actions:
         actions.extend(a.get_deprecations())
-    return Report(policy.name, policy_fields, conditions,
-                  mode, resource, filters, actions)
+    return Report(policy.name, policy_fields, conditions, mode, resource, filters, actions)
 
 
 class Report:
     """A deprecation report is generated per policy."""
 
-    def __init__(self, policy_name, policy_fields=(), conditions=(), mode=(),
-                 resource=(), filters=(), actions=()):
+    def __init__(
+        self,
+        policy_name,
+        policy_fields=(),
+        conditions=(),
+        mode=(),
+        resource=(),
+        filters=(),
+        actions=(),
+    ):
         self.policy_name = policy_name
         self.policy_fields = policy_fields
         self.conditions = conditions
@@ -281,6 +290,7 @@ class Report:
             if footnotes is None:
                 return ""
             return footnotes.note(d)
+
         result = [f"  {name}:"]
         result.extend([f"    {d}{footnote(d)}" for d in deprecations])
         return result
@@ -296,6 +306,7 @@ class Footnotes:
     deprecation line and have the dates and URLs if they exist, shown at the
     end.
     """
+
     def __init__(self):
         self.seen = {}
         self.notes = []

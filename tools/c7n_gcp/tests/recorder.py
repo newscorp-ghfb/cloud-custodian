@@ -19,7 +19,6 @@ def sanitize_project_name(dirty_str):
 
 
 class FlightRecorder(Http):
-
     def __init__(self, data_path=None, discovery_path=None):
         self._data_path = data_path
         self._discovery_path = discovery_path
@@ -29,14 +28,18 @@ class FlightRecorder(Http):
     def get_next_file_path(self, uri, method, record=True):
         uri = sanitize_project_name(uri)
         base_name = "%s%s" % (
-            method.lower(), urlparse(uri).path.replace('/', '-').replace(':', '-'))
+            method.lower(),
+            urlparse(uri).path.replace('/', '-').replace(':', '-'),
+        )
         data_dir = self._data_path
 
         is_discovery = False
         # We don't record authentication
-        if (base_name.startswith('post-oauth2-v4') or
-                base_name.startswith('post-o-oauth2') or
-                base_name.startswith('post-token')):
+        if (
+            base_name.startswith('post-oauth2-v4')
+            or base_name.startswith('post-o-oauth2')
+            or base_name.startswith('post-token')
+        ):
             return
         # Use a common directory for discovery metadata across tests.
         if base_name.startswith('get-discovery'):
@@ -68,11 +71,12 @@ class FlightRecorder(Http):
 
 
 class HttpRecorder(FlightRecorder):
-
-    def request(self, uri, method="GET", body=None, headers=None,
-                redirections=1, connection_type=None):
+    def request(
+        self, uri, method="GET", body=None, headers=None, redirections=1, connection_type=None
+    ):
         response, content = super(HttpRecorder, self).request(
-            uri, method, body, headers, redirections, connection_type)
+            uri, method, body, headers, redirections, connection_type
+        )
         fpath = self.get_next_file_path(uri, method)
 
         if fpath is None:
@@ -95,23 +99,24 @@ class HttpRecorder(FlightRecorder):
 class HttpReplay(FlightRecorder):
 
     static_responses = {
-        ('POST', 'https://accounts.google.com/o/oauth2/token'): json.dumps({
-            'access_token': 'ya29', 'token_type': 'Bearer',
-            'expires_in': 3600}).encode('utf8'),
-        ('POST', 'https://oauth2.googleapis.com/token'): json.dumps({
-            'access_token': 'ya29', 'token_type': 'Bearer',
-            'expires_in': 3600}).encode('utf8')}
+        ('POST', 'https://accounts.google.com/o/oauth2/token'): json.dumps(
+            {'access_token': 'ya29', 'token_type': 'Bearer', 'expires_in': 3600}
+        ).encode('utf8'),
+        ('POST', 'https://oauth2.googleapis.com/token'): json.dumps(
+            {'access_token': 'ya29', 'token_type': 'Bearer', 'expires_in': 3600}
+        ).encode('utf8'),
+    }
 
     _cache = {}
 
-    def request(self, uri, method="GET", body=None, headers=None,
-                redirections=1, connection_type=None):
+    def request(
+        self, uri, method="GET", body=None, headers=None, redirections=1, connection_type=None
+    ):
         if (method, uri) in self.static_responses:
             return (
-                Response({
-                    'status': '200',
-                    'content-type': 'application/json; charset=UTF-8'}),
-                self.static_responses[(method, uri)])
+                Response({'status': '200', 'content-type': 'application/json; charset=UTF-8'}),
+                self.static_responses[(method, uri)],
+            )
 
         fpath = self.get_next_file_path(uri, method, record=False)
         fopen = open

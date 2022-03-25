@@ -13,7 +13,6 @@ from common import MAILER_CONFIG, SQS_MESSAGE_1, RESOURCE_1
 
 
 class FormatStruct(unittest.TestCase):
-
     def test_formats_struct(self):
         expected = '{\n  "foo": "bar"\n}'
         actual = utils.format_struct({'foo': 'bar'})
@@ -21,7 +20,6 @@ class FormatStruct(unittest.TestCase):
 
 
 class StripPrefix(unittest.TestCase):
-
     def test_strip_prefix(self):
         self.assertEqual(utils.strip_prefix('aws.internet-gateway', 'aws.'), 'internet-gateway')
         self.assertEqual(utils.strip_prefix('aws.s3', 'aws.'), 's3')
@@ -43,82 +41,89 @@ def test_config_defaults():
         memory=1024,
         timeout=300,
         runtime='python3.7',
-        contact_tags=[])
+        contact_tags=[],
+    )
 
 
 class GetResourceTagTargets(unittest.TestCase):
-
     def test_target_tag_list(self):
         self.assertEqual(
             utils.get_resource_tag_targets(
-                {'Tags': [{'Key': 'Creator', 'Value': 'alice'}]},
-                ['Creator']),
-            ['alice'])
+                {'Tags': [{'Key': 'Creator', 'Value': 'alice'}]}, ['Creator']
+            ),
+            ['alice'],
+        )
 
     def test_target_tag_map(self):
         r = {'Tags': {'Creator': 'Bob'}}
-        self.assertEqual(
-            utils.get_resource_tag_targets(r, ['Creator']),
-            ['Bob'])
+        self.assertEqual(utils.get_resource_tag_targets(r, ['Creator']), ['Bob'])
 
 
 class ResourceFormat(unittest.TestCase):
-
     def test_efs(self):
         self.assertEqual(
             utils.resource_format(
-                {'Name': 'abc', 'FileSystemId': 'fsid', 'LifeCycleState': 'available'},
-                'efs'),
-            'name: abc  id: fsid  state: available')
+                {'Name': 'abc', 'FileSystemId': 'fsid', 'LifeCycleState': 'available'}, 'efs'
+            ),
+            'name: abc  id: fsid  state: available',
+        )
 
     def test_eip(self):
         self.assertEqual(
             utils.resource_format(
-                {'PublicIp': '8.8.8.8', 'Domain': 'vpc', 'AllocationId': 'eipxyz'},
-                'network-addr'),
-            'ip: 8.8.8.8  id: eipxyz  scope: vpc')
+                {'PublicIp': '8.8.8.8', 'Domain': 'vpc', 'AllocationId': 'eipxyz'}, 'network-addr'
+            ),
+            'ip: 8.8.8.8  id: eipxyz  scope: vpc',
+        )
 
     def test_nat(self):
         self.assertEqual(
             utils.resource_format(
-                {'NatGatewayId': 'nat-xyz', 'State': 'available', 'VpcId': 'vpc-123'},
-                'nat-gateway'),
-            'id: nat-xyz  state: available  vpc: vpc-123')
+                {'NatGatewayId': 'nat-xyz', 'State': 'available', 'VpcId': 'vpc-123'}, 'nat-gateway'
+            ),
+            'id: nat-xyz  state: available  vpc: vpc-123',
+        )
 
     def test_igw(self):
         self.assertEqual(
             utils.resource_format(
-                {'InternetGatewayId': 'igw-x', 'Attachments': []},
-                'aws.internet-gateway'),
-            'id: igw-x  attachments: 0')
+                {'InternetGatewayId': 'igw-x', 'Attachments': []}, 'aws.internet-gateway'
+            ),
+            'id: igw-x  attachments: 0',
+        )
 
     def test_rds_cluster(self):
         self.assertEqual(
             utils.resource_format(
-                {'DBClusterIdentifier': 'database-2',
-                 'Engine': 'mysql-aurora',
-                 'EngineVersion': '5.7.mysql_aurora.2.07.2',
-                 'AllocatedStorage': '1'},
-                'rds-cluster'),
+                {
+                    'DBClusterIdentifier': 'database-2',
+                    'Engine': 'mysql-aurora',
+                    'EngineVersion': '5.7.mysql_aurora.2.07.2',
+                    'AllocatedStorage': '1',
+                },
+                'rds-cluster',
+            ),
             'database-2 mysql-aurora-5.7.mysql_aurora.2.07.2 1',
         )
 
     def test_s3(self):
-        self.assertEqual(
-            utils.resource_format(
-                {'Name': 'bucket-x'}, 'aws.s3'),
-            'bucket-x')
+        self.assertEqual(utils.resource_format({'Name': 'bucket-x'}, 'aws.s3'), 'bucket-x')
 
     def test_alb(self):
         self.assertEqual(
             utils.resource_format(
-                {'LoadBalancerArn': 'arn:aws:elasticloadbalancing:us-east-1:367930536793'
-                                    ':loadbalancer/app/dev/1234567890',
-                 'AvailabilityZones': [], 'Scheme': 'internal'},
-                'app-elb'),
+                {
+                    'LoadBalancerArn': 'arn:aws:elasticloadbalancing:us-east-1:367930536793'
+                    ':loadbalancer/app/dev/1234567890',
+                    'AvailabilityZones': [],
+                    'Scheme': 'internal',
+                },
+                'app-elb',
+            ),
             'arn: arn:aws:elasticloadbalancing:us-east-1:367930536793:'
             'loadbalancer/app/dev/1234567890'
-            '  zones: 0  scheme: internal')
+            '  zones: 0  scheme: internal',
+        )
 
     def test_cloudtrail(self):
         self.assertEqual(
@@ -152,7 +157,7 @@ class ResourceFormat(unittest.TestCase):
                 "service-quota",
             ),
             "ServiceName: Amazon EC2 Auto Scaling QuotaName: Auto Scaling groups per region "
-            "Quota: 200 Usage: 54\n"
+            "Quota: 200 Usage: 54\n",
         )
 
     def test_service_quota_none_usagemetric(self):
@@ -161,13 +166,11 @@ class ResourceFormat(unittest.TestCase):
                 {
                     "ServiceName": "AWS Cloud Map",
                     "QuotaName": "Namespaces per Region",
-                    "c7n:MatchedFilters": [
-                        "UsageMetric"
-                    ]
+                    "c7n:MatchedFilters": ["UsageMetric"],
                 },
                 "service-quota",
             ),
-            "ServiceName: AWS Cloud Map QuotaName: Namespaces per Region\n"
+            "ServiceName: AWS Cloud Map QuotaName: Namespaces per Region\n",
         )
 
 
@@ -182,151 +185,62 @@ class GetAwsUsernameFromEvent(unittest.TestCase):
                 "arn": "arn:aws:iam::123456789012:user/michael_bolton",
                 "accountId": "123456789012",
                 "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
-                "userName": "michael_bolton"
+                "userName": "michael_bolton",
             }
         }
     }
 
     def test_get(self):
-        username = utils.get_aws_username_from_event(
-            Mock(), self.CLOUDTRAIL_EVENT
-        )
+        username = utils.get_aws_username_from_event(Mock(), self.CLOUDTRAIL_EVENT)
         self.assertEqual(username, 'michael_bolton')
 
     def test_get_username_none(self):
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), None),
-            None
-        )
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), None), None)
 
     def test_get_username_identity_none(self):
         evt = {'detail': {}}
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            None
-        )
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), None)
 
     def test_get_username_assumed_role(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'AssumedRole',
-                    'arn': 'foo'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            'foo'
-        )
+        evt = {'detail': {'userIdentity': {'type': 'AssumedRole', 'arn': 'foo'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), 'foo')
 
     def test_get_username_assumed_role_instance(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'AssumedRole',
-                    'arn': 'foo/i-12345678'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            None
-        )
+        evt = {'detail': {'userIdentity': {'type': 'AssumedRole', 'arn': 'foo/i-12345678'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), None)
 
     def test_get_username_assumed_role_lambda(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'AssumedRole',
-                    'arn': 'foo/awslambda'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            None
-        )
+        evt = {'detail': {'userIdentity': {'type': 'AssumedRole', 'arn': 'foo/awslambda'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), None)
 
     def test_get_username_assumed_role_colons(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'AssumedRole',
-                    'arn': 'foo/bar:baz:blam'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            'baz:blam'
-        )
+        evt = {'detail': {'userIdentity': {'type': 'AssumedRole', 'arn': 'foo/bar:baz:blam'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), 'baz:blam')
 
     def test_get_username_iam(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'IAMUser',
-                    'userName': 'bar'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            'bar'
-        )
+        evt = {'detail': {'userIdentity': {'type': 'IAMUser', 'userName': 'bar'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), 'bar')
 
     def test_get_username_root(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'Root'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            None
-        )
+        evt = {'detail': {'userIdentity': {'type': 'Root'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), None)
 
     def test_get_username_principalColon(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'foo',
-                    'principalId': 'bar:baz'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            'baz'
-        )
+        evt = {'detail': {'userIdentity': {'type': 'foo', 'principalId': 'bar:baz'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), 'baz')
 
     def test_get_username_principal(self):
-        evt = {
-            'detail': {
-                'userIdentity': {
-                    'type': 'foo',
-                    'principalId': 'blam'
-                }
-            }
-        }
-        self.assertEqual(
-            utils.get_aws_username_from_event(Mock(), evt),
-            'blam'
-        )
+        evt = {'detail': {'userIdentity': {'type': 'foo', 'principalId': 'blam'}}}
+        self.assertEqual(utils.get_aws_username_from_event(Mock(), evt), 'blam')
 
 
 class ProviderSelector(unittest.TestCase):
-
     def test_get_providers(self):
         self.assertEqual(utils.get_provider({'queue_url': 'asq://'}), utils.Providers.Azure)
         self.assertEqual(utils.get_provider({'queue_url': 'sqs://'}), utils.Providers.AWS)
 
 
 class DecryptTests(unittest.TestCase):
-
     @patch('c7n_mailer.utils.kms_decrypt')
     def test_kms_decrypt(self, kms_decrypt_mock):
         utils.decrypt({'queue_url': 'aws', 'test': 'test'}, Mock(), Mock(), 'test')
@@ -343,7 +257,6 @@ class DecryptTests(unittest.TestCase):
 
 
 class OtherTests(unittest.TestCase):
-
     def test_config_defaults(self):
         config = MAILER_CONFIG
         utils.setup_defaults(config)
@@ -364,7 +277,7 @@ class OtherTests(unittest.TestCase):
                 config.get('datadog_api_key'),
                 config.get('slack_token'),
                 config.get('slack_webhook'),
-                config.get('queue_url')
+                config.get('queue_url'),
             ],
             [
                 'us-east-1',
@@ -382,8 +295,8 @@ class OtherTests(unittest.TestCase):
                 None,
                 None,
                 None,
-                MAILER_CONFIG['queue_url']
-            ]
+                MAILER_CONFIG['queue_url'],
+            ],
         )
 
     def test_get_jinja_env(self):
@@ -393,20 +306,27 @@ class OtherTests(unittest.TestCase):
     def test_get_rendered_jinja(self):
         # Jinja paths must always be forward slashes regardless of operating system
         template_abs_filename = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), 'example.jinja'))
+            os.path.join(os.path.dirname(__file__), 'example.jinja')
+        )
         template_abs_filename = template_abs_filename.replace('\\', '/')
         SQS_MESSAGE_1['action']['template'] = template_abs_filename
         body = utils.get_rendered_jinja(
-            ["test@test.com"], SQS_MESSAGE_1, [RESOURCE_1],
+            ["test@test.com"],
+            SQS_MESSAGE_1,
+            [RESOURCE_1],
             logging.getLogger('c7n_mailer.utils.email'),
-            'template', 'default', MAILER_CONFIG['templates_folders'])
+            'template',
+            'default',
+            MAILER_CONFIG['templates_folders'],
+        )
         self.assertIsNotNone(body)
 
     def test_get_message_subject(self):
         subject = utils.get_message_subject(SQS_MESSAGE_1)
-        self.assertEqual(subject,
-                         SQS_MESSAGE_1['action']['subject'].replace('{{ account }}',
-                                                                    SQS_MESSAGE_1['account']))
+        self.assertEqual(
+            subject,
+            SQS_MESSAGE_1['action']['subject'].replace('{{ account }}', SQS_MESSAGE_1['account']),
+        )
 
     def test_kms_decrypt(self):
         config = {'test': {'secret': 'mysecretpassword'}}

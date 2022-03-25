@@ -27,8 +27,7 @@ class AccessAnalyzer(ValueFilter):
 
     """
 
-    schema = type_schema('iam-analyzer',
-        analyzer={'type': 'string'}, rinherit=ValueFilter.schema)
+    schema = type_schema('iam-analyzer', analyzer={'type': 'string'}, rinherit=ValueFilter.schema)
     schema_alias = True
     permissions = ('access-analyzer:ListFindings', 'access-analyzer:ListAnalyzers')
     supported_types = (
@@ -48,8 +47,8 @@ class AccessAnalyzer(ValueFilter):
         results = []
         self.annotate = False
         self.get_findings(
-            client, analyzer_arn,
-            [r for r in resources if self.analysis_annotation not in r])
+            client, analyzer_arn, [r for r in resources if self.analysis_annotation not in r]
+        )
         for r in resources:
             findings = r.get(self.analysis_annotation, [])
             if not findings:
@@ -67,18 +66,16 @@ class AccessAnalyzer(ValueFilter):
         return results
 
     def get_findings(self, client, analyzer_arn, resources):
-        for resource_set in chunks(
-                zip(self.manager.get_arns(resources), resources),
-                20):
+        for resource_set in chunks(zip(self.manager.get_arns(resources), resources), 20):
             resource_set = dict(resource_set)
             filters = {
                 'status': {'eq': ['ACTIVE']},
                 'resource': {'contains': list(resource_set)},
-                'resourceType': {'eq': [self.manager.resource_type.cfn_type]}
+                'resourceType': {'eq': [self.manager.resource_type.cfn_type]},
             }
             for finding in self.manager.retry(
-                    client.list_findings,
-                    analyzerArn=analyzer_arn, filter=filters).get('findings', ()):
+                client.list_findings, analyzerArn=analyzer_arn, filter=filters
+            ).get('findings', ()):
                 r = resource_set[finding['resource']]
                 r.setdefault(self.analysis_annotation, []).append(finding)
 
@@ -93,9 +90,9 @@ class AccessAnalyzer(ValueFilter):
             found = a
         if not found:
             raise PolicyExecutionError(
-                "policy:%s no access analyzer found in account or org analyzer specified" % (
-                    self.manager.policy.name
-                ))
+                "policy:%s no access analyzer found in account or org analyzer specified"
+                % (self.manager.policy.name)
+            )
         return found['arn']
 
     @classmethod

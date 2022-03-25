@@ -18,8 +18,8 @@ PETER = (
         'manager': 'uid=bill_lumbergh,cn=users,dc=initech,dc=com',
         'mail': 'peter@initech.com',
         'displayName': 'Peter',
-        'objectClass': 'person'
-    }
+        'objectClass': 'person',
+    },
 )
 BILL = (
     'uid=bill_lumbergh,cn=users,dc=initech,dc=com',
@@ -27,8 +27,8 @@ BILL = (
         'uid': ['bill_lumbergh'],
         'mail': 'bill_lumberg@initech.com',
         'displayName': 'Bill Lumberg',
-        'objectClass': 'person'
-    }
+        'objectClass': 'person',
+    },
 )
 
 MAILER_CONFIG = {
@@ -43,8 +43,7 @@ MAILER_CONFIG = {
     'cache_engine': 'sqlite',
     'role': 'arn:aws:iam::xxxx:role/cloudcustodian-mailer',
     'ldap_uid_tags': ['CreatorName', 'Owner'],
-    'templates_folders': [os.path.abspath(os.path.dirname(__file__)),
-                          os.path.abspath('/')],
+    'templates_folders': [os.path.abspath(os.path.dirname(__file__)), os.path.abspath('/')],
 }
 
 MAILER_CONFIG_AZURE = {
@@ -62,33 +61,21 @@ RESOURCE_1 = {
     'AvailabilityZone': 'us-east-1a',
     'Attachments': [],
     'Tags': [
-        {
-            'Value': 'milton@initech.com',
-            'Key': 'SupportEmail'
-        },
-        {
-            'Value': 'peter',
-            'Key': 'CreatorName'
-        }
+        {'Value': 'milton@initech.com', 'Key': 'SupportEmail'},
+        {'Value': 'peter', 'Key': 'CreatorName'},
     ],
-    'VolumeId': 'vol-01a0e6ea6b89f0099'
+    'VolumeId': 'vol-01a0e6ea6b89f0099',
 }
 
 RESOURCE_2 = {
     'AvailabilityZone': 'us-east-1c',
     'Attachments': [],
     'Tags': [
-        {
-            'Value': 'milton@initech.com',
-            'Key': 'SupportEmail'
-        },
-        {
-            'Value': 'peter',
-            'Key': 'CreatorName'
-        }
+        {'Value': 'milton@initech.com', 'Key': 'SupportEmail'},
+        {'Value': 'peter', 'Key': 'CreatorName'},
     ],
     'VolumeId': 'vol-21a0e7ea9b19f0043',
-    'Size': 8
+    'Size': 8,
 }
 
 RESOURCE_3 = {
@@ -101,22 +88,16 @@ RESOURCE_3 = {
             "InstanceId": "i-00000000000000000",
             "State": "attached",
             "VolumeId": "vol-00000000000000000",
-            "DeleteOnTermination": 'true'
+            "DeleteOnTermination": 'true',
         }
     ],
     'Tags': [
-        {
-            'Value': 'milton@initech.com',
-            'Key': 'SupportEmail'
-        },
-        {
-            'Value': 'peter',
-            'Key': 'CreatorName'
-        }
+        {'Value': 'milton@initech.com', 'Key': 'SupportEmail'},
+        {'Value': 'peter', 'Key': 'CreatorName'},
     ],
     'VolumeId': 'vol-21a0e7ea9b19f0043',
     'Size': 8,
-    'State': "in-use"
+    'State': "in-use",
 }
 
 SQS_MESSAGE_1 = {
@@ -130,60 +111,46 @@ SQS_MESSAGE_1 = {
         'priority_header': '1',
         'type': 'notify',
         'transport': {'queue': 'xxx', 'type': 'sqs'},
-        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!'
+        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!',
     },
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
         'resource': 'ebs',
         'actions': [
-            {
-                'type': 'mark-for-op',
-                'days': 15,
-                'op': 'delete'
-            },
+            {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
             {
                 'to': ['resource-owner', 'ldap_uid_tags'],
                 'email_ldap_username_manager': True,
                 'template': '',
                 'priority_header': '1',
                 'type': 'notify',
-                'subject': 'EBS Volumes will be DELETED in 15 DAYS!'
-            }
+                'subject': 'EBS Volumes will be DELETED in 15 DAYS!',
+            },
         ],
         'comments': 'We are deleting your EBS volumes.',
-        'name': 'ebs-mark-unattached-deletion'
+        'name': 'ebs-mark-unattached-deletion',
     },
     'event': None,
-    'resources': [RESOURCE_1]
+    'resources': [RESOURCE_1],
 }
 
 SQS_MESSAGE_2 = {
     'account': 'core-services-dev',
     'account_id': '000000000000',
     'region': 'us-east-1',
-    'action': {
-        'type': 'notify',
-        'to': ['datadog://?metric_name=EBS_volume.available.size']
-    },
+    'action': {'type': 'notify', 'to': ['datadog://?metric_name=EBS_volume.available.size']},
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
         'resource': 'ebs',
         'actions': [
-            {
-                'type': 'mark-for-op',
-                'days': 15,
-                'op': 'delete'
-            },
-            {
-                'type': 'notify',
-                'to': ['datadog://?metric_name=EBS_volume.available.size']
-            }
+            {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
+            {'type': 'notify', 'to': ['datadog://?metric_name=EBS_volume.available.size']},
         ],
         'comments': 'We are deleting your EBS volumes.',
-        'name': 'ebs-mark-unattached-deletion'
+        'name': 'ebs-mark-unattached-deletion',
     },
     'event': None,
-    'resources': [RESOURCE_1, RESOURCE_2]
+    'resources': [RESOURCE_1, RESOURCE_2],
 }
 
 SQS_MESSAGE_3 = {
@@ -192,27 +159,23 @@ SQS_MESSAGE_3 = {
     'region': 'us-east-1',
     'action': {
         'type': 'notify',
-        'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size']
+        'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'],
     },
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
         'resource': 'ebs',
         'actions': [
-            {
-                'type': 'mark-for-op',
-                'days': 15,
-                'op': 'delete'
-            },
+            {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
             {
                 'type': 'notify',
-                'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size']
-            }
+                'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'],
+            },
         ],
         'comments': 'We are deleting your EBS volumes.',
-        'name': 'ebs-mark-unattached-deletion'
+        'name': 'ebs-mark-unattached-deletion',
     },
     'event': None,
-    'resources': [RESOURCE_2]
+    'resources': [RESOURCE_2],
 }
 
 SQS_MESSAGE_4 = {
@@ -227,17 +190,13 @@ SQS_MESSAGE_4 = {
         'priority_header': '1',
         'type': 'notify',
         'transport': {'queue': 'xxx', 'type': 'sqs'},
-        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!'
+        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!',
     },
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
         'resource': 'ebs',
         'actions': [
-            {
-                'type': 'mark-for-op',
-                'days': 15,
-                'op': 'delete'
-            },
+            {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
             {
                 'to': ['resource-owner', 'ldap_uid_tags'],
                 'cc': ['hello@example.com', 'cc@example.com'],
@@ -245,14 +204,14 @@ SQS_MESSAGE_4 = {
                 'template': 'default.html.j2',
                 'priority_header': '1',
                 'type': 'notify',
-                'subject': 'EBS Volumes will be DELETED in 15 DAYS!'
-            }
+                'subject': 'EBS Volumes will be DELETED in 15 DAYS!',
+            },
         ],
         'comments': 'We are deleting your EBS volumes.',
-        'name': 'ebs-mark-unattached-deletion'
+        'name': 'ebs-mark-unattached-deletion',
     },
     'event': None,
-    'resources': [RESOURCE_1]
+    'resources': [RESOURCE_1],
 }
 
 SQS_MESSAGE_5 = {
@@ -264,29 +223,25 @@ SQS_MESSAGE_5 = {
         'template': 'default.html',
         'type': 'notify',
         'transport': {'queue': 'xxx', 'type': 'sqs'},
-        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!'
+        'subject': '{{ account }} AWS EBS Volumes will be DELETED in 15 DAYS!',
     },
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
         'resource': 'ebs',
         'actions': [
-            {
-                'type': 'mark-for-op',
-                'days': 15,
-                'op': 'delete'
-            },
+            {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
             {
                 'to': ['slack://tag/SlackChannel'],
                 'template': 'slack_default.j2',
                 'type': 'notify',
-                'subject': 'EBS Volumes will be DELETED in 15 DAYS!'
-            }
+                'subject': 'EBS Volumes will be DELETED in 15 DAYS!',
+            },
         ],
         'comments': 'We are deleting your EBS volumes.',
-        'name': 'ebs-mark-unattached-deletion'
+        'name': 'ebs-mark-unattached-deletion',
     },
     'event': None,
-    'resources': [RESOURCE_3]
+    'resources': [RESOURCE_3],
 }
 
 
@@ -561,10 +516,7 @@ mockBase.safe_rdn = safe_rdn
 
 def get_fake_ldap_connection():
     server = Server('my_fake_server')
-    connection = Connection(
-        server,
-        client_strategy=MOCK_SYNC
-    )
+    connection = Connection(server, client_strategy=MOCK_SYNC)
     connection.bind()
     connection.strategy.add_entry(PETER[0], PETER[1])
     connection.strategy.add_entry(BILL[0], BILL[1])
@@ -573,15 +525,9 @@ def get_fake_ldap_connection():
 
 def get_ldap_lookup(cache_engine=None, uid_regex=None):
     if cache_engine == 'sqlite':
-        config = {
-            'cache_engine': 'sqlite',
-            'ldap_cache_file': ':memory:'
-        }
+        config = {'cache_engine': 'sqlite', 'ldap_cache_file': ':memory:'}
     elif cache_engine == 'redis':
-        config = {
-            'cache_engine': 'redis',
-            'redis_host': 'localhost'
-        }
+        config = {'cache_engine': 'redis', 'redis_host': 'localhost'}
     if uid_regex:
         config['ldap_uid_regex'] = uid_regex
     ldap_lookup = MockLdapLookup(config, logger)
@@ -589,20 +535,20 @@ def get_ldap_lookup(cache_engine=None, uid_regex=None):
         'dn': 'CN=Michael Bolton,cn=users,dc=initech,dc=com',
         'mail': 'michael_bolton@initech.com',
         'manager': 'CN=Milton,cn=users,dc=initech,dc=com',
-        'displayName': 'Michael Bolton'
+        'displayName': 'Michael Bolton',
     }
     milton = {
         'uid': '123456',
         'dn': 'CN=Milton,cn=users,dc=initech,dc=com',
         'mail': 'milton@initech.com',
         'manager': 'CN=cthulhu,cn=users,dc=initech,dc=com',
-        'displayName': 'Milton'
+        'displayName': 'Milton',
     }
     bob_porter = {
         'dn': 'CN=Bob Porter,cn=users,dc=initech,dc=com',
         'mail': 'bob_porter@initech.com',
         'manager': 'CN=Bob Slydell,cn=users,dc=initech,dc=com',
-        'displayName': 'Bob Porter'
+        'displayName': 'Bob Porter',
     }
     ldap_lookup.base_dn = 'cn=users,dc=initech,dc=com'
     ldap_lookup.uid_key = 'uid'

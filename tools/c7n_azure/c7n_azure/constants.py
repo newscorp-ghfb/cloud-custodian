@@ -30,13 +30,16 @@ ENV_CONTAINER_OPTION_OUTPUT_DIR = 'AZURE_CONTAINER_OUTPUT_DIR'
 """
 Event Grid Mode
 """
-EVENT_GRID_UPN_CLAIM_JMES_PATH = \
+EVENT_GRID_UPN_CLAIM_JMES_PATH = (
     'data.claims."http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"'
-EVENT_GRID_NAME_CLAIM_JMES_PATH = \
+)
+EVENT_GRID_NAME_CLAIM_JMES_PATH = (
     'data.claims."http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"'
+)
 EVENT_GRID_SP_NAME_JMES_PATH = 'data.claims.appid'
-EVENT_GRID_SERVICE_ADMIN_JMES_PATH = \
+EVENT_GRID_SERVICE_ADMIN_JMES_PATH = (
     'data.claims."http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"'
+)
 EVENT_GRID_PRINCIPAL_TYPE_JMES_PATH = 'data.authorization.evidence.principalType'
 EVENT_GRID_PRINCIPAL_ROLE_JMES_PATH = 'data.authorization.evidence.role'
 EVENT_GRID_EVENT_TIME_PATH = 'eventTime'
@@ -104,33 +107,27 @@ FUNCTION_HOST_CONFIG = {
         "healthCheckInterval": "00:00:10",
         "healthCheckWindow": "00:02:00",
         "healthCheckThreshold": 6,
-        "counterThreshold": 0.80
+        "counterThreshold": 0.80,
     },
     "functionTimeout": "00:10:00",
     "logging": {
         "fileLoggingMode": "always",
-        "console": {
-            "isEnabled": "true"
-        },
+        "console": {"isEnabled": "true"},
         "logLevel": {
             "default": "Debug",
             "Host.Results": "Trace",
             "Function": "Trace",
-            "Host.Aggregator": "Trace"
-        }
+            "Host.Aggregator": "Trace",
+        },
     },
     "extensions": {
-        "http": {
-            "routePrefix": "api",
-            "maxConcurrentRequests": 5,
-            "maxOutstandingRequests": 30
-        }
-    }
+        "http": {"routePrefix": "api", "maxConcurrentRequests": 5, "maxOutstandingRequests": 30}
+    },
 }
 
 FUNCTION_EXTENSION_BUNDLE_CONFIG = {
     "id": "Microsoft.Azure.Functions.ExtensionBundle",
-    "version": "[1.*, 2.0.0)"
+    "version": "[1.*, 2.0.0)",
 }
 
 """

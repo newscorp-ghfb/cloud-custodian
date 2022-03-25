@@ -20,7 +20,7 @@ def test_s3_access_point(test, s3_access_point):
             'actions': ['delete'],
         },
         session_factory=factory,
-        config={'account_id': account_id}
+        config={'account_id': account_id},
     )
 
     resources = p.run()
@@ -31,6 +31,4 @@ def test_s3_access_point(test, s3_access_point):
         time.sleep(2)
 
     with pytest.raises(ClientError):
-        client.get_access_point(
-            AccountId=p.options['account_id'], Name=resources[0]['Name']
-        )
+        client.get_access_point(AccountId=p.options['account_id'], Name=resources[0]['Name'])

@@ -23,7 +23,7 @@ CLOUDTRAIL_EVENT = {
             "arn": "arn:aws:iam::123456789012:user/michael_bolton",
             "accountId": "123456789012",
             "accessKeyId": "AKIAIOSFODNN7EXAMPLE",
-            "userName": "michael_bolton"
+            "userName": "michael_bolton",
         }
     }
 }
@@ -35,13 +35,13 @@ class MockEmailDelivery(EmailDelivery):
 
 
 class EmailTest(unittest.TestCase):
-
     def setUp(self):
         self.aws_session = boto3.Session()
         self.email_delivery = MockEmailDelivery(MAILER_CONFIG, self.aws_session, logger)
         self.email_delivery.ldap_lookup.uid_regex = ''
-        template_abs_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                             'example.jinja')
+        template_abs_filename = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), 'example.jinja'
+        )
 
         # Jinja paths must always be forward slashes regardless of operating system
         template_abs_filename = template_abs_filename.replace('\\', '/')
@@ -86,7 +86,7 @@ class EmailTest(unittest.TestCase):
             'lsdk',
             'resource-owner',
             'event-owner',
-            'bill@initech.com'
+            'bill@initech.com',
         ]
         valid_emails = self.email_delivery.get_valid_emails_from_list(list_1)
         self.assertEqual(valid_emails, ['michael_bolton@initech.com', 'bill@initech.com'])
@@ -98,16 +98,10 @@ class EmailTest(unittest.TestCase):
 
     def test_get_ldap_emails_from_resource(self):
         SQS_MESSAGE_1['action']['email_ldap_username_manager'] = False
-        ldap_emails = self.email_delivery.get_ldap_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_1
-        )
+        ldap_emails = self.email_delivery.get_ldap_emails_from_resource(SQS_MESSAGE_1, RESOURCE_1)
         self.assertEqual(ldap_emails, ['peter@initech.com'])
         SQS_MESSAGE_1['action']['email_ldap_username_manager'] = True
-        ldap_emails = self.email_delivery.get_ldap_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_1
-        )
+        ldap_emails = self.email_delivery.get_ldap_emails_from_resource(SQS_MESSAGE_1, RESOURCE_1)
         self.assertEqual(ldap_emails, ['peter@initech.com', 'bill_lumberg@initech.com'])
 
     def test_email_to_resources_map_with_ldap_manager(self):
@@ -132,13 +126,8 @@ class EmailTest(unittest.TestCase):
 
     def test_email_to_email_message_map_additional_headers(self):
         conf = dict(MAILER_CONFIG)
-        conf['additional_email_headers'] = {
-            'X-Foo': 'X-Foo-Value',
-            'X-Bar': '1234'
-        }
-        email_delivery = MockEmailDelivery(
-            conf, self.aws_session, logger
-        )
+        conf['additional_email_headers'] = {'X-Foo': 'X-Foo-Value', 'X-Bar': '1234'}
+        email_delivery = MockEmailDelivery(conf, self.aws_session, logger)
         SQS_MESSAGE = copy.deepcopy(SQS_MESSAGE_1)
         SQS_MESSAGE['policy']['actions'][1].pop('email_ldap_username_manager', None)
         email_addrs_to_email_message_map = email_delivery.get_to_addrs_email_messages_map(
@@ -169,7 +158,7 @@ class EmailTest(unittest.TestCase):
             to_addrs = ['bill_lumberg@initech.com', 'milton@initech.com', 'peter@initech.com']
             self.assertEqual(
                 smtp_instance.sendmail.mock_calls,
-                [call(MAILER_CONFIG['from_address'], to_addrs, mimetext_msg.as_string())]
+                [call(MAILER_CONFIG['from_address'], to_addrs, mimetext_msg.as_string())],
             )
 
     def test_smtp_called_multiple_times(self):
@@ -178,13 +167,8 @@ class EmailTest(unittest.TestCase):
         RESOURCE_2 = {
             'AvailabilityZone': 'us-east-1a',
             'Attachments': [],
-            'Tags': [
-                {
-                    'Value': 'samir@initech.com',
-                    'Key': 'SupportEmail'
-                }
-            ],
-            'VolumeId': 'vol-01a0e6ea6b8lsdkj93'
+            'Tags': [{'Value': 'samir@initech.com', 'Key': 'SupportEmail'}],
+            'VolumeId': 'vol-01a0e6ea6b8lsdkj93',
         }
         SQS_MESSAGE['resources'].append(RESOURCE_2)
         to_addrs_to_email_messages_map = self.email_delivery.get_to_addrs_email_messages_map(
@@ -208,13 +192,8 @@ class EmailTest(unittest.TestCase):
         RESOURCE_2 = {
             'AvailabilityZone': 'us-east-1a',
             'Attachments': [],
-            'Tags': [
-                {
-                    'Value': 'samir@initech.com',
-                    'Key': 'SupportEmail'
-                }
-            ],
-            'VolumeId': 'vol-01a0e6ea6b8lsdkj93'
+            'Tags': [{'Value': 'samir@initech.com', 'Key': 'SupportEmail'}],
+            'VolumeId': 'vol-01a0e6ea6b8lsdkj93',
         }
         SQS_MESSAGE['resources'].append(RESOURCE_2)
         emails_to_resources_map = self.email_delivery.get_email_to_addrs_to_resources_map(
@@ -232,24 +211,15 @@ class EmailTest(unittest.TestCase):
         RESOURCE_2 = {
             'AvailabilityZone': 'us-east-1a',
             'Attachments': [],
-            'Tags': [
-                {
-                    'Value': 'peter',
-                    'Key': 'CreatorName'
-                }
-            ],
-            'VolumeId': 'vol-01a0e6ea6b89f0099'
+            'Tags': [{'Value': 'peter', 'Key': 'CreatorName'}],
+            'VolumeId': 'vol-01a0e6ea6b89f0099',
         }
         SQS_MESSAGE['resources'] = [RESOURCE_2]
         emails_to_resources_map = self.email_delivery.get_email_to_addrs_to_resources_map(
             SQS_MESSAGE
         )
-        email_1_to_addrs = (
-            'bill_lumberg@initech.com', 'foo@example.com', 'peter@initech.com'
-        )
-        self.assertEqual(
-            emails_to_resources_map[email_1_to_addrs], [RESOURCE_2]
-        )
+        email_1_to_addrs = ('bill_lumberg@initech.com', 'foo@example.com', 'peter@initech.com')
+        self.assertEqual(emails_to_resources_map[email_1_to_addrs], [RESOURCE_2])
 
     def test_no_mapping_if_no_valid_emails(self):
         SQS_MESSAGE = copy.deepcopy(SQS_MESSAGE_1)
@@ -264,36 +234,24 @@ class EmailTest(unittest.TestCase):
         RESOURCE_2 = {
             'AvailabilityZone': 'us-east-1a',
             'Attachments': [],
-            'Tags': [
-                {
-                    'Value': '123456',
-                    'Key': 'OwnerEmail'
-                }
-            ],
-            'VolumeId': 'vol-01a0e6ea6b8lsdkj93'
+            'Tags': [{'Value': '123456', 'Key': 'OwnerEmail'}],
+            'VolumeId': 'vol-01a0e6ea6b8lsdkj93',
         }
         RESOURCE_3 = {
             'AvailabilityZone': 'us-east-1a',
             'Attachments': [],
-            'Tags': [
-                {
-                    'Value': 'milton@initech.com',
-                    'Key': 'OwnerEmail'
-                }
-            ],
-            'VolumeId': 'vol-01a0e6ea6b8lsdkj93'
+            'Tags': [{'Value': 'milton@initech.com', 'Key': 'OwnerEmail'}],
+            'VolumeId': 'vol-01a0e6ea6b8lsdkj93',
         }
 
         ldap_emails = self.email_delivery.get_resource_owner_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_2
+            SQS_MESSAGE_1, RESOURCE_2
         )
 
         self.assertEqual(ldap_emails, ['milton@initech.com'])
 
         ldap_emails = self.email_delivery.get_resource_owner_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_3
+            SQS_MESSAGE_1, RESOURCE_3
         )
 
         self.assertEqual(ldap_emails, ['milton@initech.com'])
@@ -311,13 +269,14 @@ class EmailTest(unittest.TestCase):
 
         self.email_delivery = MockEmailDelivery(config, self.aws_session, logger_mock)
         org_emails = self.email_delivery.get_resource_owner_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_1
+            SQS_MESSAGE_1, RESOURCE_1
         )
 
         assert org_emails == ['milton@initech.com', 'peter@initech.com']
-        assert call("Using org_domain to reconstruct email addresses from contact_tags values") \
+        assert (
+            call("Using org_domain to reconstruct email addresses from contact_tags values")
             not in logger_mock.debug.call_args_list
+        )
 
     def test_get_resource_owner_emails_from_resource_org_domain(self):
         config = copy.deepcopy(MAILER_CONFIG)
@@ -334,18 +293,22 @@ class EmailTest(unittest.TestCase):
 
         self.email_delivery = MockEmailDelivery(config, self.aws_session, logger_mock)
         org_emails = self.email_delivery.get_resource_owner_emails_from_resource(
-            SQS_MESSAGE_1,
-            RESOURCE_1
+            SQS_MESSAGE_1, RESOURCE_1
         )
 
         assert org_emails == ['milton@initech.com', 'peter@test.com']
         logger_mock.debug.assert_called_with(
-            "Using org_domain to reconstruct email addresses from contact_tags values")
+            "Using org_domain to reconstruct email addresses from contact_tags values"
+        )
 
     def test_cc_email_functionality(self):
         email = get_mimetext_message(
-            self.email_delivery.config, self.email_delivery.logger,
-            SQS_MESSAGE_4, SQS_MESSAGE_4['resources'], ['hello@example.com'])
+            self.email_delivery.config,
+            self.email_delivery.logger,
+            SQS_MESSAGE_4,
+            SQS_MESSAGE_4['resources'],
+            ['hello@example.com'],
+        )
         self.assertEqual(email['Cc'], 'hello@example.com, cc@example.com')
 
     def test_sendgrid(self):

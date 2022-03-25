@@ -10,7 +10,6 @@ import os
 
 
 class TestCache(TestCase):
-
     def test_factory(self):
         self.assertIsInstance(cache.factory(None), cache.NullCache)
         test_config = Namespace(cache_period=60, cache="test-cloud-custodian.cache")
@@ -20,11 +19,10 @@ class TestCache(TestCase):
 
 
 class MemCacheTest(TestCase):
-
     def test_mem_factory(self):
         self.assertEqual(
-            cache.factory(config.Bag(cache='memory', cache_period=5)).__class__,
-            cache.InMemoryCache)
+            cache.factory(config.Bag(cache='memory', cache_period=5)).__class__, cache.InMemoryCache
+        )
 
     def test_get_set(self):
         mem_cache = cache.InMemoryCache()
@@ -33,17 +31,12 @@ class MemCacheTest(TestCase):
         self.assertEqual(mem_cache.load(), True)
 
         mem_cache = cache.InMemoryCache()
-        self.assertEqual(
-            mem_cache.get({'region': 'us-east-1'}),
-            {'hello': 'world'})
+        self.assertEqual(mem_cache.get({'region': 'us-east-1'}), {'hello': 'world'})
 
 
 class FileCacheManagerTest(TestCase):
-
     def setUp(self):
-        self.test_config = Namespace(
-            cache_period=60, cache="test-cloud-custodian.cache"
-        )
+        self.test_config = Namespace(cache_period=60, cache="test-cloud-custodian.cache")
         self.test_cache = cache.FileCacheManager(self.test_config)
         self.test_key = "test"
         self.bad_key = "bad"
@@ -68,9 +61,7 @@ class FileCacheManagerTest(TestCase):
 
     def test_get(self):
         # mock the pick and set it to the data variable
-        test_pickle = pickle.dumps(
-            {pickle.dumps(self.test_key): self.test_value}, protocol=2
-        )
+        test_pickle = pickle.dumps({pickle.dumps(self.test_key): self.test_value}, protocol=2)
         self.test_cache.data = pickle.loads(test_pickle)
 
         # assert

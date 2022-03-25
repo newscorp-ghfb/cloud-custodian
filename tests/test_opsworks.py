@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class TestOpsworksCM(BaseTest):
-
     def test_query_CM(self):
         factory = self.replay_flight_data("test_opswork-cm_query")
         p = self.load_policy(
@@ -35,7 +34,6 @@ class TestOpsworksCM(BaseTest):
 
 
 class TestOpsWorksStack(BaseTest):
-
     def test_query_opsworks_stacks(self):
         factory = self.replay_flight_data("test_opswork-stack_query")
         p = self.load_policy(
@@ -64,9 +62,7 @@ class TestOpsWorksStack(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["Name"], "test-delete-opswork-stack")
         client = factory().client("opsworks")
-        remainder = client.describe_stack_summary(StackId=resources[0]["StackId"])[
-            "StackSummary"
-        ]
+        remainder = client.describe_stack_summary(StackId=resources[0]["StackId"])["StackSummary"]
         self.assertEqual(remainder["InstancesCount"]["Stopping"], 1)
 
     def test_delete_opsworks_stacks(self):

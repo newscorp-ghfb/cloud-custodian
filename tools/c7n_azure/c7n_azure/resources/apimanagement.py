@@ -32,12 +32,7 @@ class ApiManagement(ArmResourceManager):
         service = 'azure.mgmt.apimanagement'
         client = 'ApiManagementClient'
         enum_spec = ('api_management_service', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.[name, capacity]'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.[name, capacity]')
         resource_type = 'Microsoft.ApiManagement/service'
 
 
@@ -72,8 +67,9 @@ class Resize(AzureBaseAction):
         required=['capacity', 'tier'],
         **{
             'capacity': {'type': 'number'},
-            'tier': {'enum': ['Developer', 'Basic', 'Standard', 'Premium']}
-        })
+            'tier': {'enum': ['Developer', 'Basic', 'Standard', 'Premium']},
+        }
+    )
 
     def __init__(self, data, manager=None):
         super(Resize, self).__init__(data, manager)

@@ -32,11 +32,5 @@ class VMScaleSet(ArmResourceManager):
         service = 'azure.mgmt.compute'
         client = 'ComputeManagementClient'
         enum_spec = ('virtual_machine_scale_sets', 'list_all', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name',
-            'sku.capacity'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name', 'sku.capacity')
         resource_type = 'Microsoft.Compute/virtualMachineScaleSets'

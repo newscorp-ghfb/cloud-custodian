@@ -22,11 +22,11 @@ from c7n.utils import local_session
 
 
 class LockActionTest(BaseTest):
-
     def setUp(self):
         super(LockActionTest, self).setUp()
         self.client = local_session(Session).client(
-            'azure.mgmt.resource.locks.ManagementLockClient')
+            'azure.mgmt.resource.locks.ManagementLockClient'
+        )
         self.resources = []
 
     def tearDown(self):
@@ -35,25 +35,17 @@ class LockActionTest(BaseTest):
             resource = self.resources[0]
             if resource.get('resourceGroup') is None:
                 self.client.management_locks.delete_at_resource_group_level(
-                    resource['name'],
-                    resource['lock'])
-            else:
-                self.client.management_locks.delete_by_scope(
-                    resource['id'],
-                    resource['lock']
+                    resource['name'], resource['lock']
                 )
+            else:
+                self.client.management_locks.delete_by_scope(resource['id'], resource['lock'])
         super(LockActionTest, self).tearDown()
 
     def test_valid_policy(self):
         policy = {
             'name': 'lock-cosmosdb',
             'resource': 'azure.cosmosdb',
-            'actions': [
-                {
-                    'type': 'lock',
-                    'lock-type': 'ReadOnly'
-                }
-            ],
+            'actions': [{'type': 'lock', 'lock-type': 'ReadOnly'}],
         }
 
         self.assertTrue(self.load_policy(data=policy, validate=True))
@@ -66,7 +58,7 @@ class LockActionTest(BaseTest):
                     'type': 'lock',
                     'lock-type': 'ReadOnly',
                     'lock-name': 'testLock',
-                    'lock-notes': 'testNotes'
+                    'lock-notes': 'testNotes',
                 }
             ],
         }
@@ -78,11 +70,7 @@ class LockActionTest(BaseTest):
         policy = {
             'name': 'lock-cosmosdb',
             'resource': 'azure.cosmosdb',
-            'actions': [
-                {
-                    'type': 'lock'
-                }
-            ],
+            'actions': [{'type': 'lock'}],
         }
 
         with self.assertRaises(PolicyValidationError):
@@ -90,35 +78,34 @@ class LockActionTest(BaseTest):
 
     @arm_template('locked.json')
     def test_lock_action_resource(self):
-        p = self.load_policy({
-            'name': 'lock-sqlserver',
-            'resource': 'azure.sqlserver',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'op': 'glob',
-                    'value': 'cclockedsqlserver*'
-                }
-            ],
-            'actions': [
-                {
-                    'type': 'lock',
-                    'lock-type': 'ReadOnly',
-                    'lock-name': 'sqllock',
-                    'lock-notes': 'testNotes'
-                }
-            ],
-        })
+        p = self.load_policy(
+            {
+                'name': 'lock-sqlserver',
+                'resource': 'azure.sqlserver',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cclockedsqlserver*'}
+                ],
+                'actions': [
+                    {
+                        'type': 'lock',
+                        'lock-type': 'ReadOnly',
+                        'lock-name': 'sqllock',
+                        'lock-notes': 'testNotes',
+                    }
+                ],
+            }
+        )
         self.resources = p.run()
 
         self.assertEqual(len(self.resources), 1)
         resource_name = self.resources[0]['name']
         self.assertTrue(resource_name.startswith('cclockedsqlserver'))
 
-        locks = [r.serialize(True)
-                 for r in self.client.management_locks.list_by_scope(self.resources[0]['id'])
-                 if r.name == 'sqllock']
+        locks = [
+            r.serialize(True)
+            for r in self.client.management_locks.list_by_scope(self.resources[0]['id'])
+            if r.name == 'sqllock'
+        ]
 
         self.assertEqual(len(locks), 1)
         self.assertEqual(locks[0]['properties']['level'], 'ReadOnly')
@@ -127,32 +114,30 @@ class LockActionTest(BaseTest):
 
     @arm_template('locked.json')
     def test_lock_action_resource_group(self):
-        p = self.load_policy({
-            'name': 'lock-locked-rg',
-            'resource': 'azure.resourcegroup',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'value': 'test_locked'
-                }
-            ],
-            'actions': [
-                {
-                    'type': 'lock',
-                    'lock-type': 'CanNotDelete',
-                    'lock-name': 'rglock',
-                    'lock-notes': 'testNotes'
-                }
-            ],
-        })
+        p = self.load_policy(
+            {
+                'name': 'lock-locked-rg',
+                'resource': 'azure.resourcegroup',
+                'filters': [{'type': 'value', 'key': 'name', 'value': 'test_locked'}],
+                'actions': [
+                    {
+                        'type': 'lock',
+                        'lock-type': 'CanNotDelete',
+                        'lock-name': 'rglock',
+                        'lock-notes': 'testNotes',
+                    }
+                ],
+            }
+        )
         self.resources = p.run()
         self.assertEqual(len(self.resources), 1)
         self.assertEqual(self.resources[0]['name'], 'test_locked')
 
-        locks = [r.serialize(True) for r in
-                 self.client.management_locks.list_at_resource_group_level('test_locked')
-                 if r.name == 'rglock']
+        locks = [
+            r.serialize(True)
+            for r in self.client.management_locks.list_at_resource_group_level('test_locked')
+            if r.name == 'rglock'
+        ]
 
         self.assertEqual(len(locks), 1)
         self.assertEqual(locks[0]['properties']['level'], 'CanNotDelete')
@@ -161,35 +146,36 @@ class LockActionTest(BaseTest):
 
     @arm_template('locked.json')
     def test_lock_action_child_resource(self):
-        p = self.load_policy({
-            'name': 'lock-sqldatabase',
-            'resource': 'azure.sqldatabase',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'value': 'cclockeddb'
-                }
-            ],
-            'actions': [
-                {
-                    'type': 'lock',
-                    'lock-type': 'ReadOnly',
-                    'lock-name': 'dblock',
-                    'lock-notes': 'testNotes'
-                }
-            ],
-        })
+        p = self.load_policy(
+            {
+                'name': 'lock-sqldatabase',
+                'resource': 'azure.sqldatabase',
+                'filters': [{'type': 'value', 'key': 'name', 'value': 'cclockeddb'}],
+                'actions': [
+                    {
+                        'type': 'lock',
+                        'lock-type': 'ReadOnly',
+                        'lock-name': 'dblock',
+                        'lock-notes': 'testNotes',
+                    }
+                ],
+            }
+        )
         self.resources = p.run()
         self.assertEqual(len(self.resources), 1)
         self.assertEqual(self.resources[0]['name'], 'cclockeddb')
 
-        locks = [r.serialize(True) for r in self.client.management_locks.list_at_resource_level(
-            'test_locked',
-            'Microsoft.Sql/servers',
-            ResourceIdParser.get_resource_name(self.resources[0]['c7n:parent-id']),
-            'databases',
-            'cclockeddb') if r.name == 'dblock']
+        locks = [
+            r.serialize(True)
+            for r in self.client.management_locks.list_at_resource_level(
+                'test_locked',
+                'Microsoft.Sql/servers',
+                ResourceIdParser.get_resource_name(self.resources[0]['c7n:parent-id']),
+                'databases',
+                'cclockeddb',
+            )
+            if r.name == 'dblock'
+        ]
 
         self.assertEqual(len(locks), 1)
         self.assertEqual(locks[0]['properties']['level'], 'ReadOnly')

@@ -9,7 +9,6 @@ from .common import BaseTest, functional
 
 
 class KMSTest(BaseTest):
-
     def test_kms_grant(self):
         session_factory = self.replay_flight_data("test_kms_grants")
         p = self.load_policy(
@@ -36,7 +35,7 @@ class KMSTest(BaseTest):
                         "key": "AliasNames",
                         "op": "in",
                         "value": "alias/aws/dms",
-                        "value_type": "swap"
+                        "value_type": "swap",
                     }
                 ],
             },
@@ -102,11 +101,11 @@ class KMSTest(BaseTest):
                 ],
                 "filters": [
                     {"AliasNames[0]": "alias/config-source-testing"},
-                    {"tag:ConfigTesting": "present"}
+                    {"tag:ConfigTesting": "present"},
                 ],
             },
             session_factory=session_factory,
-            config={"region": "us-east-2"}
+            config={"region": "us-east-2"},
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -118,14 +117,16 @@ class KMSTest(BaseTest):
                 "name": "survive-access-denied",
                 "resource": "kms-key",
                 "filters": [
-                    {"type": "value",
-                     "key": "AliasNames[0]",
-                     "op": "glob",
-                     "value": "alias/test-kms*"}
+                    {
+                        "type": "value",
+                        "key": "AliasNames[0]",
+                        "op": "glob",
+                        "value": "alias/test-kms*",
+                    }
                 ],
             },
             session_factory=session_factory,
-            config={"region": "us-west-1"}
+            config={"region": "us-west-1"},
         )
         resources = p.run()
         self.assertEqual(len(resources), 2)
@@ -144,9 +145,7 @@ class KMSTest(BaseTest):
 
         client = session_factory().client("kms")
         key_id = client.create_key()["KeyMetadata"]["KeyId"]
-        self.addCleanup(
-            client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7
-        )
+        self.addCleanup(client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7)
 
         client.put_key_policy(
             KeyId=key_id,
@@ -181,9 +180,7 @@ class KMSTest(BaseTest):
             ),
         )
 
-        self.assertStatementIds(
-            client, key_id, "DefaultRoot", "SpecificAllow", "Public"
-        )
+        self.assertStatementIds(client, key_id, "DefaultRoot", "SpecificAllow", "Public")
 
         p = self.load_policy(
             {
@@ -216,9 +213,7 @@ class KMSTest(BaseTest):
         session_factory = self.replay_flight_data("test_kms_remove_named")
         client = session_factory().client("kms")
         key_id = client.create_key()["KeyMetadata"]["KeyId"]
-        self.addCleanup(
-            client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7
-        )
+        self.addCleanup(client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7)
 
         client.put_key_policy(
             KeyId=key_id,
@@ -253,9 +248,7 @@ class KMSTest(BaseTest):
                 "name": "kms-rm-named",
                 "resource": "kms-key",
                 "filters": [{"KeyId": key_id}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=session_factory,
         )
@@ -270,23 +263,18 @@ class KMSTest(BaseTest):
 
 
 class KMSTagging(BaseTest):
-
     @functional
     def test_kms_key_tag(self):
         session_factory = self.replay_flight_data("test_kms_key_tag")
         client = session_factory().client("kms")
         key_id = client.create_key()["KeyMetadata"]["KeyId"]
-        self.addCleanup(
-            client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7
-        )
+        self.addCleanup(client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7)
         policy = self.load_policy(
             {
                 "name": "kms-key-tag",
                 "resource": "kms-key",
                 "filters": [{"KeyId": key_id}],
-                "actions": [
-                    {"type": "tag", "key": "RequisiteKey", "value": "Required"}
-                ],
+                "actions": [{"type": "tag", "key": "RequisiteKey", "value": "Required"}],
             },
             session_factory=session_factory,
         )
@@ -299,16 +287,10 @@ class KMSTagging(BaseTest):
     def test_kms_key_remove_tag(self):
         session_factory = self.replay_flight_data("test_kms_key_remove_tag")
         client = session_factory().client("kms")
-        key_id = client.create_key(
-            Tags=[{"TagKey": "ExpiredTag", "TagValue": "Invalid"}]
-        )[
+        key_id = client.create_key(Tags=[{"TagKey": "ExpiredTag", "TagValue": "Invalid"}])[
             "KeyMetadata"
-        ][
-            "KeyId"
-        ]
-        self.addCleanup(
-            client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7
-        )
+        ]["KeyId"]
+        self.addCleanup(client.schedule_key_deletion, KeyId=key_id, PendingWindowInDays=7)
 
         policy = self.load_policy(
             {
@@ -334,17 +316,10 @@ class KMSTagging(BaseTest):
                 "name": "sqs-kms-key-related",
                 "resource": "sqs",
                 "source": "config",
-                "query": [
-                    {"clause": "resourceName like 'test-kms%'"}
-                ],
+                "query": [{"clause": "resourceName like 'test-kms%'"}],
                 "filters": [
-                    {
-                        "type": "kms-key",
-                        "key": "c7n:AliasName",
-                        "value": key_alias,
-                        "op": "eq"
-                    }
-                ]
+                    {"type": "kms-key", "key": "c7n:AliasName", "value": key_alias, "op": "eq"}
+                ],
             },
             session_factory=session_factory,
         )
@@ -352,39 +327,52 @@ class KMSTagging(BaseTest):
         client = session_factory().client("kms")
         self.assertEqual(len(resources), 2)
         target_key = client.describe_key(KeyId=key_alias)
-        self.assertTrue(all(
-            res['KmsMasterKeyId'] in (key_alias, target_key['KeyMetadata']['Arn'])
-            for res in resources
-        ))
+        self.assertTrue(
+            all(
+                res['KmsMasterKeyId'] in (key_alias, target_key['KeyMetadata']['Arn'])
+                for res in resources
+            )
+        )
 
     def test_kms_post_finding(self):
         factory = self.replay_flight_data('test_kms_post_finding')
-        p = self.load_policy({
-            'name': 'kms',
-            'resource': 'aws.kms',
-            'actions': [
-                {'type': 'post-finding',
-                 'types': [
-                     'Software and Configuration Checks/OrgStandard/abc-123']}]},
-            session_factory=factory, config={'region': 'us-west-2'})
+        p = self.load_policy(
+            {
+                'name': 'kms',
+                'resource': 'aws.kms',
+                'actions': [
+                    {
+                        'type': 'post-finding',
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
+                    }
+                ],
+            },
+            session_factory=factory,
+            config={'region': 'us-west-2'},
+        )
 
-        resources = p.resource_manager.get_resources([
-            'arn:aws:kms:us-west-2:644160558196:alias/c7n-test'])
-        rfinding = p.resource_manager.actions[0].format_resource(
-            resources[0])
+        resources = p.resource_manager.get_resources(
+            ['arn:aws:kms:us-west-2:644160558196:alias/c7n-test']
+        )
+        rfinding = p.resource_manager.actions[0].format_resource(resources[0])
         self.maxDiff = None
         self.assertEqual(
             rfinding,
-            {'Details': {'AwsKmsKey': {
-                'KeyId': '44d25a5c-7efa-44ed-8436-b9511ea921b3',
-                'KeyManager': 'CUSTOMER',
-                'KeyState': 'Enabled',
-                'CreationDate': 1493967398.394,
-                'Origin': 'AWS_KMS'}},
-             'Id': 'arn:aws:kms:us-west-2:644160558196:alias/44d25a5c-7efa-44ed-8436-b9511ea921b3',
-             'Partition': 'aws',
-             'Region': 'us-west-2',
-             'Type': 'AwsKmsKey'})
+            {
+                'Details': {
+                    'AwsKmsKey': {
+                        'KeyId': '44d25a5c-7efa-44ed-8436-b9511ea921b3',
+                        'KeyManager': 'CUSTOMER',
+                        'KeyState': 'Enabled',
+                        'CreationDate': 1493967398.394,
+                        'Origin': 'AWS_KMS',
+                    }
+                },
+                'Id': 'arn:aws:kms:us-west-2:644160558196:alias/44d25a5c-7efa-44ed-8436-b9511ea921b3',
+                'Partition': 'aws',
+                'Region': 'us-west-2',
+                'Type': 'AwsKmsKey',
+            },
+        )
 
-        shape_validate(
-            rfinding['Details']['AwsKmsKey'], 'AwsKmsKeyDetails', 'securityhub')
+        shape_validate(rfinding['Details']['AwsKmsKey'], 'AwsKmsKeyDetails', 'securityhub')

@@ -22,8 +22,9 @@ class CustodianGCPTesting(PyTestUtils, GoogleFlightRecorder):
             if not self.recording:
                 return PROJECT_ID
         except AttributeError:
-            raise RuntimeError('project_id not available until after '
-                               'replay or record flight data is invoked')
+            raise RuntimeError(
+                'project_id not available until after ' 'replay or record flight data is invoked'
+            )
         return get_default_project()
 
 
@@ -35,5 +36,5 @@ def test(request):
 
 
 def pytest_terraform_modify_state(tfstate):
-    """ Sanitize functional testing account data """
+    """Sanitize functional testing account data"""
     tfstate.update(sanitize_project_name(str(tfstate)))

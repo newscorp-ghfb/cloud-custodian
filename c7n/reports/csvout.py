@@ -72,7 +72,7 @@ def report(policies, start_date, options, output_fh, raw_output_fh=None):
         extra_fields=options.field,
         include_default_fields=not options.no_default_fields,
         include_region=len(regions) > 1,
-        include_policy=len(policy_names) > 1
+        include_policy=len(policy_names) > 1,
     )
 
     records = []
@@ -84,7 +84,8 @@ def report(policies, start_date, options, output_fh, raw_output_fh=None):
                 policy.session_factory,
                 policy.ctx.output.config['netloc'],
                 strip_output_path(policy.ctx.output.config['path'], policy.name),
-                start_date)
+                start_date,
+            )
         else:
             policy_records = fs_record_set(policy.ctx.log_dir, policy.name)
 
@@ -146,9 +147,15 @@ def _get_values(record, field_list, tag_map):
 
 
 class Formatter:
-
-    def __init__(self, resource_type, extra_fields=(), include_default_fields=True,
-                 include_region=False, include_policy=False, fields=()):
+    def __init__(
+        self,
+        resource_type,
+        extra_fields=(),
+        include_default_fields=True,
+        include_region=False,
+        include_policy=False,
+        fields=(),
+    ):
 
         # Lookup default fields for resource type.
         model = resource_type
@@ -205,11 +212,9 @@ class Formatter:
             return []
 
         # Sort before unique to get the first/latest record
-        date_sort = ('CustodianDate' in records[0] and 'CustodianDate' or
-                     self._date_field)
+        date_sort = 'CustodianDate' in records[0] and 'CustodianDate' or self._date_field
         if date_sort:
-            records.sort(
-                key=lambda r: r[date_sort], reverse=reverse)
+            records.sort(key=lambda r: r[date_sort], reverse=reverse)
 
         if unique:
             uniq = self.uniq_by_id(records)
@@ -227,8 +232,7 @@ def fs_record_set(output_path, policy_name):
     if not os.path.exists(record_path):
         return []
 
-    mdate = datetime.fromtimestamp(
-        os.stat(record_path).st_ctime)
+    mdate = datetime.fromtimestamp(os.stat(record_path).st_ctime)
 
     with open(record_path) as fh:
         records = json.load(fh)
@@ -265,17 +269,14 @@ def record_set(session_factory, bucket, key_prefix, start_date, specify_hour=Fal
         for key_set in p:
             if 'Contents' not in key_set:
                 continue
-            keys = [k for k in key_set['Contents']
-                    if k['Key'].endswith('resources.json.gz')]
+            keys = [k for k in key_set['Contents'] if k['Key'].endswith('resources.json.gz')]
             key_count += len(keys)
-            futures = map(lambda k: w.submit(
-                get_records, bucket, k, session_factory), keys)
+            futures = map(lambda k: w.submit(get_records, bucket, k, session_factory), keys)
 
             for f in as_completed(futures):
                 records.extend(f.result())
 
-    log.info("Fetched %d records across %d files" % (
-        len(records), key_count))
+    log.info("Fetched %d records across %d files" % (len(records), key_count))
     return records
 
 
@@ -293,8 +294,7 @@ def get_records(bucket, key, session_factory):
     blob = io.BytesIO(result['Body'].read())
 
     records = json.load(gzip.GzipFile(fileobj=blob))
-    log.debug("bucket: %s key: %s records: %d",
-              bucket, key['Key'], len(records))
+    log.debug("bucket: %s key: %s records: %d", bucket, key['Key'], len(records))
     for r in records:
         r['CustodianDate'] = custodian_date
     return records

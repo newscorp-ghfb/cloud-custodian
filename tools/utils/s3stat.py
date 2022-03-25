@@ -14,17 +14,14 @@ def bucket_info(c, bucket):
         Namespace='AWS/S3',
         MetricName='NumberOfObjects',
         Dimensions=[
-            {'Name': 'BucketName',
-           'Value': bucket},
-           {'Name': 'StorageType',
-               'Value': 'AllStorageTypes'}
+            {'Name': 'BucketName', 'Value': bucket},
+            {'Name': 'StorageType', 'Value': 'AllStorageTypes'},
         ],
-        StartTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
-        EndTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0),
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
+        EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 24 * 24,
-        Statistics=['Average'])
+        Statistics=['Average'],
+    )
 
     if not response['Datapoints']:
         result['ObjectCount'] = 0
@@ -35,17 +32,14 @@ def bucket_info(c, bucket):
         Namespace='AWS/S3',
         MetricName='BucketSizeBytes',
         Dimensions=[
-            {'Name': 'BucketName',
-          'Value': bucket},
-          {'Name': 'StorageType',
-              'Value': 'StandardStorage'},
+            {'Name': 'BucketName', 'Value': bucket},
+            {'Name': 'StorageType', 'Value': 'StandardStorage'},
         ],
-        StartTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0) - timedelta(10),
-        EndTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0),
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(10),
+        EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 24 * 24,
-        Statistics=['Average'])
+        Statistics=['Average'],
+    )
 
     if not response['Datapoints']:
         result['Size'] = 0
@@ -70,8 +64,7 @@ def main():
     for b in buckets:
         index += 1
         try:
-            bucket_region = s3.get_bucket_location(
-                Bucket=b['Name'])['LocationConstraint']
+            bucket_region = s3.get_bucket_location(Bucket=b['Name'])['LocationConstraint']
             if bucket_region is None:
                 bucket_region = "us-east-1"
             # special case per

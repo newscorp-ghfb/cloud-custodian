@@ -8,7 +8,6 @@ from mock import MagicMock
 
 
 class AutoTagCreator(BaseTest):
-
     def test_auto_tag_assumed(self):
         # verify auto tag works with assumed roles and can optionally update
         session_factory = self.replay_flight_data("test_ec2_autotag_assumed")
@@ -166,9 +165,7 @@ class AutoTagCreator(BaseTest):
         resources = policy.push(event, None)
         auto_tag_user.data = {"tag": "Owner", "principal_id_tag": "OwnerId"}
         result = auto_tag_user.process(resources, event)
-        self.assertEqual(
-            result, {"Owner": "Radiant", "OwnerId": "AROAIFMJLHZRIKEFRKUUF"}
-        )
+        self.assertEqual(result, {"Owner": "Radiant", "OwnerId": "AROAIFMJLHZRIKEFRKUUF"})
 
         # check that it does not sets principalId with assumeRole
         policy = self.load_policy(

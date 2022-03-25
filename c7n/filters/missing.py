@@ -15,12 +15,16 @@ class Missing(Filter):
 
     This works as an effectively an embedded policy thats evaluated.
     """
+
     schema = type_schema(
         'missing',
-        policy={'type': 'object',
-                'required': ['resource'],
-                'properties': {'resource': {'type': 'string'}}},
-        required=['policy'])
+        policy={
+            'type': 'object',
+            'required': ['resource'],
+            'properties': {'resource': {'type': 'string'}},
+        },
+        required=['policy'],
+    )
 
     def __init__(self, data, manager):
         super(Missing, self).__init__(data, manager)
@@ -29,20 +33,21 @@ class Missing(Filter):
     def validate(self):
         if 'mode' in self.data['policy']:
             raise PolicyValidationError(
-                "Execution mode can't be specified in "
-                "embedded policy %s" % self.data)
+                "Execution mode can't be specified in " "embedded policy %s" % self.data
+            )
         if 'actions' in self.data['policy']:
             raise PolicyValidationError(
-                "Actions can't be specified in "
-                "embedded policy %s" % self.data)
-        collection = PolicyLoader(
-            self.manager.config).load_data(
-                {'policies': [self.data['policy']]}, "memory://",
-                session_factory=self.manager.session_factory)
+                "Actions can't be specified in " "embedded policy %s" % self.data
+            )
+        collection = PolicyLoader(self.manager.config).load_data(
+            {'policies': [self.data['policy']]},
+            "memory://",
+            session_factory=self.manager.session_factory,
+        )
         if not collection:
             raise PolicyValidationError(
-                "policy %s missing filter empty embedded policy" % (
-                    self.manager.ctx.policy.name))
+                "policy %s missing filter empty embedded policy" % (self.manager.ctx.policy.name)
+            )
         self.embedded_policy = list(collection).pop()
         self.embedded_policy.validate()
         return self

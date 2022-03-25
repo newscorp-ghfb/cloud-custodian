@@ -20,20 +20,24 @@ class FunctionAppUtilsTest(BaseTest):
         self.session = local_session(Session)
         self.subscription_id = self.session.get_subscription_id()
         self.storage_name = 'ccfuncapp%s' % self.subscription_id[-12:]
-        self.dedicated_function_name = 'cloud-custodian-test-dedicated%s' \
-            % self.subscription_id[-12:]
+        self.dedicated_function_name = (
+            'cloud-custodian-test-dedicated%s' % self.subscription_id[-12:]
+        )
 
     @arm_template('functionapp-reqs.json')
     def test_get_storage_connection_string(self):
-        id = '/subscriptions/%s/resourceGroups/test_functionapp-reqs/providers/Microsoft.Storage' \
-             '/storageAccounts/%s' % (self.subscription_id, self.storage_name)
+        id = (
+            '/subscriptions/%s/resourceGroups/test_functionapp-reqs/providers/Microsoft.Storage'
+            '/storageAccounts/%s' % (self.subscription_id, self.storage_name)
+        )
         conn_string = FunctionAppUtilities.get_storage_account_connection_string(id)
         self.assertIn('AccountName=%s;' % self.storage_name, conn_string)
 
     @arm_template('functionapp-reqs.json')
     def test_get_application_insights_key_exists(self):
-        insights = AppInsightsUnit().get({'name': 'cloud-custodian-test',
-                                          'resource_group_name': CONST_GROUP_NAME})
+        insights = AppInsightsUnit().get(
+            {'name': 'cloud-custodian-test', 'resource_group_name': CONST_GROUP_NAME}
+        )
 
         self.assertIsNotNone(insights)
         self.assertIsNotNone(insights.instrumentation_key)
@@ -44,21 +48,21 @@ class FunctionAppUtilsTest(BaseTest):
             app_insights={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': 'cloud-custodian-test'
+                'name': 'cloud-custodian-test',
             },
             storage_account={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': self.storage_name
+                'name': self.storage_name,
             },
             service_plan={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
                 'name': 'cloud-custodian-test',
-                'location': 'westus2'
+                'location': 'westus2',
             },
-            function_app={'resource_group_name': CONST_GROUP_NAME,
-                          'name': 'custodian-test-app'})
+            function_app={'resource_group_name': CONST_GROUP_NAME, 'name': 'custodian-test-app'},
+        )
 
         app = FunctionAppUtilities.deploy_function_app(parameters)
         self.assertIsNotNone(app)
@@ -69,22 +73,24 @@ class FunctionAppUtilsTest(BaseTest):
             app_insights={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': 'cloud-custodian-test'
+                'name': 'cloud-custodian-test',
             },
             storage_account={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': self.storage_name
+                'name': self.storage_name,
             },
             service_plan={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
                 'name': 'cloud-custodian-test',
-                'sku_tier': 'something wrong'
+                'sku_tier': 'something wrong',
             },
             function_app={
                 'name': self.dedicated_function_name,
-                'resource_group_name': CONST_GROUP_NAME})
+                'resource_group_name': CONST_GROUP_NAME,
+            },
+        )
 
         FunctionAppUtilities.deploy_function_app(parameters)
         self.assertEqual(parameters.service_plan['sku_tier'], 'Basic')
@@ -94,12 +100,14 @@ class FunctionAppUtilsTest(BaseTest):
             ('test-function-name', 'test-function-name-suffix'),
             ('test_function_name', 'test-function-name-suffix'),
             ('test-function-name123', 'test-function-name123-suffix'),
-            ('test-function-name!@#$', 'test-function-name-----suffix')
+            ('test-function-name!@#$', 'test-function-name-----suffix'),
         ]
 
         for test_case in test_cases:
-            self.assertEqual(test_case[1], FunctionAppUtilities.get_function_name(
-                policy_name=test_case[0], suffix='suffix'))
+            self.assertEqual(
+                test_case[1],
+                FunctionAppUtilities.get_function_name(policy_name=test_case[0], suffix='suffix'),
+            )
 
     def test_validate_function_name_length_requirements(self):
         with self.assertRaises(ValueError):
@@ -108,18 +116,16 @@ class FunctionAppUtilsTest(BaseTest):
             FunctionAppUtilities.validate_function_name(function_name='')
         with self.assertRaises(ValueError):
             FunctionAppUtilities.validate_function_name(
-                function_name='abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn')
+                function_name='abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn'
+            )
 
     def test_is_consumption_plan(self):
         params = FunctionAppUtilities.FunctionAppInfrastructureParameters(
             app_insights=None,
             storage_account=None,
-            service_plan={
-                'sku_tier': 'dynamic'
-            },
-            function_app={
-                'resource_group_name': CONST_GROUP_NAME,
-                'name': 'cloud-custodian-test'})
+            service_plan={'sku_tier': 'dynamic'},
+            function_app={'resource_group_name': CONST_GROUP_NAME, 'name': 'cloud-custodian-test'},
+        )
 
         self.assertTrue(FunctionAppUtilities.is_consumption_plan(params))
 
@@ -134,33 +140,31 @@ class FunctionAppUtilsTest(BaseTest):
             app_insights={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': 'cloud-custodian-test'
+                'name': 'cloud-custodian-test',
             },
             storage_account={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': self.storage_name
+                'name': self.storage_name,
             },
             service_plan={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
                 'name': 'cloud-custodian-test',
-                'sku_tier': 'dynamic'
+                'sku_tier': 'dynamic',
             },
-            function_app={'resource_group_name': CONST_GROUP_NAME,
-                          'name': function_app_name})
+            function_app={'resource_group_name': CONST_GROUP_NAME, 'name': function_app_name},
+        )
 
         package = FunctionPackage("TestPolicy")
         package.pkg = AzurePythonPackageArchive()
         package.close()
 
-        FunctionAppUtilities.publish_functions_package(
-            parameters, package)
+        FunctionAppUtilities.publish_functions_package(parameters, package)
 
         # verify app setting updated
         wc = self.session.client('azure.mgmt.web.WebSiteManagementClient')
-        app_settings = wc.web_apps.list_application_settings(
-            CONST_GROUP_NAME, function_app_name)
+        app_settings = wc.web_apps.list_application_settings(CONST_GROUP_NAME, function_app_name)
         self.assertNotIn('WEBSITE_RUN_FROM_PACKAGE', app_settings.properties)
 
     @arm_template('functionapp-reqs.json')
@@ -170,22 +174,24 @@ class FunctionAppUtilsTest(BaseTest):
             app_insights={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': 'cloud-custodian-test'
+                'name': 'cloud-custodian-test',
             },
             storage_account={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': self.storage_name
+                'name': self.storage_name,
             },
             service_plan={
                 'id': '',
                 'resource_group_name': CONST_GROUP_NAME,
                 'name': 'cloud-custodian-test',
-                'sku_tier': 'Basic'
+                'sku_tier': 'Basic',
             },
             function_app={
                 'resource_group_name': CONST_GROUP_NAME,
-                'name': self.dedicated_function_name})
+                'name': self.dedicated_function_name,
+            },
+        )
 
         package = FunctionPackage("TestPolicy")
         package.pkg = AzurePythonPackageArchive()

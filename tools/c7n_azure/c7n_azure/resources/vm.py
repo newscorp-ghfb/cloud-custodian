@@ -170,11 +170,9 @@ class InstanceViewFilter(ValueFilter):
     def __call__(self, i):
         if 'instanceView' not in i:
             client = self.manager.get_client()
-            instance = (
-                client.virtual_machines
-                .get(i['resourceGroup'], i['name'], expand='instanceview')
-                .instance_view
-            )
+            instance = client.virtual_machines.get(
+                i['resourceGroup'], i['name'], expand='instanceview'
+            ).instance_view
             i['instanceView'] = instance.serialize()
 
         return super(InstanceViewFilter, self).__call__(i['instanceView'])
@@ -183,79 +181,77 @@ class InstanceViewFilter(ValueFilter):
 @VirtualMachine.filter_registry.register('vm-extensions')
 class VMExtensionsFilter(ValueFilter):
     """
-        Provides a value filter targetting the virtual machine
-        extensions array.  Requires an additional API call per
-        virtual machine to retrieve the extensions.
+    Provides a value filter targetting the virtual machine
+    extensions array.  Requires an additional API call per
+    virtual machine to retrieve the extensions.
 
-        Here is an example of the data returned:
+    Here is an example of the data returned:
 
-        .. code-block:: json
+    .. code-block:: json
 
-          [{
-            "id": "/subscriptions/...",
-            "name": "CustomScript",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "location": "centralus",
-            "properties": {
-              "publisher": "Microsoft.Azure.Extensions",
-              "type": "CustomScript",
-              "typeHandlerVersion": "2.0",
-              "autoUpgradeMinorVersion": true,
-              "settings": {
-                "fileUris": []
-              },
-              "provisioningState": "Succeeded"
-            }
-          }]
+      [{
+        "id": "/subscriptions/...",
+        "name": "CustomScript",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "location": "centralus",
+        "properties": {
+          "publisher": "Microsoft.Azure.Extensions",
+          "type": "CustomScript",
+          "typeHandlerVersion": "2.0",
+          "autoUpgradeMinorVersion": true,
+          "settings": {
+            "fileUris": []
+          },
+          "provisioningState": "Succeeded"
+        }
+      }]
 
-        :examples:
+    :examples:
 
-        Find VM's with Custom Script extensions
+    Find VM's with Custom Script extensions
 
-        .. code-block:: yaml
+    .. code-block:: yaml
 
-            policies:
-              - name: vm-with-customscript
-                description: |
-                  Find all virtual machines with a custom
-                  script extension installed.
-                resource: azure.vm
-                filters:
-                  - type: vm-extensions
-                    op: in
-                    key: "[].properties.type"
-                    value: CustomScript
-                    value_type: swap
+        policies:
+          - name: vm-with-customscript
+            description: |
+              Find all virtual machines with a custom
+              script extension installed.
+            resource: azure.vm
+            filters:
+              - type: vm-extensions
+                op: in
+                key: "[].properties.type"
+                value: CustomScript
+                value_type: swap
 
 
-        Find VM's without the OMS agent installed
+    Find VM's without the OMS agent installed
 
-        .. code-block:: yaml
+    .. code-block:: yaml
 
-            policies:
-              - name: vm-without-oms
-                description: |
-                  Find all virtual machines without the
-                  OMS agent installed.
-                resource: azure.vm
-                filters:
-                  - type: vm-extensions
-                    op: not-in
-                    key: "[].properties.type"
-                    value: OmsAgentForLinux
-                    value_type: swap
+        policies:
+          - name: vm-without-oms
+            description: |
+              Find all virtual machines without the
+              OMS agent installed.
+            resource: azure.vm
+            filters:
+              - type: vm-extensions
+                op: not-in
+                key: "[].properties.type"
+                value: OmsAgentForLinux
+                value_type: swap
 
-        """
+    """
+
     schema = type_schema('vm-extensions', rinherit=ValueFilter.schema)
     annotate = False  # cannot annotate arrays
 
     def __call__(self, i):
         if 'c7n:vm-extensions' not in i:
             client = self.manager.get_client()
-            extensions = (
-                client.virtual_machine_extensions
-                .list(i['resourceGroup'], i['name'])
-            )
+            extensions = client.virtual_machine_extensions.list(i['resourceGroup'], i['name'])
             i['c7n:vm-extensions'] = [e.serialize(True) for e in extensions.value]
 
         return super(VMExtensionsFilter, self).__call__(i['c7n:vm-extensions'])
@@ -275,7 +271,9 @@ class VmPowerOffAction(AzureBaseAction):
 
     schema = type_schema('poweroff')
 
-    def _prepare_processing(self,):
+    def _prepare_processing(
+        self,
+    ):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
@@ -287,7 +285,9 @@ class VmStopAction(AzureBaseAction):
 
     schema = type_schema('stop')
 
-    def _prepare_processing(self,):
+    def _prepare_processing(
+        self,
+    ):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
@@ -299,7 +299,9 @@ class VmStartAction(AzureBaseAction):
 
     schema = type_schema('start')
 
-    def _prepare_processing(self,):
+    def _prepare_processing(
+        self,
+    ):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
@@ -311,7 +313,9 @@ class VmRestartAction(AzureBaseAction):
 
     schema = type_schema('restart')
 
-    def _prepare_processing(self,):
+    def _prepare_processing(
+        self,
+    ):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
@@ -343,12 +347,7 @@ class VmResizeAction(AzureBaseAction):
                 vmSize: Standard_A2_v2
     """
 
-    schema = type_schema(
-        'resize',
-        required=['vmSize'],
-        **{
-            'vmSize': {'type': 'string'}
-        })
+    schema = type_schema('resize', required=['vmSize'], **{'vmSize': {'type': 'string'}})
 
     def __init__(self, data, manager=None):
         super(VmResizeAction, self).__init__(data, manager)
@@ -363,5 +362,5 @@ class VmResizeAction(AzureBaseAction):
         self.client.virtual_machines.begin_update(
             resource['resourceGroup'],
             resource['name'],
-            VirtualMachineUpdate(hardware_profile=hardware_profile)
+            VirtualMachineUpdate(hardware_profile=hardware_profile),
         )

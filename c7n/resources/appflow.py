@@ -9,7 +9,6 @@ from c7n.utils import local_session, type_schema
 
 @resources.register('app-flow')
 class AppFlow(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'appflow'
         arn_type = 'flow'
@@ -104,13 +103,12 @@ class DeleteAppFlowResource(BaseAction):
     schema = type_schema('delete', force={'type': 'boolean'})
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('appflow')
+        client = local_session(self.manager.session_factory).client('appflow')
         force_delete = self.data.get('force', False)
         for r in resources:
             self.manager.retry(
                 client.delete_flow,
                 flowName=r['flowName'],
                 forceDelete=force_delete,
-                ignore_err_codes=('ResourceNotFoundException',)
+                ignore_err_codes=('ResourceNotFoundException',),
             )

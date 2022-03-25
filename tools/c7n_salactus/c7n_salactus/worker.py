@@ -44,14 +44,14 @@ from uuid import uuid4
 
 import redis
 from rq.decorators import job
+
 # for bulk invoke impl
 from rq.queue import Queue
 from rq.job import JobStatus, Job
 
 import boto3
 from botocore.client import Config
-from botocore.exceptions import (
-    ClientError, ConnectionError, EndpointConnectionError)
+from botocore.exceptions import ClientError, ConnectionError, EndpointConnectionError
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -67,13 +67,16 @@ def patch_ssl():
     if getattr(CONN_CACHE, 'patched', None):
         return
     from botocore.vendored import requests
+
     # Pick a preferred cipher suite, needs some benchmarking.
     # https://www.slideshare.net/AmazonWebServices/maximizing-amazon-s3-performance-stg304-aws-reinvent-2013
     requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = ':AES128-GCM-SHA256'
     try:
-        setattr(requests.packages.urllib3.contrib.pyopenssl,
-                'DEFAULT_SSL_CIPHER_LIST',
-                ':AES128-GCM-SHA256')
+        setattr(
+            requests.packages.urllib3.contrib.pyopenssl,
+            'DEFAULT_SSL_CIPHER_LIST',
+            ':AES128-GCM-SHA256',
+        )
     except AttributeError:
         # no pyopenssl support used / needed / available
         pass
@@ -98,14 +101,13 @@ PARTITION_QUEUE_THRESHOLD = 6
 DEFAULT_TTL = 60 * 60 * 48
 
 # Default size of the bucket before checking for inventory
-DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD = \
-    int(os.environ.get("SALACTUS_INVENTORY_THRESHOLD", 100000))
+DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD = int(
+    os.environ.get("SALACTUS_INVENTORY_THRESHOLD", 100000)
+)
 
 BUCKET_OBJ_DESC = {
-    True: ('Versions', 'list_object_versions',
-           ('NextKeyMarker', 'NextVersionIdMarker')),
-    False: ('Contents', 'list_objects_v2',
-            ('NextContinuationToken',))
+    True: ('Versions', 'list_object_versions', ('NextKeyMarker', 'NextVersionIdMarker')),
+    False: ('Contents', 'list_objects_v2', ('NextContinuationToken',)),
 }
 
 connection = redis.Redis(host=REDIS_HOST)
@@ -117,7 +119,8 @@ keyconfig = {
     'glacier': False,
     'large': True,
     'key-id': os.environ.get('SALACTUS_KEYID'),
-    'crypto': os.environ.get('SALACTUS_CRYPTO', 'AES256')}
+    'crypto': os.environ.get('SALACTUS_CRYPTO', 'AES256'),
+}
 
 log = logging.getLogger("salactus")
 
@@ -166,10 +169,16 @@ def bulk_invoke(func, args, nargs):
     argv = list(args)
     argv.append(None)
     job = Job.create(
-        func, args=argv, connection=connection,
+        func,
+        args=argv,
+        connection=connection,
         description="bucket-%s" % func.func_name,
-        origin=q.name, status=JobStatus.QUEUED, timeout=ctx.timeout,
-        result_ttl=0, ttl=ctx.ttl)
+        origin=q.name,
+        status=JobStatus.QUEUED,
+        timeout=ctx.timeout,
+        result_ttl=0,
+        ttl=ctx.ttl,
+    )
 
     for n in chunks(nargs, 100):
         job.created_at = datetime.utcnow()
@@ -192,24 +201,17 @@ def bucket_ops(bid, api=""):
         yield 42
     except ClientError as e:
         code = e.response['Error']['Code']
-        log.info(
-            "bucket error bucket:%s error:%s",
-            bid,
-            e.response['Error']['Code'])
+        log.info("bucket error bucket:%s error:%s", bid, e.response['Error']['Code'])
         if code == "NoSuchBucket":
             pass
         elif code == 'AccessDenied':
             connection.sadd('buckets-denied', bid)
         else:
             connection.hset(
-                'buckets-unknown-errors',
-                bid,
-                "%s:%s" % (api, e.response['Error']['Code']))
+                'buckets-unknown-errors', bid, "%s:%s" % (api, e.response['Error']['Code'])
+            )
     except Exception as e:
-        connection.hset(
-            'buckets-unknown-errors',
-            bid,
-            "%s:%s" % (api, str(e)))
+        connection.hset('buckets-unknown-errors', bid, "%s:%s" % (api, str(e)))
         # Let the error queue catch it
         raise
 
@@ -256,16 +258,14 @@ def bucket_key_count(client, bucket):
         Namespace='AWS/S3',
         MetricName='NumberOfObjects',
         Dimensions=[
-            {'Name': 'BucketName',
-             'Value': bucket['name']},
-            {'Name': 'StorageType',
-             'Value': 'AllStorageTypes'}],
-        StartTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
-        EndTime=datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0),
+            {'Name': 'BucketName', 'Value': bucket['name']},
+            {'Name': 'StorageType', 'Value': 'AllStorageTypes'},
+        ],
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
+        EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 60 * 24,
-        Statistics=['Minimum'])
+        Statistics=['Minimum'],
+    )
     response = client.get_metric_statistics(**params)
     if not response['Datapoints']:
         return 0
@@ -281,24 +281,18 @@ def process_account(account_info):
     client = session.client('s3', config=s3config)
     buckets = client.list_buckets()['Buckets']
 
-    connection.hset(
-        'bucket-accounts', account_info['name'], json.dumps(account_info))
+    connection.hset('bucket-accounts', account_info['name'], json.dumps(account_info))
 
     for b in buckets:
         connection.hset(
-            'bucket-ages', bucket_id(account_info, b['Name']),
-            b['CreationDate'].isoformat())
+            'bucket-ages', bucket_id(account_info, b['Name']), b['CreationDate'].isoformat()
+        )
 
     account_buckets = account_info.pop('buckets', None)
-    buckets = [n['Name'] for n in buckets
-               if not account_buckets or
-               n['Name'] in account_buckets]
+    buckets = [n['Name'] for n in buckets if not account_buckets or n['Name'] in account_buckets]
     account_not_buckets = account_info.pop('not-buckets', None)
-    buckets = [n for n in buckets
-               if not account_not_buckets or
-               n not in account_not_buckets]
-    log.info("processing %d buckets in account %s",
-             len(buckets), account_info['name'])
+    buckets = [n for n in buckets if not account_not_buckets or n not in account_not_buckets]
+    log.info("processing %d buckets in account %s", len(buckets), account_info['name'])
     for bucket_set in chunks(buckets, 50):
         invoke(process_bucket_set, account_info, bucket_set)
 
@@ -323,8 +317,7 @@ def process_bucket_set(account_info, buckets):
             error = None
 
             try:
-                location = client.get_bucket_location(
-                    Bucket=b).get('LocationConstraint')
+                location = client.get_bucket_location(Bucket=b).get('LocationConstraint')
             except Exception as e:
                 error = e
                 location = None
@@ -336,17 +329,18 @@ def process_bucket_set(account_info, buckets):
             else:
                 region = location
 
-            if (account_info.get('regions', ()) and
-                    region not in account_info.get('regions', ())):
+            if account_info.get('regions', ()) and region not in account_info.get('regions', ()):
                 continue
 
             info['region'] = region
             if region not in region_clients:
                 region_clients.setdefault(region, {})
                 region_clients[region]['s3'] = s3 = session.client(
-                    's3', region_name=region, config=s3config)
+                    's3', region_name=region, config=s3config
+                )
                 region_clients[region]['cloudwatch'] = cw = session.client(
-                    'cloudwatch', region_name=region, config=s3config)
+                    'cloudwatch', region_name=region, config=s3config
+                )
             else:
                 s3 = region_clients[region]['s3']
                 cw = region_clients[region]['cloudwatch']
@@ -365,8 +359,8 @@ def process_bucket_set(account_info, buckets):
 
             versioning = s3.get_bucket_versioning(Bucket=b)
             info['versioned'] = (
-                versioning and versioning.get('Status', '')
-                in ('Enabled', 'Suspended') or False)
+                versioning and versioning.get('Status', '') in ('Enabled', 'Suspended') or False
+            )
             connection.hset('bucket-versions', bid, int(info['versioned']))
 
             log.info("processing bucket %s", info)
@@ -380,18 +374,16 @@ def dispatch_object_source(client, account_info, bid, bucket_info):
     Choices are bucket partition, inventory, or direct pagination.
     """
 
-    if (account_info.get('inventory') and
-        bucket_info['keycount'] >
-            account_info['inventory'].get('bucket-size-threshold',
-                                          DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD)):
+    if account_info.get('inventory') and bucket_info['keycount'] > account_info['inventory'].get(
+        'bucket-size-threshold', DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD
+    ):
         inventory_info = get_bucket_inventory(
-            client,
-            bucket_info['name'],
-            account_info['inventory'].get('id-selector', '*'))
+            client, bucket_info['name'], account_info['inventory'].get('id-selector', '*')
+        )
         if inventory_info is not None:
             return invoke(
-                process_bucket_inventory, bid,
-                inventory_info['bucket'], inventory_info['prefix'])
+                process_bucket_inventory, bid, inventory_info['bucket'], inventory_info['prefix']
+            )
 
     if bucket_info['keycount'] > PARTITION_BUCKET_SIZE_THRESHOLD:
         invoke(process_bucket_partitions, bid)
@@ -400,8 +392,8 @@ def dispatch_object_source(client, account_info, bid, bucket_info):
 
 
 class CharSet:
-    """Sets of character/gram populations for the ngram partition strategy.
-    """
+    """Sets of character/gram populations for the ngram partition strategy."""
+
     hex_lower = set(string.hexdigits.lower())
     hex = set(string.hexdigits)
     digits = set(string.digits)
@@ -420,12 +412,12 @@ class CharSet:
             cls.ascii_lower,
             cls.ascii_letters,
             cls.ascii_lower_digits,
-            cls.ascii_alphanum]
+            cls.ascii_alphanum,
+        ]
 
 
 class Strategy:
-    """ Partitioning strategy for an s3 bucket.
-    """
+    """Partitioning strategy for an s3 bucket."""
 
 
 class NGramPartition(Strategy):
@@ -443,8 +435,7 @@ class NGramPartition(Strategy):
     def initialize_prefixes(self, prefix_queue):
         if prefix_queue != ('',):
             return prefix_queue
-        return ["".join(n) for n in
-                itertools.permutations(self.grams, self.limit)]
+        return ["".join(n) for n in itertools.permutations(self.grams, self.limit)]
 
     def find_partitions(self, prefix_queue, results):
         return []
@@ -476,8 +467,7 @@ class CommonPrefixPartition(Strategy):
         return prefix_queue
 
     def find_partitions(self, prefix_queue, results):
-        prefix_queue.extend(
-            [p['Prefix'] for p in results.get('CommonPrefixes', [])])
+        prefix_queue.extend([p['Prefix'] for p in results.get('CommonPrefixes', [])])
 
     def is_depth_exceeded(self, prefix):
         return prefix.count(self.partition) > self.limit
@@ -494,7 +484,7 @@ def get_partition_strategy(strategy):
 
 
 def get_keys_charset(keys, bid):
-    """ Use set of keys as selector for character superset
+    """Use set of keys as selector for character superset
 
     Note this isn't optimal, its probabilistic on the keyset char population.
     """
@@ -506,10 +496,7 @@ def get_keys_charset(keys, bid):
 
     # Normalize charsets for matching
     normalized = {}
-    for n, sset in [
-        ("p", set(string.punctuation)),
-        ("w", set(string.whitespace))
-    ]:
+    for n, sset in [("p", set(string.punctuation)), ("w", set(string.whitespace))]:
         m = chars.intersection(sset)
         if m:
             normalized[n] = m
@@ -524,8 +511,9 @@ def get_keys_charset(keys, bid):
 
     if charset is None:
         raise ValueError(
-            "Bucket: %s Failed charset ngram detection %r\n%s" % (
-                bid, "".join(chars), "\n".join(sorted(keys))))
+            "Bucket: %s Failed charset ngram detection %r\n%s"
+            % (bid, "".join(chars), "\n".join(sorted(keys)))
+        )
 
     for n, sset in normalized.items():
         charset = charset.symmetric_difference(sset)
@@ -542,34 +530,32 @@ def detect_partition_strategy(bid, delimiters=('/', '-'), prefix=''):
     region = connection.hget('bucket-regions', bid)
     versioned = bool(int(connection.hget('bucket-versions', bid)))
     size = int(float(connection.hget('bucket-sizes', bid)))
-    session = get_session(
-        json.loads(connection.hget('bucket-accounts', account)))
+    session = get_session(json.loads(connection.hget('bucket-accounts', account)))
     s3 = session.client('s3', region_name=region, config=s3config)
 
-    (contents_key,
-     contents_method,
-     continue_tokens) = BUCKET_OBJ_DESC[versioned]
+    (contents_key, contents_method, continue_tokens) = BUCKET_OBJ_DESC[versioned]
 
     with bucket_ops(bid, 'detect'):
         keys = set()
         for delimiter in delimiters:
             method = getattr(s3, contents_method, None)
-            results = method(
-                Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
+            results = method(Bucket=bucket, Prefix=prefix, Delimiter=delimiter)
             prefixes = [p['Prefix'] for p in results.get('CommonPrefixes', [])]
             contents = results.get(contents_key, [])
             keys.update([k['Key'] for k in contents])
             # If we have common prefixes within limit thresholds go wide
-            if (len(prefixes) > 0 and
-                len(prefixes) < 1000 and
-                    len(contents) < 1000):
+            if len(prefixes) > 0 and len(prefixes) < 1000 and len(contents) < 1000:
                 log.info(
                     "%s detected prefix delimiter:%s contents:%d prefixes:%d",
-                    bid, delimiter, len(contents), len(prefixes))
+                    bid,
+                    delimiter,
+                    len(contents),
+                    len(prefixes),
+                )
                 limit = prefix and 2 or 4
                 return process_bucket_partitions(
-                    bid, partition=delimiter,
-                    strategy='p', prefix_set=prefixes, limit=limit)
+                    bid, partition=delimiter, strategy='p', prefix_set=prefixes, limit=limit
+                )
 
     # Detect character sets
     charset = get_keys_charset(keys, bid)
@@ -583,8 +569,7 @@ def detect_partition_strategy(bid, delimiters=('/', '-'), prefix=''):
 
     # Dispatch
     prefixes = ('',)
-    prefixes = NGramPartition(
-        charset, limit=limit).initialize_prefixes(prefixes)
+    prefixes = NGramPartition(charset, limit=limit).initialize_prefixes(prefixes)
 
     #
     random.shuffle(prefixes)
@@ -593,44 +578,46 @@ def detect_partition_strategy(bid, delimiters=('/', '-'), prefix=''):
     # todo carry charset forward as param, and go incremental on prefix
     # ngram expansion
     connection.hincrby('bucket-partition', bid, len(prefixes))
-    return bulk_invoke(
-        process_bucket_iterator, [bid], prefixes)
+    return bulk_invoke(process_bucket_iterator, [bid], prefixes)
 
 
-@job('bucket-partition', timeout=3600 * 4, ttl=DEFAULT_TTL,
-     connection=connection, result_ttl=0)
-def process_bucket_partitions(
-        bid, prefix_set=('',), partition='/', strategy=None, limit=4):
-    """Split up a bucket keyspace into smaller sets for parallel iteration.
-    """
+@job('bucket-partition', timeout=3600 * 4, ttl=DEFAULT_TTL, connection=connection, result_ttl=0)
+def process_bucket_partitions(bid, prefix_set=('',), partition='/', strategy=None, limit=4):
+    """Split up a bucket keyspace into smaller sets for parallel iteration."""
     if strategy is None:
         return detect_partition_strategy(bid)
 
     account, bucket = bid.split(':', 1)
     region = connection.hget('bucket-regions', bid)
     versioned = bool(int(connection.hget('bucket-versions', bid)))
-    session = get_session(
-        json.loads(connection.hget('bucket-accounts', account)))
+    session = get_session(json.loads(connection.hget('bucket-accounts', account)))
     size = int(float(connection.hget('bucket-sizes', bid)))
     s3 = session.client('s3', region_name=region, config=s3config)
 
     strategy = get_partition_strategy(strategy)
     strategy.limit = limit
     strategy.partition = partition
-    (contents_key,
-     contents_method,
-     continue_tokens) = BUCKET_OBJ_DESC[versioned]
+    (contents_key, contents_method, continue_tokens) = BUCKET_OBJ_DESC[versioned]
     prefix_queue = strategy.initialize_prefixes(prefix_set)
 
     keyset = []
     log.info(
         "Process partition bid:%s strategy:%s delimiter:%s queue:%d limit:%d",
-        bid, strategy.__class__.__name__[0], partition,
-        len(prefix_queue), limit)
+        bid,
+        strategy.__class__.__name__[0],
+        partition,
+        len(prefix_queue),
+        limit,
+    )
 
     def statm(prefix):
         return "keyset:%d queue:%d prefix:%s bucket:%s size:%d" % (
-            len(keyset), len(prefix_queue), prefix, bid, size)
+            len(keyset),
+            len(prefix_queue),
+            prefix,
+            bid,
+            size,
+        )
 
     while prefix_queue:
         connection.hincrby('bucket-partition', bid, 1)
@@ -654,8 +641,7 @@ def process_bucket_partitions(
         strategy.find_partitions(prefix_queue, results)
 
         # Do we have more than 1k keys at this level, continue iteration
-        continuation_params = {
-            k: results[k] for k in continue_tokens if k in results}
+        continuation_params = {k: results[k] for k in continue_tokens if k in results}
         if continuation_params:
             bp = int(connection.hget('bucket-partition', bid))
             log.info("Partition has 1k keys, %s %s", statm(prefix), bp)
@@ -663,15 +649,14 @@ def process_bucket_partitions(
                 log.info("Recursive detection")
                 return detect_partition_strategy(bid, prefix=prefix)
 
-            invoke(process_bucket_iterator, bid, prefix, delimiter=partition,
-                   **continuation_params)
+            invoke(process_bucket_iterator, bid, prefix, delimiter=partition, **continuation_params)
 
         # If the queue get too deep, then go parallel
         if len(prefix_queue) > PARTITION_QUEUE_THRESHOLD:
             log.info("Partition add friends, %s", statm(prefix))
             for s_prefix_set in chunks(
-                    prefix_queue[PARTITION_QUEUE_THRESHOLD - 1:],
-                    PARTITION_QUEUE_THRESHOLD - 1):
+                prefix_queue[PARTITION_QUEUE_THRESHOLD - 1 :], PARTITION_QUEUE_THRESHOLD - 1
+            ):
 
                 for s in list(s_prefix_set):
                     if strategy.is_depth_exceeded(prefix):
@@ -680,11 +665,15 @@ def process_bucket_partitions(
 
                 if not s_prefix_set:
                     continue
-                invoke(process_bucket_partitions,
-                       bid,
-                       prefix_set=s_prefix_set, partition=partition,
-                       strategy=strategy, limit=limit)
-            prefix_queue = prefix_queue[:PARTITION_QUEUE_THRESHOLD - 1]
+                invoke(
+                    process_bucket_partitions,
+                    bid,
+                    prefix_set=s_prefix_set,
+                    partition=partition,
+                    strategy=strategy,
+                    limit=limit,
+                )
+            prefix_queue = prefix_queue[: PARTITION_QUEUE_THRESHOLD - 1]
 
     if keyset:
         page = page_strip({contents_key: keyset}, versioned)
@@ -692,13 +681,12 @@ def process_bucket_partitions(
             invoke(process_keyset, bid, page)
 
 
-@job('bucket-inventory', timeout=DEFAULT_TTL, ttl=DEFAULT_TTL,
-     connection=connection, result_ttl=0)
+@job('bucket-inventory', timeout=DEFAULT_TTL, ttl=DEFAULT_TTL, connection=connection, result_ttl=0)
 def process_bucket_inventory(bid, inventory_bucket, inventory_prefix):
-    """Load last inventory dump and feed as key source.
-    """
-    log.info("Loading bucket %s keys from inventory s3://%s/%s",
-             bid, inventory_bucket, inventory_prefix)
+    """Load last inventory dump and feed as key source."""
+    log.info(
+        "Loading bucket %s keys from inventory s3://%s/%s", bid, inventory_bucket, inventory_prefix
+    )
     account, bucket = bid.split(':', 1)
     region = connection.hget('bucket-regions', bid)
     versioned = bool(int(connection.hget('bucket-versions', bid)))
@@ -707,12 +695,12 @@ def process_bucket_inventory(bid, inventory_bucket, inventory_prefix):
 
     # find any key visitors with inventory filtering
     account_info = json.loads(connection.hget('bucket-accounts', account))
-    ifilters = [v.inventory_filter for v
-                in get_key_visitors(account_info) if v.inventory_filter]
+    ifilters = [v.inventory_filter for v in get_key_visitors(account_info) if v.inventory_filter]
 
     with bucket_ops(bid, 'inventory'):
         page_iterator = load_bucket_inventory(
-            s3, inventory_bucket, inventory_prefix, versioned, ifilters)
+            s3, inventory_bucket, inventory_prefix, versioned, ifilters
+        )
         if page_iterator is None:
             log.info("bucket:%s could not find inventory" % bid)
             # case: inventory configured but not delivered yet
@@ -724,19 +712,21 @@ def process_bucket_inventory(bid, inventory_bucket, inventory_prefix):
             invoke(process_keyset, bid, page)
 
 
-@job('bucket-page-iterator', timeout=DEFAULT_TTL, ttl=DEFAULT_TTL,
-     connection=connection, result_ttl=0)
+@job(
+    'bucket-page-iterator',
+    timeout=DEFAULT_TTL,
+    ttl=DEFAULT_TTL,
+    connection=connection,
+    result_ttl=0,
+)
 def process_bucket_iterator(bid, prefix="", delimiter="", **continuation):
-    """Bucket pagination
-    """
-    log.info("Iterating keys bucket %s prefix %s delimiter %s",
-             bid, prefix, delimiter)
+    """Bucket pagination"""
+    log.info("Iterating keys bucket %s prefix %s delimiter %s", bid, prefix, delimiter)
 
     account, bucket = bid.split(':', 1)
     region = connection.hget('bucket-regions', bid)
     versioned = bool(int(connection.hget('bucket-versions', bid)))
-    session = get_session(
-        json.loads(connection.hget('bucket-accounts', account)))
+    session = get_session(json.loads(connection.hget('bucket-accounts', account)))
     s3 = session.client('s3', region_name=region, config=s3config)
 
     (contents_key, contents_method, _) = BUCKET_OBJ_DESC[versioned]
@@ -798,8 +788,9 @@ def filter_encrypted(ischema, kr):
     return kr[ischema['EncryptionStatus']].startswith('SSE')
 
 
-@job('bucket-keyset-scan', timeout=DEFAULT_TTL, ttl=DEFAULT_TTL,
-     connection=connection, result_ttl=0)
+@job(
+    'bucket-keyset-scan', timeout=DEFAULT_TTL, ttl=DEFAULT_TTL, connection=connection, result_ttl=0
+)
 def process_keyset(bid, key_set):
     account, bucket = bid.split(':', 1)
     region = connection.hget('bucket-regions', bid)
@@ -826,11 +817,12 @@ def process_keyset(bid, key_set):
             futures = {}
             for kchunk in chunks(key_set, 100):
                 for v in visitors:
-                    processor = (versioned and
-                        v.process_version or v.process_key)
-                    futures[w.submit(
-                        process_key_chunk, s3, bucket, kchunk,
-                        processor, bool(object_reporting))] = v.visitor_name
+                    processor = versioned and v.process_version or v.process_key
+                    futures[
+                        w.submit(
+                            process_key_chunk, s3, bucket, kchunk, processor, bool(object_reporting)
+                        )
+                    ] = v.visitor_name
 
             for f in as_completed(futures):
                 if f.exception():
@@ -940,10 +932,14 @@ def publish_object_records(bid, objects, reporting):
     record_prefix = reporting.get('record-prefix')
     key = "%s/%s/%s/%s.json" % (
         reporting.get('prefix').strip('/'),
-        record_prefix, bid, str(uuid4()))
+        record_prefix,
+        bid,
+        str(uuid4()),
+    )
     client.put_object(
         Bucket=bucket,
         Key=key,
         Body=dumps(objects),
         ACL="bucket-owner-full-control",
-        ServerSideEncryption="AES256")
+        ServerSideEncryption="AES256",
+    )

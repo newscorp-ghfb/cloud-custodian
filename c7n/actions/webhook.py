@@ -17,21 +17,21 @@ from .core import EventAction
 
 class Webhook(EventAction):
     """Calls a webhook with optional parameters and body
-       populated from JMESPath queries.
+    populated from JMESPath queries.
 
-        .. code-block:: yaml
+     .. code-block:: yaml
 
-          policies:
-            - name: call-webhook
-              resource: ec2
-              description: |
-                Call webhook with list of resource groups
-              actions:
-               - type: webhook
-                 url: http://foo.com
-                 query-params:
-                    resource_name: resource.name
-                    policy_name: policy.name
+       policies:
+         - name: call-webhook
+           resource: ec2
+           description: |
+             Call webhook with list of resource groups
+           actions:
+            - type: webhook
+              url: http://foo.com
+              query-params:
+                 resource_name: resource.name
+                 policy_name: policy.name
     """
 
     schema_alias = True
@@ -46,18 +46,12 @@ class Webhook(EventAction):
             'method': {'type': 'string', 'enum': ['PUT', 'POST', 'GET', 'PATCH', 'DELETE']},
             'query-params': {
                 "type": "object",
-                "additionalProperties": {
-                    "type": "string",
-                    "description": "query string values"
-                }
+                "additionalProperties": {"type": "string", "description": "query string values"},
             },
             'headers': {
                 "type": "object",
-                "additionalProperties": {
-                    "type": "string",
-                    "description": "header values"
-                }
-            }
+                "additionalProperties": {"type": "string", "description": "header values"},
+            },
         }
     )
 
@@ -80,7 +74,7 @@ class Webhook(EventAction):
             'execution_id': self.manager.ctx.execution_id,
             'execution_start': self.manager.ctx.start_time,
             'policy': self.manager.data,
-            'event': event
+            'event': event,
         }
 
         self.http = self._build_http_manager()
@@ -106,20 +100,19 @@ class Webhook(EventAction):
 
         try:
             res = self.http.request(
-                method=self.method,
-                url=prepared_url,
-                body=prepared_body,
-                headers=prepared_headers)
+                method=self.method, url=prepared_url, body=prepared_body, headers=prepared_headers
+            )
 
-            self.log.info("%s got response %s with URL %s" %
-                          (self.method, res.status, prepared_url))
+            self.log.info(
+                "%s got response %s with URL %s" % (self.method, res.status, prepared_url)
+            )
         except urllib3.exceptions.HTTPError as e:
             self.log.error("Error calling %s. Code: %s" % (prepared_url, e.reason))
 
     def _build_http_manager(self):
         pool_kwargs = {
             'cert_reqs': 'CERT_REQUIRED',
-            'ca_certs': certifi and certifi.where() or None
+            'ca_certs': certifi and certifi.where() or None,
         }
 
         proxy_url = utils.get_proxy_url(self.url)

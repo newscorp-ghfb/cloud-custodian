@@ -5,7 +5,6 @@ from c7n_azure.utils import RetentionPeriod
 
 
 class RetentionPeriodTest(BaseTest):
-
     def test_iso8601_duration_days(self):
         duration = RetentionPeriod.iso8601_duration(23, RetentionPeriod.Units.days)
         self.assertEqual(duration, "P23D")

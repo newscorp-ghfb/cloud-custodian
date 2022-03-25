@@ -12,12 +12,10 @@ from c7n.tags import RemoveTag, Tag, TagDelayedAction, TagActionFilter, universa
 
 @resources.register('message-broker')
 class MessageBroker(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'mq'
         enum_spec = ('list_brokers', 'BrokerSummaries', None)
-        detail_spec = (
-            'describe_broker', 'BrokerId', 'BrokerId', None)
+        detail_spec = ('describe_broker', 'BrokerId', 'BrokerId', None)
         cfn_type = 'AWS::AmazonMQ::Broker'
         id = 'BrokerId'
         arn = 'BrokerArn'
@@ -60,17 +58,14 @@ class MQSGFilter(SecurityGroupFilter):
 
 @MessageBroker.filter_registry.register('metrics')
 class MQMetrics(MetricsFilter):
-
     def get_dimensions(self, resource):
         # Fetching for Active broker instance only, https://amzn.to/2tLBhEB
-        return [{'Name': self.model.dimension,
-                 'Value': "{}-1".format(resource['BrokerName'])}]
+        return [{'Name': self.model.dimension, 'Value': "{}-1".format(resource['BrokerName'])}]
 
 
 @MessageBroker.action_registry.register('delete')
 class Delete(Action):
-    """Delete a set of message brokers
-    """
+    """Delete a set of message brokers"""
 
     schema = type_schema('delete')
     permissions = ("mq:DeleteBroker",)
@@ -109,8 +104,8 @@ class TagMessageBroker(Tag):
         for r in mq:
             try:
                 client.create_tags(
-                    ResourceArn=r['BrokerArn'],
-                    Tags={t['Key']: t['Value'] for t in new_tags})
+                    ResourceArn=r['BrokerArn'], Tags={t['Key']: t['Value'] for t in new_tags}
+                )
             except client.exceptions.ResourceNotFound:
                 continue
 
@@ -167,7 +162,6 @@ class MarkForOpMessageBroker(TagDelayedAction):
 
 @resources.register('message-config')
 class MessageConfig(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'mq'
         enum_spec = ('list_configurations', 'Configurations', None)

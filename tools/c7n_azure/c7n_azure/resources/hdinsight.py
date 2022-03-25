@@ -55,7 +55,7 @@ class Hdinsight(ArmResourceManager):
             'location',
             'resourceGroup',
             'properties.clusterDefinition.kind',
-            'properties.tier'
+            'properties.tier',
         )
         resource_type = 'Microsoft.HDInsight/clusters'
 
@@ -86,18 +86,13 @@ class Resize(AzureBaseAction):
     """
 
     schema = type_schema(
-        'resize',
-        required=['count'],
-        **{
-            'count': {'type': 'integer', 'minimum': 1}
-        })
+        'resize', required=['count'], **{'count': {'type': 'integer', 'minimum': 1}}
+    )
 
     def _prepare_processing(self):
         self.client = self.manager.get_client()
 
     def _process_resource(self, cluster):
         self.client.clusters.begin_resize(
-            cluster['resourceGroup'],
-            cluster['name'],
-            target_instance_count=self.data['count']
+            cluster['resourceGroup'], cluster['name'], target_instance_count=self.data['count']
         )

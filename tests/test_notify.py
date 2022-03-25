@@ -13,7 +13,6 @@ from c7n.exceptions import PolicyValidationError
 
 
 class NotifyTest(BaseTest):
-
     @functional
     def test_notify_address_from(self):
         session_factory = self.replay_flight_data("test_notify_address_from")
@@ -63,9 +62,7 @@ class NotifyTest(BaseTest):
         resources = policy.run()
         self.assertEqual(policy.data.get("actions")[0].get("to"), ["to@example.com"])
         self.assertEqual(len(resources), 1)
-        messages = client.receive_message(
-            QueueUrl=queue_url, AttributeNames=["All"]
-        ).get(
+        messages = client.receive_message(QueueUrl=queue_url, AttributeNames=["All"]).get(
             "Messages", []
         )
         self.assertEqual(len(messages), 1)
@@ -87,40 +84,67 @@ class NotifyTest(BaseTest):
     def test_resource_prep(self):
         session_factory = self.record_flight_data("test_notify_resource_prep")
         policy = self.load_policy(
-            {"name": "notify-sns",
-             "resource": "ec2",
-             "actions": [
-                 {"type": "notify", "to": ["noone@example.com"],
-                  "transport": {"type": "sns", "topic": "zebra"}}]},
-            session_factory=session_factory)
+            {
+                "name": "notify-sns",
+                "resource": "ec2",
+                "actions": [
+                    {
+                        "type": "notify",
+                        "to": ["noone@example.com"],
+                        "transport": {"type": "sns", "topic": "zebra"},
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         self.assertEqual(
             policy.resource_manager.actions[0].prepare_resources(
-                [{'c7n:user-data': 'xyz', 'Id': 'i-123'}]),
-            [{'Id': 'i-123'}])
+                [{'c7n:user-data': 'xyz', 'Id': 'i-123'}]
+            ),
+            [{'Id': 'i-123'}],
+        )
 
         policy = self.load_policy(
-            {"name": "notify-sns",
-             "resource": "launch-config",
-             "actions": [
-                 {"type": "notify", "to": ["noone@example.com"],
-                  "transport": {"type": "sns", "topic": "zebra"}}]},
-            session_factory=session_factory)
+            {
+                "name": "notify-sns",
+                "resource": "launch-config",
+                "actions": [
+                    {
+                        "type": "notify",
+                        "to": ["noone@example.com"],
+                        "transport": {"type": "sns", "topic": "zebra"},
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         self.assertEqual(
             policy.resource_manager.actions[0].prepare_resources(
-                [{'UserData': 'xyz', 'Id': 'l-123'}]),
-            [{'Id': 'l-123'}])
+                [{'UserData': 'xyz', 'Id': 'l-123'}]
+            ),
+            [{'Id': 'l-123'}],
+        )
 
         policy = self.load_policy(
-            {"name": "notify-sns",
-             "resource": "asg",
-             "actions": [
-                 {"type": "notify", "to": ["noone@example.com"],
-                  "transport": {"type": "sns", "topic": "zebra"}}]},
-            session_factory=session_factory)
+            {
+                "name": "notify-sns",
+                "resource": "asg",
+                "actions": [
+                    {
+                        "type": "notify",
+                        "to": ["noone@example.com"],
+                        "transport": {"type": "sns", "topic": "zebra"},
+                    }
+                ],
+            },
+            session_factory=session_factory,
+        )
         self.assertEqual(
             policy.resource_manager.actions[0].prepare_resources(
-                [{'c7n:user-data': 'xyz', 'Id': 'a-123'}]),
-            [{'Id': 'a-123'}])
+                [{'c7n:user-data': 'xyz', 'Id': 'a-123'}]
+            ),
+            [{'Id': 'a-123'}],
+        )
 
     def test_sns_notify(self):
         session_factory = self.replay_flight_data("test_sns_notify_action")
@@ -161,11 +185,7 @@ class NotifyTest(BaseTest):
                 {
                     "type": "notify",
                     "to": ["noone@example.com"],
-                    "transport": {
-                        "type": "sns",
-                        "topic": topic,
-                        "attributes": {"mtype": "test"}
-                    },
+                    "transport": {"type": "sns", "topic": topic, "attributes": {"mtype": "test"}},
                 }
             ],
         }
@@ -181,17 +201,20 @@ class NotifyTest(BaseTest):
         ).get('Messages')
         self.assertFalse(messages)
 
-        subscription = sns.list_subscriptions_by_topic(
-            TopicArn=topic)['Subscriptions'][0]['Endpoint']
+        subscription = sns.list_subscriptions_by_topic(TopicArn=topic)['Subscriptions'][0][
+            'Endpoint'
+        ]
         self.assertEqual(subscription, 'arn:aws:sqs:us-east-1:644160558196:test-queue')
 
         self.load_policy(policy, session_factory=session_factory).run()
         if self.recording:
             time.sleep(20)
 
-        message_body = json.loads(sqs.receive_message(
-            QueueUrl='https://sqs.us-east-1.amazonaws.com/644160558196/test-queue'
-        ).get('Messages')[0]['Body'])
+        message_body = json.loads(
+            sqs.receive_message(
+                QueueUrl='https://sqs.us-east-1.amazonaws.com/644160558196/test-queue'
+            ).get('Messages')[0]['Body']
+        )
         self.assertTrue('mtype' in message_body['MessageAttributes'])
         self.assertTrue('good-attr' in message_body['MessageAttributes'])
 
@@ -210,7 +233,8 @@ class NotifyTest(BaseTest):
                             "type": "sqs",
                             "queue": (
                                 "https://sqs.us-west-2.amazonaws.com/"
-                                "619193117841/custodian-messages"),
+                                "619193117841/custodian-messages"
+                            ),
                         },
                     }
                 ],
@@ -226,13 +250,9 @@ class NotifyTest(BaseTest):
         session_factory = self.replay_flight_data("test_notify_region_var")
 
         ec2 = session_factory().resource("ec2")
-        instance = ec2.create_instances(ImageId="ami-6057e21a", MinCount=1, MaxCount=1)[
-            0
-        ].id
+        instance = ec2.create_instances(ImageId="ami-6057e21a", MinCount=1, MaxCount=1)[0].id
         ec2_client = session_factory().client("ec2")
-        ec2_client.create_tags(
-            Resources=[instance], Tags=[{"Key": "k1", "Value": "v1"}]
-        )
+        ec2_client.create_tags(Resources=[instance], Tags=[{"Key": "k1", "Value": "v1"}])
         self.addCleanup(ec2_client.terminate_instances, InstanceIds=[instance])
 
         sqs_client = session_factory().client("sqs")
@@ -268,9 +288,7 @@ class NotifyTest(BaseTest):
 
         messages = sqs_client.receive_message(
             QueueUrl=queue_url.format(**region_format), AttributeNames=["All"]
-        ).get(
-            "Messages", []
-        )
+        ).get("Messages", [])
         self.assertEqual(len(messages), 1)
         body = json.loads(zlib.decompress(base64.b64decode(messages[0]["Body"])))
         self.assertTrue("tag:k1" in body.get("resources")[0].get("c7n:MatchedFilters"))

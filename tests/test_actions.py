@@ -7,7 +7,6 @@ from .common import BaseTest
 
 
 class ActionTest(BaseTest):
-
     def test_process_unimplemented(self):
         self.assertRaises(NotImplementedError, Action().process, None)
 
@@ -18,11 +17,14 @@ class ActionTest(BaseTest):
         resources = [
             {'app': 'X', 'state': {'status': 'running'}},
             {'app': 'Y', 'state': {'status': 'stopped'}},
-            {'app': 'Z', 'state': {'status': 'running'}}]
-        assert {'X', 'Z'} == {r['app'] for r in a.filter_resources(
-            resources, 'state.status', ('running',))}
+            {'app': 'Z', 'state': {'status': 'running'}},
+        ]
+        assert {'X', 'Z'} == {
+            r['app'] for r in a.filter_resources(resources, 'state.status', ('running',))
+        }
         assert log_output.getvalue().strip() == (
-            'set-x implicitly filtered 2 of 3 resources key:state.status on running')
+            'set-x implicitly filtered 2 of 3 resources key:state.status on running'
+        )
 
     def test_run_api(self):
         resp = {
@@ -42,10 +44,8 @@ class ActionTest(BaseTest):
 
 
 class ActionRegistryTest(BaseTest):
-
     def test_error_bad_action_type(self):
-        self.assertRaises(
-            PolicyValidationError, ActionRegistry("test.actions").factory, {}, None)
+        self.assertRaises(PolicyValidationError, ActionRegistry("test.actions").factory, {}, None)
 
     def test_error_unregistered_action_type(self):
         self.assertRaises(

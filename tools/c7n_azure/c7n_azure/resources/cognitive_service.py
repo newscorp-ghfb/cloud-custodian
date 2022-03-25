@@ -34,10 +34,5 @@ class CognitiveService(ArmResourceManager):
         service = 'azure.mgmt.cognitiveservices'
         client = 'CognitiveServicesManagementClient'
         enum_spec = ('accounts', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name')
         resource_type = 'Microsoft.CognitiveServices/accounts'

@@ -5,8 +5,11 @@ import logging
 import re
 import time
 
-from azure.mgmt.eventgrid.models import \
-    StorageQueueEventSubscriptionDestination, StringInAdvancedFilter, EventSubscriptionFilter
+from azure.mgmt.eventgrid.models import (
+    StorageQueueEventSubscriptionDestination,
+    StringInAdvancedFilter,
+    EventSubscriptionFilter,
+)
 import jmespath
 
 from c7n_azure.azure_events import AzureEvents, AzureEventSubscription
@@ -16,7 +19,8 @@ from c7n_azure.constants import (
     AUTH_TYPE_UAI,
     FUNCTION_EVENT_TRIGGER_MODE,
     FUNCTION_TIME_TRIGGER_MODE,
-    RESOURCE_GROUPS_TYPE)
+    RESOURCE_GROUPS_TYPE,
+)
 from c7n_azure.function_package import FunctionPackage
 from c7n_azure.functionapp_utils import FunctionAppUtilities
 from c7n_azure.resources.arm import ArmResourceManager
@@ -46,61 +50,67 @@ class AzureFunctionMode(ServerlessExecutionMode):
                         'type': 'object',
                         'additionalProperties': False,
                         'properties': {
-                            'type': {'enum': [AUTH_TYPE_MSI,
-                                              AUTH_TYPE_UAI,
-                                              AUTH_TYPE_EMBED]},
+                            'type': {'enum': [AUTH_TYPE_MSI, AUTH_TYPE_UAI, AUTH_TYPE_EMBED]},
                             'id': {'type': 'string'},
                         },
                     },
                     'appInsights': {
                         'oneOf': [
                             {'type': 'string'},
-                            {'type': 'object',
-                             'additionalProperties': False,
-                             'properties': {
-                                 'name': {'type': 'string'},
-                                 'location': {'type': 'string'},
-                                 'resourceGroupName': {'type': 'string'}}}
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'name': {'type': 'string'},
+                                    'location': {'type': 'string'},
+                                    'resourceGroupName': {'type': 'string'},
+                                },
+                            },
                         ]
                     },
                     'storageAccount': {
                         'oneOf': [
                             {'type': 'string'},
-                            {'type': 'object',
-                             'additionalProperties': False,
-                             'properties': {
-                                 'name': {'type': 'string'},
-                                 'location': {'type': 'string'},
-                                 'resourceGroupName': {'type': 'string'}}}
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'name': {'type': 'string'},
+                                    'location': {'type': 'string'},
+                                    'resourceGroupName': {'type': 'string'},
+                                },
+                            },
                         ]
                     },
                     'servicePlan': {
                         'oneOf': [
                             {'type': 'string'},
-                            {'type': 'object',
-                             'additionalProperties': False,
-                             'properties': {
-                                 'name': {'type': 'string'},
-                                 'location': {'type': 'string'},
-                                 'resourceGroupName': {'type': 'string'},
-                                 'skuTier': {'type': 'string'},
-                                 'skuName': {'type': 'string'},
-                                 'autoScale': {
-                                     'type': 'object',
-                                     'additionalProperties': False,
-                                     'properties': {
-                                         'enabled': {'type': 'boolean'},
-                                         'minCapacity': {'type': 'string'},
-                                         'maxCapacity': {'type': 'string'},
-                                         'defaultCapacity': {'type': 'string'}
-                                     }
-                                 }
-                             }}
+                            {
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'properties': {
+                                    'name': {'type': 'string'},
+                                    'location': {'type': 'string'},
+                                    'resourceGroupName': {'type': 'string'},
+                                    'skuTier': {'type': 'string'},
+                                    'skuName': {'type': 'string'},
+                                    'autoScale': {
+                                        'type': 'object',
+                                        'additionalProperties': False,
+                                        'properties': {
+                                            'enabled': {'type': 'boolean'},
+                                            'minCapacity': {'type': 'string'},
+                                            'maxCapacity': {'type': 'string'},
+                                            'defaultCapacity': {'type': 'string'},
+                                        },
+                                    },
+                                },
+                            },
                         ]
                     },
                 },
             },
-            'execution-options': {'type': 'object'}
+            'execution-options': {'type': 'object'},
         },
     }
 
@@ -119,18 +129,19 @@ class AzureFunctionMode(ServerlessExecutionMode):
 
     def validate(self):
         super().validate()
-        identity = jmespath.search(
-            'mode."provision-options".identity', self.policy.data)
-        if (identity and identity['type'] == AUTH_TYPE_UAI and
-                'id' not in identity):
+        identity = jmespath.search('mode."provision-options".identity', self.policy.data)
+        if identity and identity['type'] == AUTH_TYPE_UAI and 'id' not in identity:
             raise PolicyValidationError(
-                "policy:%s user assigned identity requires specifying id" % (
-                    self.policy.name))
+                "policy:%s user assigned identity requires specifying id" % (self.policy.name)
+            )
         if not identity or identity['type'] == AUTH_TYPE_EMBED:
-            self.log.error((
-                'policy:%s function policies should use UserAssigned Identities '
-                'see https://cloudcustodian.io/docs/azure/configuration/functionshosting.html#authentication-options'), # noqa
-                self.policy.name)
+            self.log.error(
+                (
+                    'policy:%s function policies should use UserAssigned Identities '
+                    'see https://cloudcustodian.io/docs/azure/configuration/functionshosting.html#authentication-options'
+                ),  # noqa
+                self.policy.name,
+            )
 
     def get_function_app_params(self):
         session = local_session(self.policy.session_factory)
@@ -150,9 +161,10 @@ class AzureFunctionMode(ServerlessExecutionMode):
                     'enabled': False,
                     'min_capacity': 1,
                     'max_capacity': 2,
-                    'default_capacity': 1
-                }
-            })
+                    'default_capacity': 1,
+                },
+            },
+        )
 
         # Metadata used for automatic naming
         location = service_plan.get('location', 'eastus')
@@ -170,20 +182,19 @@ class AzureFunctionMode(ServerlessExecutionMode):
             {
                 'name': self.default_storage_name + storage_suffix,
                 'location': location,
-                'resource_group_name': rg_name
-            })
+                'resource_group_name': rg_name,
+            },
+        )
 
         app_insights = AzureFunctionMode.extract_properties(
             provision_options,
             'appInsights',
-            {
-                'name': service_plan['name'],
-                'location': location,
-                'resource_group_name': rg_name
-            })
+            {'name': service_plan['name'], 'location': location, 'resource_group_name': rg_name},
+        )
 
-        function_app_name = FunctionAppUtilities.get_function_name(self.policy_name,
-            function_suffix)
+        function_app_name = FunctionAppUtilities.get_function_name(
+            self.policy_name, function_suffix
+        )
 
         FunctionAppUtilities.validate_function_name(function_app_name)
         params = FunctionAppUtilities.FunctionAppInfrastructureParameters(
@@ -193,13 +204,15 @@ class AzureFunctionMode(ServerlessExecutionMode):
             function_app={
                 'name': function_app_name,
                 'resource_group_name': service_plan['resource_group_name'],
-                'identity': self._get_identity(session)})
+                'identity': self._get_identity(session),
+            },
+        )
         return params
 
     def _get_identity(self, session):
-        identity = jmespath.search(
-            'mode."provision-options".identity', self.policy.data) or {
-                'type': AUTH_TYPE_EMBED}
+        identity = jmespath.search('mode."provision-options".identity', self.policy.data) or {
+            'type': AUTH_TYPE_EMBED
+        }
         if identity['type'] != AUTH_TYPE_UAI:
             return identity
 
@@ -221,8 +234,9 @@ class AzureFunctionMode(ServerlessExecutionMode):
                 break
         if not found:
             raise PolicyExecutionError(
-                "policy:%s Could not find the user assigned identity %s" % (
-                    self.policy.name, identity['id']))
+                "policy:%s Could not find the user assigned identity %s"
+                % (self.policy.name, identity['id'])
+            )
         identity['id'] = found.id
         identity['client_id'] = found.client_id
         return identity
@@ -241,8 +255,9 @@ class AzureFunctionMode(ServerlessExecutionMode):
             for key in properties.keys():
                 value = settings.get(StringUtils.snake_to_camel(key), properties[key])
                 if isinstance(value, dict):
-                    result[key] = \
-                        AzureFunctionMode.extract_properties({'v': value}, 'v', properties[key])
+                    result[key] = AzureFunctionMode.extract_properties(
+                        {'v': value}, 'v', properties[key]
+                    )
                 else:
                     result[key] = value
 
@@ -255,9 +270,10 @@ class AzureFunctionMode(ServerlessExecutionMode):
     def provision(self):
         # Make sure we have auth data for function provisioning
         session = local_session(self.policy.session_factory)
-        if jmespath.search(
-                'mode."provision-options".identity.type',
-                self.policy.data) in (AUTH_TYPE_EMBED, None):
+        if jmespath.search('mode."provision-options".identity.type', self.policy.data) in (
+            AUTH_TYPE_EMBED,
+            None,
+        ):
             session.get_functions_auth_string("")
 
         self.target_subscription_ids = session.get_function_target_subscription_ids()
@@ -270,18 +286,18 @@ class AzureFunctionMode(ServerlessExecutionMode):
         raise NotImplementedError("subclass responsibility")
 
     def build_functions_package(self, queue_name=None, target_subscription_ids=None):
-        self.log.info(
-            "Building function package for %s",
-            self.function_params.function_app['name'])
+        self.log.info("Building function package for %s", self.function_params.function_app['name'])
 
-        requirements = generate_requirements('c7n-azure',
-                                             ignore=['boto3', 'botocore', 'pywin32'],
-                                             exclude='c7n')
+        requirements = generate_requirements(
+            'c7n-azure', ignore=['boto3', 'botocore', 'pywin32'], exclude='c7n'
+        )
         package = FunctionPackage(self.policy_name, target_sub_ids=target_subscription_ids)
-        package.build(self.policy.data,
-                      modules=['c7n', 'c7n-azure'],
-                      requirements=requirements,
-                      queue_name=queue_name)
+        package.build(
+            self.policy.data,
+            modules=['c7n', 'c7n-azure'],
+            requirements=requirements,
+            queue_name=queue_name,
+        )
         package.close()
 
         self.log.info("Function package built, size is %dKB" % (package.pkg.size / 1024))
@@ -289,7 +305,7 @@ class AzureFunctionMode(ServerlessExecutionMode):
 
 
 class AzureModeCommon:
-    """ Utility methods shared across a variety of modes """
+    """Utility methods shared across a variety of modes"""
 
     @staticmethod
     def extract_resource_id(policy, event):
@@ -307,8 +323,9 @@ class AzureModeCommon:
             types = expected_type.split('/')
 
             types_regex = '/'.join([t + '/[^/]+' for t in types[1:]])
-            extract_regex = '/subscriptions/[^/]+/resourceGroups/[^/]+/providers/{0}/{1}'\
-                .format(types[0], types_regex)
+            extract_regex = '/subscriptions/[^/]+/resourceGroups/[^/]+/providers/{0}/{1}'.format(
+                types[0], types_regex
+            )
 
         return re.search(extract_regex, event['subject'], re.IGNORECASE).group()
 
@@ -318,46 +335,46 @@ class AzureModeCommon:
 
         with policy.ctx:
             resources = policy.resource_manager.get_resources(
-                [AzureModeCommon.extract_resource_id(policy, event)])
+                [AzureModeCommon.extract_resource_id(policy, event)]
+            )
 
-            resources = policy.resource_manager.filter_resources(
-                resources, event)
+            resources = policy.resource_manager.filter_resources(resources, event)
 
         with policy.ctx:
             rt = time.time() - s
 
             policy.ctx.metrics.put_metric(
-                'ResourceCount', len(resources), 'Count', Scope="Policy",
-                buffer=False)
-            policy.ctx.metrics.put_metric(
-                "ResourceTime", rt, "Seconds", Scope="Policy")
-            policy._write_file(
-                'resources.json', utils.dumps(resources, indent=2))
+                'ResourceCount', len(resources), 'Count', Scope="Policy", buffer=False
+            )
+            policy.ctx.metrics.put_metric("ResourceTime", rt, "Seconds", Scope="Policy")
+            policy._write_file('resources.json', utils.dumps(resources, indent=2))
 
             if not resources:
                 policy.log.info(
-                    "policy: %s resources: %s no resources found" % (
-                        policy.name, policy.resource_type))
+                    "policy: %s resources: %s no resources found"
+                    % (policy.name, policy.resource_type)
+                )
                 return
 
             at = time.time()
             for action in policy.resource_manager.actions:
                 policy.log.info(
                     "policy: %s invoking action: %s resources: %d",
-                    policy.name, action.name, len(resources))
+                    policy.name,
+                    action.name,
+                    len(resources),
+                )
                 with policy.ctx.tracer.subsegment('action:%s' % action.type):
                     if isinstance(action, EventAction):
                         results = action.process(resources, event)
                     else:
                         results = action.process(resources)
                 try:
-                    policy._write_file(
-                        "action-%s" % action.name, utils.dumps(results))
+                    policy._write_file("action-%s" % action.name, utils.dumps(results))
                 except (TypeError, OverflowError):
                     pass
 
-        policy.ctx.metrics.put_metric(
-            "ActionTime", time.time() - at, "Seconds", Scope="Policy")
+        policy.ctx.metrics.put_metric("ActionTime", time.time() - at, "Seconds", Scope="Policy")
         return resources
 
 
@@ -365,20 +382,25 @@ class AzureModeCommon:
 class AzurePeriodicMode(AzureFunctionMode, PullMode):
     """A policy that runs/executes in azure functions at specified
     time intervals."""
+
     # Based on NCRONTAB used by Azure Functions:
     # https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer
-    schedule_regex = (r'^\s?([0-5]?[0-9]|\,|(\*\/)|\-)+ '
-                      r'(\*|[0-5]?[0-9]|\,|\/|\-)+ '
-                      r'(\*|[0-9]|(1[0-9])|(2[0-3])|\,|\/|\-)+ '
-                      r'(\*|[1-9]|([1-2][0-9])|(3[0-1])|\,|\*\/|\-)+ '
-                      r'([Jj](an|anuary)|[Ff](eb|ebruary)|[Mm](ar|arch)|[Aa](pr|pril)|[Mm]ay|'
-                      r'[Jj](un|une)|[Jj](ul|uly)|[Aa](ug|ugust)|[Ss](ep|eptember)|[Oo](ct'
-                      r'|ctober)|[Nn](ov|ovember)|[Dd](ec|ecember)|\,|\*\/|[1-9]|(1[0-2])|\*)+ '
-                      r'([Mm](on|onday)|[Tt](u|ue|ues|uesday)|[Ww](ed|ednesday)|[Tt](hu|hursday)|'
-                      r'[Ff](ri|riday)|[Ss](at|aturday)|[Ss](un|unday)|[0-6]|\,|\*|\-)+\s?$')
-    schema = utils.type_schema(FUNCTION_TIME_TRIGGER_MODE,
-                               schedule={'type': 'string', 'pattern': schedule_regex},
-                               rinherit=AzureFunctionMode.schema)
+    schedule_regex = (
+        r'^\s?([0-5]?[0-9]|\,|(\*\/)|\-)+ '
+        r'(\*|[0-5]?[0-9]|\,|\/|\-)+ '
+        r'(\*|[0-9]|(1[0-9])|(2[0-3])|\,|\/|\-)+ '
+        r'(\*|[1-9]|([1-2][0-9])|(3[0-1])|\,|\*\/|\-)+ '
+        r'([Jj](an|anuary)|[Ff](eb|ebruary)|[Mm](ar|arch)|[Aa](pr|pril)|[Mm]ay|'
+        r'[Jj](un|une)|[Jj](ul|uly)|[Aa](ug|ugust)|[Ss](ep|eptember)|[Oo](ct'
+        r'|ctober)|[Nn](ov|ovember)|[Dd](ec|ecember)|\,|\*\/|[1-9]|(1[0-2])|\*)+ '
+        r'([Mm](on|onday)|[Tt](u|ue|ues|uesday)|[Ww](ed|ednesday)|[Tt](hu|hursday)|'
+        r'[Ff](ri|riday)|[Ss](at|aturday)|[Ss](un|unday)|[0-6]|\,|\*|\-)+\s?$'
+    )
+    schema = utils.type_schema(
+        FUNCTION_TIME_TRIGGER_MODE,
+        schedule={'type': 'string', 'pattern': schedule_regex},
+        rinherit=AzureFunctionMode.schema,
+    )
 
     def provision(self):
         super(AzurePeriodicMode, self).provision()
@@ -399,24 +421,34 @@ class AzureEventGridMode(AzureFunctionMode):
     """A policy that runs/executes in azure functions from an
     azure event."""
 
-    schema = utils.type_schema(FUNCTION_EVENT_TRIGGER_MODE,
-                               events={'type': 'array',
-                                    'maxItems': 5,
-                                    'items': {
-                                        'oneOf': [
-                                            {'type': 'string'},
-                                            {'type': 'object',
-                                                'required': ['resourceProvider', 'event'],
-                                                'properties': {
-                                                    'resourceProvider': {'type': 'string'},
-                                                    'event': {'type': 'string'}}}]}},
-                               required=['events'],
-                               rinherit=AzureFunctionMode.schema)
+    schema = utils.type_schema(
+        FUNCTION_EVENT_TRIGGER_MODE,
+        events={
+            'type': 'array',
+            'maxItems': 5,
+            'items': {
+                'oneOf': [
+                    {'type': 'string'},
+                    {
+                        'type': 'object',
+                        'required': ['resourceProvider', 'event'],
+                        'properties': {
+                            'resourceProvider': {'type': 'string'},
+                            'event': {'type': 'string'},
+                        },
+                    },
+                ]
+            },
+        },
+        required=['events'],
+        rinherit=AzureFunctionMode.schema,
+    )
 
     def __init__(self, policy):
         super(AzureEventGridMode, self).__init__(policy)
         self.subscribed_events = AzureEvents.get_event_operations(
-            self.policy.data['mode'].get('events', ()))
+            self.policy.data['mode'].get('events', ())
+        )
 
     def validate(self):
         super(AzureEventGridMode, self).validate()
@@ -427,7 +459,9 @@ class AzureEventGridMode(AzureFunctionMode):
         if not isinstance(self.policy.resource_manager, ArmResourceManager):
             raise PolicyValidationError(
                 'The policy resource, {}, is not supported in event grid mode.'.format(
-                    self.policy.data['resource']))
+                    self.policy.data['resource']
+                )
+            )
 
     def _validate_event_matches_resource(self):
         resource_type = self.policy.resource_manager.resource_type.resource_type
@@ -436,7 +470,9 @@ class AzureEventGridMode(AzureFunctionMode):
                 if resource_type.lower() not in event.lower():
                     raise PolicyValidationError(
                         'The policy resource, {}, can not be triggered by the event, {}.'.format(
-                            resource_type, event))
+                            resource_type, event
+                        )
+                    )
 
     def provision(self):
         super(AzureEventGridMode, self).provision()
@@ -462,7 +498,8 @@ class AzureEventGridMode(AzureFunctionMode):
         storage_client = session.client('azure.mgmt.storage.StorageManagementClient')
         storage_account = storage_client.storage_accounts.get_properties(
             self.function_params.storage_account['resource_group_name'],
-            self.function_params.storage_account['name'])
+            self.function_params.storage_account['name'],
+        )
 
         try:
             StorageUtilities.create_queue_from_storage_account(storage_account, queue_name, session)
@@ -474,20 +511,25 @@ class AzureEventGridMode(AzureFunctionMode):
 
     def _create_event_subscription(self, storage_account, queue_name, session):
         self.log.info('Creating event grid subscription')
-        destination = StorageQueueEventSubscriptionDestination(resource_id=storage_account.id,
-                                                               queue_name=queue_name)
+        destination = StorageQueueEventSubscriptionDestination(
+            resource_id=storage_account.id, queue_name=queue_name
+        )
 
         # filter specific events
-        advance_filter = StringInAdvancedFilter(key='Data.OperationName',
-                                                values=self.subscribed_events)
+        advance_filter = StringInAdvancedFilter(
+            key='Data.OperationName', values=self.subscribed_events
+        )
         event_filter = EventSubscriptionFilter(advanced_filters=[advance_filter])
 
         for subscription_id in self.target_subscription_ids:
             try:
-                AzureEventSubscription.create(destination, queue_name,
-                                              subscription_id, session, event_filter)
-                self.log.info('Event grid subscription creation succeeded: subscription_id=%s' %
-                              subscription_id)
+                AzureEventSubscription.create(
+                    destination, queue_name, subscription_id, session, event_filter
+                )
+                self.log.info(
+                    'Event grid subscription creation succeeded: subscription_id=%s'
+                    % subscription_id
+                )
             except Exception:
                 self.log.exception('Event Subscription creation failed')
                 raise SystemExit

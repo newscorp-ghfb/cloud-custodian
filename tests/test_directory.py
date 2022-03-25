@@ -6,7 +6,6 @@ from .common import BaseTest, load_data
 
 
 class CloudDirectoryTest(BaseTest):
-
     def test_cloud_directory(self):
         session_factory = self.replay_flight_data("test_cloud_directory")
         client = session_factory().client("clouddirectory")
@@ -15,13 +14,9 @@ class CloudDirectoryTest(BaseTest):
         self.addCleanup(client.delete_schema, SchemaArn=schema_arn)
         schema_data = load_data("sample-clouddir-schema.json")
 
-        client.put_schema_from_json(
-            SchemaArn=schema_arn, Document=json.dumps(schema_data)
-        )
+        client.put_schema_from_json(SchemaArn=schema_arn, Document=json.dumps(schema_data))
 
-        published_schema = client.publish_schema(
-            DevelopmentSchemaArn=schema_arn, Version="1"
-        ).get(
+        published_schema = client.publish_schema(DevelopmentSchemaArn=schema_arn, Version="1").get(
             "PublishedSchemaArn"
         )
         self.addCleanup(client.delete_schema, SchemaArn=published_schema)
@@ -51,7 +46,6 @@ class CloudDirectoryTest(BaseTest):
 
 
 class DirectoryTests(BaseTest):
-
     def test_directory_tag(self):
         session_factory = self.replay_flight_data("test_directory_tag")
         client = session_factory().client("ds")
@@ -60,9 +54,7 @@ class DirectoryTests(BaseTest):
                 "name": "tag-directory",
                 "resource": "directory",
                 "filters": [{"tag:RequiredTag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "RequiredId", "value": "RequiredValue"}
-                ],
+                "actions": [{"type": "tag", "key": "RequiredId", "value": "RequiredValue"}],
             },
             session_factory=session_factory,
         )

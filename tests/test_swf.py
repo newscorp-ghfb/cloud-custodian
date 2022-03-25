@@ -17,7 +17,7 @@ class TestSimpleWorkflow(BaseTest):
                         "op": "eq",
                         "value": "test-custodian-swf-domain",
                     }
-                ]
+                ],
             },
             session_factory=session_factory,
         )

@@ -34,10 +34,5 @@ class IoTHub(ArmResourceManager):
         service = 'azure.mgmt.iothub'
         client = 'IotHubClient'
         enum_spec = ('iot_hub_resource', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.[name, tier, capacity]'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.[name, tier, capacity]')
         resource_type = 'Microsoft.Devices/IotHubs'

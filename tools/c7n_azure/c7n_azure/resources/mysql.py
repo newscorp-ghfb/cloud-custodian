@@ -32,9 +32,5 @@ class MySQL(ArmResourceManager):
         service = 'azure.mgmt.rdbms.mysql'
         client = 'MySQLManagementClient'
         enum_spec = ('servers', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.DBForMySQL/servers'

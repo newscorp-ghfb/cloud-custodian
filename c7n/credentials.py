@@ -15,12 +15,10 @@ from c7n.utils import get_retry
 
 # we still have some issues (see #5023) to work through to switch to
 # default regional endpoints, for now its opt-in.
-USE_STS_REGIONAL = os.environ.get(
-    'C7N_USE_STS_REGIONAL', '').lower() in ('yes', 'true')
+USE_STS_REGIONAL = os.environ.get('C7N_USE_STS_REGIONAL', '').lower() in ('yes', 'true')
 
 
 class SessionFactory:
-
     def __init__(self, region, profile=None, assume_role=None, external_id=None):
         self.region = region
         self.profile = profile
@@ -29,8 +27,7 @@ class SessionFactory:
         self.user_agent_name = "CloudCustodian"
         self.session_name = "CloudCustodian"
         if 'C7N_SESSION_SUFFIX' in os.environ:
-            self.session_name = "%s@%s" % (
-                self.session_name, os.environ['C7N_SESSION_SUFFIX'])
+            self.session_name = "%s@%s" % (self.session_name, os.environ['C7N_SESSION_SUFFIX'])
         self._subscribers = []
 
     def _set_policy_name(self, name):
@@ -42,11 +39,14 @@ class SessionFactory:
         if self.assume_role and assume:
             session = Session(profile_name=self.profile)
             session = assumed_session(
-                self.assume_role, self.session_name, session,
-                region or self.region, self.external_id)
+                self.assume_role,
+                self.session_name,
+                session,
+                region or self.region,
+                self.external_id,
+            )
         else:
-            session = Session(
-                region_name=region or self.region, profile_name=self.profile)
+            session = Session(region_name=region or self.region, profile_name=self.profile)
 
         return self.update(session)
 
@@ -90,20 +90,20 @@ def assumed_session(role_arn, session_name, session=None, region=None, external_
         if external_id is not None:
             parameters['ExternalId'] = external_id
 
-        credentials = retry(
-            get_sts_client(
-                session, region).assume_role, **parameters)['Credentials']
+        credentials = retry(get_sts_client(session, region).assume_role, **parameters)[
+            'Credentials'
+        ]
         return dict(
             access_key=credentials['AccessKeyId'],
             secret_key=credentials['SecretAccessKey'],
             token=credentials['SessionToken'],
             # Silly that we basically stringify so it can be parsed again
-            expiry_time=credentials['Expiration'].isoformat())
+            expiry_time=credentials['Expiration'].isoformat(),
+        )
 
     session_credentials = RefreshableCredentials.create_from_metadata(
-        metadata=refresh(),
-        refresh_using=refresh,
-        method='sts-assume-role')
+        metadata=refresh(), refresh_using=refresh, method='sts-assume-role'
+    )
 
     # so dirty.. it hurts, no clean way to set this outside of the
     # internals poke. There's some work upstream on making this nicer
@@ -132,5 +132,4 @@ def get_sts_client(session, region):
     else:
         endpoint_url = None
         region_name = None
-    return session.client(
-        'sts', endpoint_url=endpoint_url, region_name=region_name)
+    return session.client('sts', endpoint_url=endpoint_url, region_name=region_name)

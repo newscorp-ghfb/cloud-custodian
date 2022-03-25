@@ -30,7 +30,8 @@ class CrossAccountDomain(CrossAccountAccessFilter):
             result = self.manager.retry(
                 client.get_domain_permissions_policy,
                 domain=r['domainName'],
-                ignore_err_codes=('ResourceNotFoundException',))
+                ignore_err_codes=('ResourceNotFoundException',),
+            )
             r[self.policy_attribute] = result['policy']['document']
         return super().process(resources)
 
@@ -57,10 +58,13 @@ class DeleteDomain(Action):
           actions:
              - delete
     """
+
     schema = type_schema('delete', force={'type': 'boolean'})
-    permissions = ('codeartifact:DeleteDomain',
-                   'codeartifact:DeleteRepository',
-                   'codeartifact:ListRepositoriesInDomain')
+    permissions = (
+        'codeartifact:DeleteDomain',
+        'codeartifact:DeleteRepository',
+        'codeartifact:ListRepositoriesInDomain',
+    )
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('codeartifact')
@@ -86,21 +90,23 @@ class DeleteDomain(Action):
                 client.delete_repository,
                 domain=domain['name'],
                 repository=r['name'],
-                ignore_err_codes=('ResourceNotFoundException',))
+                ignore_err_codes=('ResourceNotFoundException',),
+            )
 
 
 class DescribeRepo(DescribeSource):
-
     def augment(self, resources):
         client = local_session(self.manager.session_factory).client(
-            self.manager.resource_type.service)
+            self.manager.resource_type.service
+        )
         results = []
         for r in resources:
             rdescribe = self.manager.retry(
                 client.describe_repository,
                 repository=r['name'],
                 domain=r['domainName'],
-                ignore_err_codes=('ResourceNotFoundException',))
+                ignore_err_codes=('ResourceNotFoundException',),
+            )
             if rdescribe:
                 results.append(rdescribe['repository'])
         return results
@@ -158,6 +164,7 @@ class DeleteRepo(Action):
           actions:
              - delete
     """
+
     schema = type_schema('delete')
     permissions = ('codeartifact:DeleteRepository',)
 
@@ -168,4 +175,5 @@ class DeleteRepo(Action):
                 client.delete_repository,
                 domain=r['domainName'],
                 repository=r['name'],
-                ignore_err_codes=('ResourceNotFoundException',))
+                ignore_err_codes=('ResourceNotFoundException',),
+            )

@@ -7,7 +7,6 @@ from c7n.exceptions import PolicyValidationError
 
 
 class TestServiceCatalog(BaseTest):
-
     def test_portfolio_cross_account_remove_delete(self):
         session_factory = self.replay_flight_data("test_portfolio_cross_account_remove_delete")
         client = session_factory().client("servicecatalog")
@@ -20,18 +19,20 @@ class TestServiceCatalog(BaseTest):
                 "filters": [{"type": "cross-account"}],
                 "actions": [
                     {"type": "remove-shared-accounts", "accounts": "matched"},
-                    {"type": "delete"}
+                    {"type": "delete"},
                 ],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['Id'], 'port-t24m4nifknphk')
         if self.recording:
             time.sleep(10)
         portfolios = client.list_portfolios()
-        self.assertFalse('port-t24m4nifknphk' in [p.get(
-            'Id') for p in portfolios.get('PortfolioDetails')])
+        self.assertFalse(
+            'port-t24m4nifknphk' in [p.get('Id') for p in portfolios.get('PortfolioDetails')]
+        )
 
     def test_remove_accounts_validation_error(self):
         self.assertRaises(
@@ -41,16 +42,20 @@ class TestServiceCatalog(BaseTest):
                 "name": "catalog-portfolio-delete-shared-accounts",
                 "resource": "aws.catalog-portfolio",
                 "actions": [{"type": "remove-shared-accounts", "accounts": "matched"}],
-            }
+            },
         )
 
     def test_portfolio_remove_share_accountid(self):
         session_factory = self.replay_flight_data("test_portfolio_remove_share_accountid")
         client = session_factory().client("servicecatalog")
-        self.assertTrue('644160558196' in client.list_portfolio_access(
-            PortfolioId='port-srkytozjwbzpc').get('AccountIds'))
-        self.assertTrue('644160558196' in client.list_portfolio_access(
-            PortfolioId='port-cpxttnlqoph32').get('AccountIds'))
+        self.assertTrue(
+            '644160558196'
+            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get('AccountIds')
+        )
+        self.assertTrue(
+            '644160558196'
+            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get('AccountIds')
+        )
         p = self.load_policy(
             {
                 "name": "servicecatalog-portfolio-cross-account",
@@ -58,14 +63,19 @@ class TestServiceCatalog(BaseTest):
                 "filters": [{"type": "cross-account"}],
                 "actions": [{"type": "remove-shared-accounts", "accounts": ["644160558196"]}],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 2)
         self.assertTrue(r['Id'] in ['port-cpxttnlqoph32', 'port-srkytozjwbzpc'] for r in resources)
-        self.assertFalse('644160558196' in client.list_portfolio_access(
-            PortfolioId='port-srkytozjwbzpc').get('AccountIds'))
-        self.assertTrue('644160558196' in client.list_portfolio_access(
-            PortfolioId='port-cpxttnlqoph32').get('AccountIds'))
+        self.assertFalse(
+            '644160558196'
+            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get('AccountIds')
+        )
+        self.assertTrue(
+            '644160558196'
+            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get('AccountIds')
+        )
 
     def test_portfolio_cross_account_whitelist(self):
         session_factory = self.replay_flight_data("test_portfolio_cross_account_whitelist")
@@ -77,8 +87,9 @@ class TestServiceCatalog(BaseTest):
             {
                 "name": "servicecatalog-portfolio-cross-account",
                 "resource": "catalog-portfolio",
-                "filters": [{"type": "cross-account", "whitelist": ["644160558196"]}]
+                "filters": [{"type": "cross-account", "whitelist": ["644160558196"]}],
             },
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 0)

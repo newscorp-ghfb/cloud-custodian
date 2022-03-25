@@ -10,8 +10,7 @@ from c7n.utils import local_session, chunks
 
 @resources.register('health-event')
 class HealthEvents(QueryResourceManager):
-    """Query resource manager for AWS health events
-    """
+    """Query resource manager for AWS health events"""
 
     class resource_type(TypeInfo):
         service = 'health'
@@ -26,14 +25,20 @@ class HealthEvents(QueryResourceManager):
     permissions = (
         'health:DescribeEvents',
         'health:DescribeEventDetails',
-        'health:DescribeAffectedEntities')
+        'health:DescribeAffectedEntities',
+    )
 
     def __init__(self, ctx, data):
         super(HealthEvents, self).__init__(ctx, data)
         self.queries = QueryFilter.parse(
-            self.data.get('query', [
-                {'eventStatusCodes': 'open'},
-                {'eventTypeCategories': ['issue', 'accountNotification']}]))
+            self.data.get(
+                'query',
+                [
+                    {'eventStatusCodes': 'open'},
+                    {'eventTypeCategories': ['issue', 'accountNotification']},
+                ],
+            )
+        )
 
     def resource_query(self):
         qf = {}
@@ -61,25 +66,29 @@ class HealthEvents(QueryResourceManager):
         client = local_session(self.session_factory).client('health')
         for resource_set in chunks(resources, 10):
             event_map = {r['arn']: r for r in resource_set}
-            event_details = client.describe_event_details(
-                eventArns=list(event_map.keys()))['successfulSet']
+            event_details = client.describe_event_details(eventArns=list(event_map.keys()))[
+                'successfulSet'
+            ]
             for d in event_details:
-                event_map[d['event']['arn']][
-                    'Description'] = d['eventDescription']['latestDescription']
+                event_map[d['event']['arn']]['Description'] = d['eventDescription'][
+                    'latestDescription'
+                ]
 
-            event_arns = [r['arn'] for r in resource_set
-                          if r['eventTypeCategory'] != 'accountNotification']
+            event_arns = [
+                r['arn'] for r in resource_set if r['eventTypeCategory'] != 'accountNotification'
+            ]
 
             if not event_arns:
                 continue
             paginator = client.get_paginator('describe_affected_entities')
-            entities = list(itertools.chain(
-                *[p['entities']for p in paginator.paginate(
-                    filter={'eventArns': event_arns})]))
+            entities = list(
+                itertools.chain(
+                    *[p['entities'] for p in paginator.paginate(filter={'eventArns': event_arns})]
+                )
+            )
 
             for e in entities:
-                event_map[e.pop('eventArn')].setdefault(
-                    'AffectedEntities', []).append(e)
+                event_map[e.pop('eventArn')].setdefault('AffectedEntities', []).append(e)
 
         return resources
 
@@ -90,19 +99,17 @@ HEALTH_VALID_FILTERS = {
     'regions': str,
     'services': str,
     'eventStatusCodes': {'open', 'closed', 'upcoming'},
-    'eventTypeCodes': str
+    'eventTypeCodes': str,
 }
 
 
 class QueryFilter:
-
     @classmethod
     def parse(cls, data):
         results = []
         for d in data:
             if not isinstance(d, dict):
-                raise PolicyValidationError(
-                    "Health Query Filter Invalid structure %s" % d)
+                raise PolicyValidationError("Health Query Filter Invalid structure %s" % d)
             results.append(cls(d).validate())
         return results
 
@@ -113,20 +120,19 @@ class QueryFilter:
 
     def validate(self):
         if not len(list(self.data.keys())) == 1:
-            raise ValueError(
-                "Health Query Filter Invalid %s" % self.data)
+            raise ValueError("Health Query Filter Invalid %s" % self.data)
         self.key = list(self.data.keys())[0]
         self.value = list(self.data.values())[0]
 
         if self.key not in HEALTH_VALID_FILTERS:
-            raise PolicyValidationError(
-                "Health Query Filter invalid filter name %s" % (self.data))
+            raise PolicyValidationError("Health Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(
                 "Health Query Filters must have a value, use tag-key"
                 " w/ tag name as value for tag present checks"
-                " %s" % self.data)
+                " %s" % self.data
+            )
         return self
 
     def query(self):

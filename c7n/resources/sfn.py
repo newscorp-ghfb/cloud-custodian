@@ -22,9 +22,7 @@ class StepFunction(QueryResourceManager):
         cfn_type = 'AWS::StepFunctions::StateMachine'
         name = 'name'
         date = 'creationDate'
-        detail_spec = (
-            "describe_state_machine", "stateMachineArn",
-            'stateMachineArn', None)
+        detail_spec = ("describe_state_machine", "stateMachineArn", 'stateMachineArn', None)
 
     def augment(self, resources):
         resources = super().augment(resources)
@@ -71,20 +69,23 @@ class InvokeStepFunction(Action):
     schema = type_schema(
         'invoke-sfn',
         required=['state-machine'],
-        **{'state-machine': {'type': 'string'},
-           'batch-size': {'type': 'integer'},
-           'bulk': {'type': 'boolean'},
-           'policy': {'type': 'boolean'}})
+        **{
+            'state-machine': {'type': 'string'},
+            'batch-size': {'type': 'integer'},
+            'bulk': {'type': 'boolean'},
+            'policy': {'type': 'boolean'},
+        }
+    )
     schema_alias = True
     permissions = ('states:StartExecution',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('stepfunctions')
+        client = local_session(self.manager.session_factory).client('stepfunctions')
         arn = self.data['state-machine']
         if not arn.startswith('arn'):
             arn = 'arn:aws:states:{}:{}:stateMachine:{}'.format(
-                self.manager.config.region, self.manager.config.account_id, arn)
+                self.manager.config.region, self.manager.config.account_id, arn
+            )
 
         params = {'stateMachineArn': arn}
         pinput = {}
@@ -99,15 +100,15 @@ class InvokeStepFunction(Action):
         for arn, r in resource_set:
             pinput['resource'] = r
             params['input'] = dumps(pinput)
-            r['c7n:execution-arn'] = self.manager.retry(
-                client.start_execution, **params).get('executionArn')
+            r['c7n:execution-arn'] = self.manager.retry(client.start_execution, **params).get(
+                'executionArn'
+            )
 
     def invoke_batch(self, client, params, pinput, resource_set):
         for batch_rset in chunks(resource_set, self.data.get('batch-size', 250)):
             pinput['resources'] = [rarn for rarn, _ in batch_rset]
             params['input'] = dumps(pinput)
-            exec_arn = self.manager.retry(
-                client.start_execution, **params).get('executionArn')
+            exec_arn = self.manager.retry(client.start_execution, **params).get('executionArn')
             for _, r in resource_set:
                 r['c7n:execution-arn'] = exec_arn
 

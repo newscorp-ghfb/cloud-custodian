@@ -28,8 +28,7 @@ from c7n.config import Bag, Config
 
 
 C7N_VALIDATE = bool(os.environ.get("C7N_VALIDATE", ""))
-skip_if_not_validating = unittest.skipIf(
-    not C7N_VALIDATE, reason="We are not validating schemas.")
+skip_if_not_validating = unittest.skipIf(not C7N_VALIDATE, reason="We are not validating schemas.")
 functional = pytest.mark.functional
 
 C7N_FUNCTIONAL = strtobool(os.environ.get('C7N_FUNCTIONAL', 'no'))
@@ -46,7 +45,7 @@ class CustodianTestCore:
         raise NotImplementedError("subclass required")
 
     def write_policy_file(self, policy, format="yaml"):
-        """ Write a policy file to disk in the specified format.
+        """Write a policy file to disk in the specified format.
 
         Input a dictionary and a format. Valid formats are `yaml` and `json`
         Returns the file path.
@@ -63,7 +62,7 @@ class CustodianTestCore:
         return fh.name
 
     def get_temp_dir(self):
-        """ Return a temporary directory that will get cleaned up. """
+        """Return a temporary directory that will get cleaned up."""
         temp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, temp_dir)
         return temp_dir
@@ -73,32 +72,33 @@ class CustodianTestCore:
             self.context_output_dir = self.get_temp_dir()
             config = Config.empty(output_dir=self.context_output_dir)
         ctx = ExecutionContext(
-            session_factory, policy or Bag({
-                "name": "test-policy", "provider_name": "aws"}), config)
+            session_factory, policy or Bag({"name": "test-policy", "provider_name": "aws"}), config
+        )
         return ctx
 
     def load_policy(
-            self,
-            data,
-            config=None,
-            session_factory=None,
-            validate=C7N_VALIDATE,
-            output_dir='null://',
-            log_group='null://',
-            cache=False,
-            allow_deprecations=True,
+        self,
+        data,
+        config=None,
+        session_factory=None,
+        validate=C7N_VALIDATE,
+        output_dir='null://',
+        log_group='null://',
+        cache=False,
+        allow_deprecations=True,
     ):
         pdata = {'policies': [data]}
         if not (config and isinstance(config, Config)):
             config = self._get_policy_config(
-                log_group=log_group,
-                output_dir=output_dir,
-                cache=cache, **(config or {}))
+                log_group=log_group, output_dir=output_dir, cache=cache, **(config or {})
+            )
         collection = self.policy_loader.load_data(
-            pdata, validate=validate,
+            pdata,
+            validate=validate,
             file_uri="memory://test",
             session_factory=session_factory,
-            config=config)
+            config=config,
+        )
         # policy non schema validation is also lazy initialization
         [p.validate() for p in collection]
         if not allow_deprecations:
@@ -106,7 +106,8 @@ class CustodianTestCore:
                 r = deprecated.Report(p)
                 if r:
                     raise DeprecationError(
-                        f"policy {p.name} contains deprecated usage\n{r.format()}")
+                        f"policy {p.name} contains deprecated usage\n{r.format()}"
+                    )
         return list(collection)[0]
 
     def _get_policy_config(self, **kw):
@@ -167,12 +168,10 @@ class CustodianTestCore:
 
         for key, value in list(kwargs.items()):
             if value is None:
-                del (kwargs[key])
+                del kwargs[key]
         os.environ.update(kwargs)
 
-    def capture_logging(
-        self, name=None, level=logging.INFO, formatter=None, log_file=None
-    ):
+    def capture_logging(self, name=None, level=logging.INFO, formatter=None, log_file=None):
         if log_file is None:
             log_file = TextTestIO()
         log_handler = logging.StreamHandler(log_file)
@@ -197,8 +196,7 @@ class CustodianTestCore:
             assert expected_regex, "expected_regex must not be empty."
             expected_regex = re.compile(expected_regex)
         if not expected_regex.search(text):
-            standardMsg = "Regex didn't match: %r not found in %r" % (
-                expected_regex.pattern, text)
+            standardMsg = "Regex didn't match: %r not found in %r" % (expected_regex.pattern, text)
             # _formatMessage ensures the longMessage option is respected
             msg = self._formatMessage(msg, standardMsg)
             raise self.failureException(msg)
@@ -226,6 +224,7 @@ class _TestUtils(unittest.TestCase):
 
 class PyTestUtils(CustodianTestCore):
     """Pytest compatibile testing utils intended for use as fixture."""
+
     def __init__(self, request):
         self.request = request
 
@@ -240,7 +239,6 @@ class PyTestUtils(CustodianTestCore):
 
 
 class TestUtils(unittest.TestCase, CustodianTestCore):
-
     def tearDown(self):
         self.cleanUp()
 
@@ -250,7 +248,6 @@ class TestUtils(unittest.TestCase, CustodianTestCore):
 
 
 class TextTestIO(io.StringIO):
-
     def write(self, b):
 
         # print handles both str/bytes and unicode/str, but io.{String,Bytes}IO
@@ -270,9 +267,7 @@ real_datetime_class = datetime.datetime
 
 
 def mock_datetime_now(tgt, dt):
-
     class DatetimeSubclassMeta(type):
-
         @classmethod
         def __instancecheck__(mcs, obj):
             return isinstance(obj, real_datetime_class)

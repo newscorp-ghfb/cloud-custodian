@@ -19,15 +19,13 @@ log = logging.getLogger('c7n_gcp.query')
 
 
 class ResourceQuery:
-
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
     def filter(self, resource_manager, **params):
         m = resource_manager.resource_type
         session = local_session(self.session_factory)
-        client = session.client(
-            m.service, m.version, m.component)
+        client = session.client(m.service, m.version, m.component)
 
         # depends on resource scope
         if m.scope in ('project', 'zone'):
@@ -46,8 +44,7 @@ class ResourceQuery:
         enum_op, path, extra_args = m.enum_spec
         if extra_args:
             params.update(extra_args)
-        return self._invoke_client_enum(
-            client, enum_op, params, path)
+        return self._invoke_client_enum(client, enum_op, params, path)
 
     def _invoke_client_enum(self, client, enum_op, params, path):
         if client.supports_pagination(enum_op):
@@ -58,13 +55,11 @@ class ResourceQuery:
                     results.extend(page_items)
             return results
         else:
-            return jmespath.search(path,
-                client.execute_query(enum_op, verb_arguments=params))
+            return jmespath.search(path, client.execute_query(enum_op, verb_arguments=params))
 
 
 @sources.register('describe-gcp')
 class DescribeSource:
-
     def __init__(self, manager):
         self.manager = manager
         self.query = ResourceQuery(manager.session_factory)
@@ -84,8 +79,7 @@ class DescribeSource:
         component = m.component
         if '.' in component:
             component = component.split('.')[-1]
-        return ("%s.%s.%s" % (
-            m.perm_service or m.service, component, method),)
+        return ("%s.%s.%s" % (m.perm_service or m.service, component, method),)
 
     def augment(self, resources):
         return resources
@@ -94,8 +88,7 @@ class DescribeSource:
 @sources.register('inventory')
 class AssetInventory:
 
-    permissions = ("cloudasset.assets.searchAllResources",
-                   "cloudasset.assets.exportResource")
+    permissions = ("cloudasset.assets.searchAllResources", "cloudasset.assets.exportResource")
 
     def __init__(self, manager):
         self.manager = manager
@@ -118,13 +111,16 @@ class AssetInventory:
             rquery = {
                 'parent': query['scope'],
                 'contentType': 'RESOURCE',
-                'assetNames': [r['name'] for r in resource_set]}
+                'assetNames': [r['name'] for r in resource_set],
+            }
             for history_result in resource_client.execute_query(
-                    'batchGetAssetsHistory', rquery).get('assets', ()):
+                'batchGetAssetsHistory', rquery
+            ).get('assets', ()):
                 resource = history_result['asset']['resource']['data']
                 resource['c7n:history'] = {
                     'window': history_result['window'],
-                    'ancestors': history_result['asset']['ancestors']}
+                    'ancestors': history_result['asset']['ancestors'],
+                }
                 resources.append(resource)
         return resources
 
@@ -137,19 +133,17 @@ class AssetInventory:
 
 class QueryMeta(type):
     """metaclass to have consistent action/filter registry for new resources."""
+
     def __new__(cls, name, parents, attrs):
         if 'filter_registry' not in attrs:
-            attrs['filter_registry'] = FilterRegistry(
-                '%s.filters' % name.lower())
+            attrs['filter_registry'] = FilterRegistry('%s.filters' % name.lower())
         if 'action_registry' not in attrs:
-            attrs['action_registry'] = ActionRegistry(
-                '%s.actions' % name.lower())
+            attrs['action_registry'] = ActionRegistry('%s.actions' % name.lower())
 
         return super(QueryMeta, cls).__new__(cls, name, parents, attrs)
 
 
 class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
-
     def __init__(self, data, options):
         super(QueryResourceManager, self).__init__(data, options)
         self.source = self.get_source(self.source_type)
@@ -162,18 +156,20 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
 
     def get_client(self):
         return local_session(self.session_factory).client(
-            self.resource_type.service,
-            self.resource_type.version,
-            self.resource_type.component)
+            self.resource_type.service, self.resource_type.version, self.resource_type.component
+        )
 
     def get_model(self):
         return self.resource_type
 
     def get_cache_key(self, query):
-        return {'source_type': self.source_type, 'query': query,
-                'service': self.resource_type.service,
-                'version': self.resource_type.version,
-                'component': self.resource_type.component}
+        return {
+            'source_type': self.source_type,
+            'query': query,
+            'service': self.resource_type.service,
+            'version': self.resource_type.version,
+            'component': self.resource_type.component,
+        }
 
     def get_resource(self, resource_info):
         return self.resource_type.get(self.get_client(), resource_info)
@@ -201,8 +197,7 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
         return resources
 
     def check_resource_limit(self, selection_count, population_count):
-        """Check if policy's execution affects more resources then its limit.
-        """
+        """Check if policy's execution affects more resources then its limit."""
         p = self.ctx.policy
         max_resource_limits = MaxResourceLimit(p, selection_count, population_count)
         return max_resource_limits.check_resource_limits()
@@ -223,7 +218,8 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
                     "Resource:%s not available -> Service:%s not enabled on %s",
                     self.type,
                     self.resource_type.service,
-                    local_session(self.session_factory).get_default_project())
+                    local_session(self.session_factory).get_default_project(),
+                )
                 return []
             raise
 
@@ -232,7 +228,6 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
 
 
 class ChildResourceManager(QueryResourceManager):
-
     def get_resource(self, resource_info):
         child_instance = super(ChildResourceManager, self).get_resource(resource_info)
 
@@ -255,7 +250,7 @@ class ChildResourceManager(QueryResourceManager):
         parent_query = self.get_parent_resource_query()
         parent_resource_manager = self.get_resource_manager(
             resource_type=self.resource_type.parent_spec['resource'],
-            data=({'query': parent_query} if parent_query else {})
+            data=({'query': parent_query} if parent_query else {}),
         )
 
         for parent_instance in parent_resource_manager.resources():
@@ -294,13 +289,13 @@ class ChildResourceManager(QueryResourceManager):
 
 
 class TypeMeta(type):
-
     def __repr__(cls):
         return "<TypeInfo service:%s component:%s scope:%s version:%s>" % (
             cls.service,
             cls.component,
             cls.scope,
-            cls.version)
+            cls.version,
+        )
 
 
 class TypeInfo(metaclass=TypeMeta):
@@ -374,34 +369,37 @@ class GcpLocation:
     /apps.locations/list>`_ and list values containing the string names of the services
     the locations are available for.
     """
-    _locations = {'eur4': ['kms'],
-                  'global': ['kms'],
-                  'europe-west4': ['kms'],
-                  'asia-east2': ['appengine', 'kms'],
-                  'asia-east1': ['kms'],
-                  'asia': ['kms'],
-                  'europe-north1': ['kms'],
-                  'us-central1': ['kms'],
-                  'nam4': ['kms'],
-                  'asia-southeast1': ['kms'],
-                  'europe': ['kms'],
-                  'australia-southeast1': ['appengine', 'kms'],
-                  'us-central': ['appengine'],
-                  'asia-south1': ['appengine', 'kms'],
-                  'us-west1': ['kms'],
-                  'us-west2': ['appengine', 'kms'],
-                  'asia-northeast2': ['appengine', 'kms'],
-                  'asia-northeast1': ['appengine', 'kms'],
-                  'europe-west2': ['appengine', 'kms'],
-                  'europe-west3': ['appengine', 'kms'],
-                  'us-east4': ['appengine', 'kms'],
-                  'europe-west1': ['kms'],
-                  'europe-west6': ['appengine', 'kms'],
-                  'us': ['kms'],
-                  'us-east1': ['appengine', 'kms'],
-                  'northamerica-northeast1': ['appengine', 'kms'],
-                  'europe-west': ['appengine'],
-                  'southamerica-east1': ['appengine', 'kms']}
+
+    _locations = {
+        'eur4': ['kms'],
+        'global': ['kms'],
+        'europe-west4': ['kms'],
+        'asia-east2': ['appengine', 'kms'],
+        'asia-east1': ['kms'],
+        'asia': ['kms'],
+        'europe-north1': ['kms'],
+        'us-central1': ['kms'],
+        'nam4': ['kms'],
+        'asia-southeast1': ['kms'],
+        'europe': ['kms'],
+        'australia-southeast1': ['appengine', 'kms'],
+        'us-central': ['appengine'],
+        'asia-south1': ['appengine', 'kms'],
+        'us-west1': ['kms'],
+        'us-west2': ['appengine', 'kms'],
+        'asia-northeast2': ['appengine', 'kms'],
+        'asia-northeast1': ['appengine', 'kms'],
+        'europe-west2': ['appengine', 'kms'],
+        'europe-west3': ['appengine', 'kms'],
+        'us-east4': ['appengine', 'kms'],
+        'europe-west1': ['kms'],
+        'europe-west6': ['appengine', 'kms'],
+        'us': ['kms'],
+        'us-east1': ['appengine', 'kms'],
+        'northamerica-northeast1': ['appengine', 'kms'],
+        'europe-west': ['appengine'],
+        'southamerica-east1': ['appengine', 'kms'],
+    }
 
     @classmethod
     def get_service_locations(cls, service):
@@ -410,5 +408,8 @@ class GcpLocation:
 
         :param service: a string representing the name of a service locations are queried for
         """
-        return [location for location in GcpLocation._locations
-                if service in GcpLocation._locations[location]]
+        return [
+            location
+            for location in GcpLocation._locations
+            if service in GcpLocation._locations[location]
+        ]

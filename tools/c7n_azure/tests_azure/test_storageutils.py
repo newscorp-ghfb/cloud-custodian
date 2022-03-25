@@ -24,8 +24,9 @@ class StorageUtilsTest(BaseTest):
     def test_get_storage_client_by_uri(self):
         account = self.setup_account()
         url = "https://" + account.name + ".blob.core.windows.net/testcontainer/extrafolder"
-        blob_service, container_name, key_prefix = \
-            StorageUtilities.get_blob_client_by_uri(url, self.session)
+        blob_service, container_name, key_prefix = StorageUtilities.get_blob_client_by_uri(
+            url, self.session
+        )
         self.assertIsNotNone(blob_service)
         self.assertEqual(container_name, "testcontainer")
         self.assertEqual(key_prefix, "extrafolder")
@@ -33,10 +34,10 @@ class StorageUtilsTest(BaseTest):
     @arm_template('storage.json')
     def test_get_storage_client_by_uri_extra_directories(self):
         account = self.setup_account()
-        url = "https://" + account.name + \
-              ".blob.core.windows.net/testcontainer/extrafolder/foo/bar"
-        blob_service, container_name, key_prefix = \
-            StorageUtilities.get_blob_client_by_uri(url, self.session)
+        url = "https://" + account.name + ".blob.core.windows.net/testcontainer/extrafolder/foo/bar"
+        blob_service, container_name, key_prefix = StorageUtilities.get_blob_client_by_uri(
+            url, self.session
+        )
         self.assertIsNotNone(blob_service)
         self.assertEqual(container_name, "testcontainer")
         self.assertEqual(key_prefix, "extrafolder/foo/bar")
@@ -54,13 +55,15 @@ class StorageUtilsTest(BaseTest):
         account = self.setup_account()
         queue_name = 'testqueuecc'
 
-        queue = \
-            StorageUtilities.create_queue_from_storage_account(account, queue_name, self.session)
+        queue = StorageUtilities.create_queue_from_storage_account(
+            account, queue_name, self.session
+        )
 
         self.assertTrue(queue)
 
-        result = \
-            StorageUtilities.delete_queue_from_storage_account(account, queue_name, self.session)
+        result = StorageUtilities.delete_queue_from_storage_account(
+            account, queue_name, self.session
+        )
 
         self.assertTrue(result)
 
@@ -94,23 +97,29 @@ class StorageUtilsTest(BaseTest):
         data = StorageAccountListKeysResult()
         data.keys = [key1]
 
-        with patch(self._get_storage_client_string() + '.list_keys', return_value=data) \
-                as list_keys_mock:
+        with patch(
+            self._get_storage_client_string() + '.list_keys', return_value=data
+        ) as list_keys_mock:
             primary_key = StorageUtilities.get_storage_primary_key(
-                'mock_rg_group', 'mock_account', self.session)
+                'mock_rg_group', 'mock_account', self.session
+            )
             list_keys_mock.assert_called_with('mock_rg_group', 'mock_account', expand=None)
             self.assertEqual(primary_key, data.keys[0].value)
 
     def _get_storage_client_string(self):
-        client = local_session(Session)\
-            .client('azure.mgmt.storage.StorageManagementClient').storage_accounts
+        client = (
+            local_session(Session)
+            .client('azure.mgmt.storage.StorageManagementClient')
+            .storage_accounts
+        )
         return client.__module__ + '.' + client.__class__.__name__
 
     @patch('azure.storage.blob.BlobServiceClient.create_container')
     def test_get_blob_client_by_uri_china_cloud(self, mock_create):
         url = CHINA_STORAGE_ACCOUNT + "/testcontainer/extrafolder"
-        blob_service, container_name, key_prefix = \
-            StorageUtilities.get_blob_client_by_uri(url, Session(cloud_endpoints=AZURE_CHINA_CLOUD))
+        blob_service, container_name, key_prefix = StorageUtilities.get_blob_client_by_uri(
+            url, Session(cloud_endpoints=AZURE_CHINA_CLOUD)
+        )
         self.assertIsNotNone(blob_service)
         self.assertEqual(container_name, "testcontainer")
         self.assertEqual(key_prefix, "extrafolder")
@@ -120,12 +129,12 @@ class StorageUtilsTest(BaseTest):
     @patch('azure.storage.queue.QueueClient.create_queue')
     def test_get_queue_client_by_uri_china_cloud(self, mock_create):
         url = CHINA_STORAGE_ACCOUNT + "/queuename"
-        queue_service, queue_name =\
-            StorageUtilities.get_queue_client_by_uri(url,
-                                                     Session(cloud_endpoints=AZURE_CHINA_CLOUD))
+        queue_service, queue_name = StorageUtilities.get_queue_client_by_uri(
+            url, Session(cloud_endpoints=AZURE_CHINA_CLOUD)
+        )
         self.assertIsNotNone(queue_service)
         self.assertEqual(queue_name, "queuename")
         self.assertIn(
-            CHINA_STORAGE_ENDPOINT,
-            queue_service._get_service(queue_name).primary_endpoint)
+            CHINA_STORAGE_ENDPOINT, queue_service._get_service(queue_name).primary_endpoint
+        )
         self.assertTrue(mock_create.called_once())

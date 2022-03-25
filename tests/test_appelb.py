@@ -15,32 +15,29 @@ def test_serialize():
 
 
 class AppELBTest(BaseTest):
-
     def test_appelb_config_event(self):
         session_factory = self.replay_flight_data('test_appelb_config_event')
-        p = self.load_policy({
-            'name': 'appelb-checker',
-            'resource': 'app-elb',
-            'mode': {
-                'type': 'config-rule'}},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {'name': 'appelb-checker', 'resource': 'app-elb', 'mode': {'type': 'config-rule'}},
+            session_factory=session_factory,
+        )
         event = event_data("app-elb-config-event.json", "config")
         result = p.push(event, {})[0]
+        self.assertEqual(result['DNSName'], 'internal-test-288037075.us-east-1.elb.amazonaws.com')
         self.assertEqual(
-            result['DNSName'],
-            'internal-test-288037075.us-east-1.elb.amazonaws.com')
-        self.assertEqual(
-            result['Tags'],
-            [{'Key': 'App', 'Value': 'DevTest'},
-             {'Key': 'Env', 'Value': 'Dev'}])
+            result['Tags'], [{'Key': 'App', 'Value': 'DevTest'}, {'Key': 'Env', 'Value': 'Dev'}]
+        )
         self.assertEqual(
             result['Attributes'],
-            {'access_logs.s3.bucket': '',
-             'access_logs.s3.enabled': False,
-             'access_logs.s3.prefix': '',
-             'deletion_protection.enabled': False,
-             'idle_timeout.timeout_seconds': 60,
-             'routing.http2.enabled': True})
+            {
+                'access_logs.s3.bucket': '',
+                'access_logs.s3.enabled': False,
+                'access_logs.s3.prefix': '',
+                'deletion_protection.enabled': False,
+                'idle_timeout.timeout_seconds': 60,
+                'routing.http2.enabled': True,
+            },
+        )
 
     def test_appelb_config_source(self):
         event = event_data("app-elb.json", "config")
@@ -116,9 +113,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-simple-filter",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "alb-1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "alb-1"}],
             },
             session_factory=session_factory,
         )
@@ -266,9 +261,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-add-tag",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "alb-1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "alb-1"}],
                 "actions": [{"type": "tag", "key": "KEY42", "value": "VALUE99"}],
             },
             session_factory=session_factory,
@@ -283,9 +276,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-remove-tag",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "alb-1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "alb-1"}],
                 "actions": [{"type": "remove-tag", "tags": ["KEY42"]}],
             },
             session_factory=session_factory,
@@ -300,9 +291,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-mark-for-delete",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "alb-1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "alb-1"}],
                 "actions": [
                     {
                         "type": "mark-for-op",
@@ -324,9 +313,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-delete",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "alb-2"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "alb-2"}],
                 "actions": [{"type": "delete"}],
             },
             session_factory=session_factory,
@@ -349,9 +336,7 @@ class AppELBTest(BaseTest):
         )
         resources = p.run()
         arn = resources[0]["LoadBalancerArn"]
-        attributes = client.describe_load_balancer_attributes(LoadBalancerArn=arn)[
-            "Attributes"
-        ]
+        attributes = client.describe_load_balancer_attributes(LoadBalancerArn=arn)["Attributes"]
         for attribute in attributes:
             for key, value in attribute.items():
                 if "deletion_protection.enabled" in key:
@@ -371,8 +356,7 @@ class AppELBTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_appelb_modify_attributes(self):
-        session_factory = self.replay_flight_data(
-            "test_appelb_modify_attributes")
+        session_factory = self.replay_flight_data("test_appelb_modify_attributes")
         client = session_factory().client("elbv2")
         p = self.load_policy(
             {
@@ -399,18 +383,18 @@ class AppELBTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         arn = resources[0]["LoadBalancerArn"]
-        attrs = client.describe_load_balancer_attributes(
-            LoadBalancerArn=arn)["Attributes"]
+        attrs = client.describe_load_balancer_attributes(LoadBalancerArn=arn)["Attributes"]
         attrs = {obj['Key']: obj['Value'] for obj in attrs}
         assert attrs['deletion_protection.enabled'] == 'true'
 
     def test_appelb_waf_any(self):
         factory = self.replay_flight_data("test_appelb_waf")
-        p = self.load_policy({
-            "name": "appelb-waf",
-            "resource": "app-elb",
-            "filters": [
-                {"type": "waf-enabled", "state": False}]},
+        p = self.load_policy(
+            {
+                "name": "appelb-waf",
+                "resource": "app-elb",
+                "filters": [{"type": "waf-enabled", "state": False}],
+            },
             session_factory=factory,
         )
         resources = p.run()
@@ -424,9 +408,7 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-waf",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "waf-enabled", "web-acl": "test", "state": False}
-                ],
+                "filters": [{"type": "waf-enabled", "web-acl": "test", "state": False}],
                 "actions": [{"type": "set-waf", "web-acl": "test"}],
             },
             session_factory=factory,
@@ -437,47 +419,44 @@ class AppELBTest(BaseTest):
             {
                 "name": "appelb-waf",
                 "resource": "app-elb",
-                "filters": [
-                    {"type": "waf-enabled", "web-acl": "test", "state": True}
-                ],
+                "filters": [{"type": "waf-enabled", "web-acl": "test", "state": True}],
             },
             session_factory=factory,
         )
         post_resources = p.run()
-        self.assertEqual(
-            resources[0]["LoadBalancerArn"], post_resources[0]["LoadBalancerArn"]
-        )
+        self.assertEqual(resources[0]["LoadBalancerArn"], post_resources[0]["LoadBalancerArn"])
 
     def test_appelb_net_metrics(self):
         factory = self.replay_flight_data('test_netelb_metrics')
-        p = self.load_policy({
-            'name': 'netelb-metrics',
-            'resource': 'app-elb',
-            'filters': [
-                {'Type': 'network'},
-                {'type': 'metrics',
-                 'name': 'TCP_ELB_Reset_Count',
-                 'namespace': 'AWS/NetworkELB',
-                 'statistics': 'Sum',
-                 'value': 10,
-                 'op': 'greater-than',
-                 'days': 0.25}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'netelb-metrics',
+                'resource': 'app-elb',
+                'filters': [
+                    {'Type': 'network'},
+                    {
+                        'type': 'metrics',
+                        'name': 'TCP_ELB_Reset_Count',
+                        'namespace': 'AWS/NetworkELB',
+                        'statistics': 'Sum',
+                        'value': 10,
+                        'op': 'greater-than',
+                        'days': 0.25,
+                    },
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['LoadBalancerName'], 'nicnoc')
-        self.assertTrue(
-            'AWS/NetworkELB.TCP_ELB_Reset_Count.Sum' in resources[
-                0]['c7n.metrics'])
+        self.assertTrue('AWS/NetworkELB.TCP_ELB_Reset_Count.Sum' in resources[0]['c7n.metrics'])
 
 
 class AppELBHealthcheckProtocolMismatchTest(BaseTest):
-
     def test_appelb_healthcheck_protocol_mismatch_filter_good(self):
         self.patch(AppELB, "executor_factory", MainThreadExecutor)
-        session_factory = self.replay_flight_data(
-            "test_appelb_healthcheck_protocol_mismatch_good"
-        )
+        session_factory = self.replay_flight_data("test_appelb_healthcheck_protocol_mismatch_good")
         p = self.load_policy(
             {
                 "name": "appelb-healthcheck-protocol-mismatch-good",
@@ -491,9 +470,7 @@ class AppELBHealthcheckProtocolMismatchTest(BaseTest):
 
     def test_appelb_healthcheck_protocol_mismatch_filter_bad(self):
         self.patch(AppELB, "executor_factory", MainThreadExecutor)
-        session_factory = self.replay_flight_data(
-            "test_appelb_healthcheck_protocol_mismatch_bad"
-        )
+        session_factory = self.replay_flight_data("test_appelb_healthcheck_protocol_mismatch_bad")
         p = self.load_policy(
             {
                 "name": "appelb-healthcheck-protocol-mismatch-bad",
@@ -507,7 +484,6 @@ class AppELBHealthcheckProtocolMismatchTest(BaseTest):
 
 
 class AppELBTargetGroupTest(BaseTest):
-
     def test_appelb_target_group_simple(self):
         self.patch(AppELBTargetGroup, "executor_factory", MainThreadExecutor)
         session_factory = self.replay_flight_data("test_appelb_target_group_simple")
@@ -534,9 +510,7 @@ class AppELBTargetGroupTest(BaseTest):
 
     def test_appelb_target_group_default_vpc(self):
         self.patch(AppELBTargetGroup, "executor_factory", MainThreadExecutor)
-        session_factory = self.replay_flight_data(
-            "test_appelb_target_group_default_vpc"
-        )
+        session_factory = self.replay_flight_data("test_appelb_target_group_default_vpc")
         p = self.load_policy(
             {
                 "name": "appelb-target-group-default-vpc",
@@ -567,7 +541,6 @@ class AppELBTargetGroupTest(BaseTest):
 
 
 class TestAppElbLogging(BaseTest):
-
     def test_enable_s3_logging(self):
         session_factory = self.replay_flight_data("test_appelb_enable_s3_logging")
         policy = self.load_policy(
@@ -594,9 +567,7 @@ class TestAppElbLogging(BaseTest):
             t["Key"]: t["Value"]
             for t in client.describe_load_balancer_attributes(
                 LoadBalancerArn=resources[0]["LoadBalancerArn"]
-            ).get(
-                "Attributes"
-            )
+            ).get("Attributes")
         }
         self.assertEqual(
             attrs,
@@ -627,9 +598,7 @@ class TestAppElbLogging(BaseTest):
             t["Key"]: t["Value"]
             for t in client.describe_load_balancer_attributes(
                 LoadBalancerArn=resources[0]["LoadBalancerArn"]
-            ).get(
-                "Attributes"
-            )
+            ).get("Attributes")
         }
         self.assertEqual(
             attrs,
@@ -642,12 +611,12 @@ class TestAppElbLogging(BaseTest):
 
 
 class TestAppElbIsLoggingFilter(BaseTest):
-    """ replicate
-        - name: appelb-is-logging-to-bucket-test
-          resource: app-elb
-          filters:
-            - type: is-logging
-            bucket: elbv2logtest
+    """replicate
+    - name: appelb-is-logging-to-bucket-test
+      resource: app-elb
+      filters:
+        - type: is-logging
+        bucket: elbv2logtest
     """
 
     def test_is_logging_to_bucket(self):
@@ -663,13 +632,10 @@ class TestAppElbIsLoggingFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertGreater(
-            len(resources), 0, "Test should find appelbs logging " "to elbv2logtest"
-        )
+        self.assertGreater(len(resources), 0, "Test should find appelbs logging " "to elbv2logtest")
 
 
 class TestAppElbAttributesFilter(BaseTest):
-
     def test_nlb_is_cross_zone_load_balancing(self):
         session_factory = self.replay_flight_data("test_netelb_attributes_filter")
         policy = self.load_policy(
@@ -677,12 +643,12 @@ class TestAppElbAttributesFilter(BaseTest):
                 "name": "netelb-is-cross-zone-balancing",
                 "resource": "app-elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "load_balancing.cross_zone_enabled",
-                            "value": True,
-                            "op": "eq"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "load_balancing.cross_zone_enabled",
+                        "value": True,
+                        "op": "eq",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -701,12 +667,12 @@ class TestAppElbAttributesFilter(BaseTest):
                 "name": "netelb-is-not-cross-zone-balancing",
                 "resource": "app-elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "load_balancing.cross_zone_enabled",
-                            "value": False,
-                            "op": "eq"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "load_balancing.cross_zone_enabled",
+                        "value": False,
+                        "op": "eq",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -718,9 +684,7 @@ class TestAppElbAttributesFilter(BaseTest):
             len(resources), 1, "Test should find 1 net lb with cross zone load balancing disabled"
         )
 
-        self.assertEqual(
-            resources[0]['Attributes']['load_balancing.cross_zone_enabled'], False
-        )
+        self.assertEqual(resources[0]['Attributes']['load_balancing.cross_zone_enabled'], False)
 
     def test_alb_http2_is__enabled(self):
         session_factory = self.replay_flight_data("test_appelb_attributes_filter")
@@ -729,12 +693,12 @@ class TestAppElbAttributesFilter(BaseTest):
                 "name": "appelb-http2-is-enabled",
                 "resource": "app-elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "routing.http2.enabled",
-                            "value": True,
-                            "op": "eq"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "routing.http2.enabled",
+                        "value": True,
+                        "op": "eq",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -742,13 +706,9 @@ class TestAppElbAttributesFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 1, "Test should find 1 app lb with http2 enabled"
-        )
+        self.assertEqual(len(resources), 1, "Test should find 1 app lb with http2 enabled")
 
-        self.assertEqual(
-            resources[0]['Attributes']['routing.http2.enabled'], True
-        )
+        self.assertEqual(resources[0]['Attributes']['routing.http2.enabled'], True)
 
     def test_alb_http2_is_not_enabled(self):
         session_factory = self.replay_flight_data("test_appelb_attributes_filter")
@@ -757,12 +717,12 @@ class TestAppElbAttributesFilter(BaseTest):
                 "name": "appelb-http2-is-not-enabled",
                 "resource": "app-elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "routing.http2.enabled",
-                            "value": False,
-                            "op": "eq"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "routing.http2.enabled",
+                        "value": False,
+                        "op": "eq",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -770,9 +730,7 @@ class TestAppElbAttributesFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 0, "Test should find 0 app lb with http2 enabled"
-        )
+        self.assertEqual(len(resources), 0, "Test should find 0 app lb with http2 enabled")
 
     def test_alb_idle_timeout_below_60(self):
         session_factory = self.replay_flight_data("test_appelb_attributes_filter")
@@ -781,12 +739,12 @@ class TestAppElbAttributesFilter(BaseTest):
                 "name": "appelb-idle-timeout-is-below-60",
                 "resource": "app-elb",
                 "filters": [
-                        {
-                            "type": "attributes",
-                            "key": "idle_timeout.timeout_seconds",
-                            "value": 60,
-                            "op": "lt"
-                        }
+                    {
+                        "type": "attributes",
+                        "key": "idle_timeout.timeout_seconds",
+                        "value": 60,
+                        "op": "lt",
+                    }
                 ],
             },
             session_factory=session_factory,
@@ -794,22 +752,18 @@ class TestAppElbAttributesFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 1, "Test should find 1 app lb with idle timeout < 60s"
-        )
+        self.assertEqual(len(resources), 1, "Test should find 1 app lb with idle timeout < 60s")
 
-        self.assertLess(
-            resources[0]['Attributes']['idle_timeout.timeout_seconds'], 60
-        )
+        self.assertLess(resources[0]['Attributes']['idle_timeout.timeout_seconds'], 60)
 
 
 class TestAppElbIsNotLoggingFilter(BaseTest):
-    """ replicate
-        - name: appelb-is-not-logging-to-bucket-test
-          resource: app-elb
-          filters:
-            - type: is-not-logging
-            bucket: elbv2logtest
+    """replicate
+    - name: appelb-is-not-logging-to-bucket-test
+      resource: app-elb
+      filters:
+        - type: is-not-logging
+        bucket: elbv2logtest
     """
 
     def test_is_logging_to_bucket(self):
@@ -831,7 +785,6 @@ class TestAppElbIsNotLoggingFilter(BaseTest):
 
 
 class TestHealthEventsFilter(BaseTest):
-
     def test_rds_health_events_filter(self):
         session_factory = self.replay_flight_data("test_appelb_health_events_filter")
         policy = self.load_policy(
@@ -847,7 +800,6 @@ class TestHealthEventsFilter(BaseTest):
 
 
 class TestModifyVpcSecurityGroupsAction(BaseTest):
-
     def test_appelb_remove_matched_security_groups(self):
 
         # Test conditions:
@@ -856,9 +808,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #   - test checks name of ALB is correct and
         #   - that SGs change and are expected values
 
-        session_factory = self.replay_flight_data(
-            "test_appelb_remove_matched_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_appelb_remove_matched_security_groups")
 
         p = self.load_policy(
             {

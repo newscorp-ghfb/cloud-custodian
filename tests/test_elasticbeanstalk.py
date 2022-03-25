@@ -9,7 +9,6 @@ from time import sleep
 
 
 class ElasticBeanstalkEnvironment(BaseTest):
-
     def test_resource_manager(self):
         factory = self.replay_flight_data("test_elasticbeanstalk_describe_envs")
         p = self.load_policy(
@@ -63,7 +62,6 @@ class ElasticBeanstalkEnvironment(BaseTest):
 
 
 class EbEnvBaseTest(BaseTest):
-
     def query_env_status(self, session, env_name):
         client = session.client("elasticbeanstalk")
         res = client.describe_environments(EnvironmentNames=[env_name])
@@ -79,7 +77,6 @@ class EbEnvBaseTest(BaseTest):
 
 
 class TestTerminate(EbEnvBaseTest):
-
     def test_eb_env_terminate(self):
         envname = "c7n-eb-tag-test-inactive"
         session_factory = self.replay_flight_data("test_eb_env_terminate")
@@ -100,11 +97,11 @@ class TestTerminate(EbEnvBaseTest):
 
 
 class TestEBEnvTagging(EbEnvBaseTest):
-
     def test_tag_delayed(self):
         envname = "c7n-eb-tag-test-inactive"
-        envarn = ("arn:aws:elasticbeanstalk:us-east-1:012345678901:"
-                  "environment/re-jenkins/%s" % envname)
+        envarn = (
+            "arn:aws:elasticbeanstalk:us-east-1:012345678901:" "environment/re-jenkins/%s" % envname
+        )
         factory = self.replay_flight_data("test_elasticbeanstalk_env_tag_delayed")
         p = self.load_policy(
             {
@@ -149,8 +146,9 @@ class TestEBEnvTagging(EbEnvBaseTest):
 
     def test_tag(self):
         envname = "c7n-eb-tag-test-inactive"
-        envarn = ("arn:aws:elasticbeanstalk:us-east-1:012345678901:"
-                  "environment/re-jenkins/%s" % envname)
+        envarn = (
+            "arn:aws:elasticbeanstalk:us-east-1:012345678901:" "environment/re-jenkins/%s" % envname
+        )
         factory = self.replay_flight_data("test_elasticbeanstalk_env_tag")
         p = self.load_policy(
             {
@@ -164,9 +162,7 @@ class TestEBEnvTagging(EbEnvBaseTest):
                         "value": ".*inactive.*",
                     }
                 ],
-                "actions": [
-                    {"type": "tag", "key": "tagTestKey", "value": "tagTestValue"}
-                ],
+                "actions": [{"type": "tag", "key": "tagTestKey", "value": "tagTestValue"}],
             },
             session_factory=factory,
         )
@@ -183,14 +179,13 @@ class TestEBEnvTagging(EbEnvBaseTest):
             if self.recording:
                 sleep(30)
             pass
-        self.assertEqual(
-            self.env_tags_dict(factory(), envarn).get("tagTestKey"), "tagTestValue"
-        )
+        self.assertEqual(self.env_tags_dict(factory(), envarn).get("tagTestKey"), "tagTestValue")
 
     def test_unmark(self):
         envname = "c7n-eb-tag-test-inactive"
-        envarn = ("arn:aws:elasticbeanstalk:us-east-1:012345678901:"
-                  "environment/re-jenkins/%s" % envname)
+        envarn = (
+            "arn:aws:elasticbeanstalk:us-east-1:012345678901:" "environment/re-jenkins/%s" % envname
+        )
         factory = self.replay_flight_data("test_elasticbeanstalk_env_unmark")
         p = self.load_policy(
             {

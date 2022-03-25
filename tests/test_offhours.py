@@ -43,9 +43,7 @@ class OffHoursFilterTest(BaseTest):
             resources = p.run()
         self.assertEqual(resources, [])
         with open(
-            os.path.join(
-                p.options["output_dir"], "offhours-records", "parse_errors.json"
-            )
+            os.path.join(p.options["output_dir"], "offhours-records", "parse_errors.json")
         ) as fh:
             data = json.load(fh)
             self.assertEqual(len(data), 1)
@@ -60,9 +58,7 @@ class OffHoursFilterTest(BaseTest):
 
     def test_validate(self):
         url_test = "s3://test-dest/holidays.csv"
-        self.assertRaises(
-            PolicyValidationError, OffHour({"default_tz": "zmta"}).validate
-        )
+        self.assertRaises(PolicyValidationError, OffHour({"default_tz": "zmta"}).validate)
         self.assertRaises(PolicyValidationError, OffHour({"offhour": 25}).validate)
         self.assertRaises(
             PolicyValidationError,
@@ -101,9 +97,7 @@ class OffHoursFilterTest(BaseTest):
             tzinfo=tzutil.gettz("America/New_York"),
         )
         with mock_datetime_now(t, datetime):
-            self.assertEqual(
-                f.process(instances), [instances[0], instances[1], instances[2]]
-            )
+            self.assertEqual(f.process(instances), [instances[0], instances[1], instances[2]])
 
     def test_opt_out_behavior(self):
         # Some users want to match based on policy filters to
@@ -286,9 +280,7 @@ class OffHoursFilterTest(BaseTest):
             p = f.get_tag_value(i)
             self.assertEqual(p, "tz=est")
             tz = f.get_tz("est")
-            self.assertTrue(
-                'America/New_York' in str(tz) or
-                'US/Eastern' in str(tz))
+            self.assertTrue('America/New_York' in str(tz) or 'US/Eastern' in str(tz))
             self.assertEqual(datetime.datetime.now(tz), t)
             self.assertEqual(t.hour, 19)
 
@@ -301,12 +293,8 @@ class OffHoursFilterTest(BaseTest):
                 for i in [
                     instance(Tags=[{"Key": "maid_offhours", "Value": ""}]),
                     instance(Tags=[{"Key": "maid_offhours", "Value": "on"}]),
-                    instance(
-                        Tags=[{"Key": "maid_offhours", "Value": '"Offhours tz=ET"'}]
-                    ),
-                    instance(
-                        Tags=[{"Key": "maid_offhours", "Value": "Offhours tz=PT"}]
-                    ),
+                    instance(Tags=[{"Key": "maid_offhours", "Value": '"Offhours tz=ET"'}]),
+                    instance(Tags=[{"Key": "maid_offhours", "Value": "Offhours tz=PT"}]),
                 ]
             ]
             # unclear what this is really checking
@@ -328,8 +316,10 @@ class OffHoursFilterTest(BaseTest):
         self.assertTrue(off.parser.has_resource_schedule(off.get_tag_value(i), "off"))
         self.assertTrue(off.parser.has_resource_schedule(off.get_tag_value(i), "on"))
         self.assertTrue(off.parser.keys_are_valid(off.get_tag_value(i)))
-        self.assertEqual(off.parser.raw_data(off.get_tag_value(i)),
-                        {'off': '[(s,1)]', 'on': '[(m,6)]', 'tz': 'pst'})
+        self.assertEqual(
+            off.parser.raw_data(off.get_tag_value(i)),
+            {'off': '[(s,1)]', 'on': '[(m,6)]', 'tz': 'pst'},
+        )
 
     def test_offhours(self):
         t = datetime.datetime(
@@ -420,36 +410,20 @@ class OffHoursFilterTest(BaseTest):
         t = datetime.datetime.now(tzutil.gettz("America/New_York"))
         t = t.replace(year=2016, month=5, day=26, hour=7, minute=00)
         with mock_datetime_now(t, datetime):
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,19);on=(m-f,7);tz=at"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,19);on=(m-f,7);tz=at"}])
             self.assertEqual(OnHour({})(i), True)
 
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,20);on=(m-f,6);tz=ast"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,20);on=(m-f,6);tz=ast"}])
             self.assertEqual(OnHour({})(i), False)
 
     def test_custom_bad_tz(self):
         t = datetime.datetime.now(tzutil.gettz("America/New_York"))
         t = t.replace(year=2016, month=5, day=26, hour=7, minute=00)
         with mock_datetime_now(t, datetime):
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,19);on=(m-f,7);tz=et"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,19);on=(m-f,7);tz=et"}])
             self.assertEqual(OnHour({})(i), True)
 
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,20);on=(m-f,7);tz=abc"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,20);on=(m-f,7);tz=abc"}])
             self.assertEqual(OnHour({})(i), False)
 
     def test_custom_bad_hours(self):
@@ -462,11 +436,7 @@ class OffHoursFilterTest(BaseTest):
             i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=();tz=et"}])
             self.assertEqual(OffHour({})(i), False)
 
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,90);on=(m-f,7);tz=et"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,90);on=(m-f,7);tz=et"}])
             # malformed value
             self.assertEqual(OffHour({})(i), False)
 
@@ -476,11 +446,7 @@ class OffHoursFilterTest(BaseTest):
             # will go to default values, but not work due to default time
             self.assertEqual(OffHour({})(i), False)
 
-            i = instance(
-                Tags=[
-                    {"Key": "maid_offhours", "Value": "off=(m-f,90);on=(m-f,7);tz=et"}
-                ]
-            )
+            i = instance(Tags=[{"Key": "maid_offhours", "Value": "off=(m-f,90);on=(m-f,7);tz=et"}])
             self.assertEqual(OffHour({})(i), False)
 
     def test_tz_only(self):
@@ -495,21 +461,11 @@ class OffHoursFilterTest(BaseTest):
         nzt = tzutil.gettz("Pacific/Auckland")
         gmt = tzutil.gettz("Etc/GMT")
         easter_island = tzutil.gettz("Chile/EasterIsland")
-        self.assertEqual(
-            OnHour({}).get_tz('america/los_angeles'),
-            pacific)
-        self.assertEqual(
-            OnHour({}).get_tz('pst'),
-            pacific)
-        self.assertEqual(
-            OnHour({}).get_tz('pacific/auckland'),
-            nzt)
-        self.assertEqual(
-            OnHour({}).get_tz('gmt'),
-            gmt)
-        self.assertEqual(
-            OnHour({}).get_tz('chile/easterisland'),
-            easter_island)
+        self.assertEqual(OnHour({}).get_tz('america/los_angeles'), pacific)
+        self.assertEqual(OnHour({}).get_tz('pst'), pacific)
+        self.assertEqual(OnHour({}).get_tz('pacific/auckland'), nzt)
+        self.assertEqual(OnHour({}).get_tz('gmt'), gmt)
+        self.assertEqual(OnHour({}).get_tz('chile/easterisland'), easter_island)
 
     def test_empty_tag(self):
         t = datetime.datetime.now(tzutil.gettz("America/New_York"))
@@ -645,9 +601,7 @@ class ScheduleParserTest(BaseTest):
             i = instance(Tags=[{"Key": "maid_offhours", "Value": "tz=est"}])
             self.assertEqual(OffHour({})(i), True)
             self.assertEqual(OffHour({"skip-days": ["2015-12-01"]})(i), False)
-            self.assertEqual(
-                OffHour({"skip-days": ["2017-01-01", "2015-12-01"]})(i), False
-            )
+            self.assertEqual(OffHour({"skip-days": ["2017-01-01", "2015-12-01"]})(i), False)
             self.assertEqual(OffHour({"skip-days": ["2015-12-02"]})(i), True)
 
     def test_onhour_skip(self):
@@ -664,7 +618,5 @@ class ScheduleParserTest(BaseTest):
             self.assertEqual(OnHour({})(i), True)
             self.assertEqual(OnHour({"onhour": 8})(i), False)
             self.assertEqual(OnHour({"skip-days": ["2015-12-01"]})(i), False)
-            self.assertEqual(
-                OnHour({"skip-days": ["2017-01-01", "2015-12-01"]})(i), False
-            )
+            self.assertEqual(OnHour({"skip-days": ["2017-01-01", "2015-12-01"]})(i), False)
             self.assertEqual(OnHour({"skip-days": ["2015-12-02"]})(i), True)

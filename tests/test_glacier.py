@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 
 
 class GlacierTagTest(BaseTest):
-
     @functional
     def test_glacier_tag(self):
         session_factory = self.replay_flight_data("test_glacier_tag")
@@ -20,9 +19,7 @@ class GlacierTagTest(BaseTest):
             {
                 "name": "glacier",
                 "resource": "glacier",
-                "filters": [
-                    {"type": "value", "key": "VaultName", "value": "c7n-glacier-test"}
-                ],
+                "filters": [{"type": "value", "key": "VaultName", "value": "c7n-glacier-test"}],
                 "actions": [{"type": "tag", "key": "abc", "value": "xyz"}],
             },
             session_factory=session_factory,
@@ -76,7 +73,6 @@ class GlacierTagTest(BaseTest):
 
 
 class GlacierStatementTest(BaseTest):
-
     @functional
     def test_glacier_remove_matched(self):
         session_factory = self.replay_flight_data("test_glacier_remove_matched")
@@ -128,15 +124,11 @@ class GlacierStatementTest(BaseTest):
         self.assertEqual([r["VaultName"] for r in resources], [name])
 
         data = json.loads(
-            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get(
-                "policy"
-            )[
+            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get("policy")[
                 "Policy"
             ]
         )
-        self.assertEqual(
-            [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
-        )
+        self.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
 
     @functional
     def test_glacier_remove_named(self):
@@ -172,9 +164,7 @@ class GlacierStatementTest(BaseTest):
                 "name": "glacier-rm-named",
                 "resource": "glacier",
                 "filters": [{"VaultName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["WhatIsIt"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["WhatIsIt"]}],
             },
             session_factory=session_factory,
         )
@@ -228,9 +218,7 @@ class GlacierStatementTest(BaseTest):
                 "name": "glacier-rm-statement",
                 "resource": "glacier",
                 "filters": [{"VaultName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=session_factory,
         )
@@ -239,9 +227,7 @@ class GlacierStatementTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get(
-                "policy"
-            )[
+            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get("policy")[
                 "Policy"
             ]
         )
@@ -249,7 +235,6 @@ class GlacierStatementTest(BaseTest):
 
 
 class GlacierVaultTest(BaseTest):
-
     def test_glacier_vault_delete(self):
         session_factory = self.replay_flight_data("test_glacier_vault_delete")
         p = self.load_policy(
@@ -259,7 +244,8 @@ class GlacierVaultTest(BaseTest):
                 "filters": [{"type": "value", "key": "VaultName", "value": "c7n-test-delete"}],
                 "actions": [{"type": "delete"}],
             },
-            session_factory=session_factory,)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client("glacier")

@@ -20,25 +20,22 @@ class TagsTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'tag-trim',
-                     'space': 5},
-                ]),
-                validate=True))
+                tools.get_policy(
+                    [
+                        {'type': 'tag-trim', 'space': 5},
+                    ]
+                ),
+                validate=True,
+            )
+        )
 
         with self.assertRaises(FilterValidationError):
             # Space must be btwn 0 and 50
-            self.load_policy(tools.get_policy([
-                {'type': 'tag-trim',
-                 'space': -1}
-            ]))
+            self.load_policy(tools.get_policy([{'type': 'tag-trim', 'space': -1}]))
 
         with self.assertRaises(FilterValidationError):
             # Space must be btwn 0 and 50
-            self.load_policy(tools.get_policy([
-                {'type': 'tag-trim',
-                 'space': 51}
-            ]))
+            self.load_policy(tools.get_policy([{'type': 'tag-trim', 'space': 51}]))
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_tag_trim_does_nothing_if_space_available(self, update_resource_tags):
@@ -60,8 +57,12 @@ class TagsTest(BaseTest):
         tag value (50)
         """
 
-        action = self._get_action({'space': 50 - len(self.existing_tags),
-                                   'preserve': [k for k in self.existing_tags.keys()]})
+        action = self._get_action(
+            {
+                'space': 50 - len(self.existing_tags),
+                'preserve': [k for k in self.existing_tags.keys()],
+            }
+        )
 
         tags = self.existing_tags.copy()
         tags.update({'tag-to-trim1': 'value1', 'tag-to-trim2': 'value2'})
@@ -77,11 +78,9 @@ class TagsTest(BaseTest):
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_tag_trim_space_0_removes_all_tags_but_preserve(self, update_resource_tags):
-        """Verifies tag trim removes all other tags but tags listed in preserve
-        """
+        """Verifies tag trim removes all other tags but tags listed in preserve"""
 
-        action = self._get_action({'space': 0,
-                                   'preserve': [k for k in self.existing_tags.keys()]})
+        action = self._get_action({'space': 0, 'preserve': [k for k in self.existing_tags.keys()]})
 
         tags = self.existing_tags.copy()
         tags.update({'tag-to-trim': 'value1', 'tag-to-trim2': 'value2', 'tag-to-trim-3': 'value3'})
@@ -98,11 +97,9 @@ class TagsTest(BaseTest):
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     @patch('logging.Logger.warning')
     def test_tag_trim_warns_no_candidates(self, logger_mock, update_resource_tags):
-        """Verifies tag trim warns when there are no candidates to trim
-        """
+        """Verifies tag trim warns when there are no candidates to trim"""
 
-        action = self._get_action({'space': 0,
-                                   'preserve': [k for k in self.existing_tags.keys()]})
+        action = self._get_action({'space': 0, 'preserve': [k for k in self.existing_tags.keys()]})
 
         tags = self.existing_tags.copy()
         resource = tools.get_resource(tags)

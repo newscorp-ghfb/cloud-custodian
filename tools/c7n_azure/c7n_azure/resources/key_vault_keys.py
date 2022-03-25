@@ -93,7 +93,7 @@ class KeyVaultKeys(ChildResourceManager):
             'kid',
             'attributes.enabled',
             'attributes.exp',
-            'attributes.recoveryLevel'
+            'attributes.recoveryLevel',
         )
 
         keyvault_child = True
@@ -110,24 +110,23 @@ class KeyVaultFilter(Filter):
     schema = type_schema(
         'keyvault',
         required=['vaults'],
-        **{
-            'vaults': {'type': 'array', 'items': {'type': 'string'}}
-        }
+        **{'vaults': {'type': 'array', 'items': {'type': 'string'}}}
     )
 
     def process(self, resources, event=None):
         parent_key = self.manager.resource_type.parent_key
-        return [r for r in resources
-                if ResourceIdParser.get_resource_name(r[parent_key]) in self.data['vaults']]
+        return [
+            r
+            for r in resources
+            if ResourceIdParser.get_resource_name(r[parent_key]) in self.data['vaults']
+        ]
 
 
 @KeyVaultKeys.filter_registry.register('key-type')
 class KeyTypeFilter(Filter):
     schema = type_schema(
         'key-type',
-        **{
-            'key-types': {'type': 'array', 'items': {'enum': ['EC', 'EC-HSM', 'RSA', 'RSA-HSM']}}
-        }
+        **{'key-types': {'type': 'array', 'items': {'enum': ['EC', 'EC-HSM', 'RSA', 'RSA-HSM']}}}
     )
 
     def process(self, resources, event=None):
@@ -137,7 +136,7 @@ class KeyTypeFilter(Filter):
             event=event,
             execution_method=self._process_resource_set,
             executor_factory=self.executor_factory,
-            log=log
+            log=log,
         )
         return resources
 

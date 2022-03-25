@@ -21,7 +21,6 @@ from .ec2 import EC2
 
 @resources.register('ssm-parameter')
 class SSMParameter(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ssm'
         enum_spec = ('describe_parameters', 'Parameters', None)
@@ -32,8 +31,7 @@ class SSMParameter(QueryResourceManager):
         cfn_type = 'AWS::SSM::Parameter'
 
     retry = staticmethod(get_retry(('Throttled',)))
-    permissions = ('ssm:GetParameters',
-                   'ssm:DescribeParameters')
+    permissions = ('ssm:GetParameters', 'ssm:DescribeParameters')
 
     augment = universal_augment
 
@@ -48,13 +46,12 @@ class DeleteParameter(Action):
         client = local_session(self.manager.session_factory).client('ssm')
         for r in resources:
             self.manager.retry(
-                client.delete_parameter, Name=r['Name'],
-                ignore_err_codes=('ParameterNotFound',))
+                client.delete_parameter, Name=r['Name'], ignore_err_codes=('ParameterNotFound',)
+            )
 
 
 @resources.register('ssm-managed-instance')
 class ManagedInstance(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ssm'
         enum_spec = ('describe_instance_information', 'InstanceInformationList', None)
@@ -100,10 +97,7 @@ class SendCommand(Action):
                       - dpkg -i osquery_3.3.0_1.linux.amd64.deb
     """
 
-    schema = type_schema(
-        'send-command',
-        command={'type': 'object'},
-        required=('command',))
+    schema = type_schema('send-command', command={'type': 'object'}, required=('command',))
 
     permissions = ('ssm:SendCommand',)
     shape = "SendCommandRequest"
@@ -123,8 +117,7 @@ class SendCommand(Action):
                 found = True
                 break
         if not found:
-            raise PolicyValidationError(
-                "send-command requires use of ssm filter on ec2 resources")
+            raise PolicyValidationError("send-command requires use of ssm filter on ec2 resources")
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ssm')
@@ -133,8 +126,7 @@ class SendCommand(Action):
 
     def process_resource_set(self, client, resources):
         command = dict(self.data['command'])
-        command['InstanceIds'] = [
-            r['InstanceId'] for r in resources]
+        command['InstanceIds'] = [r['InstanceId'] for r in resources]
         result = client.send_command(**command).get('Command')
         for r in resources:
             r.setdefault('c7n:SendCommand', []).append(result['CommandId'])
@@ -142,7 +134,6 @@ class SendCommand(Action):
 
 @resources.register('ssm-activation')
 class SSMActivation(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ssm'
         enum_spec = ('describe_activations', 'ActivationList', None)
@@ -170,6 +161,7 @@ class OpsItem(QueryResourceManager):
     """Resource for OpsItems in SSM OpsCenter
     https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html
     """
+
     class resource_type(TypeInfo):
 
         enum_spec = ('describe_ops_items', 'OpsItemSummaries', None)
@@ -178,9 +170,7 @@ class OpsItem(QueryResourceManager):
         id = 'OpsItemId'
         name = 'Title'
 
-        default_report_fields = (
-            'Status', 'Title', 'LastModifiedTime',
-            'CreatedBy', 'CreatedTime')
+        default_report_fields = ('Status', 'Title', 'LastModifiedTime', 'CreatedBy', 'CreatedTime')
 
     QueryKeys = {
         'Status',
@@ -195,7 +185,8 @@ class OpsItem(QueryResourceManager):
         'OperationalDataKey',
         'OperationalDataValue',
         'ResourceId',
-        'AutomationId'}
+        'AutomationId',
+    }
     QueryOperators = {'Equal', 'LessThan', 'GreaterThan', 'Contains'}
 
     def validate(self):
@@ -205,11 +196,13 @@ class OpsItem(QueryResourceManager):
     def get_resources(self, ids, cache=True, augment=True):
         if isinstance(ids, str):
             ids = [ids]
-        return self.resources({
-            'OpsItemFilters': [{
-                'Key': 'OpsItemId',
-                'Values': [i],
-                'Operator': 'Equal'} for i in ids]})
+        return self.resources(
+            {
+                'OpsItemFilters': [
+                    {'Key': 'OpsItemId', 'Values': [i], 'Operator': 'Equal'} for i in ids
+                ]
+            }
+        )
 
     def resources(self, query=None):
         q = self.resource_query()
@@ -220,12 +213,13 @@ class OpsItem(QueryResourceManager):
     def resource_query(self):
         filters = []
         for q in self.data.get('query', ()):
-            if (not isinstance(q, dict) or
-                not set(q.keys()) == {'Key', 'Values', 'Operator'} or
-                q['Key'] not in self.QueryKeys or
-                    q['Operator'] not in self.QueryOperators):
-                raise PolicyValidationError(
-                    "invalid ops-item query %s" % self.data['query'])
+            if (
+                not isinstance(q, dict)
+                or not set(q.keys()) == {'Key', 'Values', 'Operator'}
+                or q['Key'] not in self.QueryKeys
+                or q['Operator'] not in self.QueryOperators
+            ):
+                raise PolicyValidationError("invalid ops-item query %s" % self.data['query'])
             filters.append(q)
         return {'OpsItemFilters': filters}
 
@@ -268,12 +262,15 @@ class UpdateOpsItem(Action):
 
     def process(self, resources):
         attrs = dict(self.data)
-        attrs = filter_empty({
-            'Description': attrs.get('description'),
-            'Title': attrs.get('title'),
-            'Priority': attrs.get('priority'),
-            'Status': attrs.get('status'),
-            'Notifications': [{'Arn': a} for a in attrs.get('topics', ())]})
+        attrs = filter_empty(
+            {
+                'Description': attrs.get('description'),
+                'Title': attrs.get('title'),
+                'Priority': attrs.get('priority'),
+                'Status': attrs.get('status'),
+                'Notifications': [{'Arn': a} for a in attrs.get('topics', ())],
+            }
+        )
 
         modified = []
         for r in resources:
@@ -307,12 +304,15 @@ class OpsItemFilter(Filter):
 
     schema = type_schema(
         'ops-item',
-        status={'type': 'array',
-                'default': ['Open'],
-                'items': {'enum': ['Open', 'In progress', 'Resolved']}},
+        status={
+            'type': 'array',
+            'default': ['Open'],
+            'items': {'enum': ['Open', 'In progress', 'Resolved']},
+        },
         priority={'type': 'array', 'items': {'enum': list(range(1, 6))}},
         title={'type': 'string'},
-        source={'type': 'string'})
+        source={'type': 'string'},
+    )
     schema_alias = True
     permissions = ('ssm:DescribeOpsItems',)
 
@@ -326,8 +326,7 @@ class OpsItemFilter(Filter):
 
             arn_item_map = {}
             for i in items:
-                for arn in json.loads(
-                        i['OperationalData']['/aws/resources']['Value']):
+                for arn in json.loads(i['OperationalData']['/aws/resources']['Value']):
                     arn_item_map.setdefault(arn['arn'], []).append(i['OpsItemId'])
 
             for arn, r in zip(self.manager.get_arns(resource_set), resource_set):
@@ -338,19 +337,28 @@ class OpsItemFilter(Filter):
 
     def get_query_filter(self, resources):
         q = []
-        q.append({'Key': 'Status', 'Operator': 'Equal',
-                  'Values': self.data.get('status', ('Open',))})
+        q.append(
+            {'Key': 'Status', 'Operator': 'Equal', 'Values': self.data.get('status', ('Open',))}
+        )
         if self.data.get('priority'):
-            q.append({'Key': 'Priority', 'Operator': 'Equal',
-                      'Values': list(map(str, self.data['priority']))})
+            q.append(
+                {
+                    'Key': 'Priority',
+                    'Operator': 'Equal',
+                    'Values': list(map(str, self.data['priority'])),
+                }
+            )
         if self.data.get('title'):
-            q.append({'Key': 'Title', 'Operator': 'Contains',
-                      'Values': [self.data['title']]})
+            q.append({'Key': 'Title', 'Operator': 'Contains', 'Values': [self.data['title']]})
         if self.data.get('source'):
-            q.append({'Key': 'Source', 'Operator': 'Equal',
-                      'Values': [self.data['source']]})
-        q.append({'Key': 'ResourceId', 'Operator': 'Contains',
-                  'Values': [r[self.manager.resource_type.id] for r in resources]})
+            q.append({'Key': 'Source', 'Operator': 'Equal', 'Values': [self.data['source']]})
+        q.append(
+            {
+                'Key': 'ResourceId',
+                'Operator': 'Contains',
+                'Values': [r[self.manager.resource_type.id] for r in resources],
+            }
+        )
         return {'OpsItemFilters': q}
 
     @classmethod
@@ -430,8 +438,7 @@ class PostItem(Action):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('ssm')
         item_template = self.get_item_template()
-        resources = list(sorted(resources, key=operator.itemgetter(
-            self.manager.resource_type.id)))
+        resources = list(sorted(resources, key=operator.itemgetter(self.manager.resource_type.id)))
         items = self.get_items(client, item_template)
         if items:
             # - Use a copy of the template as we'll be passing in status changes on updates.
@@ -443,12 +450,14 @@ class PostItem(Action):
 
         for resource_set in chunks(resources, 100):
             resource_arns = json.dumps(
-                [{'arn': arn} for arn in sorted(self.manager.get_arns(resource_set))])
+                [{'arn': arn} for arn in sorted(self.manager.get_arns(resource_set))]
+            )
             item_template['OperationalData']['/aws/resources'] = {
-                'Type': 'SearchableString', 'Value': resource_arns}
+                'Type': 'SearchableString',
+                'Value': resource_arns,
+            }
             if items:
-                item_template['RelatedOpsItems'] = [
-                    {'OpsItemId': item_ids[:5]}]
+                item_template['RelatedOpsItems'] = [{'OpsItemId': item_ids[:5]}]
             try:
                 oid = client.create_ops_item(**item_template).get('OpsItemId')
                 item_ids.insert(0, oid)
@@ -460,21 +469,21 @@ class PostItem(Action):
 
     def get_items(self, client, item_template):
         qf = [
-            {'Key': 'OperationalDataValue',
-             'Operator': 'Contains',
-             'Values': [item_template['OperationalData'][
-                 '/custodian/dedup']['Value']]},
-            {'Key': 'OperationalDataKey',
-             'Operator': 'Equal',
-             'Values': ['/custodian/dedup']},
-            {'Key': 'Status',
-             'Operator': 'Equal',
-             # In progress could imply activity/executions underway, we don't want to update
-             # the resource set out from underneath that so only look at Open state.
-             'Values': ['Open']},
-            {'Key': 'Source',
-             'Operator': 'Equal',
-             'Values': ['Cloud Custodian']}]
+            {
+                'Key': 'OperationalDataValue',
+                'Operator': 'Contains',
+                'Values': [item_template['OperationalData']['/custodian/dedup']['Value']],
+            },
+            {'Key': 'OperationalDataKey', 'Operator': 'Equal', 'Values': ['/custodian/dedup']},
+            {
+                'Key': 'Status',
+                'Operator': 'Equal',
+                # In progress could imply activity/executions underway, we don't want to update
+                # the resource set out from underneath that so only look at Open state.
+                'Values': ['Open'],
+            },
+            {'Key': 'Source', 'Operator': 'Equal', 'Values': ['Cloud Custodian']},
+        ]
         items = client.describe_ops_items(OpsItemFilters=qf)['OpsItemSummaries']
         return list(sorted(items, key=operator.itemgetter('CreatedTime'), reverse=True))
 
@@ -505,7 +514,8 @@ class PostItem(Action):
         item_arn_map = {}
         for i in items:
             item_arn_map[i['OpsItemId']] = arns = json.loads(
-                i['OperationalData']['/aws/resources']['Value'])
+                i['OperationalData']['/aws/resources']['Value']
+            )
             for arn in arns:
                 arn_item_map[arn['arn']] = i['OpsItemId']
 
@@ -533,62 +543,56 @@ class PostItem(Action):
             if not i['OpsItemId'] in updated:
                 continue
             i = dict(i)
-            for k in ('CreatedBy', 'CreatedTime', 'Source', 'LastModifiedBy',
-                      'LastModifiedTime'):
+            for k in ('CreatedBy', 'CreatedTime', 'Source', 'LastModifiedBy', 'LastModifiedTime'):
                 i.pop(k, None)
             i['OperationalData']['/aws/resources']['Value'] = json.dumps(
-                item_arn_map[i['OpsItemId']])
+                item_arn_map[i['OpsItemId']]
+            )
             i['OperationalData'].pop('/aws/dedup', None)
             client.update_ops_item(**i)
         return remainder
 
     def get_item_template(self):
         title = self.data.get('title', self.manager.data['name']).strip()
-        dedup = ("%s %s %s %s" % (
-            title,
-            self.manager.type,
-            self.manager.config.region,
-            self.manager.config.account_id)).encode('utf8')
+        dedup = (
+            "%s %s %s %s"
+            % (title, self.manager.type, self.manager.config.region, self.manager.config.account_id)
+        ).encode('utf8')
         # size restrictions on this value is 4-20, digest is 32
         dedup = hashlib.md5(dedup).hexdigest()[:20]  # nosec nosemgrep
 
         i = dict(
             Title=title,
             Description=self.data.get(
-                'description',
-                self.manager.data.get(
-                    'description',
-                    self.manager.data.get('name'))),
+                'description', self.manager.data.get('description', self.manager.data.get('name'))
+            ),
             Priority=self.data.get('priority'),
             Source="Cloud Custodian",
-            Tags=[{'Key': k, 'Value': v} for k, v in self.data.get(
-                'tags', self.manager.data.get('tags', {})).items()],
+            Tags=[
+                {'Key': k, 'Value': v}
+                for k, v in self.data.get('tags', self.manager.data.get('tags', {})).items()
+            ],
             Notifications=[{'Arn': a} for a in self.data.get('topics', ())],
             OperationalData={
                 '/aws/dedup': {
                     'Type': 'SearchableString',
-                    'Value': json.dumps({'dedupString': dedup})},
+                    'Value': json.dumps({'dedupString': dedup}),
+                },
                 '/custodian/execution-id': {
                     'Type': 'String',
-                    'Value': self.manager.ctx.execution_id},
+                    'Value': self.manager.ctx.execution_id,
+                },
                 # We need our own dedup string to be able to filter
                 # search on it.
-                '/custodian/dedup': {
-                    'Type': 'SearchableString',
-                    'Value': dedup},
-                '/custodian/policy': {
-                    'Type': 'String',
-                    'Value': json.dumps(self.manager.data)},
-                '/custodian/version': {
-                    'Type': 'String',
-                    'Value': version},
+                '/custodian/dedup': {'Type': 'SearchableString', 'Value': dedup},
+                '/custodian/policy': {'Type': 'String', 'Value': json.dumps(self.manager.data)},
+                '/custodian/version': {'Type': 'String', 'Value': version},
                 '/custodian/policy-name': {
                     'Type': 'SearchableString',
-                    'Value': self.manager.data['name']},
-                '/custodian/resource': {
-                    'Type': 'SearchableString',
-                    'Value': self.manager.type},
-            }
+                    'Value': self.manager.data['name'],
+                },
+                '/custodian/resource': {'Type': 'SearchableString', 'Value': self.manager.type},
+            },
         )
         return filter_empty(i)
 
@@ -603,13 +607,13 @@ resources.subscribe(PostItem.register_resource)
 
 @resources.register('ssm-document')
 class SSMDocument(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'ssm'
-        enum_spec = ('list_documents', 'DocumentIdentifiers', {'Filters': [
-            {
-                'Key': 'Owner',
-                'Values': ['Self']}]})
+        enum_spec = (
+            'list_documents',
+            'DocumentIdentifiers',
+            {'Filters': [{'Key': 'Owner', 'Values': ['Self']}]},
+        )
         name = id = 'Name'
         date = 'RegistrationDate'
         arn_type = 'Document'
@@ -642,13 +646,12 @@ class SSMDocumentCrossAccount(CrossAccountAccessFilter):
         with self.executor_factory(max_workers=3) as w:
             futures = []
             for resource_set in chunks(resources, 10):
-                futures.append(w.submit(
-                    self.process_resource_set, client, resource_set))
+                futures.append(w.submit(self.process_resource_set, client, resource_set))
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Exception checking cross account access \n %s" % (
-                            f.exception()))
+                        "Exception checking cross account access \n %s" % (f.exception())
+                    )
                     continue
                 results.extend(f.result())
         return results
@@ -660,9 +663,9 @@ class SSMDocumentCrossAccount(CrossAccountAccessFilter):
                 client.describe_document_permission,
                 Name=r['Name'],
                 PermissionType='Share',
-                ignore_err_codes=('InvalidDocument',))['AccountSharingInfoList']
-            shared_accounts = {
-                g.get('AccountId') for g in attrs}
+                ignore_err_codes=('InvalidDocument',),
+            )['AccountSharingInfoList']
+            shared_accounts = {g.get('AccountId') for g in attrs}
             delta_accounts = shared_accounts.difference(self.accounts)
             if delta_accounts:
                 r['c7n:CrossAccountViolations'] = list(delta_accounts)
@@ -693,16 +696,16 @@ class RemoveSharingSSMDocument(Action):
                     remove: matched
     """
 
-    schema = type_schema('set-sharing',
-                        remove={
-                            'oneOf': [
-                                {'enum': ['matched']},
-                                {'type': 'array', 'items': {
-                                    'type': 'string'}},
-                            ]},
-                        add={
-                            'type': 'array', 'items': {
-                                'type': 'string'}})
+    schema = type_schema(
+        'set-sharing',
+        remove={
+            'oneOf': [
+                {'enum': ['matched']},
+                {'type': 'array', 'items': {'type': 'string'}},
+            ]
+        },
+        add={'type': 'array', 'items': {'type': 'string'}},
+    )
     permissions = ('ssm:ModifyDocumentPermission',)
 
     def process(self, resources):
@@ -716,10 +719,10 @@ class RemoveSharingSSMDocument(Action):
                         Name=r['Name'],
                         PermissionType='Share',
                         AccountIdsToAdd=add_accounts,
-                        AccountIdsToRemove=r['c7n:CrossAccountViolations']
+                        AccountIdsToRemove=r['c7n:CrossAccountViolations'],
                     )
                 except client.exceptions.InvalidDocumentOperation as e:
-                    raise(e)
+                    raise (e)
         else:
             for r in resources:
                 try:
@@ -727,10 +730,10 @@ class RemoveSharingSSMDocument(Action):
                         Name=r['Name'],
                         PermissionType='Share',
                         AccountIdsToAdd=add_accounts,
-                        AccountIdsToRemove=remove_accounts
+                        AccountIdsToRemove=remove_accounts,
                     )
                 except client.exceptions.InvalidDocumentOperation as e:
-                    raise(e)
+                    raise (e)
 
 
 @SSMDocument.action_registry.register('delete')
@@ -755,12 +758,12 @@ class DeleteSSMDocument(Action):
                     force: True
     """
 
-    schema = type_schema(
-        'delete',
-        force={'type': 'boolean'}
-    )
+    schema = type_schema('delete', force={'type': 'boolean'})
 
-    permissions = ('ssm:DeleteDocument', 'ssm:ModifyDocumentPermission',)
+    permissions = (
+        'ssm:DeleteDocument',
+        'ssm:ModifyDocumentPermission',
+    )
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ssm')
@@ -770,20 +773,16 @@ class DeleteSSMDocument(Action):
             except client.exceptions.InvalidDocumentOperation as e:
                 if self.data.get('force', False):
                     response = client.describe_document_permission(
-                        Name=r['Name'],
-                        PermissionType='Share'
+                        Name=r['Name'], PermissionType='Share'
                     )
                     client.modify_document_permission(
                         Name=r['Name'],
                         PermissionType='Share',
-                        AccountIdsToRemove=response.get('AccountIds', [])
+                        AccountIdsToRemove=response.get('AccountIds', []),
                     )
-                    client.delete_document(
-                        Name=r['Name'],
-                        Force=True
-                    )
+                    client.delete_document(Name=r['Name'], Force=True)
                 else:
-                    raise(e)
+                    raise (e)
 
 
 @resources.register('ssm-data-sync')
@@ -791,6 +790,7 @@ class SSMDataSync(QueryResourceManager):
     """Resource for AWS DataSync
     https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html
     """
+
     class resource_type(TypeInfo):
 
         enum_spec = ('list_resource_data_sync', 'ResourceDataSyncItems', None)
@@ -821,6 +821,7 @@ class DeleteDataSync(Action):
             actions:
               - type: delete
     """
+
     permissions = ('ssm:DeleteResourceDataSync',)
     schema = type_schema('delete')
 

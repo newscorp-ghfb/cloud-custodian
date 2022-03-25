@@ -20,20 +20,22 @@ class ArgumentError(Exception):
 
 
 def setup_parser():
-    desc = ('This utility script will preserve the history of a policy '
-            'if it is renamed.  Pass in the old policy name and new '
-            'policy name and any old policy output and logs will be '
-            'copied to the new policy name. '
-            'This utility can also be used to re-encrypt your logs '
-            'by providing your SSE-KMS key. If the old and new targets '
-            'are the same, it will re-encrypt in-place')
+    desc = (
+        'This utility script will preserve the history of a policy '
+        'if it is renamed.  Pass in the old policy name and new '
+        'policy name and any old policy output and logs will be '
+        'copied to the new policy name. '
+        'This utility can also be used to re-encrypt your logs '
+        'by providing your SSE-KMS key. If the old and new targets '
+        'are the same, it will re-encrypt in-place'
+    )
 
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-v', '--verbose', default=False, action="store_true")
-    parser.add_argument('--sse-kms-key-id',
-                        help="Key id for SSE-KMS encrypted objects")
-    parser.add_argument('-s', '--output-dir', required=True,
-                        help="Directory or S3 URL For Policy Output")
+    parser.add_argument('--sse-kms-key-id', help="Key id for SSE-KMS encrypted objects")
+    parser.add_argument(
+        '-s', '--output-dir', required=True, help="Directory or S3 URL For Policy Output"
+    )
     parser.add_argument("old", help="Old policy name")
     parser.add_argument("new", help="New policy name")
 
@@ -53,11 +55,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
     except ClientError:
         raise ArgumentError('S3 bucket {} does not exist.'.format(bucket))
 
-    log.info(
-        'Retrieving list of S3 objects to rename in bucket "{}"'.format(
-            bucket
-        )
-    )
+    log.info('Retrieving list of S3 objects to rename in bucket "{}"'.format(bucket))
     paginator = client.get_paginator('list_objects_v2')
     rename_iterator = paginator.paginate(Bucket=bucket, Prefix=old + '/')
     obj_count = 0
@@ -66,8 +64,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
         # loop through the pages of results renaming
 
         if page.get('Contents') is None:
-            raise ArgumentError('Key {} does not exist in bucket {}'.format(
-                old, bucket))
+            raise ArgumentError('Key {} does not exist in bucket {}'.format(old, bucket))
 
         # Loop through the old objects copying and deleting
         for obj in page.get('Contents'):
@@ -75,20 +72,24 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
             old_meta = client.head_object(Bucket=bucket, Key=old_key)
             old_sse_type = old_meta.get('ServerSideEncryption')
             old_sse_key = old_meta.get('SSEKMSKeyId')
-            new_key = new + old_key[len(old):]
+            new_key = new + old_key[len(old) :]
 
             # check that we haven't already run and have existing data
             # in the new key
             new_obj = s3.Object(bucket, new_key)
             if new_key == old_key:
-                log.debug(('Old and new keys match and new SSEKMSKeyId '
-                         'Specified, re-encrypting {}').format(new_obj.key))
+                log.debug(
+                    (
+                        'Old and new keys match and new SSEKMSKeyId ' 'Specified, re-encrypting {}'
+                    ).format(new_obj.key)
+                )
             else:
                 try:
                     new_obj.load()
                     if new_key != old_key:
-                        log.info('Skipping existing output in new '
-                                 'location: {}'.format(new_obj.key))
+                        log.info(
+                            'Skipping existing output in new ' 'location: {}'.format(new_obj.key)
+                        )
                         continue
                 except ClientError as e:
                     response_code = e.response.get('Error').get('Code')
@@ -100,11 +101,8 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
                         raise
 
             copy_from_args = dict(
-                CopySource={
-                    'Bucket': bucket,
-                    'Key': old_key,
-                    'MetadataDirective': 'COPY'
-                })
+                CopySource={'Bucket': bucket, 'Key': old_key, 'MetadataDirective': 'COPY'}
+            )
 
             if sse_kms_key_id:
                 # Re-encrypt with a new key
@@ -127,8 +125,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
                 log.debug('Deleted "{}"'.format(old_key))
             obj_count += 1
 
-        log.info(('Finished renaming/re-encrypting '
-                  '{} objects').format(obj_count))
+        log.info(('Finished renaming/re-encrypting ' '{} objects').format(obj_count))
 
 
 def main():
@@ -136,25 +133,22 @@ def main():
     options = parser.parse_args()
 
     level = options.verbose and logging.DEBUG or logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
+    logging.basicConfig(level=level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
     logging.getLogger('botocore').setLevel(logging.ERROR)
 
     if options.output_dir.startswith('s3://'):
         try:
-            s3_rename(options.output_dir,
-                      options.old,
-                      options.new,
-                      options.sse_kms_key_id)
+            s3_rename(options.output_dir, options.old, options.new, options.sse_kms_key_id)
         except ArgumentError as e:
             print(e.message)
             sys.exit(2)
     else:
-        print("This tool only works for policy output stored on S3. ",
-              "To move locally stored output rename",
-              "`{}/{}`".format(options.output_dir, options.old),
-              "to `{}/{}`.".format(options.output_dir, options.new))
+        print(
+            "This tool only works for policy output stored on S3. ",
+            "To move locally stored output rename",
+            "`{}/{}`".format(options.output_dir, options.old),
+            "to `{}/{}`.".format(options.output_dir, options.new),
+        )
 
 
 if __name__ == '__main__':

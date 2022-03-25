@@ -17,62 +17,52 @@ class CloudWatchEvents:
     trail_events = {
         # event source, resource type as keys, mapping to api call and
         # jmespath expression
-        'ConsoleLogin': {
-            'ids': 'userIdentity.arn',
-            'source': 'signin.amazonaws.com'},
-
+        'ConsoleLogin': {'ids': 'userIdentity.arn', 'source': 'signin.amazonaws.com'},
         'CreateAutoScalingGroup': {
             'ids': 'requestParameters.autoScalingGroupName',
-            'source': 'autoscaling.amazonaws.com'},
-
+            'source': 'autoscaling.amazonaws.com',
+        },
         'UpdateAutoScalingGroup': {
             'ids': 'requestParameters.autoScalingGroupName',
-            'source': 'autoscaling.amazonaws.com'},
-
-        'CreateBucket': {
-            'ids': 'requestParameters.bucketName',
-            'source': 's3.amazonaws.com'},
-
+            'source': 'autoscaling.amazonaws.com',
+        },
+        'CreateBucket': {'ids': 'requestParameters.bucketName', 'source': 's3.amazonaws.com'},
         'CreateCluster': {
             'ids': 'requestParameters.clusterIdentifier',
-            'source': 'redshift.amazonaws.com'},
-
+            'source': 'redshift.amazonaws.com',
+        },
         'CreateLoadBalancer': {
             'ids': 'requestParameters.loadBalancerName',
-            'source': 'elasticloadbalancing.amazonaws.com'},
-
+            'source': 'elasticloadbalancing.amazonaws.com',
+        },
         'CreateLoadBalancerPolicy': {
             'ids': 'requestParameters.loadBalancerName',
-            'source': 'elasticloadbalancing.amazonaws.com'},
-
+            'source': 'elasticloadbalancing.amazonaws.com',
+        },
         'CreateDBInstance': {
             'ids': 'requestParameters.dBInstanceIdentifier',
-            'source': 'rds.amazonaws.com'},
-
-        'CreateVolume': {
-            'ids': 'responseElements.volumeId',
-            'source': 'ec2.amazonaws.com'},
-
+            'source': 'rds.amazonaws.com',
+        },
+        'CreateVolume': {'ids': 'responseElements.volumeId', 'source': 'ec2.amazonaws.com'},
         'SetLoadBalancerPoliciesOfListener': {
             'ids': 'requestParameters.loadBalancerName',
-            'source': 'elasticloadbalancing.amazonaws.com'},
-
+            'source': 'elasticloadbalancing.amazonaws.com',
+        },
         'CreateElasticsearchDomain': {
             'ids': 'requestParameters.domainName',
-            'source': 'es.amazonaws.com'},
-
-        'CreateTable': {
-            'ids': 'requestParameters.tableName',
-            'source': 'dynamodb.amazonaws.com'},
-
+            'source': 'es.amazonaws.com',
+        },
+        'CreateTable': {'ids': 'requestParameters.tableName', 'source': 'dynamodb.amazonaws.com'},
         'CreateFunction': {
             'event': 'CreateFunction20150331',
             'source': 'lambda.amazonaws.com',
-            'ids': 'requestParameters.functionName'},
-
+            'ids': 'requestParameters.functionName',
+        },
         'RunInstances': {
             'ids': 'responseElements.instancesSet.items[].instanceId',
-            'source': 'ec2.amazonaws.com'}}
+            'source': 'ec2.amazonaws.com',
+        },
+    }
 
     @classmethod
     def get(cls, event_name):

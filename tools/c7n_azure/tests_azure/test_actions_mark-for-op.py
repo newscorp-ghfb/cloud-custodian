@@ -21,12 +21,14 @@ class ActionsMarkForOpTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'mark-for-op',
-                     'op': 'delete',
-                     'days': 10},
-                ]),
-                validate=True))
+                tools.get_policy(
+                    [
+                        {'type': 'mark-for-op', 'op': 'delete', 'days': 10},
+                    ]
+                ),
+                validate=True,
+            )
+        )
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_mark_for_op(self, update_resource_tags):

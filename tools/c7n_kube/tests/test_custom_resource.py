@@ -15,14 +15,10 @@ class TestCustomResource(KubeTest):
                 'name': 'custom-resources',
                 'resource': 'k8s.custom-cluster-resource',
                 'query': [
-                    {
-                        'group': 'stable.example.com',
-                        'version': 'v1',
-                        'plural': 'crontabscluster'
-                    }
-                ]
+                    {'group': 'stable.example.com', 'version': 'v1', 'plural': 'crontabscluster'}
+                ],
             },
-            session_factory=factory
+            session_factory=factory,
         )
 
         resources = policy.run()
@@ -36,15 +32,9 @@ class TestCustomResource(KubeTest):
             {
                 'name': 'custom-resources',
                 'resource': 'k8s.custom-namespaced-resource',
-                'query': [
-                    {
-                        'group': 'stable.example.com',
-                        'version': 'v1',
-                        'plural': 'crontabs'
-                    }
-                ]
+                'query': [{'group': 'stable.example.com', 'version': 'v1', 'plural': 'crontabs'}],
             },
-            session_factory=factory
+            session_factory=factory,
         )
 
         resources = policy.run()
@@ -53,13 +43,14 @@ class TestCustomResource(KubeTest):
         self.assertEqual(resources[0]['kind'], 'CronTab')
 
     def test_custom_resource_validation(self):
-        self.assertRaises(PolicyValidationError,
+        self.assertRaises(
+            PolicyValidationError,
             self.load_policy,
             {
                 'name': 'custom-resources',
                 'resource': 'k8s.custom-namespaced-resource',
             },
-            validate=True
+            validate=True,
         )
 
         self.assertRaises(
@@ -68,9 +59,7 @@ class TestCustomResource(KubeTest):
             {
                 'name': 'custom-resources',
                 'resource': 'k8s.custom-namespaced-resource',
-                'query': [
-                    {'bad': 'value'}
-                ]
+                'query': [{'bad': 'value'}],
             },
-            validate=True
+            validate=True,
         )

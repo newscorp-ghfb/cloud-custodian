@@ -8,7 +8,6 @@ from c7n.utils import local_session
 
 
 class DescribeBackup(DescribeSource):
-
     def augment(self, resources):
         resources = super(DescribeBackup, self).augment(resources)
         client = local_session(self.manager.session_factory).client('backup')
@@ -41,7 +40,6 @@ class DescribeBackup(DescribeSource):
 
 @resources.register('backup-plan')
 class BackupPlan(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'backup'
         enum_spec = ('list_backup_plans', 'BackupPlansList', None)
@@ -52,14 +50,10 @@ class BackupPlan(QueryResourceManager):
         config_type = cfn_type = 'AWS::Backup::BackupPlan'
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeBackup,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeBackup, 'config': ConfigSource}
 
 
 class DescribeVault(DescribeSource):
-
     def augment(self, resources):
         return universal_augment(self.manager, super(DescribeVault, self).augment(resources))
 
@@ -68,8 +62,7 @@ class DescribeVault(DescribeSource):
         resources = []
         for rid in resource_ids:
             try:
-                resources.append(
-                    client.describe_backup_vault(BackupVaultName=rid))
+                resources.append(client.describe_backup_vault(BackupVaultName=rid))
             except client.exceptions.ResourceNotFoundException:
                 continue
         return resources
@@ -77,7 +70,6 @@ class DescribeVault(DescribeSource):
 
 @resources.register('backup-vault')
 class BackupVault(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'backup'
         enum_spec = ('list_backup_vaults', 'BackupVaultList', None)
@@ -87,10 +79,7 @@ class BackupVault(QueryResourceManager):
         universal_taggable = object()
         config_type = cfn_type = 'AWS::Backup::BackupVault'
 
-    source_mapping = {
-        'describe': DescribeVault,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeVault, 'config': ConfigSource}
 
 
 @BackupVault.filter_registry.register('kms-key')

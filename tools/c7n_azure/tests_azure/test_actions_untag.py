@@ -16,23 +16,15 @@ class ActionsRemoveTagTest(BaseTest):
         return RemoveTag(data=data, manager=Mock())
 
     def test_schema_validate(self):
-        self.assertTrue(
-            self.load_policy(
-                tools.get_policy([
-                    {'type': 'untag',
-                     'tags': ['test']}
-                ])))
+        self.assertTrue(self.load_policy(tools.get_policy([{'type': 'untag', 'tags': ['test']}])))
 
         with self.assertRaises(FilterValidationError):
             # Must specify tags to remove
-            self.load_policy(tools.get_policy([
-                {'type': 'untag'}
-            ]))
+            self.load_policy(tools.get_policy([{'type': 'untag'}]))
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_remove_single_tag(self, update_resource_tags):
-        """Verifies we can delete a tag without modifying an existing tag on that resource
-        """
+        """Verifies we can delete a tag without modifying an existing tag on that resource"""
 
         action = self._get_action({'tags': ['tag-to-delete']})
 
@@ -49,8 +41,7 @@ class ActionsRemoveTagTest(BaseTest):
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_remove_tags(self, update_resource_tags):
-        """Verifies we can delete multiple tags without modifying existing tags.
-        """
+        """Verifies we can delete multiple tags without modifying existing tags."""
 
         action = self._get_action({'tags': ['tag-to-delete-1', 'tag-to-delete-2']})
 
@@ -67,8 +58,7 @@ class ActionsRemoveTagTest(BaseTest):
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_removal_works_with_nonexistent_tag(self, update_resource_tags):
-        """Verifies attempting to delete a tag that is not on the resource does not throw an error
-        """
+        """Verifies attempting to delete a tag that is not on the resource does not throw an error"""
 
         action = self._get_action({'tags': ['tag-does-not-exist']})
 

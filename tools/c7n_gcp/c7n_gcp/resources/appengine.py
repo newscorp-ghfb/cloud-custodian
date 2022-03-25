@@ -10,8 +10,8 @@ from c7n.utils import local_session
 
 @resources.register('app-engine')
 class AppEngineApp(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps
-    """
+    """GCP resource: https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps"""
+
     class resource_type(TypeInfo):
         service = 'appengine'
         version = 'v1'
@@ -21,7 +21,12 @@ class AppEngineApp(QueryResourceManager):
         id = 'id'
         name = 'name'
         default_report_fields = [
-            'id', 'locationId', 'servingStatus', 'authDomain', 'defaultHostName']
+            'id',
+            'locationId',
+            'servingStatus',
+            'authDomain',
+            'defaultHostName',
+        ]
         asset_type = "appengine.googleapis.com/Application"
         permissions = ('appengine.applications.get',)
         metric_key = 'resource.labels.module_id'
@@ -29,8 +34,8 @@ class AppEngineApp(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_query(
-                'get', {'appsId': re.match('apps/(.*)',
-                    resource_info['resourceName']).group(1)})
+                'get', {'appsId': re.match('apps/(.*)', resource_info['resourceName']).group(1)}
+            )
 
     def get_resource_query(self):
         return {'appsId': local_session(self.session_factory).get_default_project()}
@@ -41,9 +46,13 @@ class AppEngineCertificate(ChildResourceManager):
     """GCP resource:
     https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.authorizedCertificates
     """
+
     def _get_parent_resource_info(self, child_instance):
-        return {'resourceName': re.match(
-            '(apps/.*?)/authorizedCertificates/.*', child_instance['name']).group(1)}
+        return {
+            'resourceName': re.match(
+                '(apps/.*?)/authorizedCertificates/.*', child_instance['name']
+            ).group(1)
+        }
 
     class resource_type(ChildTypeInfo):
         service = 'appengine'
@@ -53,21 +62,18 @@ class AppEngineCertificate(ChildResourceManager):
         scope = None
         name = 'displayName'
         id = 'id'
-        parent_spec = {
-            'resource': 'app-engine',
-            'child_enum_params': {
-                ('id', 'appsId')
-            }
-        }
+        parent_spec = {'resource': 'app-engine', 'child_enum_params': {('id', 'appsId')}}
         default_report_fields = ['displayName', 'expireTime']
         permissions = ('appengine.applications.get',)
 
         @staticmethod
         def get(client, resource_info):
-            apps_id, cert_id = re.match('apps/(.*?)/authorizedCertificates/(.*)',
-                                        resource_info['resourceName']).groups()
-            return client.execute_query('get', {'appsId': apps_id,
-                                                'authorizedCertificatesId': cert_id})
+            apps_id, cert_id = re.match(
+                'apps/(.*?)/authorizedCertificates/(.*)', resource_info['resourceName']
+            ).groups()
+            return client.execute_query(
+                'get', {'appsId': apps_id, 'authorizedCertificatesId': cert_id}
+            )
 
 
 @resources.register('app-engine-domain')
@@ -75,6 +81,7 @@ class AppEngineDomain(ChildResourceManager):
     """GCP resource:
     https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.authorizedDomains/list#AuthorizedDomain
     """
+
     class resource_type(ChildTypeInfo):
         service = 'appengine'
         version = 'v1'
@@ -84,12 +91,7 @@ class AppEngineDomain(ChildResourceManager):
         id = 'id'
         name = "name"
         default_report_fields = [id, name]
-        parent_spec = {
-            'resource': 'app-engine',
-            'child_enum_params': {
-                ('id', 'appsId')
-            }
-        }
+        parent_spec = {'resource': 'app-engine', 'child_enum_params': {('id', 'appsId')}}
         permissions = ('appengine.applications.get',)
 
 
@@ -98,9 +100,13 @@ class AppEngineDomainMapping(ChildResourceManager):
     """GCP resource:
     https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.domainMappings
     """
+
     def _get_parent_resource_info(self, child_instance):
-        return {'resourceName': re.match(
-            '(apps/.*?)/domainMappings/.*', child_instance['name']).group(1)}
+        return {
+            'resourceName': re.match('(apps/.*?)/domainMappings/.*', child_instance['name']).group(
+                1
+            )
+        }
 
     class resource_type(ChildTypeInfo):
         service = 'appengine'
@@ -111,20 +117,15 @@ class AppEngineDomainMapping(ChildResourceManager):
         name = "name"
         id = 'id'
         default_report_fields = [id, name]
-        parent_spec = {
-            'resource': 'app-engine',
-            'child_enum_params': {
-                ('id', 'appsId')
-            }
-        }
+        parent_spec = {'resource': 'app-engine', 'child_enum_params': {('id', 'appsId')}}
         permissions = ('appengine.applications.get',)
 
         @staticmethod
         def get(client, resource_info):
-            apps_id, mapping_id = re.match('apps/(.*?)/domainMappings/(.*)',
-                                           resource_info['resourceName']).groups()
-            return client.execute_query('get', {'appsId': apps_id,
-                                                'domainMappingsId': mapping_id})
+            apps_id, mapping_id = re.match(
+                'apps/(.*?)/domainMappings/(.*)', resource_info['resourceName']
+            ).groups()
+            return client.execute_query('get', {'appsId': apps_id, 'domainMappingsId': mapping_id})
 
 
 @resources.register('app-engine-firewall-ingress-rule')
@@ -132,9 +133,11 @@ class AppEngineFirewallIngressRule(ChildResourceManager):
     """GCP resource:
     https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.firewall.ingressRules
     """
+
     def _get_parent_resource_info(self, child_instance):
-        return {'resourceName': 'apps/%s' %
-                                local_session(self.session_factory).get_default_project()}
+        return {
+            'resourceName': 'apps/%s' % local_session(self.session_factory).get_default_project()
+        }
 
     class resource_type(ChildTypeInfo):
         service = 'appengine'
@@ -143,19 +146,15 @@ class AppEngineFirewallIngressRule(ChildResourceManager):
         enum_spec = ('list', 'ingressRules[]', None)
         scope = None
         name = id = 'priority'
-        parent_spec = {
-            'resource': 'app-engine',
-            'child_enum_params': {
-                ('id', 'appsId')
-            }
-        }
+        parent_spec = {'resource': 'app-engine', 'child_enum_params': {('id', 'appsId')}}
         default_report_fields = ['priority', 'action', 'sourceRange', 'description']
         permissions = ('appengine.applications.get',)
 
         @staticmethod
         def get(client, resource_info):
-            apps_id, ingress_rules_id = re.match('apps/(.*?)/firewall/ingressRules/(.*)',
-                                                 resource_info['resourceName']).groups()
+            apps_id, ingress_rules_id = re.match(
+                'apps/(.*?)/firewall/ingressRules/(.*)', resource_info['resourceName']
+            ).groups()
             return client.execute_query(
-                'get', {'appsId': apps_id,
-                        'ingressRulesId': ingress_rules_id})
+                'get', {'appsId': apps_id, 'ingressRulesId': ingress_rules_id}
+            )

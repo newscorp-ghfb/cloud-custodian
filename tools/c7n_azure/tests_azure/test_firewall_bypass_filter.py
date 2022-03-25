@@ -6,13 +6,11 @@ from mock import Mock
 
 
 class FirewallBypassFilterMock(FirewallBypassFilter):
-
     def _query_bypass(self, resource):
         return resource['bypass']
 
 
 class FirewallBypassFilterTest(BaseTest):
-
     def test_include_empty(self):
         satisfying_resources = [
             {'bypass': ['AzureServices']},

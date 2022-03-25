@@ -19,7 +19,6 @@ import c7n.filters.vpc as net_filters
 
 @resources.register('workspaces')
 class Workspace(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'workspaces'
         enum_spec = ('describe_workspaces', 'Workspaces', None)
@@ -69,8 +68,7 @@ class WorkspaceConnectionStatusFilter(ValueFilter):
 
     def get_connection_status(self, client, workspace_ids):
         connection_status_chunk = self.manager.retry(
-            client.describe_workspaces_connection_status,
-            WorkspaceIds=workspace_ids
+            client.describe_workspaces_connection_status, WorkspaceIds=workspace_ids
         )['WorkspacesConnectionStatus']
 
         return connection_status_chunk
@@ -79,18 +77,20 @@ class WorkspaceConnectionStatusFilter(ValueFilter):
         client = local_session(self.manager.session_factory).client('workspaces')
         annotate_map = {r['WorkspaceId']: r for r in resources if self.annotation_key not in r}
         with self.executor_factory(max_workers=2) as w:
-            self.log.debug(
-                'Querying connection status for %d workspaces' % len(annotate_map))
-            for status in itertools.chain(*w.map(
-                functools.partial(self.get_connection_status, client),
-                chunks(annotate_map.keys(), 25)
-            )):
+            self.log.debug('Querying connection status for %d workspaces' % len(annotate_map))
+            for status in itertools.chain(
+                *w.map(
+                    functools.partial(self.get_connection_status, client),
+                    chunks(annotate_map.keys(), 25),
+                )
+            ):
                 annotate_map[status['WorkspaceId']][self.annotation_key] = status
         return list(filter(self, resources))
 
     def get_resource_value(self, k, i):
         return super(WorkspaceConnectionStatusFilter, self).get_resource_value(
-            k, i[self.annotation_key])
+            k, i[self.annotation_key]
+        )
 
 
 @Workspace.filter_registry.register('kms-key')
@@ -133,7 +133,7 @@ class TerminateWorkspace(BaseAction):
         'UPDATING',
         'STOPPING',
         'STOPPED',
-        'ERROR'
+        'ERROR',
     )
 
     def process(self, resources):
@@ -148,7 +148,6 @@ class TerminateWorkspace(BaseAction):
 
 @resources.register('workspaces-image')
 class WorkspaceImage(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'workspaces'
         enum_spec = ('describe_workspace_images', 'Images', None)
@@ -166,7 +165,8 @@ class WorkspaceImageCrossAccount(CrossAccountAccessFilter):
         'cross-account',
         # white list accounts
         whitelist_from=ValuesFrom.schema,
-        whitelist={'type': 'array', 'items': {'type': 'string'}})
+        whitelist={'type': 'array', 'items': {'type': 'string'}},
+    )
 
     permissions = ('workspaces:DescribeWorkspaceImagePermissions',)
 
@@ -177,11 +177,12 @@ class WorkspaceImageCrossAccount(CrossAccountAccessFilter):
         for r in resources:
             found = False
             try:
-                accts = client.describe_workspace_image_permissions(
-                    ImageId=r['ImageId']).get('ImagePermissions')
+                accts = client.describe_workspace_image_permissions(ImageId=r['ImageId']).get(
+                    'ImagePermissions'
+                )
                 for a in accts:
                     account_id = a['SharedAccountId']
-                    if (account_id not in allowed_accounts):
+                    if account_id not in allowed_accounts:
                         r.setdefault('c7n:CrossAccountViolations', []).append(account_id)
                         found = True
                 if found:
@@ -212,7 +213,10 @@ class DeleteWorkspaceImage(BaseAction):
 
     schema = type_schema('delete')
     permissions = ('workspaces:DeleteWorkspaceImage',)
-    valid_origin_states = ('AVAILABLE', 'ERROR',)
+    valid_origin_states = (
+        'AVAILABLE',
+        'ERROR',
+    )
 
     def process(self, resources):
 
@@ -233,7 +237,6 @@ class DeleteWorkspaceImage(BaseAction):
 
 @resources.register('workspaces-directory')
 class WorkspaceDirectory(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'workspaces'
         enum_spec = ('describe_workspace_directories', 'Directories', None)
@@ -284,6 +287,7 @@ class WorkspacesDirectoryClientProperties(ValueFilter):
               value: ENABLED
 
     """
+
     permissions = ('workspaces:DescribeClientProperties',)
 
     schema = type_schema('client-properties', rinherit=ValueFilter.schema)
@@ -295,9 +299,11 @@ class WorkspacesDirectoryClientProperties(ValueFilter):
         for directory in directories:
             if self.annotation_key not in directory:
                 try:
-                    client_properties = client.describe_client_properties(
-                        ResourceIds=[directory['DirectoryId']]).get(
-                            'ClientPropertiesList')[0].get('ClientProperties')
+                    client_properties = (
+                        client.describe_client_properties(ResourceIds=[directory['DirectoryId']])
+                        .get('ClientPropertiesList')[0]
+                        .get('ClientProperties')
+                    )
                 except client.exceptions.ResourceNotFoundException:
                     continue
                 directory[self.annotation_key] = client_properties
@@ -329,6 +335,7 @@ class ModifyClientProperties(BaseAction):
                         ReconnectEnabled: DISABLED
 
     """
+
     schema = type_schema(
         'modify-client-properties',
         required=['attributes'],
@@ -340,11 +347,11 @@ class ModifyClientProperties(BaseAction):
                     'type': 'object',
                     'additionalProperties': False,
                     'required': ['ReconnectEnabled'],
-                    'properties': {
-                        'ReconnectEnabled': {'enum': ['DISABLED', 'ENABLED']}
-                    }
+                    'properties': {'ReconnectEnabled': {'enum': ['DISABLED', 'ENABLED']}},
                 }
-            }})
+            },
+        },
+    )
 
     permissions = ('workspaces:ModifyClientProperties',)
 
@@ -354,13 +361,15 @@ class ModifyClientProperties(BaseAction):
                 return self
         raise PolicyValidationError(
             '`modify-client-properties` may only be used in '
-            'conjunction with `client-properties` filter on %s' % (self.manager.data,))
+            'conjunction with `client-properties` filter on %s' % (self.manager.data,)
+        )
 
     def process(self, directories):
         client = local_session(self.manager.session_factory).client('workspaces')
         for directory in directories:
             try:
                 client.modify_client_properties(
-                    ResourceId=directory['DirectoryId'], **self.data['attributes'])
+                    ResourceId=directory['DirectoryId'], **self.data['attributes']
+                )
             except client.exceptions.ResourceNotFoundException:
                 continue

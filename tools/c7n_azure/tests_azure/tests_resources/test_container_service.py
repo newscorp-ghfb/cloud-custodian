@@ -12,22 +12,27 @@ class ContainerServiceTest(BaseTest):
 
     def test_container_service_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-azure-container-service',
-                'resource': 'azure.containerservice'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-azure-container-service', 'resource': 'azure.containerservice'},
+                validate=True,
+            )
             self.assertTrue(p)
 
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-containerservice',
-            'resource': 'azure.containerservice',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestacs'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-containerservice',
+                'resource': 'azure.containerservice',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestacs',
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

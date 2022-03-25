@@ -4,8 +4,7 @@
 import json
 import functools
 
-from c7n_terraform.parser import (
-    HclLocator, TerraformVisitor, Parser, VariableResolver)
+from c7n_terraform.parser import HclLocator, TerraformVisitor, Parser, VariableResolver
 from .tf_common import data_dir, build_visitor
 
 

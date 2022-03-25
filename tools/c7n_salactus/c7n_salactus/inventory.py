@@ -19,8 +19,7 @@ from c7n.utils import chunks
 
 
 def load_manifest_file(client, bucket, schema, versioned, ifilters, key_info):
-    """Given an inventory csv file, return an iterator over keys
-    """
+    """Given an inventory csv file, return an iterator over keys"""
     # To avoid thundering herd downloads, we do an immediate yield for
     # interspersed i/o
     yield None
@@ -61,16 +60,14 @@ def inventory_filter(ifilters, ischema, kr):
     return False
 
 
-def load_bucket_inventory(
-        client, inventory_bucket, inventory_prefix, versioned, ifilters):
+def load_bucket_inventory(client, inventory_bucket, inventory_prefix, versioned, ifilters):
     """Given an inventory location for a bucket, return an iterator over keys
 
     on the most recent delivered manifest.
     """
     now = datetime.datetime.now()
     key_prefix = "%s/%s" % (inventory_prefix, now.strftime('%Y-%m-'))
-    keys = client.list_objects(
-        Bucket=inventory_bucket, Prefix=key_prefix).get('Contents', [])
+    keys = client.list_objects(Bucket=inventory_bucket, Prefix=key_prefix).get('Contents', [])
     keys = [k['Key'] for k in keys if k['Key'].endswith('.json')]
     keys.sort()
     if not keys:
@@ -81,12 +78,13 @@ def load_bucket_inventory(
     manifest_data = json.load(manifest['Body'])
 
     # schema as column name to column index mapping
-    schema = dict([(k, i) for i, k in enumerate(
-        [n.strip() for n in manifest_data['fileSchema'].split(',')])])
+    schema = dict(
+        [(k, i) for i, k in enumerate([n.strip() for n in manifest_data['fileSchema'].split(',')])]
+    )
 
     processor = functools.partial(
-        load_manifest_file, client, inventory_bucket,
-        schema, versioned, ifilters)
+        load_manifest_file, client, inventory_bucket, schema, versioned, ifilters
+    )
     generators = map(processor, manifest_data.get('files', ()))
     return random_chain(generators)
 
@@ -109,8 +107,9 @@ def random_chain(generators):
 
 def get_bucket_inventory(client, bucket, inventory_id):
     """Check a bucket for a named inventory, and return the destination."""
-    inventories = client.list_bucket_inventory_configurations(
-        Bucket=bucket).get('InventoryConfigurationList', [])
+    inventories = client.list_bucket_inventory_configurations(Bucket=bucket).get(
+        'InventoryConfigurationList', []
+    )
     inventories = {i['Id']: i for i in inventories}
     found = fnmatch.filter(inventories, inventory_id)
     if not found:
@@ -118,5 +117,7 @@ def get_bucket_inventory(client, bucket, inventory_id):
 
     i = inventories[found.pop()]
     s3_info = i['Destination']['S3BucketDestination']
-    return {'bucket': s3_info['Bucket'].rsplit(':')[-1],
-            'prefix': "%s/%s/%s" % (s3_info['Prefix'], bucket, i['Id'])}
+    return {
+        'bucket': s3_info['Bucket'].rsplit(':')[-1],
+        'prefix': "%s/%s/%s" % (s3_info['Prefix'], bucket, i['Id']),
+    }

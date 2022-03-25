@@ -40,7 +40,7 @@ class AppServicePlan(ArmResourceManager):
             'location',
             'resourceGroup',
             'kind',
-            'sku.[name, tier, capacity]'
+            'sku.[name, tier, capacity]',
         )
         resource_type = 'Microsoft.Web/serverfarms'
 
@@ -105,21 +105,36 @@ class ResizePlan(AzureBaseAction):
 
     schema = {
         'type': 'object',
-        'anyOf': [
-            {'required': ['size']},
-            {'required': ['count']}
-        ],
+        'anyOf': [{'required': ['size']}, {'required': ['count']}],
         'properties': {
             'type': {'enum': ['resize-plan']},
-            'size': Lookup.lookup_type({'type': 'string',
-                                        'enum': ['F1', 'B1', 'B2', 'B3', 'D1',
-                                                 'S1', 'S2', 'S3', 'P1', 'P2',
-                                                 'P3', 'P1V2', 'P2V2', 'P3v2',
-                                                 'PC2', 'PC3', 'PC4']
-                                        }),
-            'count': Lookup.lookup_type({'type': 'integer'})
+            'size': Lookup.lookup_type(
+                {
+                    'type': 'string',
+                    'enum': [
+                        'F1',
+                        'B1',
+                        'B2',
+                        'B3',
+                        'D1',
+                        'S1',
+                        'S2',
+                        'S3',
+                        'P1',
+                        'P2',
+                        'P3',
+                        'P1V2',
+                        'P2V2',
+                        'P3v2',
+                        'PC2',
+                        'PC3',
+                        'PC4',
+                    ],
+                }
+            ),
+            'count': Lookup.lookup_type({'type': 'integer'}),
         },
-        'additionalProperties': False
+        'additionalProperties': False,
     }
 
     def _prepare_processing(self):
@@ -129,8 +144,10 @@ class ResizePlan(AzureBaseAction):
         model = models.AppServicePlan(location=resource['location'])
 
         if resource['kind'] == 'functionapp':
-            self.log.info("Skipping %s, because this App Service Plan "
-                          "is for Consumption Azure Functions." % resource['name'])
+            self.log.info(
+                "Skipping %s, because this App Service Plan "
+                "is for Consumption Azure Functions." % resource['name']
+            )
             return
 
         if resource['kind'] == 'linux':
@@ -153,8 +170,9 @@ class ResizePlan(AzureBaseAction):
         try:
             self.client.app_service_plans.update(resource['resourceGroup'], resource['name'], model)
         except models.DefaultErrorResponseException as e:
-            self.log.error("Failed to resize %s.  Inner exception: %s" %
-                           (resource['name'], e.inner_exception))
+            self.log.error(
+                "Failed to resize %s.  Inner exception: %s" % (resource['name'], e.inner_exception)
+            )
 
     @staticmethod
     def get_sku_name(tier):

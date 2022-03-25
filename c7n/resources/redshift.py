@@ -9,8 +9,7 @@ from concurrent.futures import as_completed
 
 from c7n.actions import BaseAction, ModifyVpcSecurityGroupsAction
 from c7n.exceptions import PolicyValidationError
-from c7n.filters import (
-    ValueFilter, DefaultVpcBase, AgeFilter, CrossAccountAccessFilter)
+from c7n.filters import ValueFilter, DefaultVpcBase, AgeFilter, CrossAccountAccessFilter
 import c7n.filters.vpc as net_filters
 from c7n.filters.kms import KmsRelatedFilter
 from c7n.filters.offhours import OffHour, OnHour
@@ -18,14 +17,12 @@ from c7n.manager import resources
 from c7n.resolver import ValuesFrom
 from c7n.query import QueryResourceManager, TypeInfo
 from c7n import tags
-from c7n.utils import (
-    type_schema, local_session, chunks, snapshot_identifier)
+from c7n.utils import type_schema, local_session, chunks, snapshot_identifier
 from .aws import shape_validate
 
 
 @resources.register('redshift')
 class Redshift(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'redshift'
         arn_type = 'cluster'
@@ -47,7 +44,7 @@ Redshift.filter_registry.register('onhour', OnHour)
 
 @Redshift.filter_registry.register('default-vpc')
 class DefaultVpc(DefaultVpcBase):
-    """ Matches if an redshift database is in the default vpc
+    """Matches if an redshift database is in the default vpc
 
     :example:
 
@@ -63,13 +60,12 @@ class DefaultVpc(DefaultVpcBase):
     schema = type_schema('default-vpc')
 
     def __call__(self, redshift):
-        return (redshift.get('VpcId') and
-                self.match(redshift.get('VpcId')) or False)
+        return redshift.get('VpcId') and self.match(redshift.get('VpcId')) or False
 
 
 @Redshift.filter_registry.register('logging')
 class LoggingFilter(ValueFilter):
-    """ Checks Redshift logging status and attributes.
+    """Checks Redshift logging status and attributes.
 
     :example:
 
@@ -93,6 +89,7 @@ class LoggingFilter(ValueFilter):
 
 
     """
+
     permissions = ("redshift:DescribeLoggingStatus",)
     schema = type_schema('logging', rinherit=ValueFilter.schema)
     annotation_key = 'c7n:logging'
@@ -104,7 +101,8 @@ class LoggingFilter(ValueFilter):
             if self.annotation_key not in cluster:
                 try:
                     result = client.describe_logging_status(
-                        ClusterIdentifier=cluster['ClusterIdentifier'])
+                        ClusterIdentifier=cluster['ClusterIdentifier']
+                    )
                     result.pop('ResponseMetadata')
                 except client.exceptions.ClusterNotFound:
                     continue
@@ -122,14 +120,14 @@ class Pause(BaseAction):
     permissions = ('redshift:PauseCluster',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('redshift')
+        client = local_session(self.manager.session_factory).client('redshift')
         for r in self.filter_resources(resources, 'ClusterStatus', ('available',)):
             try:
-                client.pause_cluster(
-                    ClusterIdentifier=r['ClusterIdentifier'])
-            except (client.exceptions.ClusterNotFoundFault,
-                    client.exceptions.InvalidClusterStateFault):
+                client.pause_cluster(ClusterIdentifier=r['ClusterIdentifier'])
+            except (
+                client.exceptions.ClusterNotFoundFault,
+                client.exceptions.InvalidClusterStateFault,
+            ):
                 raise
 
 
@@ -140,14 +138,14 @@ class Resume(BaseAction):
     permissions = ('redshift:ResumeCluster',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('redshift')
+        client = local_session(self.manager.session_factory).client('redshift')
         for r in self.filter_resources(resources, 'ClusterStatus', ('paused',)):
             try:
-                client.resume_cluster(
-                    ClusterIdentifier=r['ClusterIdentifier'])
-            except (client.exceptions.ClusterNotFoundFault,
-                    client.exceptions.InvalidClusterStateFault):
+                client.resume_cluster(ClusterIdentifier=r['ClusterIdentifier'])
+            except (
+                client.exceptions.ClusterNotFoundFault,
+                client.exceptions.InvalidClusterStateFault,
+            ):
                 raise
 
 
@@ -172,12 +170,14 @@ class SetRedshiftLogging(BaseAction):
                     prefix: redshiftlogs
                     state: enabled
     """
+
     schema = type_schema(
         'set-logging',
         state={'enum': ['enabled', 'disabled']},
         bucket={'type': 'string'},
         prefix={'type': 'string'},
-        required=('state',))
+        required=('state',),
+    )
 
     def get_permissions(self):
         perms = ('redshift:EnableLogging',)
@@ -188,9 +188,12 @@ class SetRedshiftLogging(BaseAction):
     def validate(self):
         if self.data.get('state') == 'enabled':
             if 'bucket' not in self.data:
-                raise PolicyValidationError((
-                    "redshift logging enablement requires `bucket` "
-                    "and `prefix` specification on %s" % (self.manager.data,)))
+                raise PolicyValidationError(
+                    (
+                        "redshift logging enablement requires `bucket` "
+                        "and `prefix` specification on %s" % (self.manager.data,)
+                    )
+                )
         return self
 
     def process(self, resources):
@@ -205,13 +208,14 @@ class SetRedshiftLogging(BaseAction):
 
                 self.manager.retry(
                     client.enable_logging,
-                    ClusterIdentifier=redshift_id, BucketName=bucketname, S3KeyPrefix=prefix)
+                    ClusterIdentifier=redshift_id,
+                    BucketName=bucketname,
+                    S3KeyPrefix=prefix,
+                )
 
             elif self.data.get('state') == 'disabled':
 
-                self.manager.retry(
-                    client.disable_logging,
-                    ClusterIdentifier=redshift_id)
+                self.manager.retry(client.disable_logging, ClusterIdentifier=redshift_id)
 
 
 @Redshift.filter_registry.register('security-group')
@@ -232,13 +236,15 @@ class SubnetFilter(net_filters.SubnetFilter):
         group_ids = set()
         for r in resources:
             group_ids.update(
-                [s['SubnetIdentifier'] for s in
-                 self.groups[r['ClusterSubnetGroupName']]['Subnets']])
+                [s['SubnetIdentifier'] for s in self.groups[r['ClusterSubnetGroupName']]['Subnets']]
+            )
         return group_ids
 
     def process(self, resources, event=None):
-        self.groups = {r['ClusterSubnetGroupName']: r for r in
-                       RedshiftSubnetGroup(self.manager.ctx, {}).resources()}
+        self.groups = {
+            r['ClusterSubnetGroupName']: r
+            for r in RedshiftSubnetGroup(self.manager.ctx, {}).resources()
+        }
         return super(SubnetFilter, self).process(resources, event)
 
 
@@ -270,14 +276,16 @@ class Parameter(ValueFilter):
         groups = {}
         for r in clusters:
             for pg in r['ClusterParameterGroups']:
-                groups.setdefault(pg['ParameterGroupName'], []).append(
-                    r['ClusterIdentifier'])
+                groups.setdefault(pg['ParameterGroupName'], []).append(r['ClusterIdentifier'])
 
         def get_params(group_name):
             c = local_session(self.manager.session_factory).client('redshift')
             paginator = c.get_paginator('describe_cluster_parameters')
-            param_group = list(itertools.chain(*[p['Parameters']
-                for p in paginator.paginate(ParameterGroupName=group_name)]))
+            param_group = list(
+                itertools.chain(
+                    *[p['Parameters'] for p in paginator.paginate(ParameterGroupName=group_name)]
+                )
+            )
             params = {}
             for p in param_group:
                 v = p['ParameterValue']
@@ -289,8 +297,7 @@ class Parameter(ValueFilter):
 
         with self.executor_factory(max_workers=3) as w:
             group_names = groups.keys()
-            self.group_params = dict(
-                zip(group_names, w.map(get_params, group_names)))
+            self.group_params = dict(zip(group_names, w.map(get_params, group_names)))
         return super(Parameter, self).process(clusters, event)
 
     def __call__(self, db):
@@ -329,8 +336,7 @@ class Delete(BaseAction):
                   - type: delete
     """
 
-    schema = type_schema(
-        'delete', **{'skip-snapshot': {'type': 'boolean'}})
+    schema = type_schema('delete', **{'skip-snapshot': {'type': 'boolean'}})
 
     permissions = ('redshift:DeleteCluster',)
 
@@ -338,13 +344,10 @@ class Delete(BaseAction):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for db_set in chunks(clusters, size=5):
-                futures.append(
-                    w.submit(self.process_db_set, db_set))
+                futures.append(w.submit(self.process_db_set, db_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting redshift set \n %s",
-                        f.exception())
+                    self.log.error("Exception deleting redshift set \n %s", f.exception())
 
     def process_db_set(self, db_set):
         skip = self.data.get('skip-snapshot', False)
@@ -355,14 +358,16 @@ class Delete(BaseAction):
                 params['SkipFinalClusterSnapshot'] = True
             else:
                 params['FinalClusterSnapshotIdentifier'] = snapshot_identifier(
-                    'Final', db['ClusterIdentifier'])
+                    'Final', db['ClusterIdentifier']
+                )
             try:
                 c.delete_cluster(**params)
             except ClientError as e:
                 if e.response['Error']['Code'] == "InvalidClusterState":
                     self.log.warning(
                         "Cannot delete cluster when not 'Available' state: %s",
-                        db['ClusterIdentifier'])
+                        db['ClusterIdentifier'],
+                    )
                     continue
                 raise
 
@@ -389,39 +394,32 @@ class RetentionWindow(BaseAction):
     """
 
     date_attribute = 'AutomatedSnapshotRetentionPeriod'
-    schema = type_schema(
-        'retention',
-        **{'days': {'type': 'number'}})
+    schema = type_schema('retention', **{'days': {'type': 'number'}})
     permissions = ('redshift:ModifyCluster',)
 
     def process(self, clusters):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for cluster in clusters:
-                futures.append(w.submit(
-                    self.process_snapshot_retention,
-                    cluster))
+                futures.append(w.submit(self.process_snapshot_retention, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception setting Redshift retention  \n %s",
-                        f.exception())
+                    self.log.error("Exception setting Redshift retention  \n %s", f.exception())
 
     def process_snapshot_retention(self, cluster):
         current_retention = int(cluster.get(self.date_attribute, 0))
         new_retention = self.data['days']
 
         if current_retention < new_retention:
-            self.set_retention_window(
-                cluster,
-                max(current_retention, new_retention))
+            self.set_retention_window(cluster, max(current_retention, new_retention))
             return cluster
 
     def set_retention_window(self, cluster, retention):
         c = local_session(self.manager.session_factory).client('redshift')
         c.modify_cluster(
             ClusterIdentifier=cluster['ClusterIdentifier'],
-            AutomatedSnapshotRetentionPeriod=retention)
+            AutomatedSnapshotRetentionPeriod=retention,
+        )
 
 
 @Redshift.action_registry.register('snapshot')
@@ -452,24 +450,19 @@ class Snapshot(BaseAction):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for cluster in clusters:
-                futures.append(w.submit(
-                    self.process_cluster_snapshot,
-                    client, cluster))
+                futures.append(w.submit(self.process_cluster_snapshot, client, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception creating Redshift snapshot  \n %s",
-                        f.exception())
+                    self.log.error("Exception creating Redshift snapshot  \n %s", f.exception())
         return clusters
 
     def process_cluster_snapshot(self, client, cluster):
         cluster_tags = cluster.get('Tags')
         client.create_cluster_snapshot(
-            SnapshotIdentifier=snapshot_identifier(
-                'Backup',
-                cluster['ClusterIdentifier']),
+            SnapshotIdentifier=snapshot_identifier('Backup', cluster['ClusterIdentifier']),
             ClusterIdentifier=cluster['ClusterIdentifier'],
-            Tags=cluster_tags)
+            Tags=cluster_tags,
+        )
 
 
 @Redshift.action_registry.register('enable-vpc-routing')
@@ -495,23 +488,17 @@ class EnhancedVpcRoutine(BaseAction):
                     value: true
     """
 
-    schema = type_schema(
-        'enable-vpc-routing',
-        value={'type': 'boolean'})
+    schema = type_schema('enable-vpc-routing', value={'type': 'boolean'})
     permissions = ('redshift:ModifyCluster',)
 
     def process(self, clusters):
         with self.executor_factory(max_workers=3) as w:
             futures = []
             for cluster in clusters:
-                futures.append(w.submit(
-                    self.process_vpc_routing,
-                    cluster))
+                futures.append(w.submit(self.process_vpc_routing, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception changing Redshift VPC routing  \n %s",
-                        f.exception())
+                    self.log.error("Exception changing Redshift VPC routing  \n %s", f.exception())
         return clusters
 
     def process_vpc_routing(self, cluster):
@@ -521,8 +508,8 @@ class EnhancedVpcRoutine(BaseAction):
         if current_routing != new_routing:
             c = local_session(self.manager.session_factory).client('redshift')
             c.modify_cluster(
-                ClusterIdentifier=cluster['ClusterIdentifier'],
-                EnhancedVpcRouting=new_routing)
+                ClusterIdentifier=cluster['ClusterIdentifier'], EnhancedVpcRouting=new_routing
+            )
 
 
 @Redshift.action_registry.register('set-public-access')
@@ -544,16 +531,15 @@ class RedshiftSetPublicAccess(BaseAction):
                       state: false
     """
 
-    schema = type_schema(
-        'set-public-access',
-        state={'type': 'boolean'})
+    schema = type_schema('set-public-access', state={'type': 'boolean'})
     permissions = ('redshift:ModifyCluster',)
 
     def set_access(self, c):
         client = local_session(self.manager.session_factory).client('redshift')
         client.modify_cluster(
             ClusterIdentifier=c['ClusterIdentifier'],
-            PubliclyAccessible=self.data.get('state', False))
+            PubliclyAccessible=self.data.get('state', False),
+        )
 
     def process(self, clusters):
         with self.executor_factory(max_workers=2) as w:
@@ -562,7 +548,9 @@ class RedshiftSetPublicAccess(BaseAction):
                 if f.exception():
                     self.log.error(
                         "Exception setting Redshift public access on %s  \n %s",
-                        futures[f]['ClusterIdentifier'], f.exception())
+                        futures[f]['ClusterIdentifier'],
+                        f.exception(),
+                    )
         return clusters
 
 
@@ -588,9 +576,7 @@ class RedshiftSetAttributes(BaseAction):
                         AllowVersionUpgrade: true
     """
 
-    schema = type_schema('set-attributes',
-                        attributes={"type": "object"},
-                        required=('attributes',))
+    schema = type_schema('set-attributes', attributes={"type": "object"}, required=('attributes',))
 
     permissions = ('redshift:ModifyCluster',)
     cluster_mapping = {
@@ -598,7 +584,7 @@ class RedshiftSetAttributes(BaseAction):
         'ClusterSecurityGroups': 'ClusterSecurityGroups[].ClusterSecurityGroupName',
         'VpcSecurityGroupIds': 'VpcSecurityGroups[].ClusterSecurityGroupName',
         'HsmClientCertificateIdentifier': 'HsmStatus.HsmClientCertificateIdentifier',
-        'HsmConfigurationIdentifier': 'HsmStatus.HsmConfigurationIdentifier'
+        'HsmConfigurationIdentifier': 'HsmStatus.HsmConfigurationIdentifier',
     }
 
     shape = 'ModifyClusterMessage'
@@ -612,7 +598,8 @@ class RedshiftSetAttributes(BaseAction):
 
     def process(self, clusters):
         client = local_session(self.manager.session_factory).client(
-            self.manager.get_model().service)
+            self.manager.get_model().service
+        )
         for cluster in clusters:
             self.process_cluster(client, cluster)
 
@@ -621,23 +608,24 @@ class RedshiftSetAttributes(BaseAction):
             config = dict(self.data.get('attributes'))
             modify = {}
             for k, v in config.items():
-                if ((k in self.cluster_mapping and
-                v != jmespath.search(self.cluster_mapping[k], cluster)) or
-                v != cluster.get('PendingModifiedValues', {}).get(k, cluster.get(k))):
+                if (
+                    k in self.cluster_mapping
+                    and v != jmespath.search(self.cluster_mapping[k], cluster)
+                ) or v != cluster.get('PendingModifiedValues', {}).get(k, cluster.get(k)):
                     modify[k] = v
             if not modify:
                 return
 
-            modify['ClusterIdentifier'] = (cluster.get('PendingModifiedValues', {})
-                                          .get('ClusterIdentifier')
-                                          or cluster.get('ClusterIdentifier'))
+            modify['ClusterIdentifier'] = cluster.get('PendingModifiedValues', {}).get(
+                'ClusterIdentifier'
+            ) or cluster.get('ClusterIdentifier')
             client.modify_cluster(**modify)
         except (client.exceptions.ClusterNotFoundFault):
             return
         except ClientError as e:
             self.log.warning(
-                "Exception trying to modify cluster: %s error: %s",
-                cluster['ClusterIdentifier'], e)
+                "Exception trying to modify cluster: %s error: %s", cluster['ClusterIdentifier'], e
+            )
             raise
 
 
@@ -766,13 +754,12 @@ class RedshiftModifyVpcSecurityGroups(ModifyVpcSecurityGroupsAction):
 
     def process(self, clusters):
         client = local_session(self.manager.session_factory).client('redshift')
-        groups = super(
-            RedshiftModifyVpcSecurityGroups, self).get_groups(clusters)
+        groups = super(RedshiftModifyVpcSecurityGroups, self).get_groups(clusters)
 
         for idx, c in enumerate(clusters):
             client.modify_cluster(
-                ClusterIdentifier=c['ClusterIdentifier'],
-                VpcSecurityGroupIds=groups[idx])
+                ClusterIdentifier=c['ClusterIdentifier'], VpcSecurityGroupIds=groups[idx]
+            )
 
 
 @resources.register('redshift-subnet-group')
@@ -784,8 +771,7 @@ class RedshiftSubnetGroup(QueryResourceManager):
         arn_type = 'subnetgroup'
         arn_separator = ':'
         id = name = 'ClusterSubnetGroupName'
-        enum_spec = (
-            'describe_cluster_subnet_groups', 'ClusterSubnetGroups', None)
+        enum_spec = ('describe_cluster_subnet_groups', 'ClusterSubnetGroups', None)
         filter_name = 'ClusterSubnetGroupName'
         filter_type = 'scalar'
         cfn_type = config_type = "AWS::Redshift::ClusterSubnetGroup"
@@ -794,8 +780,7 @@ class RedshiftSubnetGroup(QueryResourceManager):
 
 @resources.register('redshift-snapshot')
 class RedshiftSnapshot(QueryResourceManager):
-    """Resource manager for Redshift snapshots.
-    """
+    """Resource manager for Redshift snapshots."""
 
     class resource_type(TypeInfo):
         service = 'redshift'
@@ -832,29 +817,31 @@ class RedshiftSnapshotAge(AgeFilter):
     """
 
     schema = type_schema(
-        'age', days={'type': 'number'},
-        op={'$ref': '#/definitions/filters_common/comparison_operators'})
+        'age',
+        days={'type': 'number'},
+        op={'$ref': '#/definitions/filters_common/comparison_operators'},
+    )
 
     date_attribute = 'SnapshotCreateTime'
 
 
 @RedshiftSnapshot.filter_registry.register('cross-account')
 class RedshiftSnapshotCrossAccount(CrossAccountAccessFilter):
-    """Filter all accounts that allow access to non-whitelisted accounts
-    """
+    """Filter all accounts that allow access to non-whitelisted accounts"""
+
     permissions = ('redshift:DescribeClusterSnapshots',)
     schema = type_schema(
         'cross-account',
         whitelist={'type': 'array', 'items': {'type': 'string'}},
-        whitelist_from=ValuesFrom.schema)
+        whitelist_from=ValuesFrom.schema,
+    )
 
     def process(self, snapshots, event=None):
         accounts = self.get_accounts()
         snapshots = [s for s in snapshots if s.get('AccountsWithRestoreAccess')]
         results = []
         for s in snapshots:
-            s_accounts = {a.get('AccountId') for a in s[
-                'AccountsWithRestoreAccess']}
+            s_accounts = {a.get('AccountId') for a in s['AccountsWithRestoreAccess']}
             delta_accounts = s_accounts.difference(accounts)
             if delta_accounts:
                 s['c7n:CrossAccountViolations'] = list(delta_accounts)
@@ -889,13 +876,10 @@ class RedshiftSnapshotDelete(BaseAction):
         with self.executor_factory(max_workers=3) as w:
             futures = []
             for snapshot_set in chunks(reversed(snapshots), size=50):
-                futures.append(
-                    w.submit(self.process_snapshot_set, snapshot_set))
+                futures.append(w.submit(self.process_snapshot_set, snapshot_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting snapshot set \n %s",
-                        f.exception())
+                    self.log.error("Exception deleting snapshot set \n %s", f.exception())
         return snapshots
 
     def process_snapshot_set(self, snapshots_set):
@@ -903,7 +887,8 @@ class RedshiftSnapshotDelete(BaseAction):
         for s in snapshots_set:
             c.delete_cluster_snapshot(
                 SnapshotIdentifier=s['SnapshotIdentifier'],
-                SnapshotClusterIdentifier=s['ClusterIdentifier'])
+                SnapshotClusterIdentifier=s['ClusterIdentifier'],
+            )
 
 
 @RedshiftSnapshot.action_registry.register('revoke-access')
@@ -924,6 +909,7 @@ class RedshiftSnapshotRevokeAccess(BaseAction):
                 actions:
                   - type: revoke-access
     """
+
     permissions = ('redshift:RevokeSnapshotAccess',)
     schema = type_schema('revoke-access')
 
@@ -933,7 +919,8 @@ class RedshiftSnapshotRevokeAccess(BaseAction):
                 return self
         raise PolicyValidationError(
             '`revoke-access` may only be used in '
-            'conjunction with `cross-account` filter on %s' % (self.manager.data,))
+            'conjunction with `cross-account` filter on %s' % (self.manager.data,)
+        )
 
     def process_snapshot_set(self, client, snapshot_set):
         for s in snapshot_set:
@@ -942,7 +929,8 @@ class RedshiftSnapshotRevokeAccess(BaseAction):
                     self.manager.retry(
                         client.revoke_snapshot_access,
                         SnapshotIdentifier=s['SnapshotIdentifier'],
-                        AccountWithRestoreAccess=a)
+                        AccountWithRestoreAccess=a,
+                    )
                 except ClientError as e:
                     if e.response['Error']['Code'] == 'ClusterSnapshotNotFound':
                         continue
@@ -953,27 +941,22 @@ class RedshiftSnapshotRevokeAccess(BaseAction):
         with self.executor_factory(max_workers=2) as w:
             futures = {}
             for snapshot_set in chunks(snapshots, 25):
-                futures[w.submit(
-                    self.process_snapshot_set, client, snapshot_set)
-                ] = snapshot_set
+                futures[w.submit(self.process_snapshot_set, client, snapshot_set)] = snapshot_set
             for f in as_completed(futures):
                 if f.exception():
                     self.log.exception(
-                        'Exception while revoking access on %s: %s' % (
-                            ', '.join(
-                                [s['SnapshotIdentifier'] for s in futures[f]]),
-                            f.exception()))
+                        'Exception while revoking access on %s: %s'
+                        % (', '.join([s['SnapshotIdentifier'] for s in futures[f]]), f.exception())
+                    )
 
 
 @resources.register('redshift-reserved')
 class ReservedNode(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'redshift'
         name = id = 'ReservedNodeId'
         date = 'StartTime'
-        enum_spec = (
-            'describe_reserved_nodes', 'ReservedNodes', None)
+        enum_spec = ('describe_reserved_nodes', 'ReservedNodes', None)
         filter_name = 'ReservedNodes'
         filter_type = 'list'
         arn_type = "reserved-nodes"

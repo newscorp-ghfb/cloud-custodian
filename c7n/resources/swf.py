@@ -21,7 +21,4 @@ class SimpleWorkflowDomain(QueryResourceManager):
         universal_taggable = object()
         permission_augment = ('swf:ListTagsForResource',)
 
-    source_mapping = {
-        'describe': DescribeSimpleWorkflow,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeSimpleWorkflow, 'config': ConfigSource}

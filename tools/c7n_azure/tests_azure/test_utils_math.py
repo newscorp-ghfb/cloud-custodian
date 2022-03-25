@@ -5,7 +5,6 @@ from c7n_azure.utils import Math
 
 
 class UtilsMathTest(BaseTest):
-
     def test_mean_single_value(self):
         data = [10]
         actual = Math.mean(data)

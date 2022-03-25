@@ -14,13 +14,15 @@ from c7n.filters.offhours import OffHour, OnHour
 
 @resources.register('sagemaker-notebook')
 class NotebookInstance(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sagemaker'
         enum_spec = ('list_notebook_instances', 'NotebookInstances', None)
         detail_spec = (
-            'describe_notebook_instance', 'NotebookInstanceName',
-            'NotebookInstanceName', None)
+            'describe_notebook_instance',
+            'NotebookInstanceName',
+            'NotebookInstanceName',
+            None,
+        )
         arn = id = 'NotebookInstanceArn'
         name = 'NotebookInstanceName'
         date = 'CreationTime'
@@ -33,8 +35,7 @@ class NotebookInstance(QueryResourceManager):
 
         def _augment(r):
             # List tags for the Notebook-Instance & set as attribute
-            tags = self.retry(client.list_tags,
-                ResourceArn=r['NotebookInstanceArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=r['NotebookInstanceArn'])['Tags']
             r['Tags'] = tags
             return r
 
@@ -50,23 +51,18 @@ NotebookInstance.filter_registry.register('onhour', OnHour)
 
 @resources.register('sagemaker-job')
 class SagemakerJob(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sagemaker'
         enum_spec = ('list_training_jobs', 'TrainingJobSummaries', None)
-        detail_spec = (
-            'describe_training_job', 'TrainingJobName', 'TrainingJobName', None)
+        detail_spec = ('describe_training_job', 'TrainingJobName', 'TrainingJobName', None)
         arn = id = 'TrainingJobArn'
         name = 'TrainingJobName'
         date = 'CreationTime'
-        permission_augment = (
-            'sagemaker:DescribeTrainingJob', 'sagemaker:ListTags')
+        permission_augment = ('sagemaker:DescribeTrainingJob', 'sagemaker:ListTags')
 
     def __init__(self, ctx, data):
         super(SagemakerJob, self).__init__(ctx, data)
-        self.queries = QueryFilter.parse(
-            self.data.get('query', [
-                {'StatusEquals': 'InProgress'}]))
+        self.queries = QueryFilter.parse(self.data.get('query', [{'StatusEquals': 'InProgress'}]))
 
     def resources(self, query=None):
         for q in self.queries:
@@ -81,8 +77,7 @@ class SagemakerJob(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(j):
-            tags = self.retry(client.list_tags,
-                ResourceArn=j['TrainingJobArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=j['TrainingJobArn'])['Tags']
             j['Tags'] = tags
             return j
 
@@ -92,13 +87,11 @@ class SagemakerJob(QueryResourceManager):
 
 @resources.register('sagemaker-transform-job')
 class SagemakerTransformJob(QueryResourceManager):
-
     class resource_type(TypeInfo):
         arn_type = "transform-job"
         service = 'sagemaker'
         enum_spec = ('list_transform_jobs', 'TransformJobSummaries', None)
-        detail_spec = (
-            'describe_transform_job', 'TransformJobName', 'TransformJobName', None)
+        detail_spec = ('describe_transform_job', 'TransformJobName', 'TransformJobName', None)
         arn = id = 'TransformJobArn'
         name = 'TransformJobName'
         date = 'CreationTime'
@@ -108,9 +101,7 @@ class SagemakerTransformJob(QueryResourceManager):
 
     def __init__(self, ctx, data):
         super(SagemakerTransformJob, self).__init__(ctx, data)
-        self.queries = QueryFilter.parse(
-            self.data.get('query', [
-                {'StatusEquals': 'InProgress'}]))
+        self.queries = QueryFilter.parse(self.data.get('query', [{'StatusEquals': 'InProgress'}]))
 
     def resources(self, query=None):
         for q in self.queries:
@@ -125,8 +116,7 @@ class SagemakerTransformJob(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(j):
-            tags = self.retry(client.list_tags,
-                ResourceArn=j['TransformJobArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=j['TransformJobArn'])['Tags']
             j['Tags'] = tags
             return j
 
@@ -135,7 +125,10 @@ class SagemakerTransformJob(QueryResourceManager):
 
 class QueryFilter:
 
-    JOB_FILTERS = ('StatusEquals', 'NameContains',)
+    JOB_FILTERS = (
+        'StatusEquals',
+        'NameContains',
+    )
 
     @classmethod
     def parse(cls, data):
@@ -143,12 +136,10 @@ class QueryFilter:
         names = set()
         for d in data:
             if not isinstance(d, dict):
-                raise PolicyValidationError(
-                    "Job Query Filter Invalid structure %s" % d)
+                raise PolicyValidationError("Job Query Filter Invalid structure %s" % d)
             for k, v in d.items():
                 if isinstance(v, list):
-                    raise ValueError(
-                        'Job query filter invalid structure %s' % v)
+                    raise ValueError('Job query filter invalid structure %s' % v)
             query = cls(d).validate().query()
             if query['Name'] in names:
                 # Cannot filter multiple times on the same key
@@ -170,21 +161,19 @@ class QueryFilter:
 
     def validate(self):
         if not len(list(self.data.keys())) == 1:
-            raise PolicyValidationError(
-                "Job Query Filter Invalid %s" % self.data)
+            raise PolicyValidationError("Job Query Filter Invalid %s" % self.data)
         self.key = list(self.data.keys())[0]
         self.value = list(self.data.values())[0]
 
         if self.key not in self.JOB_FILTERS and not self.key.startswith('tag:'):
-            raise PolicyValidationError(
-                "Job Query Filter invalid filter name %s" % (
-                    self.data))
+            raise PolicyValidationError("Job Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(
                 "Job Query Filters must have a value, use tag-key"
                 " w/ tag name as value for tag present checks"
-                " %s" % self.data)
+                " %s" % self.data
+            )
         return self
 
     def query(self):
@@ -196,13 +185,10 @@ class QueryFilter:
 
 @resources.register('sagemaker-endpoint')
 class SagemakerEndpoint(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sagemaker'
         enum_spec = ('list_endpoints', 'Endpoints', None)
-        detail_spec = (
-            'describe_endpoint', 'EndpointName',
-            'EndpointName', None)
+        detail_spec = ('describe_endpoint', 'EndpointName', 'EndpointName', None)
         arn = id = 'EndpointArn'
         name = 'EndpointName'
         date = 'CreationTime'
@@ -214,8 +200,7 @@ class SagemakerEndpoint(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(e):
-            tags = self.retry(client.list_tags,
-                ResourceArn=e['EndpointArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=e['EndpointArn'])['Tags']
             e['Tags'] = tags
             return e
 
@@ -229,13 +214,10 @@ SagemakerEndpoint.filter_registry.register('marked-for-op', TagActionFilter)
 
 @resources.register('sagemaker-endpoint-config')
 class SagemakerEndpointConfig(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sagemaker'
         enum_spec = ('list_endpoint_configs', 'EndpointConfigs', None)
-        detail_spec = (
-            'describe_endpoint_config', 'EndpointConfigName',
-            'EndpointConfigName', None)
+        detail_spec = ('describe_endpoint_config', 'EndpointConfigName', 'EndpointConfigName', None)
         arn = id = 'EndpointConfigArn'
         name = 'EndpointConfigName'
         date = 'CreationTime'
@@ -247,8 +229,7 @@ class SagemakerEndpointConfig(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(e):
-            tags = self.retry(client.list_tags,
-                ResourceArn=e['EndpointConfigArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=e['EndpointConfigArn'])['Tags']
             e['Tags'] = tags
             return e
 
@@ -261,13 +242,10 @@ SagemakerEndpointConfig.filter_registry.register('marked-for-op', TagActionFilte
 
 @resources.register('sagemaker-model')
 class Model(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'sagemaker'
         enum_spec = ('list_models', 'Models', None)
-        detail_spec = (
-            'describe_model', 'ModelName',
-            'ModelName', None)
+        detail_spec = ('describe_model', 'ModelName', 'ModelName', None)
         arn = id = 'ModelArn'
         name = 'ModelName'
         date = 'CreationTime'
@@ -279,8 +257,7 @@ class Model(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(r):
-            tags = self.retry(client.list_tags,
-                ResourceArn=r['ModelArn'])['Tags']
+            tags = self.retry(client.list_tags, ResourceArn=r['ModelArn'])['Tags']
             r.setdefault('Tags', []).extend(tags)
             return r
 
@@ -342,6 +319,7 @@ class TagNotebookInstance(Tag):
                     key: required-tag
                     value: required-value
     """
+
     permissions = ('sagemaker:AddTags',)
 
     def process_resource_set(self, client, resources, tags):
@@ -397,6 +375,7 @@ class RemoveTagNotebookInstance(RemoveTag):
                   - type: remove-tag
                     tags: ["expired-tag"]
     """
+
     permissions = ('sagemaker:DeleteTags',)
 
     def process_resource_set(self, client, resources, keys):
@@ -463,13 +442,15 @@ class StartNotebookInstance(BaseAction):
             actions:
               - start
     """
+
     schema = type_schema('start')
     permissions = ('sagemaker:StartNotebookInstance',)
     valid_origin_states = ('Stopped',)
 
     def process(self, resources):
-        resources = self.filter_resources(resources, 'NotebookInstanceStatus',
-                                          self.valid_origin_states)
+        resources = self.filter_resources(
+            resources, 'NotebookInstanceStatus', self.valid_origin_states
+        )
         if not len(resources):
             return
 
@@ -477,8 +458,7 @@ class StartNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.start_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName'])
+                client.start_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -499,13 +479,15 @@ class StopNotebookInstance(BaseAction):
             actions:
               - stop
     """
+
     schema = type_schema('stop')
     permissions = ('sagemaker:StopNotebookInstance',)
     valid_origin_states = ('InService',)
 
     def process(self, resources):
-        resources = self.filter_resources(resources, 'NotebookInstanceStatus',
-                                          self.valid_origin_states)
+        resources = self.filter_resources(
+            resources, 'NotebookInstanceStatus', self.valid_origin_states
+        )
         if not len(resources):
             return
 
@@ -513,8 +495,7 @@ class StopNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.stop_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName'])
+                client.stop_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -535,13 +516,18 @@ class DeleteNotebookInstance(BaseAction):
             actions:
               - delete
     """
+
     schema = type_schema('delete')
     permissions = ('sagemaker:DeleteNotebookInstance',)
-    valid_origin_states = ('Stopped', 'Failed',)
+    valid_origin_states = (
+        'Stopped',
+        'Failed',
+    )
 
     def process(self, resources):
-        resources = self.filter_resources(resources, 'NotebookInstanceStatus',
-                                          self.valid_origin_states)
+        resources = self.filter_resources(
+            resources, 'NotebookInstanceStatus', self.valid_origin_states
+        )
         if not len(resources):
             return
 
@@ -549,8 +535,7 @@ class DeleteNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.delete_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName'])
+                client.delete_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -590,6 +575,7 @@ class DeleteModel(BaseAction):
             actions:
               - delete
     """
+
     schema = type_schema('delete')
     permissions = ('sagemaker:DeleteModel',)
 
@@ -619,6 +605,7 @@ class SagemakerJobStop(BaseAction):
             actions:
               - stop
     """
+
     schema = type_schema('stop')
     permissions = ('sagemaker:StopTrainingJob',)
 
@@ -648,9 +635,8 @@ class SagemakerEndpointDelete(BaseAction):
             actions:
               - type: delete
     """
-    permissions = (
-        'sagemaker:DeleteEndpoint',
-        'sagemaker:DeleteEndpointConfig')
+
+    permissions = ('sagemaker:DeleteEndpoint', 'sagemaker:DeleteEndpointConfig')
     schema = type_schema('delete')
 
     def process(self, endpoints):
@@ -678,6 +664,7 @@ class SagemakerEndpointConfigDelete(BaseAction):
             actions:
               - delete
     """
+
     schema = type_schema('delete')
     permissions = ('sagemaker:DeleteEndpointConfig',)
 
@@ -685,8 +672,7 @@ class SagemakerEndpointConfigDelete(BaseAction):
         client = local_session(self.manager.session_factory).client('sagemaker')
         for e in endpoints:
             try:
-                client.delete_endpoint_config(
-                    EndpointConfigName=e['EndpointConfigName'])
+                client.delete_endpoint_config(EndpointConfigName=e['EndpointConfigName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -707,6 +693,7 @@ class SagemakerTransformJobStop(BaseAction):
             actions:
               - stop
     """
+
     schema = type_schema('stop')
     permissions = ('sagemaker:StopTransformJob',)
 

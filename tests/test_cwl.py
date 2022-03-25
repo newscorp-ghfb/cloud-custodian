@@ -11,29 +11,30 @@ from pytest_terraform import terraform
 
 @terraform('log_delete', teardown=terraform.TEARDOWN_IGNORE)
 def test_tagged_log_group_delete(test, log_delete):
-    factory = test.replay_flight_data(
-        'test_log_group_tag_delete', region="us-west-2")
+    factory = test.replay_flight_data('test_log_group_tag_delete', region="us-west-2")
 
-    p = test.load_policy({
-        'name': 'group-delete',
-        'resource': 'aws.log-group',
-        'filters': [{
-            'tag:App': 'Foie'}],
-        'actions': ['delete']},
-        session_factory=factory, config={'region': 'us-west-2'})
+    p = test.load_policy(
+        {
+            'name': 'group-delete',
+            'resource': 'aws.log-group',
+            'filters': [{'tag:App': 'Foie'}],
+            'actions': ['delete'],
+        },
+        session_factory=factory,
+        config={'region': 'us-west-2'},
+    )
 
     resources = p.run()
     assert len(resources) == 1
-    assert resources[0]['logGroupName'] == log_delete[
-        'aws_cloudwatch_log_group.test_group.name']
+    assert resources[0]['logGroupName'] == log_delete['aws_cloudwatch_log_group.test_group.name']
     client = factory().client('logs')
-    assert client.describe_log_groups(
-        logGroupNamePrefix=resources[0]['logGroupName']).get(
-            'logGroups') == []
+    assert (
+        client.describe_log_groups(logGroupNamePrefix=resources[0]['logGroupName']).get('logGroups')
+        == []
+    )
 
 
 class LogGroupTest(BaseTest):
-
     def test_cross_account(self):
         factory = self.replay_flight_data("test_log_group_cross_account")
         p = self.load_policy(
@@ -55,15 +56,9 @@ class LogGroupTest(BaseTest):
             {
                 'name': 'test-log-group-kms-filter',
                 'resource': 'log-group',
-                'filters': [
-                    {
-                        'type': 'kms-key',
-                        'key': 'c7n:AliasName',
-                        'value': 'alias/cw'
-                    }
-                ]
+                'filters': [{'type': 'kms-key', 'key': 'c7n:AliasName', 'value': 'alias/cw'}],
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
@@ -82,21 +77,30 @@ class LogGroupTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["c7n:SubscriptionFilters"][0]["destinationArn"],
-            "arn:aws:lambda:us-east-2:1111111111111:function:CloudCustodian")
+        self.assertEqual(
+            resources[0]["c7n:SubscriptionFilters"][0]["destinationArn"],
+            "arn:aws:lambda:us-east-2:1111111111111:function:CloudCustodian",
+        )
 
     def test_age_normalize(self):
         factory = self.replay_flight_data("test_log_group_age_normalize")
-        p = self.load_policy({
-            'name': 'log-age',
-            'resource': 'aws.log-group',
-            'filters': [{
-                'type': 'value',
-                'value_type': 'age',
-                'value': 30,
-                'op': 'greater-than',
-                'key': 'creationTime'}]},
-            session_factory=factory, config={'region': 'us-west-2'})
+        p = self.load_policy(
+            {
+                'name': 'log-age',
+                'resource': 'aws.log-group',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'value_type': 'age',
+                        'value': 30,
+                        'op': 'greater-than',
+                        'key': 'creationTime',
+                    }
+                ],
+            },
+            session_factory=factory,
+            config={'region': 'us-west-2'},
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['creationTime'], 1548368507441)
@@ -115,12 +119,7 @@ class LogGroupTest(BaseTest):
             client.put_log_events(
                 logGroupName=log_group,
                 logStreamName=log_stream,
-                logEvents=[
-                    {
-                        'timestamp': int(time.time() * 1000),
-                        'message': 'message 1'
-                    }
-                ]
+                logEvents=[{'timestamp': int(time.time() * 1000), 'message': 'message 1'}],
             )
             time.sleep(5)
 
@@ -141,11 +140,10 @@ class LogGroupTest(BaseTest):
         # should match lastIngestionTime on first stream
         self.assertEqual(
             resources[0]["lastWrite"].timestamp() * 1000,
-            float(resources[0]["streams"][0]["lastIngestionTime"])
+            float(resources[0]["streams"][0]["lastIngestionTime"]),
         )
         self.assertNotEqual(
-            resources[0]["lastWrite"].timestamp() * 1000,
-            float(resources[0]["creationTime"])
+            resources[0]["lastWrite"].timestamp() * 1000, float(resources[0]["creationTime"])
         )
         self.assertGreater(resources[0]["lastWrite"].year, 2019)
 
@@ -173,8 +171,7 @@ class LogGroupTest(BaseTest):
         self.assertEqual(resources[0]["logGroupName"], log_group)
         # should match CreationTime on group itself
         self.assertEqual(
-            resources[0]["lastWrite"].timestamp() * 1000,
-            float(resources[0]["creationTime"])
+            resources[0]["lastWrite"].timestamp() * 1000, float(resources[0]["creationTime"])
         )
         self.assertGreater(resources[0]["lastWrite"].year, 2019)
 
@@ -206,11 +203,10 @@ class LogGroupTest(BaseTest):
         # should match CreationTime on latest stream
         self.assertEqual(
             resources[0]["lastWrite"].timestamp() * 1000,
-            float(resources[0]["streams"][0]["creationTime"])
+            float(resources[0]["streams"][0]["creationTime"]),
         )
         self.assertNotEqual(
-            resources[0]["lastWrite"].timestamp() * 1000,
-            float(resources[0]["creationTime"])
+            resources[0]["lastWrite"].timestamp() * 1000, float(resources[0]["creationTime"])
         )
         self.assertGreater(resources[0]["lastWrite"].year, 2019)
 
@@ -245,21 +241,20 @@ class LogGroupTest(BaseTest):
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
-            'logs').exceptions.ResourceNotFoundException = (
-                client.exceptions.ResourceNotFoundException)
-        mock_factory().client('logs').delete_log_group.side_effect = (
-            client.exceptions.ResourceNotFoundException(
-                {'Error': {'Code': 'xyz'}},
-                operation_name='delete_log_group'))
-        p = self.load_policy({
-            'name': 'delete-log-err',
-            'resource': 'log-group',
-            'actions': ['delete']},
-            session_factory=mock_factory)
+            'logs'
+        ).exceptions.ResourceNotFoundException = client.exceptions.ResourceNotFoundException
+        mock_factory().client(
+            'logs'
+        ).delete_log_group.side_effect = client.exceptions.ResourceNotFoundException(
+            {'Error': {'Code': 'xyz'}}, operation_name='delete_log_group'
+        )
+        p = self.load_policy(
+            {'name': 'delete-log-err', 'resource': 'log-group', 'actions': ['delete']},
+            session_factory=mock_factory,
+        )
 
         try:
-            p.resource_manager.actions[0].process(
-                [{'logGroupName': 'abc'}])
+            p.resource_manager.actions[0].process([{'logGroupName': 'abc'}])
         except client.exceptions.ResourceNotFoundException:
             self.fail('should not raise')
         mock_factory().client('logs').delete_log_group.assert_called_once()
@@ -283,8 +278,7 @@ class LogGroupTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["logGroupName"], log_group)
-        self.assertEqual(client.describe_log_groups(
-            logGroupNamePrefix=log_group)['logGroups'], [])
+        self.assertEqual(client.describe_log_groups(logGroupNamePrefix=log_group)['logGroups'], [])
 
     @functional
     def test_encrypt(self):
@@ -295,36 +289,38 @@ class LogGroupTest(BaseTest):
         self.addCleanup(client.delete_log_group, logGroupName=log_group)
 
         p = self.load_policy(
-            {'name': 'encrypt-log-group',
-             'resource': 'log-group',
-             'filters': [{'logGroupName': log_group}],
-             'actions': [{
-                 'type': 'set-encryption',
-                 'kms-key': 'alias/app-logs'}]},
+            {
+                'name': 'encrypt-log-group',
+                'resource': 'log-group',
+                'filters': [{'logGroupName': log_group}],
+                'actions': [{'type': 'set-encryption', 'kms-key': 'alias/app-logs'}],
+            },
             config={'region': 'us-west-2'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['logGroupName'], log_group)
-        results = client.describe_log_groups(
-            logGroupNamePrefix=log_group)['logGroups']
+        results = client.describe_log_groups(logGroupNamePrefix=log_group)['logGroups']
         self.assertEqual(
             results[0]['kmsKeyId'],
-            'arn:aws:kms:us-west-2:644160558196:key/6f13fc53-8da0-46f2-9c69-c1f9fbf471d7')
+            'arn:aws:kms:us-west-2:644160558196:key/6f13fc53-8da0-46f2-9c69-c1f9fbf471d7',
+        )
 
     def test_metrics(self):
         session_factory = self.replay_flight_data('test_log_group_metric')
         p = self.load_policy(
-            {'name': 'metric-log-group',
-             'resource': 'log-group',
-             'filters': [
-                 {"logGroupName": "/aws/lambda/myIOTFunction"},
-                 {"type": "metrics",
-                  "name": "IncomingBytes",
-                  "value": 1,
-                  "op": "greater-than"}]},
+            {
+                'name': 'metric-log-group',
+                'resource': 'log-group',
+                'filters': [
+                    {"logGroupName": "/aws/lambda/myIOTFunction"},
+                    {"type": "metrics", "name": "IncomingBytes", "value": 1, "op": "greater-than"},
+                ],
+            },
             config={'region': 'us-west-2'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertIn('c7n.metrics', resources[0])
@@ -332,32 +328,38 @@ class LogGroupTest(BaseTest):
     def test_log_metric_filter(self):
         session_factory = self.replay_flight_data('test_log_group_log_metric_filter')
         p = self.load_policy(
-            {"name": "log-metric",
-             "resource": "aws.log-metric",
-             "filters": [
-                 {"type": "value",
-                  "key": "logGroupName",
-                  "value": "metric-filter-test1"}]},
+            {
+                "name": "log-metric",
+                "resource": "aws.log-metric",
+                "filters": [
+                    {"type": "value", "key": "logGroupName", "value": "metric-filter-test1"}
+                ],
+            },
             config={'region': 'us-east-2'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
     def test_log_metric_filter_alarm(self):
         session_factory = self.replay_flight_data('test_log_group_log_metric_filter_alarm')
         p = self.load_policy(
-            {"name": "log-metric",
-             "resource": "aws.log-metric",
-             "filters": [
-                 {"type": "value",
-                  "key": "logGroupName",
-                  "value": "metric-filter-test*",
-                  "op": "glob"},
-                 {"type": "alarm",
-                  "key": "AlarmName",
-                  "value": "present"}]},
+            {
+                "name": "log-metric",
+                "resource": "aws.log-metric",
+                "filters": [
+                    {
+                        "type": "value",
+                        "key": "logGroupName",
+                        "value": "metric-filter-test*",
+                        "op": "glob",
+                    },
+                    {"type": "alarm", "key": "AlarmName", "value": "present"},
+                ],
+            },
             config={'region': 'us-east-2'},
-            session_factory=session_factory)
+            session_factory=session_factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 2)
         self.assertIn('c7n:MetricAlarms', resources[0])

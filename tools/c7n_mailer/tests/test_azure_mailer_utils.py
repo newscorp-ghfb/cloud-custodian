@@ -8,7 +8,6 @@ from mock import Mock
 
 
 class AzureUtilsTest(unittest.TestCase):
-
     def test_azure_decrypt_raw(self):
         self.assertEqual(azure_decrypt({'test': 'value'}, Mock(), Mock(), 'test'), 'value')
         self.assertEqual(azure_decrypt({'test': 'value'}, Mock(), Mock(), 'test'), 'value')

@@ -9,9 +9,12 @@ import sys
 
 import c7n
 
-apache_license_header = [l + '\n' for l in """\
+apache_license_header = [
+    l + '\n'
+    for l in """\
 # SPDX-License-Identifier: Apache-2.0
-""".splitlines()]
+""".splitlines()
+]
 
 target_license_header = """\
 # SPDX-License-Identifier: Apache-2.0
@@ -23,13 +26,7 @@ target_copyright_header = """\
 
 # Direct permission was obtained from the following contributors via their
 # open source office or directly for individuals.
-old_headers = [
-    "Amazon",
-    "Capital One",
-    "Microsoft Corporation",
-    "Kapil Thangavelu",
-    "Karol Lassak"
-]
+old_headers = ["Amazon", "Capital One", "Microsoft Corporation", "Kapil Thangavelu", "Karol Lassak"]
 
 
 def update_license_header(p):
@@ -87,7 +84,7 @@ def update_copyright_header(p):
     if not offset:
         return
 
-    print(" Adding copyright header to %s" % (p, ))
+    print(" Adding copyright header to %s" % (p,))
     with open(p, 'w') as fh:
         fh.write("".join(contents))
         fh.flush()

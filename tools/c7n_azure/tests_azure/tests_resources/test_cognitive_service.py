@@ -9,22 +9,22 @@ class CognitiveServiceTest(BaseTest):
 
     def test_cognitive_service_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-azure-cognitive-service',
-                'resource': 'azure.cognitiveservice'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-azure-cognitive-service', 'resource': 'azure.cognitiveservice'},
+                validate=True,
+            )
             self.assertTrue(p)
 
     @arm_template('cognitive-service.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-cog-serv',
-            'resource': 'azure.cognitiveservice',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value': 'cctest-cog-serv'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-cog-serv',
+                'resource': 'azure.cognitiveservice',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctest-cog-serv'}
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

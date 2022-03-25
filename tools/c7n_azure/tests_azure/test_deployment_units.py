@@ -51,43 +51,51 @@ class DeploymentUnitsTest(BaseTest):
         return result
 
     def test_app_insights(self):
-        params = {'name': 'cloud-custodian-test',
-                  'location': 'westus2',
-                  'resource_group_name': self.rg_name}
+        params = {
+            'name': 'cloud-custodian-test',
+            'location': 'westus2',
+            'resource_group_name': self.rg_name,
+        }
         unit = AppInsightsUnit()
 
         self._validate(unit, params)
 
     def test_storage_account(self):
-        params = {'name': 'custodianaccount47182745',
-                  'location': self.rg_location,
-                  'resource_group_name': self.rg_name}
+        params = {
+            'name': 'custodianaccount47182745',
+            'location': self.rg_location,
+            'resource_group_name': self.rg_name,
+        }
         unit = StorageAccountUnit()
 
         self._validate(unit, params)
 
     def test_service_plan(self):
-        params = {'name': 'cloud-custodian-test',
-                  'location': self.rg_location,
-                  'resource_group_name': self.rg_name,
-                  'sku_tier': 'Basic',
-                  'sku_name': 'B1'}
+        params = {
+            'name': 'cloud-custodian-test',
+            'location': self.rg_location,
+            'resource_group_name': self.rg_name,
+            'sku_tier': 'Basic',
+            'sku_name': 'B1',
+        }
         unit = AppServicePlanUnit()
 
         self._validate(unit, params)
 
     def test_app_service_plan_autoscale(self):
-        params = {'name': 'cloud-custodian-test-autoscale',
-                  'location': self.rg_location,
-                  'resource_group_name': self.rg_name,
-                  'sku_tier': 'Basic',
-                  'sku_name': 'B1',
-                  'auto_scale': {
-                      'enabled': True,
-                      'min_capacity': 1,
-                      'max_capacity': 2,
-                      'default_capacity': 1}
-                  }
+        params = {
+            'name': 'cloud-custodian-test-autoscale',
+            'location': self.rg_location,
+            'resource_group_name': self.rg_name,
+            'sku_tier': 'Basic',
+            'sku_name': 'B1',
+            'auto_scale': {
+                'enabled': True,
+                'min_capacity': 1,
+                'max_capacity': 2,
+                'default_capacity': 1,
+            },
+        }
 
         unit = AppServicePlanUnit()
 
@@ -102,7 +110,8 @@ class DeploymentUnitsTest(BaseTest):
         sa_params = {
             'name': 'custodianaccount47182748',
             'location': self.rg_location,
-            'resource_group_name': self.rg_name}
+            'resource_group_name': self.rg_name,
+        }
         storage_unit = StorageAccountUnit()
         storage_account_id = storage_unit.provision(sa_params).id
         conn_string = FunctionAppUtilities.get_storage_account_connection_string(storage_account_id)
@@ -116,7 +125,7 @@ class DeploymentUnitsTest(BaseTest):
             'app_service_plan_id': None,  # auto-provision a dynamic app plan
             'app_insights_key': None,
             'is_consumption_plan': True,
-            'storage_account_connection_string': conn_string
+            'storage_account_connection_string': conn_string,
         }
         func_unit = FunctionAppDeploymentUnit()
         func_app = self._validate(func_unit, func_params)
@@ -130,7 +139,8 @@ class DeploymentUnitsTest(BaseTest):
         sa_params = {
             'name': 'custodianaccount47182741',
             'location': self.rg_location,
-            'resource_group_name': self.rg_name}
+            'resource_group_name': self.rg_name,
+        }
         storage_unit = StorageAccountUnit()
         storage_account_id = storage_unit.provision(sa_params).id
         conn_string = FunctionAppUtilities.get_storage_account_connection_string(storage_account_id)
@@ -141,7 +151,8 @@ class DeploymentUnitsTest(BaseTest):
             'location': self.rg_location,
             'resource_group_name': self.rg_name,
             'sku_tier': 'Basic',
-            'sku_name': 'B1'}
+            'sku_name': 'B1',
+        }
         app_plan_unit = AppServicePlanUnit()
         app_plan = app_plan_unit.provision(app_plan_params)
 
@@ -154,7 +165,7 @@ class DeploymentUnitsTest(BaseTest):
             'app_service_plan_id': app_plan.id,
             'app_insights_key': None,
             'is_consumption_plan': False,
-            'storage_account_connection_string': conn_string
+            'storage_account_connection_string': conn_string,
         }
         func_unit = FunctionAppDeploymentUnit()
         func_app = self._validate(func_unit, func_params)

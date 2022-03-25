@@ -1,12 +1,12 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
-from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor)  # noqa
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor  # noqa
 
 import threading
 
 
 class MainThreadExecutor:
-    """ For running tests.
+    """For running tests.
 
     c7n_async == True  -> catch exceptions and store them in the future.
     c7n_async == False -> let exceptions bubble up.

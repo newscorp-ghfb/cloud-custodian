@@ -11,7 +11,12 @@ from c7n.actions import RemovePolicyBase, BaseAction
 from c7n.filters import Filter, CrossAccountAccessFilter, ValueFilter
 from c7n.manager import resources
 from c7n.query import (
-    ConfigSource, DescribeSource, QueryResourceManager, RetryPageIterator, TypeInfo)
+    ConfigSource,
+    DescribeSource,
+    QueryResourceManager,
+    RetryPageIterator,
+    TypeInfo,
+)
 from c7n.utils import local_session, type_schema, select_keys
 from c7n.tags import universal_augment
 
@@ -20,7 +25,6 @@ from .securityhub import PostFinding
 
 @resources.register('kms')
 class KeyAlias(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'kms'
         arn_type = 'alias'
@@ -46,9 +50,8 @@ class DescribeKey(DescribeSource):
             for rid in ids:
                 try:
                     results.append(
-                        self.manager.retry(
-                            client.describe_key,
-                            KeyId=rid)['KeyMetadata'])
+                        self.manager.retry(client.describe_key, KeyId=rid)['KeyMetadata']
+                    )
                 except client.exceptions.NotFoundException:
                     continue
             return results
@@ -69,9 +72,7 @@ class DescribeKey(DescribeSource):
                     r.update(key_detail)
                 except ClientError as e:
                     if e.response['Error']['Code'] == 'AccessDeniedException':
-                        self.manager.log.warning(
-                            "Access denied when describing key:%s",
-                            key_id)
+                        self.manager.log.warning("Access denied when describing key:%s", key_id)
                         # If a describe fails, we still want the `Arn` key
                         # available since it is a core attribute
                         r['Arn'] = r['KeyArn']
@@ -86,7 +87,6 @@ class DescribeKey(DescribeSource):
 
 
 class ConfigKey(ConfigSource):
-
     def load_resource(self, item):
         resource = super().load_resource(item)
         alias_names = self.manager.alias_map.get(resource[self.manager.resource_type.id])
@@ -97,7 +97,6 @@ class ConfigKey(ConfigSource):
 
 @resources.register('kms-key')
 class Key(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'kms'
         arn_type = "key"
@@ -108,10 +107,7 @@ class Key(QueryResourceManager):
         universal_taggable = True
         cfn_type = config_type = 'AWS::KMS::Key'
 
-    source_mapping = {
-        'config': ConfigKey,
-        'describe': DescribeKey
-    }
+    source_mapping = {'config': ConfigKey, 'describe': DescribeKey}
 
     @property
     @lru_cache()
@@ -156,24 +152,23 @@ class KeyRotationStatus(ValueFilter):
         def _key_rotation_status(resource):
             try:
                 resource['KeyRotationEnabled'] = client.get_key_rotation_status(
-                    KeyId=resource['KeyId'])
+                    KeyId=resource['KeyId']
+                )
             except ClientError as e:
                 if e.response['Error']['Code'] == 'AccessDeniedException':
                     self.log.warning(
                         "Access denied when getting rotation status on key:%s",
-                        resource.get('KeyArn'))
+                        resource.get('KeyArn'),
+                    )
                 else:
                     raise
 
         with self.executor_factory(max_workers=2) as w:
-            query_resources = [
-                r for r in resources if 'KeyRotationEnabled' not in r]
-            self.log.debug(
-                "Querying %d kms-keys' rotation status" % len(query_resources))
+            query_resources = [r for r in resources if 'KeyRotationEnabled' not in r]
+            self.log.debug("Querying %d kms-keys' rotation status" % len(query_resources))
             list(w.map(_key_rotation_status, query_resources))
 
-        return [r for r in resources if self.match(
-                r.get('KeyRotationEnabled', {}))]
+        return [r for r in resources if self.match(r.get('KeyRotationEnabled', {}))]
 
 
 @Key.filter_registry.register('cross-account')
@@ -191,25 +186,23 @@ class KMSCrossAccountAccessFilter(CrossAccountAccessFilter):
                 filters:
                   - type: cross-account
     """
+
     permissions = ('kms:GetKeyPolicy',)
 
     def process(self, resources, event=None):
-        client = local_session(
-            self.manager.session_factory).client('kms')
+        client = local_session(self.manager.session_factory).client('kms')
 
         def _augment(r):
             key_id = r.get('TargetKeyId', r.get('KeyId'))
             assert key_id, "Invalid key resources %s" % r
-            r['Policy'] = client.get_key_policy(
-                KeyId=key_id, PolicyName='default')['Policy']
+            r['Policy'] = client.get_key_policy(KeyId=key_id, PolicyName='default')['Policy']
             return r
 
         self.log.debug("fetching policy for %d kms keys" % len(resources))
         with self.executor_factory(max_workers=1) as w:
             resources = list(filter(None, w.map(_augment, resources)))
 
-        return super(KMSCrossAccountAccessFilter, self).process(
-            resources, event)
+        return super(KMSCrossAccountAccessFilter, self).process(resources, event)
 
 
 @KeyAlias.filter_registry.register('grant-count')
@@ -230,8 +223,7 @@ class GrantCount(Filter):
                     min: 100
     """
 
-    schema = type_schema(
-        'grant-count', min={'type': 'integer', 'minimum': 0})
+    schema = type_schema('grant-count', min={'type': 'integer', 'minimum': 0})
     permissions = ('kms:ListGrants',)
 
     def process(self, keys, event=None):
@@ -254,8 +246,8 @@ class GrantCount(Filter):
             return None
 
         self.manager.ctx.metrics.put_metric(
-            "ExtantGrants", grant_count, "Count",
-            Scope=key['AliasName'][6:])
+            "ExtantGrants", grant_count, "Count", Scope=key['AliasName'][6:]
+        )
 
         return key
 
@@ -275,8 +267,7 @@ class ResourceKmsKeyAlias(ValueFilter):
         matched = []
         for r in resources:
             if r.get('KmsKeyId'):
-                r['KeyAlias'] = key_aliases_dict.get(
-                    r.get('KmsKeyId').split("key/", 1)[-1])
+                r['KeyAlias'] = key_aliases_dict.get(r.get('KmsKeyId').split("key/", 1)[-1])
                 if self.match(r.get('KeyAlias')):
                     matched.append(r)
         return matched
@@ -312,15 +303,15 @@ class RemovePolicyStatement(RemovePolicyBase):
             try:
                 results += filter(None, [self.process_resource(client, r, key_id)])
             except Exception:
-                self.log.exception(
-                    "Error processing sns:%s", key_id)
+                self.log.exception("Error processing sns:%s", key_id)
         return results
 
     def process_resource(self, client, resource, key_id):
         if 'Policy' not in resource:
             try:
-                resource['Policy'] = client.get_key_policy(
-                    KeyId=key_id, PolicyName='default')['Policy']
+                resource['Policy'] = client.get_key_policy(KeyId=key_id, PolicyName='default')[
+                    'Policy'
+                ]
             except ClientError as e:
                 if e.response['Error']['Code'] != "NotFoundException":
                     raise
@@ -331,22 +322,17 @@ class RemovePolicyStatement(RemovePolicyBase):
 
         p = json.loads(resource['Policy'])
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
 
         if not found:
             return
 
         # NB: KMS supports only one key policy 'default'
         # http://docs.aws.amazon.com/kms/latest/developerguide/programming-key-policies.html#list-policies
-        client.put_key_policy(
-            KeyId=key_id,
-            PolicyName='default',
-            Policy=json.dumps(p)
-        )
+        client.put_key_policy(KeyId=key_id, PolicyName='default', Policy=json.dumps(p))
 
-        return {'Name': key_id,
-                'State': 'PolicyRemoved',
-                'Statements': found}
+        return {'Name': key_id, 'State': 'PolicyRemoved', 'Statements': found}
 
 
 @Key.action_registry.register('set-rotation')
@@ -368,6 +354,7 @@ class KmsKeyRotation(BaseAction):
               - type: set-rotation
                 state: True
     """
+
     permissions = ('kms:EnableKeyRotation',)
     schema = type_schema('set-rotation', state={'type': 'boolean'})
 
@@ -388,17 +375,21 @@ class KmsPostFinding(PostFinding):
 
     def format_resource(self, r):
         if 'TargetKeyId' in r:
-            resolved = self.manager.get_resource_manager(
-                'kms-key').get_resources([r['TargetKeyId']])
+            resolved = self.manager.get_resource_manager('kms-key').get_resources(
+                [r['TargetKeyId']]
+            )
             if not resolved:
                 return
             r = resolved[0]
             r[self.manager.resource_type.id] = r['KeyId']
         envelope, payload = self.format_envelope(r)
-        payload.update(self.filter_empty(
-            select_keys(r, [
-                'AWSAccount', 'CreationDate', 'KeyId',
-                'KeyManager', 'Origin', 'KeyState'])))
+        payload.update(
+            self.filter_empty(
+                select_keys(
+                    r, ['AWSAccount', 'CreationDate', 'KeyId', 'KeyManager', 'Origin', 'KeyState']
+                )
+            )
+        )
 
         # Securityhub expects a unix timestamp for CreationDate
         if 'CreationDate' in payload and isinstance(payload['CreationDate'], datetime):

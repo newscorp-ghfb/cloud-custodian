@@ -9,22 +9,21 @@ class DataFactoryTest(BaseTest):
 
     def test_data_factory_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-azure-data-factory',
-                'resource': 'azure.datafactory'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-azure-data-factory', 'resource': 'azure.datafactory'}, validate=True
+            )
             self.assertTrue(p)
 
     @arm_template('datafactory.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-data-factory',
-            'resource': 'azure.datafactory',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cctest-data-factory*'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-data-factory',
+                'resource': 'azure.datafactory',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cctest-data-factory*'}
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

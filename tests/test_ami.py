@@ -9,16 +9,13 @@ from .common import BaseTest
 
 
 class TestAMI(BaseTest):
-
     def test_query(self):
         factory = self.replay_flight_data("test_ami")
         p = self.load_policy(
             {
                 "name": "test-ami",
                 "resource": "ami",
-                "filters": [
-                    {"Name": "LambdaCompiler"}, {"type": "image-age", "days": 0.2}
-                ],
+                "filters": [{"Name": "LambdaCompiler"}, {"type": "image-age", "days": 0.2}],
                 "actions": ["deregister"],
             },
             session_factory=factory,
@@ -28,37 +25,44 @@ class TestAMI(BaseTest):
 
     def test_ami_remove_launch_permissions(self):
         factory = self.replay_flight_data('test_ami_remove_perms')
-        p = self.load_policy({
-            'name': 'ami-check',
-            'resource': 'aws.ami',
-            'filters': ['cross-account'],
-            'actions': [{
-                'type': 'remove-launch-permissions',
-                'accounts': 'matched'}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'ami-check',
+                'resource': 'aws.ami',
+                'filters': ['cross-account'],
+                'actions': [{'type': 'remove-launch-permissions', 'accounts': 'matched'}],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            sorted(resources[0]['c7n:CrossAccountViolations']),
-            ['112233445566', '665544332211'])
+            sorted(resources[0]['c7n:CrossAccountViolations']), ['112233445566', '665544332211']
+        )
 
         client = factory().client('ec2')
         perms = client.describe_image_attribute(
-            ImageId=resources[0]['ImageId'],
-            Attribute='launchPermission')['LaunchPermissions']
+            ImageId=resources[0]['ImageId'], Attribute='launchPermission'
+        )['LaunchPermissions']
         assert perms == []
 
     def test_ami_sse(self):
         factory = self.replay_flight_data('test_ami_sse')
-        p = self.load_policy({
-            'name': 'ubuntu-bionic',
-            'resource': 'aws.ami',
-            'query': [
-                {'Owners': ["123456789123"]},
-                {'Filters': [
-                    {'Name': 'name',
-                     'Values': ["ubuntu/images/hvm-ssd/ubuntu-bionic*"]}]}]},
-            session_factory=factory)
+        p = self.load_policy(
+            {
+                'name': 'ubuntu-bionic',
+                'resource': 'aws.ami',
+                'query': [
+                    {'Owners': ["123456789123"]},
+                    {
+                        'Filters': [
+                            {'Name': 'name', 'Values': ["ubuntu/images/hvm-ssd/ubuntu-bionic*"]}
+                        ]
+                    },
+                ],
+            },
+            session_factory=factory,
+        )
         resources = p.run()
         self.assertEqual(resources[0]['OwnerId'], '123456789123')
 
@@ -66,9 +70,12 @@ class TestAMI(BaseTest):
         factory = self.replay_flight_data("test_ami_not_found_err")
         ami_id = 'ami-123f000eee1f9f654'
         good_ami_id = 'ami-041151726c89bed87'
-        error_response = {"Error": {
-            "Message": "The image id '[%s]' does not exist" % (ami_id),
-            "Code": "InvalidAMIID.NotFound"}}
+        error_response = {
+            "Error": {
+                "Message": "The image id '[%s]' does not exist" % (ami_id),
+                "Code": "InvalidAMIID.NotFound",
+            }
+        }
 
         responses = [ClientError(error_response, "DescribeSnapshots")]
 
@@ -79,9 +86,7 @@ class TestAMI(BaseTest):
 
         self.patch(DescribeSource, 'get_resources', base_get_resources)
 
-        p = self.load_policy(
-            {'name': 'bad-ami', 'resource': 'ami'},
-            session_factory=factory)
+        p = self.load_policy({'name': 'bad-ami', 'resource': 'ami'}, session_factory=factory)
         resources = p.resource_manager.get_resources([ami_id, good_ami_id])
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ImageId'], good_ami_id)
@@ -114,7 +119,7 @@ class TestAMI(BaseTest):
         error_response = {
             "Error": {
                 "Message": "The image id '[ami-ffffffff]' does not exist",
-                "Code": "InvalidAMIID.NotFound"
+                "Code": "InvalidAMIID.NotFound",
             }
         }
         e = ClientError(error_response, operation_name)
@@ -125,7 +130,7 @@ class TestAMI(BaseTest):
         error_response = {
             "Error": {
                 "Message": "The image id '[ami-11111111, ami-ffffffff]' does not exist",
-                "Code": "InvalidAMIID.NotFound"
+                "Code": "InvalidAMIID.NotFound",
             }
         }
         e = ClientError(error_response, operation_name)
@@ -134,20 +139,22 @@ class TestAMI(BaseTest):
 
     def test_deregister_delete_snaps(self):
         factory = self.replay_flight_data('test_ami_deregister_delete_snap')
-        p = self.load_policy({
-            'name': 'deregister-snap',
-            'resource': 'ami',
-            'actions': [{
-                'type': 'deregister',
-                'delete-snapshots': True}]},
-            session_factory=factory, config={'account_id': '644160558196'})
+        p = self.load_policy(
+            {
+                'name': 'deregister-snap',
+                'resource': 'ami',
+                'actions': [{'type': 'deregister', 'delete-snapshots': True}],
+            },
+            session_factory=factory,
+            config={'account_id': '644160558196'},
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client('ec2')
-        snap_ids = jmespath.search(
-            'BlockDeviceMappings[].Ebs.SnapshotId', resources[0])
+        snap_ids = jmespath.search('BlockDeviceMappings[].Ebs.SnapshotId', resources[0])
         self.assertRaises(
-            ClientError, client.describe_snapshots, SnapshotIds=snap_ids, OwnerIds=['self'])
+            ClientError, client.describe_snapshots, SnapshotIds=snap_ids, OwnerIds=['self']
+        )
 
     def test_unused_ami_with_asg_launch_templates(self):
         factory = self.replay_flight_data('test_unused_ami_launch_template')

@@ -36,7 +36,8 @@ def region_gc(options, region, policy_config, policies):
         region=region,
         assume_role=policy_config.assume_role,
         profile=policy_config.profile,
-        external_id=policy_config.external_id)
+        external_id=policy_config.external_id,
+    )
 
     manager = mu.LambdaManager(session_factory)
     funcs = list(manager.list_functions(options.prefix))
@@ -66,11 +67,13 @@ def region_gc(options, region, policy_config, policies):
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 log.warning(
                     "Region:%s Lambda Function or Access Policy Statement missing: %s",
-                    region, n['FunctionName'])
+                    region,
+                    n['FunctionName'],
+                )
             else:
                 log.warning(
-                    "Region:%s Unexpected error: %s for function %s",
-                    region, e, n['FunctionName'])
+                    "Region:%s Unexpected error: %s for function %s", region, e, n['FunctionName']
+                )
 
             # Continue on with next function instead of raising an exception
             continue
@@ -85,21 +88,23 @@ def region_gc(options, region, policy_config, policies):
                     log.info("Skipping function %s" % n['FunctionName'])
                     continue
                 if principal == {'Service': 'events.amazonaws.com'}:
-                    events.append(
-                        mu.CloudWatchEventSource({}, session_factory))
+                    events.append(mu.CloudWatchEventSource({}, session_factory))
                 elif principal == {'Service': 'config.amazonaws.com'}:
-                    events.append(
-                        mu.ConfigRule({}, session_factory))
+                    events.append(mu.ConfigRule({}, session_factory))
 
-        f = mu.LambdaFunction({
-            'name': n['FunctionName'],
-            'role': n['Role'],
-            'handler': n['Handler'],
-            'timeout': n['Timeout'],
-            'memory_size': n['MemorySize'],
-            'description': n['Description'],
-            'runtime': n['Runtime'],
-            'events': events}, None)
+        f = mu.LambdaFunction(
+            {
+                'name': n['FunctionName'],
+                'role': n['Role'],
+                'handler': n['Handler'],
+                'timeout': n['Timeout'],
+                'memory_size': n['MemorySize'],
+                'description': n['Description'],
+                'runtime': n['Runtime'],
+                'events': events,
+            },
+            None,
+        )
 
         log.info("Region:%s Removing %s", region, n['FunctionName'])
         if options.dryrun:
@@ -134,7 +139,8 @@ def get_gc_regions(regions, policy_config):
             region='us-east-1',
             assume_role=policy_config.assume_role,
             profile=policy_config.profile,
-            external_id=policy_config.external_id)
+            external_id=policy_config.external_id,
+        )
 
         client = session_factory().client('ec2')
         return [region['RegionName'] for region in client.describe_regions()['Regions']]
@@ -145,32 +151,49 @@ def setup_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("configs", nargs='*', help="Policy configuration file(s)")
     parser.add_argument(
-        '-c', '--config', dest="config_files", nargs="*", action='append',
-        help="Policy configuration files(s)", default=[])
+        '-c',
+        '--config',
+        dest="config_files",
+        nargs="*",
+        action='append',
+        help="Policy configuration files(s)",
+        default=[],
+    )
     parser.add_argument(
-        "--present", action="store_true", default=False,
-        help='Target policies present in config files for removal instead of skipping them.')
+        "--present",
+        action="store_true",
+        default=False,
+        help='Target policies present in config files for removal instead of skipping them.',
+    )
     parser.add_argument(
-        '-r', '--region', action='append', dest='regions', metavar='REGION',
-        help="AWS Region to target. Can be used multiple times, also supports `all`")
+        '-r',
+        '--region',
+        action='append',
+        dest='regions',
+        metavar='REGION',
+        help="AWS Region to target. Can be used multiple times, also supports `all`",
+    )
     parser.add_argument('--dryrun', action="store_true", default=False)
     parser.add_argument(
-        "--profile", default=os.environ.get('AWS_PROFILE'),
-        help="AWS Account Config File Profile to utilize")
+        "--profile",
+        default=os.environ.get('AWS_PROFILE'),
+        help="AWS Account Config File Profile to utilize",
+    )
     parser.add_argument(
-        "--prefix", default="custodian-",
-        help="The Lambda name prefix to use for clean-up")
+        "--prefix", default="custodian-", help="The Lambda name prefix to use for clean-up"
+    )
+    parser.add_argument("--policy-regex", help="The policy must match the regex")
     parser.add_argument(
-        "--policy-regex",
-        help="The policy must match the regex")
-    parser.add_argument("-p", "--policies", default=None, dest='policy_filter',
-                        help="Only use named/matched policies")
+        "-p",
+        "--policies",
+        default=None,
+        dest='policy_filter',
+        help="Only use named/matched policies",
+    )
+    parser.add_argument("--assume", default=None, dest="assume_role", help="Role to assume")
     parser.add_argument(
-        "--assume", default=None, dest="assume_role",
-        help="Role to assume")
-    parser.add_argument(
-        "-v", dest="verbose", action="store_true", default=False,
-        help='toggle verbose logging')
+        "-v", dest="verbose", action="store_true", default=False, help='toggle verbose logging'
+    )
     return parser
 
 
@@ -181,9 +204,7 @@ def main():
     log_level = logging.INFO
     if options.verbose:
         log_level = logging.DEBUG
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
+    logging.basicConfig(level=log_level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
     logging.getLogger('botocore').setLevel(logging.ERROR)
     logging.getLogger('urllib3').setLevel(logging.ERROR)
     logging.getLogger('c7n.cache').setLevel(logging.WARNING)
@@ -204,18 +225,17 @@ def main():
         sys.exit(1)
 
     policy_config = Config.empty(
-        regions=options.regions,
-        profile=options.profile,
-        assume_role=options.assume_role)
+        regions=options.regions, profile=options.profile, assume_role=options.assume_role
+    )
 
     # use cloud provider to initialize policies to get region expansion
     policies = AWS().initialize_policies(
-        PolicyCollection([
-            p for p in load_policies(
-                options, policy_config)
-            if p.provider_name == 'aws'],
-            policy_config),
-        policy_config)
+        PolicyCollection(
+            [p for p in load_policies(options, policy_config) if p.provider_name == 'aws'],
+            policy_config,
+        ),
+        policy_config,
+    )
 
     resources_gc_prefix(options, policy_config, policies)
 

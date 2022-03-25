@@ -36,6 +36,6 @@ class ContainerService(ArmResourceManager):
             'name',
             'location',
             'resourceGroup',
-            'properties.agentPoolProfiles[].[name, vmSize, count]'
+            'properties.agentPoolProfiles[].[name, vmSize, count]',
         )
         resource_type = 'Microsoft.ContainerService/containerServices'

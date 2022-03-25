@@ -7,7 +7,12 @@ from c7n.actions import BaseAction
 from c7n.filters.vpc import SubnetFilter, SecurityGroupFilter, VpcFilter
 from c7n.manager import resources
 from c7n.query import (
-    QueryResourceManager, DescribeSource, ConfigSource, TypeInfo, ChildResourceManager)
+    QueryResourceManager,
+    DescribeSource,
+    ConfigSource,
+    TypeInfo,
+    ChildResourceManager,
+)
 from c7n.tags import universal_augment
 from c7n.utils import local_session, type_schema
 from c7n import query
@@ -17,13 +22,16 @@ from .securityhub import OtherResourcePostFinding
 
 @resources.register('codecommit')
 class CodeRepository(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codecommit'
         enum_spec = ('list_repositories', 'repositories', None)
         batch_detail_spec = (
-            'batch_get_repositories', 'repositoryNames', 'repositoryName',
-            'repositories', None)
+            'batch_get_repositories',
+            'repositoryNames',
+            'repositoryName',
+            'repositories',
+            None,
+        )
         name = id = 'repositoryName'
         arn = "Arn"
         date = 'creationDate'
@@ -55,8 +63,7 @@ class DeleteRepository(BaseAction):
     permissions = ("codecommit:DeleteRepository",)
 
     def process(self, repositories):
-        client = local_session(
-            self.manager.session_factory).client('codecommit')
+        client = local_session(self.manager.session_factory).client('codecommit')
         for r in repositories:
             self.process_repository(client, r)
 
@@ -64,24 +71,20 @@ class DeleteRepository(BaseAction):
         try:
             client.delete_repository(repositoryName=repository['repositoryName'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting repo:\n %s" % e)
+            self.log.exception("Exception deleting repo:\n %s" % e)
 
 
 class DescribeBuild(DescribeSource):
-
     def augment(self, resources):
-        return universal_augment(
-            self.manager,
-            super(DescribeBuild, self).augment(resources))
+        return universal_augment(self.manager, super(DescribeBuild, self).augment(resources))
 
 
 class ConfigBuild(ConfigSource):
-
     def load_resource(self, item):
         item_config = item['configuration']
         item_config['Tags'] = [
-            {'Key': t['key'], 'Value': t['value']} for t in item_config.get('tags')]
+            {'Key': t['key'], 'Value': t['value']} for t in item_config.get('tags')
+        ]
 
         # AWS Config garbage mangle undo.
 
@@ -99,21 +102,21 @@ class ConfigBuild(ConfigSource):
 
         if 'vpcConfig' in item_config and 'subnets' in item_config['vpcConfig']:
             item_config['vpcConfig']['subnets'] = [
-                s['subnet'] for s in item_config['vpcConfig']['subnets']]
+                s['subnet'] for s in item_config['vpcConfig']['subnets']
+            ]
 
         item_config['arn'] = 'arn:aws:codebuild:{}:{}:project/{}'.format(
-            self.manager.config.region, self.manager.config.account_id, item_config['name'])
+            self.manager.config.region, self.manager.config.account_id, item_config['name']
+        )
         return item_config
 
 
 @resources.register('codebuild')
 class CodeBuildProject(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codebuild'
         enum_spec = ('list_projects', 'projects', None)
-        batch_detail_spec = (
-            'batch_get_projects', 'names', None, 'projects', None)
+        batch_detail_spec = ('batch_get_projects', 'names', None, 'projects', None)
         name = id = 'name'
         arn = 'arn'
         date = 'created'
@@ -122,10 +125,7 @@ class CodeBuildProject(QueryResourceManager):
         arn_type = 'project'
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeBuild,
-        'config': ConfigBuild
-    }
+    source_mapping = {'describe': DescribeBuild, 'config': ConfigBuild}
 
 
 @CodeBuildProject.filter_registry.register('subnet')
@@ -153,33 +153,48 @@ class BuildPostFinding(OtherResourcePostFinding):
 
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
-        payload.update(self.filter_empty({
-            'Name': r['name'],
-            'EncryptionKey': r['encryptionKey'],
-            'Environment': self.filter_empty({
-                'Type': r['environment']['type'],
-                'Certificate': r['environment'].get('certificate'),
-                'RegistryCredential': self.filter_empty({
-                    'Credential': jmespath.search(
-                        'environment.registryCredential.credential', r),
-                    'CredentialProvider': jmespath.search(
-                        'environment.registryCredential.credentialProvider', r)
-                }),
-                'ImagePullCredentialsType': r['environment'].get(
-                    'imagePullCredentialsType')
-            }),
-            'ServiceRole': r['serviceRole'],
-            'VpcConfig': self.filter_empty({
-                'VpcId': jmespath.search('vpcConfig.vpcId', r),
-                'Subnets': jmespath.search('vpcConfig.subnets', r),
-                'SecurityGroupIds': jmespath.search('vpcConfig.securityGroupIds', r)
-            }),
-            'Source': self.filter_empty({
-                'Type': jmespath.search('source.type', r),
-                'Location': jmespath.search('source.location', r),
-                'GitCloneDepth': jmespath.search('source.gitCloneDepth', r)
-            }),
-        }))
+        payload.update(
+            self.filter_empty(
+                {
+                    'Name': r['name'],
+                    'EncryptionKey': r['encryptionKey'],
+                    'Environment': self.filter_empty(
+                        {
+                            'Type': r['environment']['type'],
+                            'Certificate': r['environment'].get('certificate'),
+                            'RegistryCredential': self.filter_empty(
+                                {
+                                    'Credential': jmespath.search(
+                                        'environment.registryCredential.credential', r
+                                    ),
+                                    'CredentialProvider': jmespath.search(
+                                        'environment.registryCredential.credentialProvider', r
+                                    ),
+                                }
+                            ),
+                            'ImagePullCredentialsType': r['environment'].get(
+                                'imagePullCredentialsType'
+                            ),
+                        }
+                    ),
+                    'ServiceRole': r['serviceRole'],
+                    'VpcConfig': self.filter_empty(
+                        {
+                            'VpcId': jmespath.search('vpcConfig.vpcId', r),
+                            'Subnets': jmespath.search('vpcConfig.subnets', r),
+                            'SecurityGroupIds': jmespath.search('vpcConfig.securityGroupIds', r),
+                        }
+                    ),
+                    'Source': self.filter_empty(
+                        {
+                            'Type': jmespath.search('source.type', r),
+                            'Location': jmespath.search('source.location', r),
+                            'GitCloneDepth': jmespath.search('source.gitCloneDepth', r),
+                        }
+                    ),
+                }
+            )
+        )
         return envelope
 
 
@@ -213,12 +228,10 @@ class DeleteProject(BaseAction):
         try:
             client.delete_project(name=project['name'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting project:\n %s" % e)
+            self.log.exception("Exception deleting project:\n %s" % e)
 
 
 class ConfigPipeline(ConfigSource):
-
     def load_resource(self, item):
         item_config = self._load_item_config(item)
         resource = item_config.pop('pipeline')
@@ -228,7 +241,6 @@ class ConfigPipeline(ConfigSource):
 
 
 class DescribePipeline(DescribeSource):
-
     def augment(self, resources):
         resources = super().augment(resources)
         return universal_augment(self.manager, resources)
@@ -236,7 +248,6 @@ class DescribePipeline(DescribeSource):
 
 @resources.register('codepipeline')
 class CodeDeployPipeline(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codepipeline'
         enum_spec = ('list_pipelines', 'pipelines', None)
@@ -248,10 +259,7 @@ class CodeDeployPipeline(QueryResourceManager):
         cfn_type = config_type = "AWS::CodePipeline::Pipeline"
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribePipeline,
-        'config': ConfigPipeline
-    }
+    source_mapping = {'describe': DescribePipeline, 'config': ConfigPipeline}
 
 
 @CodeDeployPipeline.action_registry.register('delete')
@@ -270,25 +278,26 @@ class DeletePipeline(BaseAction):
 
 
 class DescribeApplication(DescribeSource):
-
     def augment(self, resources):
         resources = super().augment(resources)
         client = local_session(self.manager.session_factory).client('codedeploy')
         for r, arn in zip(resources, self.manager.get_arns(resources)):
-            r['Tags'] = client.list_tags_for_resource(
-                ResourceArn=arn).get('Tags', [])
+            r['Tags'] = client.list_tags_for_resource(ResourceArn=arn).get('Tags', [])
         return resources
 
 
 @resources.register('codedeploy-app')
 class CodeDeployApplication(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codedeploy'
         enum_spec = ('list_applications', 'applications', None)
         batch_detail_spec = (
-            'batch_get_applications', 'applicationNames',
-            None, 'applicationsInfo', None)
+            'batch_get_applications',
+            'applicationNames',
+            None,
+            'applicationsInfo',
+            None,
+        )
         id = name = 'applicationName'
         date = 'createTime'
         arn_type = "application"
@@ -296,10 +305,7 @@ class CodeDeployApplication(QueryResourceManager):
         config_type = cfn_type = "AWS::CodeDeploy::Application"
         universal_taggable = True
 
-    source_mapping = {
-        'describe': DescribeApplication,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeApplication, 'config': ConfigSource}
 
     def get_arns(self, resources):
         return [self.generate_arn(r['applicationName']) for r in resources]
@@ -316,21 +322,29 @@ class DeleteApplication(BaseAction):
         for r in resources:
             try:
                 self.manager.retry(client.delete_application, applicationName=r['applicationName'])
-            except (client.exceptions.InvalidApplicationNameException,
-            client.exceptions.ApplicationDoesNotExistException):
+            except (
+                client.exceptions.InvalidApplicationNameException,
+                client.exceptions.ApplicationDoesNotExistException,
+            ):
                 continue
 
 
 @resources.register('codedeploy-deployment')
 class CodeDeployDeployment(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codedeploy'
-        enum_spec = ('list_deployments', 'deployments', {'includeOnlyStatuses': [
-            'Created', 'Queued', 'InProgress', 'Baking', 'Ready']})
+        enum_spec = (
+            'list_deployments',
+            'deployments',
+            {'includeOnlyStatuses': ['Created', 'Queued', 'InProgress', 'Baking', 'Ready']},
+        )
         batch_detail_spec = (
-            'batch_get_deployments', 'deploymentIds',
-            None, 'deploymentsInfo', None)
+            'batch_get_deployments',
+            'deploymentIds',
+            None,
+            'deploymentsInfo',
+            None,
+        )
         name = id = 'deploymentId'
         # couldn't find a real cloudformation type
         cfn_type = None
@@ -339,7 +353,6 @@ class CodeDeployDeployment(QueryResourceManager):
 
 
 class DescribeDeploymentGroup(query.ChildDescribeSource):
-
     def get_query(self):
         query = super().get_query()
         query.capture_parent_id = True
@@ -350,19 +363,21 @@ class DescribeDeploymentGroup(query.ChildDescribeSource):
         results = []
         for parent_id, group_name in resources:
             dg = self.manager.retry(
-                client.get_deployment_group, applicationName=parent_id,
-                deploymentGroupName=group_name).get('deploymentGroupInfo')
+                client.get_deployment_group,
+                applicationName=parent_id,
+                deploymentGroupName=group_name,
+            ).get('deploymentGroupInfo')
             results.append(dg)
         for r in results:
             rarn = self.manager.generate_arn(r['applicationName'] + '/' + r['deploymentGroupName'])
-            r['Tags'] = self.manager.retry(
-                client.list_tags_for_resource, ResourceArn=rarn).get('Tags')
+            r['Tags'] = self.manager.retry(client.list_tags_for_resource, ResourceArn=rarn).get(
+                'Tags'
+            )
         return results
 
 
 @resources.register('codedeploy-group')
 class CodeDeployDeploymentGroup(ChildResourceManager):
-
     class resource_type(TypeInfo):
         service = 'codedeploy'
         parent_spec = ('codedeploy-app', 'applicationName', None)
@@ -375,9 +390,7 @@ class CodeDeployDeploymentGroup(ChildResourceManager):
         permission_prefix = 'codedeploy'
         universal_taggable = True
 
-    source_mapping = {
-        'describe-child': DescribeDeploymentGroup
-    }
+    source_mapping = {'describe-child': DescribeDeploymentGroup}
 
     def get_arns(self, resources):
         arns = []
@@ -388,8 +401,7 @@ class CodeDeployDeploymentGroup(ChildResourceManager):
 
 @CodeDeployDeploymentGroup.action_registry.register('delete')
 class DeleteDeploymentGroup(BaseAction):
-    """Delete a deployment group tied to an application.
-    """
+    """Delete a deployment group tied to an application."""
 
     schema = type_schema('delete')
     permissions = ('codedeploy:DeleteDeploymentGroup',)
@@ -398,8 +410,10 @@ class DeleteDeploymentGroup(BaseAction):
         client = local_session(self.manager.session_factory).client('codedeploy')
         for r in resources:
             try:
-                self.manager.retry(client.delete_deployment_group,
-                      applicationName=r['applicationName'],
-                      deploymentGroupName=r['deploymentGroupName'])
+                self.manager.retry(
+                    client.delete_deployment_group,
+                    applicationName=r['applicationName'],
+                    deploymentGroupName=r['deploymentGroupName'],
+                )
             except client.exceptions.InvalidDeploymentGroupNameException:
                 continue

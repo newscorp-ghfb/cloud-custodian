@@ -9,29 +9,22 @@ from c7n_azure.utils import ResourceIdParser
 
 
 class RecordSetTest(BaseTest):
-
     def test_record_set_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'record-set-policy',
-                'resource': 'azure.recordset'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'record-set-policy', 'resource': 'azure.recordset'}, validate=True
+            )
             self.assertTrue(p)
 
     @arm_template('dns.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-find-by-name',
-            'resource': 'azure.recordset',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'op': 'eq',
-                    'value': 'www'
-                }
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-find-by-name',
+                'resource': 'azure.recordset',
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'www'}],
+            }
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
@@ -39,7 +32,6 @@ class RecordSetTest(BaseTest):
 
 
 class DeleteRecordSetTest(BaseTest):
-
     @classmethod
     def setUpClass(cls, *args, **kwargs):
         super(DeleteRecordSetTest, cls).setUpClass(*args, **kwargs)
@@ -62,14 +54,7 @@ class DeleteRecordSetTest(BaseTest):
             zone_name=zone_name,
             relative_record_set_name=rs_name,
             record_type=rs_type,
-            parameters={
-                'ttl': rs_ttl,
-                'arecords': [
-                    {
-                        'ipv4_address': rs_arecord_ipaddr
-                    }
-                ]
-            },
+            parameters={'ttl': rs_ttl, 'arecords': [{'ipv4_address': rs_arecord_ipaddr}]},
         )
 
     @arm_template('dns.json')
@@ -77,23 +62,14 @@ class DeleteRecordSetTest(BaseTest):
 
         record_set_name = 'deleteme'
 
-        p = self.load_policy({
-            'name': 'test-delete-a-record-set',
-            'resource': 'azure.recordset',
-            'filters': [
-                {
-                    'type': 'value',
-                    'key': 'name',
-                    'op': 'eq',
-                    'value': record_set_name
-                }
-            ],
-            'actions': [
-                {
-                    'type': 'delete'
-                }
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-delete-a-record-set',
+                'resource': 'azure.recordset',
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': record_set_name}],
+                'actions': [{'type': 'delete'}],
+            }
+        )
 
         resources = p.run()
         self.assertEqual(len(resources), 1)

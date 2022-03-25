@@ -10,16 +10,16 @@ from c7n.resources.resource_map import ResourceMap
 
 
 class ProviderTest(BaseTest):
-
     def test_import_resource_classes(self):
         rtypes, missing = import_resource_classes(
-            ResourceMap, ('aws.ec2', 'aws.app-elb', 'aws.foobar'))
+            ResourceMap, ('aws.ec2', 'aws.app-elb', 'aws.foobar')
+        )
         self.assertEqual(len(rtypes), 2)
         self.assertEqual([r.type for r in rtypes], ['ec2', 'app-elb'])
         self.assertEqual(missing, ['aws.foobar'])
 
-#    def test_import_resource_classes_wildcard(self):
-#        rtypes = import_resource_classes(ResourceMap, ('*',))
+    #    def test_import_resource_classes_wildcard(self):
+    #        rtypes = import_resource_classes(ResourceMap, ('*',))
 
     def test_get_resource_class(self):
         with self.assertRaises(KeyError) as ectx:

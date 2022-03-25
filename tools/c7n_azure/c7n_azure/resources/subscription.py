@@ -75,12 +75,14 @@ Subscription.filter_registry.register('missing', Missing)
 @Subscription.action_registry.register('add-policy')
 class AddPolicy(BaseAction):
 
-    schema = type_schema('add-policy',
+    schema = type_schema(
+        'add-policy',
         required=['name', 'display_name', 'definition_name'],
         scope={'type': 'string'},
         definition_name={'type': 'string'},
         name={'type': 'string'},
-        display_name={'type': 'string'})
+        display_name={'type': 'string'},
+    )
 
     policyDefinitionPrefix = '/providers/Microsoft.Authorization/policyDefinitions/'
 
@@ -93,30 +95,35 @@ class AddPolicy(BaseAction):
         self.policyDefinitionName = self.data['definition_name']
 
     def _get_definition_id(self, name):
-        return next((r for r in self.policyClient.policy_definitions.list()
-                     if name == r.display_name or name == r.id or name == r.name), None)
+        return next(
+            (
+                r
+                for r in self.policyClient.policy_definitions.list()
+                if name == r.display_name or name == r.id or name == r.name
+            ),
+            None,
+        )
 
     def _add_policy(self, subscription):
         parameters = PolicyAssignment(
-            display_name=self.displayName,
-            policy_definition_id=self.policyDefinition.id)
+            display_name=self.displayName, policy_definition_id=self.policyDefinition.id
+        )
         self.policyClient.policy_assignments.create(
-            scope=self.scope,
-            policy_assignment_name=self.paName,
-            parameters=parameters
+            scope=self.scope, policy_assignment_name=self.paName, parameters=parameters
         )
 
     def process(self, subscriptions):
         self.session = local_session(self.manager.session_factory)
         self.policyClient = self.session.client("azure.mgmt.resource.policy.PolicyClient")
 
-        self.scope = '/subscriptions/' + self.session.subscription_id + \
-                     '/' + self.data.get('scope', '')
+        self.scope = (
+            '/subscriptions/' + self.session.subscription_id + '/' + self.data.get('scope', '')
+        )
         self.policyDefinition = self._get_definition_id(self.policyDefinitionName)
         if self.policyDefinition is None:
             raise PolicyValidationError(
-                "Azure Policy Definition '%s' not found." % (
-                    self.policyDefinitionName))
+                "Azure Policy Definition '%s' not found." % (self.policyDefinitionName)
+            )
 
         for s in subscriptions:
             self._add_policy(s)

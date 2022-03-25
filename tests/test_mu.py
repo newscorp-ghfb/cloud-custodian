@@ -29,11 +29,10 @@ from c7n.mu import (
     SNSSubscription,
     SQSSubscription,
     CloudWatchEventSource,
-    CloudWatchLogSubscription
+    CloudWatchLogSubscription,
 )
 
-from .common import (
-    BaseTest, event_data, functional, Bag, ACCOUNT_ID)
+from .common import BaseTest, event_data, functional, Bag, ACCOUNT_ID
 from .data import helloworld
 
 
@@ -43,18 +42,16 @@ ROLE = "arn:aws:iam::644160558196:role/custodian-mu"
 def test_get_exec_options():
 
     assert get_exec_options(Config().empty()) == {'tracer': 'default'}
-    assert get_exec_options(Config().empty(output_dir='/tmp/xyz')) == {
-        'tracer': 'default'}
+    assert get_exec_options(Config().empty(output_dir='/tmp/xyz')) == {'tracer': 'default'}
     assert get_exec_options(
-        Config().empty(log_group='gcp', output_dir='gs://mybucket/myprefix')) == {
-            'tracer': 'default',
-            'output_dir': 'gs://mybucket/myprefix',
-            'log_group': 'gcp'}
+        Config().empty(log_group='gcp', output_dir='gs://mybucket/myprefix')
+    ) == {'tracer': 'default', 'output_dir': 'gs://mybucket/myprefix', 'log_group': 'gcp'}
 
 
 def test_generate_requirements():
     lines = generate_requirements(
-        'boto3', ignore=('docutils', 's3transfer', 'six'), exclude=['urllib3'])
+        'boto3', ignore=('docutils', 's3transfer', 'six'), exclude=['urllib3']
+    )
     packages = []
     for l in lines.split('\n'):
         pkg_name, version = l.split('==')
@@ -63,7 +60,6 @@ def test_generate_requirements():
 
 
 class Publish(BaseTest):
-
     def make_func(self, **kw):
         func_data = dict(
             name="test-foo-bar",
@@ -96,9 +92,7 @@ class Publish(BaseTest):
         factory = self.replay_flight_data('test_lambda_layer_concurrent_publish')
         mgr = LambdaManager(factory)
         layers = ['arn:aws:lambda:us-east-1:644160558196:layer:CustodianLayer:2']
-        func = self.make_func(
-            concurrency=5,
-            layers=layers)
+        func = self.make_func(concurrency=5, layers=layers)
         self.addCleanup(mgr.remove, func)
 
         result = mgr.publish(func)
@@ -144,7 +138,7 @@ class PolicyLambdaProvision(Publish):
                 "name": "sg-modified",
                 "mode": {"type": "config-rule"},
             },
-            session_factory=session_factory
+            session_factory=session_factory,
         )
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -159,15 +153,16 @@ class PolicyLambdaProvision(Publish):
         # disable that support so the original behavior check on config poll mode
         # can be verified
         from c7n.resources.kinesis import KinesisStream
-        self.patch(
-            KinesisStream.resource_type, 'config_type', None)
 
-        p = self.load_policy({
-            'name': 'configx',
-            'resource': 'aws.kinesis',
-            'mode': {
-                'schedule': 'Three_Hours',
-                'type': 'config-poll-rule'}})
+        self.patch(KinesisStream.resource_type, 'config_type', None)
+
+        p = self.load_policy(
+            {
+                'name': 'configx',
+                'resource': 'aws.kinesis',
+                'mode': {'schedule': 'Three_Hours', 'type': 'config-poll-rule'},
+            }
+        )
         mu_policy = PolicyLambda(p)
         mu_policy.arn = "arn:aws:lambda:us-east-1:644160558196:function:CloudCustodian"
         events = mu_policy.get_events(session_factory)
@@ -175,17 +170,20 @@ class PolicyLambdaProvision(Publish):
         config_rule = events.pop()
         self.assertEqual(
             config_rule.get_rule_params(mu_policy),
-
-            {'ConfigRuleName': 'custodian-configx',
-             'Description': 'cloud-custodian lambda policy',
-             'MaximumExecutionFrequency': 'Three_Hours',
-             'Scope': {'ComplianceResourceTypes': ['AWS::Kinesis::Stream']},
-             'Source': {
-                 'Owner': 'CUSTOM_LAMBDA',
-                 'SourceDetails': [{'EventSource': 'aws.config',
-                                    'MessageType': 'ScheduledNotification'}],
-                 'SourceIdentifier': 'arn:aws:lambda:us-east-1:644160558196:function:CloudCustodian'} # noqa
-             })
+            {
+                'ConfigRuleName': 'custodian-configx',
+                'Description': 'cloud-custodian lambda policy',
+                'MaximumExecutionFrequency': 'Three_Hours',
+                'Scope': {'ComplianceResourceTypes': ['AWS::Kinesis::Stream']},
+                'Source': {
+                    'Owner': 'CUSTOM_LAMBDA',
+                    'SourceDetails': [
+                        {'EventSource': 'aws.config', 'MessageType': 'ScheduledNotification'}
+                    ],
+                    'SourceIdentifier': 'arn:aws:lambda:us-east-1:644160558196:function:CloudCustodian',
+                },  # noqa
+            },
+        )
 
     def test_config_rule_evaluation(self):
         session_factory = self.replay_flight_data("test_config_rule_evaluate")
@@ -206,12 +204,17 @@ class PolicyLambdaProvision(Publish):
     def test_phd_account_mode(self):
         factory = self.replay_flight_data('test_phd_event_mode')
         p = self.load_policy(
-            {'name': 'ec2-retire',
-             'resource': 'account',
-             'mode': {
-                 'categories': ['scheduledChange'],
-                 'events': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
-                 'type': 'phd'}}, session_factory=factory)
+            {
+                'name': 'ec2-retire',
+                'resource': 'account',
+                'mode': {
+                    'categories': ['scheduledChange'],
+                    'events': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
+                    'type': 'phd',
+                },
+            },
+            session_factory=factory,
+        )
         mode = p.get_execution_mode()
         event = event_data('event-phd-ec2-retire.json')
         resources = mode.run(event, None)
@@ -221,25 +224,27 @@ class PolicyLambdaProvision(Publish):
     def test_phd_mode_sans_details(self):
         factory = self.replay_flight_data('test_phd_event_mode')
         p = self.load_policy(
-            {'name': 'ec2-retire',
-             'resource': 'account',
-             'mode': {'type': 'phd'}}, session_factory=factory)
+            {'name': 'ec2-retire', 'resource': 'account', 'mode': {'type': 'phd'}},
+            session_factory=factory,
+        )
         p_lambda = PolicyLambda(p)
         events = p_lambda.get_events(factory)
-        self.assertEqual(
-            json.loads(events[0].render_event_pattern()),
-            {'source': ['aws.health']}
-        )
+        self.assertEqual(json.loads(events[0].render_event_pattern()), {'source': ['aws.health']})
 
     def test_phd_mode(self):
         factory = self.replay_flight_data('test_phd_event_mode')
         p = self.load_policy(
-            {'name': 'ec2-retire',
-             'resource': 'ec2',
-             'mode': {
-                 'categories': ['scheduledChange'],
-                 'events': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
-                 'type': 'phd'}}, session_factory=factory)
+            {
+                'name': 'ec2-retire',
+                'resource': 'ec2',
+                'mode': {
+                    'categories': ['scheduledChange'],
+                    'events': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
+                    'type': 'phd',
+                },
+            },
+            session_factory=factory,
+        )
         mode = p.get_execution_mode()
         event = event_data('event-phd-ec2-retire.json')
         resources = mode.run(event, None)
@@ -249,40 +254,53 @@ class PolicyLambdaProvision(Publish):
         events = p_lambda.get_events(factory)
         self.assertEqual(
             json.loads(events[0].render_event_pattern()),
-            {'detail': {
-                'eventTypeCategory': ['scheduledChange'],
-                'eventTypeCode': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED']},
-             'source': ['aws.health']}
+            {
+                'detail': {
+                    'eventTypeCategory': ['scheduledChange'],
+                    'eventTypeCode': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
+                },
+                'source': ['aws.health'],
+            },
         )
 
     def test_phd_mode_account(self):
         factory = self.replay_flight_data('test_phd_event_account')
         p = self.load_policy(
-            {'name': 'ec2-retire',
-             'resource': 'account',
-             'mode': {
-                 'categories': ['issue', 'scheduledChange'],
-                 'statuses': ['open', 'upcoming'],
-                 'type': 'phd'}}, session_factory=factory)
+            {
+                'name': 'ec2-retire',
+                'resource': 'account',
+                'mode': {
+                    'categories': ['issue', 'scheduledChange'],
+                    'statuses': ['open', 'upcoming'],
+                    'type': 'phd',
+                },
+            },
+            session_factory=factory,
+        )
 
         p_lambda = PolicyLambda(p)
         events = p_lambda.get_events(factory)
         self.assertEqual(
             json.loads(events[0].render_event_pattern()),
-            {'detail': {
-                'eventTypeCategory': ['issue', 'scheduledChange']},
-             'source': ['aws.health']}
+            {
+                'detail': {'eventTypeCategory': ['issue', 'scheduledChange']},
+                'source': ['aws.health'],
+            },
         )
 
     def test_cloudtrail_delay(self):
-        p = self.load_policy({
-            'name': 'aws-account',
-            'resource': 'aws.account',
-            'mode': {
-                'type': 'cloudtrail',
-                'delay': 32,
-                'role': 'CustodianRole',
-                'events': ['RunInstances']}})
+        p = self.load_policy(
+            {
+                'name': 'aws-account',
+                'resource': 'aws.account',
+                'mode': {
+                    'type': 'cloudtrail',
+                    'delay': 32,
+                    'role': 'CustodianRole',
+                    'events': ['RunInstances'],
+                },
+            }
+        )
         from c7n import policy
 
         class time:
@@ -295,36 +313,45 @@ class PolicyLambdaProvision(Publish):
 
         self.patch(policy, 'time', time)
         trail_mode = p.get_execution_mode()
-        results = trail_mode.run({
-            'detail': {
-                'eventSource': 'ec2.amazonaws.com',
-                'eventName': 'RunInstances'}},
-            None)
+        results = trail_mode.run(
+            {'detail': {'eventSource': 'ec2.amazonaws.com', 'eventName': 'RunInstances'}}, None
+        )
         self.assertEqual(len(results), 0)
         self.assertEqual(time.invokes, [32])
 
     def test_user_pattern_merge(self):
-        p = self.load_policy({
-            'name': 'ec2-retire',
-            'resource': 'ec2',
-            'mode': {
-                'type': 'cloudtrail',
-                'pattern': {
-                    'detail': {
-                        'userIdentity': {
-                            'userName': [{'anything-but': 'deputy'}]}}},
-                'events': [{
-                    'ids': 'responseElements.subnet.subnetId',
-                    'source': 'ec2.amazonaws.com',
-                    'event': 'CreateSubnet'}]}})
+        p = self.load_policy(
+            {
+                'name': 'ec2-retire',
+                'resource': 'ec2',
+                'mode': {
+                    'type': 'cloudtrail',
+                    'pattern': {
+                        'detail': {'userIdentity': {'userName': [{'anything-but': 'deputy'}]}}
+                    },
+                    'events': [
+                        {
+                            'ids': 'responseElements.subnet.subnetId',
+                            'source': 'ec2.amazonaws.com',
+                            'event': 'CreateSubnet',
+                        }
+                    ],
+                },
+            }
+        )
         p_lambda = PolicyLambda(p)
         events = p_lambda.get_events(None)
         self.assertEqual(
             json.loads(events[0].render_event_pattern()),
-            {'detail': {'eventName': ['CreateSubnet'],
-                        'eventSource': ['ec2.amazonaws.com'],
-                        'userIdentity': {'userName': [{'anything-but': 'deputy'}]}},
-             'detail-type': ['AWS API Call via CloudTrail']})
+            {
+                'detail': {
+                    'eventName': ['CreateSubnet'],
+                    'eventSource': ['ec2.amazonaws.com'],
+                    'userIdentity': {'userName': [{'anything-but': 'deputy'}]},
+                },
+                'detail-type': ['AWS API Call via CloudTrail'],
+            },
+        )
 
     @functional
     def test_sqs_subscriber(self):
@@ -337,9 +364,9 @@ class PolicyLambdaProvision(Publish):
         session = session_factory()
         client = session.client('sqs')
         queue_url = client.create_queue(QueueName=queue_name).get('QueueUrl')
-        queue_arn = client.get_queue_attributes(
-            QueueUrl=queue_url,
-            AttributeNames=['QueueArn'])['Attributes']['QueueArn']
+        queue_arn = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=['QueueArn'])[
+            'Attributes'
+        ]['QueueArn']
         self.addCleanup(client.delete_queue, QueueUrl=queue_url)
 
         # Setup Function
@@ -347,7 +374,8 @@ class PolicyLambdaProvision(Publish):
             session_factory=session_factory,
             name=func_name,
             role="arn:aws:iam::644160558196:role/custodian-mu",
-            events=[SQSSubscription(session_factory, [queue_arn])])
+            events=[SQSSubscription(session_factory, [queue_arn])],
+        )
 
         func = helloworld.get_function(**params)
         manager = LambdaManager(session_factory)
@@ -355,22 +383,22 @@ class PolicyLambdaProvision(Publish):
         self.addCleanup(manager.remove, func)
 
         # Send and Receive Check
-        client.send_message(
-            QueueUrl=queue_url, MessageBody=json.dumps({'jurassic': 'block'}))
+        client.send_message(QueueUrl=queue_url, MessageBody=json.dumps({'jurassic': 'block'}))
 
         if self.recording:
             time.sleep(60)
 
-#        log_events = list(manager.logs(func, "1970-1-1 UTC", "2037-1-1"))
-#        messages = [
-#            e["message"] for e in log_events if e["message"].startswith('{"Records')
-#        ]
+        #        log_events = list(manager.logs(func, "1970-1-1 UTC", "2037-1-1"))
+        #        messages = [
+        #            e["message"] for e in log_events if e["message"].startswith('{"Records')
+        #        ]
         self.addCleanup(
-            session.client("logs").delete_log_group,
-            logGroupName="/aws/lambda/%s" % func_name)
-#        self.assertIn(
-#            'jurassic',
-#            json.loads(messages[0])["Records"][0]["body"])
+            session.client("logs").delete_log_group, logGroupName="/aws/lambda/%s" % func_name
+        )
+
+    #        self.assertIn(
+    #            'jurassic',
+    #            json.loads(messages[0])["Records"][0]["body"])
 
     @functional
     def test_sns_subscriber_and_ipaddress(self):
@@ -401,18 +429,19 @@ class PolicyLambdaProvision(Publish):
         client.publish(TopicArn=topic_arn, Message="Greetings, program!")
         if self.recording:
             time.sleep(30)
-#        log_events = manager.logs(func, "1970-1-1 UTC", "2037-1-1")
-#        messages = [
-#            e["message"] for e in log_events if e["message"].startswith('{"Records')
-#        ]
-#        self.addCleanup(
-#            session.client("logs").delete_log_group,
-#            logGroupName="/aws/lambda/c7n-hello-world",
-#        )
-#        self.assertEqual(
-#            json.loads(messages[0])["Records"][0]["Sns"]["Message"],
-#            "Greetings, program!",
-#        )
+
+    #        log_events = manager.logs(func, "1970-1-1 UTC", "2037-1-1")
+    #        messages = [
+    #            e["message"] for e in log_events if e["message"].startswith('{"Records')
+    #        ]
+    #        self.addCleanup(
+    #            session.client("logs").delete_log_group,
+    #            logGroupName="/aws/lambda/c7n-hello-world",
+    #        )
+    #        self.assertEqual(
+    #            json.loads(messages[0])["Records"][0]["Sns"]["Message"],
+    #            "Greetings, program!",
+    #        )
 
     def test_cwe_update_config_and_code(self):
         # Originally this was testing the no update case.. but
@@ -422,17 +451,20 @@ class PolicyLambdaProvision(Publish):
         # the focus of the test.
 
         session_factory = self.replay_flight_data("test_cwe_update", zdata=True)
-        p = self.load_policy({
-            "resource": "s3",
-            "name": "s3-bucket-policy",
-            "mode": {"type": "cloudtrail",
-                     "events": ["CreateBucket"], 'runtime': 'python2.7'},
-            "filters": [
-                {"type": "missing-policy-statement",
-                 "statement_ids": ["RequireEncryptedPutObject"]},
-            ],
-            "actions": ["no-op"],
-        })
+        p = self.load_policy(
+            {
+                "resource": "s3",
+                "name": "s3-bucket-policy",
+                "mode": {"type": "cloudtrail", "events": ["CreateBucket"], 'runtime': 'python2.7'},
+                "filters": [
+                    {
+                        "type": "missing-policy-statement",
+                        "statement_ids": ["RequireEncryptedPutObject"],
+                    },
+                ],
+                "actions": ["no-op"],
+            }
+        )
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
         result = mgr.publish(pl, "Dev", role=ROLE)
@@ -470,31 +502,31 @@ class PolicyLambdaProvision(Publish):
 
         lines = output.getvalue().strip().split("\n")
         self.assertTrue("Updating function custodian-s3-bucket-policy code" in lines)
-        self.assertTrue(
-            "Updating function: custodian-s3-bucket-policy config MemorySize" in lines)
+        self.assertTrue("Updating function: custodian-s3-bucket-policy config MemorySize" in lines)
         self.assertEqual(result["FunctionName"], result2["FunctionName"])
         # drive by coverage
         functions = [
-            i
-            for i in mgr.list_functions()
-            if i["FunctionName"] == "custodian-s3-bucket-policy"
+            i for i in mgr.list_functions() if i["FunctionName"] == "custodian-s3-bucket-policy"
         ]
         self.assertTrue(len(functions), 1)
 
     def test_cwe_trail(self):
         session_factory = self.replay_flight_data("test_cwe_trail", zdata=True)
-        p = self.load_policy({
-            "resource": "s3",
-            "name": "s3-bucket-policy",
-            "mode": {"type": "cloudtrail", "events": ["CreateBucket"]},
-            "filters": [
-                {
-                    "type": "missing-policy-statement",
-                    "statement_ids": ["RequireEncryptedPutObject"],
-                }
-            ],
-            "actions": ["no-op"]},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                "resource": "s3",
+                "name": "s3-bucket-policy",
+                "mode": {"type": "cloudtrail", "events": ["CreateBucket"]},
+                "filters": [
+                    {
+                        "type": "missing-policy-statement",
+                        "statement_ids": ["RequireEncryptedPutObject"],
+                    }
+                ],
+                "actions": ["no-op"],
+            },
+            session_factory=session_factory,
+        )
 
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -529,11 +561,14 @@ class PolicyLambdaProvision(Publish):
 
     def test_cwe_instance(self):
         session_factory = self.replay_flight_data("test_cwe_instance", zdata=True)
-        p = self.load_policy({
-            "resource": "s3",
-            "name": "ec2-encrypted-vol",
-            "mode": {"type": "ec2-instance-state", "events": ["pending"]}},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                "resource": "s3",
+                "name": "ec2-encrypted-vol",
+                "mode": {"type": "ec2-instance-state", "events": ["pending"]},
+            },
+            session_factory=session_factory,
+        )
 
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -574,7 +609,9 @@ class PolicyLambdaProvision(Publish):
                 "resource": "asg",
                 "name": "asg-spin-detector",
                 "mode": {"type": "asg-instance-state", "events": ["launch-failure"]},
-            }, session_factory=session_factory)
+            },
+            session_factory=session_factory,
+        )
 
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -608,25 +645,26 @@ class PolicyLambdaProvision(Publish):
 
     def test_cwe_security_hub_action(self):
         factory = self.replay_flight_data('test_mu_cwe_sechub_action')
-        p = self.load_policy({
-            'name': 'sechub',
-            'resource': 'account',
-            'mode': {
-                'type': 'hub-action'}},
+        p = self.load_policy(
+            {'name': 'sechub', 'resource': 'account', 'mode': {'type': 'hub-action'}},
             session_factory=factory,
-            config={'account_id': ACCOUNT_ID})
+            config={'account_id': ACCOUNT_ID},
+        )
         mu_policy = PolicyLambda(p)
         events = mu_policy.get_events(factory)
         self.assertEqual(len(events), 1)
         hub_action = events.pop()
         self.assertEqual(
             json.loads(hub_action.cwe.render_event_pattern()),
-            {'resources': [
-                'arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub'],
-             'source': ['aws.securityhub'],
-             'detail-type': [
-                 'Security Hub Findings - Custom Action', 'Security Hub Insight Results'
-            ]})
+            {
+                'resources': ['arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub'],
+                'source': ['aws.securityhub'],
+                'detail-type': [
+                    'Security Hub Findings - Custom Action',
+                    'Security Hub Insight Results',
+                ],
+            },
+        )
 
         hub_action.cwe = cwe = mock.Mock(CloudWatchEventSource)
         cwe.get.return_value = False
@@ -635,23 +673,26 @@ class PolicyLambdaProvision(Publish):
 
         self.assertEqual(repr(hub_action), "<SecurityHub Action sechub>")
         self.assertEqual(
-            hub_action._get_arn(),
-            "arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub")
-        self.assertEqual(
-            hub_action.get(mu_policy.name), {'event': False, 'action': None})
+            hub_action._get_arn(), "arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub"
+        )
+        self.assertEqual(hub_action.get(mu_policy.name), {'event': False, 'action': None})
         hub_action.add(mu_policy)
         self.assertEqual(
-            {'event': False,
-             'action': {
-                 'ActionTargetArn': ('arn:aws:securityhub:us-east-1:'
-                                     '644160558196:action/custom/sechub'),
-                 'Name': 'Account sechub', 'Description': 'sechub'}},
-            hub_action.get(mu_policy.name))
+            {
+                'event': False,
+                'action': {
+                    'ActionTargetArn': (
+                        'arn:aws:securityhub:us-east-1:' '644160558196:action/custom/sechub'
+                    ),
+                    'Name': 'Account sechub',
+                    'Description': 'sechub',
+                },
+            },
+            hub_action.get(mu_policy.name),
+        )
         hub_action.update(mu_policy)
         hub_action.remove(mu_policy, func_deleted=True)
-        self.assertEqual(
-            hub_action.get(mu_policy.name),
-            {'event': False, 'action': None})
+        self.assertEqual(hub_action.get(mu_policy.name), {'event': False, 'action': None})
 
     def test_cwe_schedule(self):
         session_factory = self.replay_flight_data("test_cwe_schedule", zdata=True)
@@ -660,7 +701,9 @@ class PolicyLambdaProvision(Publish):
                 "resource": "ec2",
                 "name": "periodic-ec2-checker",
                 "mode": {"type": "periodic", "schedule": "rate(1 day)"},
-            }, session_factory=session_factory)
+            },
+            session_factory=session_factory,
+        )
 
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -693,16 +736,12 @@ class PolicyLambdaProvision(Publish):
 
     def create_a_lambda(self, flight, **extra):
         session_factory = self.replay_flight_data(flight, zdata=True)
-        mode = {
-            "type": "config-rule", "role": "arn:aws:iam::644160558196:role/custodian-mu"
-        }
+        mode = {"type": "config-rule", "role": "arn:aws:iam::644160558196:role/custodian-mu"}
         mode.update(extra)
-        p = self.load_policy({
-            "resource": "s3",
-            "name": "hello-world",
-            "actions": ["no-op"],
-            "mode": mode},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {"resource": "s3", "name": "hello-world", "actions": ["no-op"], "mode": mode},
+            session_factory=session_factory,
+        )
 
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
@@ -726,16 +765,16 @@ class PolicyLambdaProvision(Publish):
         return self.create_a_lambda(flight, **extra)
 
     def update_a_lambda(self, mgr, **config):
-        mode = {
-            "type": "config-rule", "role": "arn:aws:iam::644160558196:role/custodian-mu"
-        }
+        mode = {"type": "config-rule", "role": "arn:aws:iam::644160558196:role/custodian-mu"}
         mode.update(config)
-        p = self.load_policy({
-            "resource": "s3",
-            "name": "hello-world",
-            "actions": ["no-op"],
-            "mode": mode,
-        })
+        p = self.load_policy(
+            {
+                "resource": "s3",
+                "name": "hello-world",
+                "actions": ["no-op"],
+                "mode": mode,
+            }
+        )
         pl = PolicyLambda(p)
         return mgr.publish(pl)
 
@@ -762,9 +801,7 @@ class PolicyLambdaProvision(Publish):
         self.assert_items(tags, {"Foo": "Bar"})
 
     def test_config_coverage_for_lambda_update_from_plain(self):
-        mgr, result = self.create_a_lambda(
-            "test_config_coverage_for_lambda_update_from_plain"
-        )
+        mgr, result = self.create_a_lambda("test_config_coverage_for_lambda_update_from_plain")
         result = self.update_a_lambda(
             mgr,
             **{
@@ -885,9 +922,7 @@ class PolicyLambdaProvision(Publish):
 
         self.assertFalse(delta({}, {"KMSKeyArn": ""}))
 
-        self.assertFalse(
-            delta({}, {"VpcConfig": {"SecurityGroupIds": [], "SubnetIds": []}})
-        )
+        self.assertFalse(delta({}, {"VpcConfig": {"SecurityGroupIds": [], "SubnetIds": []}}))
 
     def test_config_defaults(self):
         p = PolicyLambda(Bag({"name": "hello", "data": {"mode": {}}}))
@@ -912,11 +947,14 @@ class PolicyLambdaProvision(Publish):
 
     def test_remove_permissions_from_event_cloudtrail(self):
         session_factory = self.replay_flight_data("test_remove_permissions_event")
-        p = self.load_policy({
-            "resource": "ec2",
-            "name": "test",
-            "mode": {"type": "cloudtrail", "events": ["RunInstances"]}},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                "resource": "ec2",
+                "name": "test",
+                "mode": {"type": "cloudtrail", "events": ["RunInstances"]},
+            },
+            session_factory=session_factory,
+        )
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
         self.addCleanup(mgr.remove, pl, True)
@@ -945,11 +983,14 @@ class PolicyLambdaProvision(Publish):
 
     def test_pause_resume_policy(self):
         session_factory = self.replay_flight_data("test_pause_resume_policy")
-        p = self.load_policy({
-            "resource": "ec2",
-            "name": "test",
-            "mode": {"type": "cloudtrail", "events": ["RunInstances"]}},
-            session_factory=session_factory)
+        p = self.load_policy(
+            {
+                "resource": "ec2",
+                "name": "test",
+                "mode": {"type": "cloudtrail", "events": ["RunInstances"]},
+            },
+            session_factory=session_factory,
+        )
         pl = PolicyLambda(p)
         mgr = LambdaManager(session_factory)
         self.addCleanup(mgr.remove, pl, True)
@@ -985,7 +1026,7 @@ class PolicyLambdaProvision(Publish):
                     "arn": "arn:aws:logs:us-east-1:644160558196:log-group:/aws/lambda/test:*",
                 }
             ],
-            "foo"
+            "foo",
         )
         cwls.add(func)
         lambda_client = session_factory().client("lambda")
@@ -1006,8 +1047,7 @@ class PolicyLambdaProvision(Publish):
         mgr.publish(func)
 
         sns_sub = SNSSubscription(
-            session_factory,
-            topic_arns=["arn:aws:sns:us-east-1:644160558196:test-topic"]
+            session_factory, topic_arns=["arn:aws:sns:us-east-1:644160558196:test-topic"]
         )
         # this shouldn't raise an exception even though we never added it
         sns_sub.remove(func, func_deleted=False)
@@ -1032,7 +1072,7 @@ class PolicyLambdaProvision(Publish):
         bln = BucketLambdaNotification(
             data={},
             session_factory=session_factory,
-            bucket={"Name": "c7n-ci20210930214353595400000001"}
+            bucket={"Name": "c7n-ci20210930214353595400000001"},
         )
 
         bln.add(func)
@@ -1050,7 +1090,6 @@ class PolicyLambdaProvision(Publish):
 
 
 class PythonArchiveTest(unittest.TestCase):
-
     def make_archive(self, modules=(), cache_file=None):
         archive = self.make_open_archive(modules, cache_file=cache_file)
         archive.close()
@@ -1204,9 +1243,9 @@ class PythonArchiveTest(unittest.TestCase):
         self.assertRaises(AssertionError, self.check_world_readable, archive)
 
     def test_cache_zip_file(self):
-        archive = self.make_archive(cache_file=os.path.join(os.path.dirname(__file__),
-                                                            "data",
-                                                            "test.zip"))
+        archive = self.make_archive(
+            cache_file=os.path.join(os.path.dirname(__file__), "data", "test.zip")
+        )
 
         self.assertTrue("cheese.txt" in archive.get_filenames())
         self.assertTrue("cheese/is/yummy.txt" in archive.get_filenames())
@@ -1216,7 +1255,6 @@ class PythonArchiveTest(unittest.TestCase):
 
 
 class PycCase(unittest.TestCase):
-
     def setUp(self):
         self.bench = tempfile.mkdtemp()
         sys.path.insert(0, self.bench)
@@ -1234,7 +1272,6 @@ class PycCase(unittest.TestCase):
 
 
 class Constructor(PycCase):
-
     def test_class_constructor_only_accepts_py_modules_not_pyc(self):
 
         # Create a module with both *.py and *.pyc.
@@ -1276,7 +1313,6 @@ class Constructor(PycCase):
 
 
 class AddPyFile(PycCase):
-
     def test_can_add_py_file(self):
         archive = PythonPackageArchive()
         archive.add_py_file(self.py_with_pyc("foo.py"))
@@ -1298,7 +1334,6 @@ class AddPyFile(PycCase):
 
 
 class DiffTags(unittest.TestCase):
-
     def test_empty(self):
         assert LambdaManager.diff_tags({}, {}) == ({}, [])
 
@@ -1309,5 +1344,4 @@ class DiffTags(unittest.TestCase):
         assert LambdaManager.diff_tags({}, {"Foo": "Bar"}) == ({"Foo": "Bar"}, [])
 
     def test_update(self):
-        assert LambdaManager.diff_tags(
-            {"Foo": "Bar"}, {"Foo": "Baz"}) == ({"Foo": "Baz"}, [])
+        assert LambdaManager.diff_tags({"Foo": "Bar"}, {"Foo": "Baz"}) == ({"Foo": "Baz"}, [])

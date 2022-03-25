@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 class MailerTester:
-
     def __init__(self, msg_file, config, msg_plain=False, json_dump_file=None):
         if not os.path.exists(msg_file):
             raise RuntimeError("File does not exist: %s" % msg_file)
@@ -55,11 +54,7 @@ class MailerTester:
         logger.info('Would send email to: %s', addrs_to_msgs.keys())
         if print_only:
             mime = get_mimetext_message(
-                self.config,
-                logger,
-                self.data,
-                self.data['resources'],
-                ['foo@example.com']
+                self.config, logger, self.data, self.data['resources'], ['foo@example.com']
             )
             logger.info('Send mail with subject: "%s"', mime['Subject'])
             print(mime.get_payload(None, True).decode('utf-8'))
@@ -78,32 +73,51 @@ class MailerTester:
 def setup_parser():
     parser = argparse.ArgumentParser('Test c7n-mailer templates and mail')
     parser.add_argument('-c', '--config', required=True)
-    parser.add_argument('-d', '--dry-run', dest='dry_run', action='store_true',
-                        default=False,
-                        help='Log messages that would be sent, but do not send')
-    parser.add_argument('-T', '--template-print', dest='print_only',
-                        action='store_true', default=False,
-                        help='Just print rendered templates')
-    parser.add_argument('-t', '--templates', default=None, type=str,
-                        help='message templates folder location')
-    parser.add_argument('-p', '--plain', dest='plain', action='store_true',
-                        default=False,
-                        help='Expect MESSAGE_FILE to be a plain string, '
-                             'rather than the base64-encoded, gzipped SQS '
-                             'message format')
-    parser.add_argument('-j', '--json-dump-file', dest='json_dump_file',
-                        type=str, action='store', default=None,
-                        help='If dump JSON of MESSAGE_FILE to this path; '
-                             'useful to base64-decode and gunzip a message')
-    parser.add_argument('MESSAGE_FILE', type=str,
-                        help='Path to SQS message dump/content file')
+    parser.add_argument(
+        '-d',
+        '--dry-run',
+        dest='dry_run',
+        action='store_true',
+        default=False,
+        help='Log messages that would be sent, but do not send',
+    )
+    parser.add_argument(
+        '-T',
+        '--template-print',
+        dest='print_only',
+        action='store_true',
+        default=False,
+        help='Just print rendered templates',
+    )
+    parser.add_argument(
+        '-t', '--templates', default=None, type=str, help='message templates folder location'
+    )
+    parser.add_argument(
+        '-p',
+        '--plain',
+        dest='plain',
+        action='store_true',
+        default=False,
+        help='Expect MESSAGE_FILE to be a plain string, '
+        'rather than the base64-encoded, gzipped SQS '
+        'message format',
+    )
+    parser.add_argument(
+        '-j',
+        '--json-dump-file',
+        dest='json_dump_file',
+        type=str,
+        action='store',
+        default=None,
+        help='If dump JSON of MESSAGE_FILE to this path; '
+        'useful to base64-decode and gunzip a message',
+    )
+    parser.add_argument('MESSAGE_FILE', type=str, help='Path to SQS message dump/content file')
     return parser
 
 
 def session_factory(config):
-    return boto3.Session(
-        region_name=config['region'],
-        profile_name=config.get('profile'))
+    return boto3.Session(region_name=config['region'], profile_name=config.get('profile'))
 
 
 def main():
@@ -114,13 +128,11 @@ def main():
     default_templates = [
         os.path.abspath(os.path.join(module_dir, 'msg-templates')),
         os.path.abspath(os.path.join(module_dir, '..', 'msg-templates')),
-        os.path.abspath('.')
+        os.path.abspath('.'),
     ]
     templates = options.templates
     if templates:
-        default_templates.append(
-            os.path.abspath(os.path.expanduser(os.path.expandvars(templates)))
-        )
+        default_templates.append(os.path.abspath(os.path.expanduser(os.path.expandvars(templates))))
 
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=log_format)
@@ -134,8 +146,7 @@ def main():
     config['templates_folders'] = default_templates
 
     tester = MailerTester(
-        options.MESSAGE_FILE, config, msg_plain=options.plain,
-        json_dump_file=options.json_dump_file
+        options.MESSAGE_FILE, config, msg_plain=options.plain, json_dump_file=options.json_dump_file
     )
     tester.run(options.dry_run, options.print_only)
 

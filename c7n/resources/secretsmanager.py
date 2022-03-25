@@ -37,8 +37,9 @@ class CrossAccountAccessFilter(iamaccess.CrossAccountAccessFilter):
     def get_resource_policy(self, r):
         if self.policy_annotation in r:
             return r[self.policy_annotation]
-        r[self.policy_annotation] = p = self.client.get_resource_policy(
-            SecretId=r['Name']).get('ResourcePolicy', None)
+        r[self.policy_annotation] = p = self.client.get_resource_policy(SecretId=r['Name']).get(
+            'ResourcePolicy', None
+        )
         return p
 
 

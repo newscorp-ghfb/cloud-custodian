@@ -44,13 +44,11 @@ def wait_for_remote_builds(deployments):
 
             if params['status'] == DeploymentStatus.Active:
                 continue
-            log.info("Remote build for %s finished with status %s.",
-                     name, params['status'])
+            log.info("Remote build for %s finished with status %s.", name, params['status'])
             finished += 1
 
         if finished < total:
-            log.info("Waiting for all remote builds to finish... %i/%i finished.",
-                     finished, total)
+            log.info("Waiting for all remote builds to finish... %i/%i finished.", finished, total)
             time.sleep(30)
 
 
@@ -78,9 +76,10 @@ def get_build_status(scm_uri):
 @click.option("--config", "-c", required=True, multiple=True, help="List of config files")
 def cli(**kwargs):
     policy_config = Config.empty()
-    policies = PolicyCollection([
-        p for p in load_policies(kwargs['config'], policy_config)
-        if p.provider_name == 'azure'], policy_config)
+    policies = PolicyCollection(
+        [p for p in load_policies(kwargs['config'], policy_config) if p.provider_name == 'azure'],
+        policy_config,
+    )
 
     session = policies.policies[0].session_factory()
     web_client = session.client('azure.mgmt.web.WebSiteManagementClient')
@@ -95,8 +94,8 @@ def cli(**kwargs):
         try:
             params = AzureFunctionMode(p).get_function_app_params()
             creds = web_client.web_apps.begin_list_publishing_credentials(
-                params.function_app_resource_group_name,
-                params.function_app_name).result()
+                params.function_app_resource_group_name, params.function_app_name
+            ).result()
             deployments[p.name] = {'scm_uri': creds.scm_uri, 'status': None}
             log.info('Retrieved deployment credentials for %s policy', p.name)
         except Exception:
@@ -119,12 +118,22 @@ def cli(**kwargs):
         else:
             success += 1
 
-    log.info('Policies total: %i, unable to load credentials: %i, not Functions mode: %i',
-             len(policies), credentials_load_failed, not_functions_policy)
-    log.info('Status not found can happen if Linux Consumption function was deployed'
-             'more than 2 hours ago.')
-    log.info('Deployments complete. Success: %i, Fail: %i, Status not found: %i',
-             success, fail, not_found)
+    log.info(
+        'Policies total: %i, unable to load credentials: %i, not Functions mode: %i',
+        len(policies),
+        credentials_load_failed,
+        not_functions_policy,
+    )
+    log.info(
+        'Status not found can happen if Linux Consumption function was deployed'
+        'more than 2 hours ago.'
+    )
+    log.info(
+        'Deployments complete. Success: %i, Fail: %i, Status not found: %i',
+        success,
+        fail,
+        not_found,
+    )
 
 
 if __name__ == "__main__":

@@ -38,12 +38,11 @@ class PostgresqlDatabase(ChildResourceManager):
         client = 'PostgreSQLManagementClient'
         enum_spec = ('databases', 'list_by_server', None)
         parent_manager_name = 'postgresql-server'
-        default_report_fields = (
-            'name',
-            '"c7n:parent-id"'
-        )
+        default_report_fields = ('name', '"c7n:parent-id"')
 
         @classmethod
         def extra_args(cls, parent_resource):
-            return {'resource_group_name': parent_resource['resourceGroup'],
-                    'server_name': parent_resource['name']}
+            return {
+                'resource_group_name': parent_resource['resourceGroup'],
+                'server_name': parent_resource['name'],
+            }

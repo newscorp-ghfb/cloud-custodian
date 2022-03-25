@@ -10,28 +10,34 @@ from c7n.resources import load_resources
 from c7n_gcp.provider import resources
 
 
-ALLOWED_NOPERM = set((
-    'or', 'and', 'not', 'value', 'reduce',
-    'offhour', 'onhour', 'marked-for-op',
-    'event', 'webhook'))
+ALLOWED_NOPERM = set(
+    (
+        'or',
+        'and',
+        'not',
+        'value',
+        'reduce',
+        'offhour',
+        'onhour',
+        'marked-for-op',
+        'event',
+        'webhook',
+    )
+)
 
 
 class ResourceMetaTest(BaseTest):
-
     def test_check_permissions(self):
         load_resources(('gcp.*',))
         missing = []
         invalid = []
-        iam_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'iam-permissions.json')
+        iam_path = os.path.join(os.path.dirname(__file__), 'data', 'iam-permissions.json')
         with open(iam_path) as fh:
             valid_perms = set(json.load(fh).get('permissions'))
         cfg = Config.empty()
 
         for k, v in resources.items():
-            policy = Bag({'name': 'permcheck',
-                     'resource': 'gcp.%s' % k,
-                     'provider_name': 'gcp'})
+            policy = Bag({'name': 'permcheck', 'resource': 'gcp.%s' % k, 'provider_name': 'gcp'})
             ctx = self.get_context(config=cfg, policy=policy)
             mgr = v(ctx, policy)
             perms = mgr.get_permissions()
@@ -64,23 +70,26 @@ class ResourceMetaTest(BaseTest):
                         invalid.append(('%s.filters.%s' % (k, n), p))
 
         if missing:
-            self.fail('missing permissions %d on \n\t%s' % (
-                len(missing), '\n\t'.join(sorted(missing))))
+            self.fail(
+                'missing permissions %d on \n\t%s' % (len(missing), '\n\t'.join(sorted(missing)))
+            )
 
         if invalid:
-            self.fail('invalid permissions %d on \n\t%s' % (
-                len(invalid), '\n\t'.join(
-                    map(str, sorted(invalid)))))
+            self.fail(
+                'invalid permissions %d on \n\t%s'
+                % (len(invalid), '\n\t'.join(map(str, sorted(invalid))))
+            )
 
     def test_get_permissions(self):
         p = self.load_policy(
-            {'name': 'istop',
-             'resource': 'gcp.instance',
-             'filters': [{'name': 'instance-1'}, {'status': 'RUNNING'}],
-             'actions': ['stop']})
-        self.assertEqual(
-            p.get_permissions(),
-            {'compute.instances.list', 'compute.instances.stop'})
+            {
+                'name': 'istop',
+                'resource': 'gcp.instance',
+                'filters': [{'name': 'instance-1'}, {'status': 'RUNNING'}],
+                'actions': ['stop'],
+            }
+        )
+        self.assertEqual(p.get_permissions(), {'compute.instances.list', 'compute.instances.stop'})
 
     def test_resource_id_meta(self):
         load_resources(('gcp.*',))
@@ -90,5 +99,4 @@ class ResourceMetaTest(BaseTest):
                 missing.append(name)
 
         if missing:
-            raise KeyError(
-                "Following resources are missing id metadata %s" % " ".join(missing))
+            raise KeyError("Following resources are missing id metadata %s" % " ".join(missing))

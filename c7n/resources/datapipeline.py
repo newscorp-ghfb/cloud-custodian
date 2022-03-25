@@ -30,13 +30,19 @@ class DataPipeline(QueryResourceManager):
         name = 'name'
         dimension = 'name'
         batch_detail_spec = (
-            'describe_pipelines', 'pipelineIds', 'id', 'pipelineDescriptionList', None)
+            'describe_pipelines',
+            'pipelineIds',
+            'id',
+            'pipelineDescriptionList',
+            None,
+        )
         enum_spec = ('list_pipelines', 'pipelineIdList', None)
 
     def augment(self, resources):
-        filter(None, _datapipeline_info(
-            resources, self.session_factory, self.executor_factory,
-            self.retry))
+        filter(
+            None,
+            _datapipeline_info(resources, self.session_factory, self.executor_factory, self.retry),
+        )
         return resources
 
 
@@ -49,9 +55,7 @@ def _datapipeline_info(pipes, session_factory, executor_factory, retry):
 
         while True:
             try:
-                results = retry(
-                    client.describe_pipelines,
-                    pipelineIds=list(pipe_map.keys()))
+                results = retry(client.describe_pipelines, pipelineIds=list(pipe_map.keys()))
                 break
             except ClientError as e:
                 if e.response['Error']['Code'] != 'PipelineNotFound':
@@ -67,9 +71,7 @@ def _datapipeline_info(pipes, session_factory, executor_factory, retry):
         for pipe_desc in results['pipelineDescriptionList']:
             pipe = pipe_map[pipe_desc['pipelineId']]
             pipe['pipelineId'] = pipe_desc['pipelineId']
-            pipe['Tags'] = [
-                {'Key': t['key'], 'Value': t['value']}
-                for t in pipe_desc['tags']]
+            pipe['Tags'] = [{'Key': t['key'], 'Value': t['value']} for t in pipe_desc['tags']]
             for field in pipe_desc['fields']:
                 key = field['key']
                 if not key.startswith('@'):
@@ -101,8 +103,7 @@ class Delete(BaseAction):
     permissions = ("datapipeline:DeletePipeline",)
 
     def process(self, pipelines):
-        client = local_session(
-            self.manager.session_factory).client('datapipeline')
+        client = local_session(self.manager.session_factory).client('datapipeline')
 
         for p in pipelines:
             try:
@@ -159,8 +160,10 @@ class TagPipeline(Tag):
         for pipeline in pipelines:
             try:
                 client.add_tags(pipelineId=pipeline['id'], tags=tag_array)
-            except (client.exceptions.PipelineDeletedException,
-                    client.exceptions.PipelineNotFoundException):
+            except (
+                client.exceptions.PipelineDeletedException,
+                client.exceptions.PipelineNotFoundException,
+            ):
                 continue
 
 
@@ -188,6 +191,8 @@ class UntagPipeline(RemoveTag):
         for pipeline in pipelines:
             try:
                 client.remove_tags(pipelineId=pipeline['id'], tagKeys=tags)
-            except (client.exceptions.PipelineDeletedException,
-                    client.exceptions.PipelineNotFoundException):
+            except (
+                client.exceptions.PipelineDeletedException,
+                client.exceptions.PipelineNotFoundException,
+            ):
                 continue

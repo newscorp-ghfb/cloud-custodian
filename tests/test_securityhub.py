@@ -7,126 +7,139 @@ from .common import BaseTest, event_data
 import logging
 import time
 
-LambdaFindingId = "us-east-2/644160558196/81cc9d38b8f8ebfd260ecc81585b4bc9/9f5932aa97900b5164502f41ae393d23" # NOQA
+LambdaFindingId = "us-east-2/644160558196/81cc9d38b8f8ebfd260ecc81585b4bc9/9f5932aa97900b5164502f41ae393d23"  # NOQA
 
 
 class SecurityHubMode(BaseTest):
-
     def test_resolve_import_finding(self):
         factory = self.replay_flight_data('test_security_hub_mode_resolve')
-        policy = self.load_policy({
-            'name': 'trail-fixer',
-            'resource': 'aws.iam-user',
-            'mode': {
-                'type': 'hub-finding',
-                'role': 'foo'}},
-            session_factory=factory)
+        policy = self.load_policy(
+            {
+                'name': 'trail-fixer',
+                'resource': 'aws.iam-user',
+                'mode': {'type': 'hub-finding', 'role': 'foo'},
+            },
+            session_factory=factory,
+        )
         event = event_data("event-securityhub-iamkey-finding-action.json")
         hub = policy.get_execution_mode()
         resources = hub.resolve_import_finding(event)
-        self.assertEqual(
-            sorted(resources),
-            sorted(['arn:aws:iam::644160558196:user/kapil']))
+        self.assertEqual(sorted(resources), sorted(['arn:aws:iam::644160558196:user/kapil']))
         resources = hub.resolve_resources(event)
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['UserName'], 'kapil')
 
     def test_resolve_action_finding(self):
-        policy = self.load_policy({
-            'name': 'trail-fixer',
-            'resource': 'aws.cloudtrail',
-            'mode': {
-                'type': 'hub-finding',
-                'role': 'foo'}})
+        policy = self.load_policy(
+            {
+                'name': 'trail-fixer',
+                'resource': 'aws.cloudtrail',
+                'mode': {'type': 'hub-finding', 'role': 'foo'},
+            }
+        )
         event = event_data("event-securityhub-cloudtrail-finding-action.json")
         hub = policy.get_execution_mode()
         resources = hub.resolve_action_finding(event)
         self.assertEqual(
             sorted(resources),
-            sorted([
-                'arn:aws:cloudtrail:us-east-1:644160558196:trail/skunk-trails']))
+            sorted(['arn:aws:cloudtrail:us-east-1:644160558196:trail/skunk-trails']),
+        )
 
     def test_resolve_action_insight(self):
-        factory = self.replay_flight_data(
-            "test_security_hub_mode_action_insight")
-        policy = self.load_policy({
-            'name': 'iam-key',
-            'resource': 'aws.iam-user',
-            'mode': {
-                'type': 'hub-action',
-                'role': 'foo'}},
-            session_factory=factory)
+        factory = self.replay_flight_data("test_security_hub_mode_action_insight")
+        policy = self.load_policy(
+            {
+                'name': 'iam-key',
+                'resource': 'aws.iam-user',
+                'mode': {'type': 'hub-action', 'role': 'foo'},
+            },
+            session_factory=factory,
+        )
         hub = policy.get_execution_mode()
         event = event_data("event-securityhub-insight-2.json")
         resources = hub.resolve_action_insight(event)
         self.assertEqual(
             sorted(resources),
-            sorted([
-                'arn:aws:iam::644160558196:user/brent.clements',
-                'arn:aws:iam::644160558196:user/david.shepherd2',
-                'arn:aws:iam::644160558196:user/david.yun',
-                'arn:aws:iam::644160558196:user/kapil']))
+            sorted(
+                [
+                    'arn:aws:iam::644160558196:user/brent.clements',
+                    'arn:aws:iam::644160558196:user/david.shepherd2',
+                    'arn:aws:iam::644160558196:user/david.yun',
+                    'arn:aws:iam::644160558196:user/kapil',
+                ]
+            ),
+        )
 
     def test_resolve_multi_account_resource_sets(self):
-        factory = self.replay_flight_data(
-            'test_security_hub_multi_account_mode')
-        policy = self.load_policy({
-            'name': 'lambda-remediate',
-            'resource': 'aws.lambda',
-            'mode': {
-                'type': 'hub-action',
-                'role': 'CustodianPolicyExecution',
-                'member-role': 'arn:aws:iam::{account_id}:role/CustodianGuardDuty'
-            }},
-            config={'region': 'us-east-2',
-                    'account_id': '519413311747'},
-            session_factory=factory)
+        factory = self.replay_flight_data('test_security_hub_multi_account_mode')
+        policy = self.load_policy(
+            {
+                'name': 'lambda-remediate',
+                'resource': 'aws.lambda',
+                'mode': {
+                    'type': 'hub-action',
+                    'role': 'CustodianPolicyExecution',
+                    'member-role': 'arn:aws:iam::{account_id}:role/CustodianGuardDuty',
+                },
+            },
+            config={'region': 'us-east-2', 'account_id': '519413311747'},
+            session_factory=factory,
+        )
         hub = policy.get_execution_mode()
         event = event_data('event-securityhub-lambda-cross.json')
         partition_resources = hub.get_resource_sets(event)
         self.assertEqual(
             {p: list(map(repr, v)) for p, v in partition_resources.items()},
-            {('644160558196', 'us-east-1'): [
-                ("<arn:aws:lambda:us-east-1:644160558196:function:"
-                 "custodian-enterprise-ec2-instances-no-elastic-ip-isolate>")
-            ]})
+            {
+                ('644160558196', 'us-east-1'): [
+                    (
+                        "<arn:aws:lambda:us-east-1:644160558196:function:"
+                        "custodian-enterprise-ec2-instances-no-elastic-ip-isolate>"
+                    )
+                ]
+            },
+        )
         output = self.capture_logging(policy.log.name, level=logging.INFO)
         results = hub.run(event, {})
         self.assertIn('Assuming member role:arn:aws:iam::644160558196', output.getvalue())
         self.assertEqual(
             results[('644160558196', 'us-east-1')][0]['FunctionName'],
-            'custodian-enterprise-ec2-instances-no-elastic-ip-isolate')
+            'custodian-enterprise-ec2-instances-no-elastic-ip-isolate',
+        )
 
 
 class SecurityHubTest(BaseTest):
-
     def test_custom_classifier(self):
         templ = {
             'name': 's3',
             'resource': 's3',
-            'actions': [{'type': 'post-finding',
-                         'types': ['Effects/CustomB/CustomA']}]}
+            'actions': [{'type': 'post-finding', 'types': ['Effects/CustomB/CustomA']}],
+        }
         self.load_policy(templ)
         templ['actions'][0]['types'] = ['CustomA/CustomB/CustomC']
         self.assertRaises(PolicyValidationError, self.load_policy, templ)
         templ['actions'][0]['types'] = ['Effects/CustomB/CustomA/CustomD']
         self.assertRaises(PolicyValidationError, self.load_policy, templ)
         templ['actions'][0]['types'] = []
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, templ, validate=True)
+        self.assertRaises(PolicyValidationError, self.load_policy, templ, validate=True)
 
     def test_s3_bucket_arn(self):
-        policy = self.load_policy({
-            'name': 's3',
-            'resource': 's3',
-            'actions': [
-                {'type': 'post-finding',
-                 'types': [
-                     "Software and Configuration Checks/AWS Security Best Practices/Network Reachability"  # NOQA
-                 ]}]})
+        policy = self.load_policy(
+            {
+                'name': 's3',
+                'resource': 's3',
+                'actions': [
+                    {
+                        'type': 'post-finding',
+                        'types': [
+                            "Software and Configuration Checks/AWS Security Best Practices/Network Reachability"  # NOQA
+                        ],
+                    }
+                ],
+            }
+        )
         post_finding = policy.resource_manager.actions[0]
-        resource = post_finding.format_resource(
-            {'Name': 'xyz', 'CreationDate': 'xtf'})
+        resource = post_finding.format_resource({'Name': 'xyz', 'CreationDate': 'xtf'})
         self.assertEqual(resource['Id'], "arn:aws:s3:::xyz")
 
     def test_bucket(self):
@@ -165,9 +178,7 @@ class SecurityHubTest(BaseTest):
         client = factory().client("securityhub")
         findings = client.get_findings(
             Filters={
-                "ResourceAwsS3BucketOwnerId": [
-                    {"Value": "Unknown", "Comparison": "EQUALS"}
-                ],
+                "ResourceAwsS3BucketOwnerId": [{"Value": "Unknown", "Comparison": "EQUALS"}],
                 "ResourceId": [
                     {
                         "Value": "arn:aws:::c7n-test-public-bucket",
@@ -196,29 +207,31 @@ class SecurityHubTest(BaseTest):
         def resources():
             return [func]
 
-        policy = self.load_policy({
-            'name': 'sec-hub-lambda',
-            'resource': 'lambda',
-            'actions': [
-                {
-                    "type": "post-finding",
-                    "severity": 10,
-                    "severity_normalized": 10,
-                    "severity_label": "INFORMATIONAL",
-                    "types": [
-                        "Software and Configuration Checks/AWS Security Best Practices"
-                    ],
-                }]},
+        policy = self.load_policy(
+            {
+                'name': 'sec-hub-lambda',
+                'resource': 'lambda',
+                'actions': [
+                    {
+                        "type": "post-finding",
+                        "severity": 10,
+                        "severity_normalized": 10,
+                        "severity_label": "INFORMATIONAL",
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
+                    }
+                ],
+            },
             config={"account_id": "644160558196", 'region': 'us-east-2'},
-            session_factory=factory)
+            session_factory=factory,
+        )
         self.patch(policy.resource_manager, "resources", resources)
         resources = policy.run()
         self.assertEqual(len(resources), 1)
 
         func_post_exec = client.get_function(FunctionName='check')
         self.assertEqual(
-            func_post_exec['Tags']['c7n:FindingId:sec-hub-lambda'].split(":", 1)[0],
-            LambdaFindingId)
+            func_post_exec['Tags']['c7n:FindingId:sec-hub-lambda'].split(":", 1)[0], LambdaFindingId
+        )
 
     def test_lambda_update(self):
         # test lambda function via post finding, uses tag to update finding.
@@ -227,10 +240,14 @@ class SecurityHubTest(BaseTest):
         client = factory().client("securityhub", region_name='us-east-2')
         finding_v1 = client.get_findings(
             Filters={
-                "Id": [{
-                    "Value": LambdaFindingId,
-                    "Comparison": "EQUALS",
-                }]}).get("Findings")[0]
+                "Id": [
+                    {
+                        "Value": LambdaFindingId,
+                        "Comparison": "EQUALS",
+                    }
+                ]
+            }
+        ).get("Findings")[0]
 
         lambda_client = factory().client('lambda')
         func = lambda_client.get_function(FunctionName='check')['Configuration']
@@ -238,19 +255,22 @@ class SecurityHubTest(BaseTest):
         def resources():
             return [func]
 
-        policy = self.load_policy({
-            'name': 'sec-hub-lambda',
-            'resource': 'lambda',
-            'actions': [{
-                "type": "post-finding",
-                "severity": 10,
-                "severity_normalized": 10,
-                "types": [
-                    "Software and Configuration Checks/AWS Security Best Practices"
+        policy = self.load_policy(
+            {
+                'name': 'sec-hub-lambda',
+                'resource': 'lambda',
+                'actions': [
+                    {
+                        "type": "post-finding",
+                        "severity": 10,
+                        "severity_normalized": 10,
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
+                    }
                 ],
-            }]},
+            },
             config={"account_id": "644160558196", 'region': 'us-east-2'},
-            session_factory=factory)
+            session_factory=factory,
+        )
         self.patch(policy.resource_manager, "resources", resources)
         resources = policy.run()
         self.assertEqual(len(resources), 1)
@@ -260,10 +280,14 @@ class SecurityHubTest(BaseTest):
 
         finding_v2 = client.get_findings(
             Filters={
-                "Id": [{
-                    "Value": LambdaFindingId,
-                    "Comparison": "EQUALS",
-                }]}).get("Findings")[0]
+                "Id": [
+                    {
+                        "Value": LambdaFindingId,
+                        "Comparison": "EQUALS",
+                    }
+                ]
+            }
+        ).get("Findings")[0]
 
         self.assertNotEqual(finding_v1['UpdatedAt'], finding_v2['UpdatedAt'])
 
@@ -279,9 +303,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -331,14 +353,19 @@ class SecurityHubTest(BaseTest):
             {
                 "name": "ec2-findings-filter",
                 "resource": "ec2",
-                "filters": [{
-                    "type": "finding",
-                    "query": {
-                        "Type": [{
-                            "Value": "Software and Configuration Checks/AWS Security Best Practices", # NOQA
-                            "Comparison": "EQUALS"}]
+                "filters": [
+                    {
+                        "type": "finding",
+                        "query": {
+                            "Type": [
+                                {
+                                    "Value": "Software and Configuration Checks/AWS Security Best Practices",  # NOQA
+                                    "Comparison": "EQUALS",
+                                }
+                            ]
+                        },
                     }
-                }],
+                ],
             },
             config={"account_id": "101010101111"},
             session_factory=factory,
@@ -352,14 +379,19 @@ class SecurityHubTest(BaseTest):
             {
                 "name": "alb-findings-filter",
                 "resource": "app-elb",
-                "filters": [{
-                    "type": "finding",
-                    "query": {
-                        "Type": [{
-                            "Value": "Software and Configuration Checks/AWS Security Best Practices", # NOQA
-                            "Comparison": "EQUALS"
-                        }]}
-                }],
+                "filters": [
+                    {
+                        "type": "finding",
+                        "query": {
+                            "Type": [
+                                {
+                                    "Value": "Software and Configuration Checks/AWS Security Best Practices",  # NOQA
+                                    "Comparison": "EQUALS",
+                                }
+                            ]
+                        },
+                    }
+                ],
             },
             config={"account_id": "101010101111"},
             session_factory=factory,
@@ -374,17 +406,25 @@ class SecurityHubTest(BaseTest):
         factory = self.replay_flight_data("test_security_hub_instance")
         client = factory().client('ec2')
         instances = client.describe_instances().get('Reservations')[0]['Instances']
-        policy = self.load_policy({
-            'name': 'ec2',
-            'resource': 'ec2',
-            'actions': [{
-                'type': 'post-finding', 'severity': 10,
-                'types': ["Software and Configuration Checks/AWS Security Best Practices"]}]},
-            config={'region': 'us-east-1', 'account_id': '644160558196'})
+        policy = self.load_policy(
+            {
+                'name': 'ec2',
+                'resource': 'ec2',
+                'actions': [
+                    {
+                        'type': 'post-finding',
+                        'severity': 10,
+                        'types': ["Software and Configuration Checks/AWS Security Best Practices"],
+                    }
+                ],
+            },
+            config={'region': 'us-east-1', 'account_id': '644160558196'},
+        )
         post_finding = policy.resource_manager.actions.pop()
         resource = post_finding.format_resource(instances[0])
         self.assertEqual(
-            resource['Id'], 'arn:aws:ec2:us-east-1:644160558196:instance/i-0fdc9cff318add68f')
+            resource['Id'], 'arn:aws:ec2:us-east-1:644160558196:instance/i-0fdc9cff318add68f'
+        )
 
     def test_iam_user(self):
         factory = self.replay_flight_data("test_security_hub_iam_user")
@@ -399,9 +439,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -433,10 +471,10 @@ class SecurityHubTest(BaseTest):
                 "Details": {
                     "Other": {
                         "CreateDate": "2016-09-10T15:45:42+00:00",
-                        "UserId": "AIDAJYFPV7WUG3EV7MIIO"
+                        "UserId": "AIDAJYFPV7WUG3EV7MIIO",
                     }
-                }
-            }
+                },
+            },
         )
 
     def test_iam_profile(self):
@@ -446,19 +484,15 @@ class SecurityHubTest(BaseTest):
             {
                 "name": "iam-profile-finding",
                 "resource": "iam-profile",
-                "filters": [{
-                    "type": "value",
-                    "key": "InstanceProfileName",
-                    "value": "CloudCustodian"
-                }],
+                "filters": [
+                    {"type": "value", "key": "InstanceProfileName", "value": "CloudCustodian"}
+                ],
                 "actions": [
                     {
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -492,10 +526,10 @@ class SecurityHubTest(BaseTest):
                         "InstanceProfileId": "AIPAJO63EBUVI2SO6IJFI",
                         "CreateDate": "2018-08-19T22:32:30+00:00",
                         "InstanceProfileName": "CloudCustodian",
-                        "c7n:MatchedFilters": "[\"InstanceProfileName\"]"
+                        "c7n:MatchedFilters": "[\"InstanceProfileName\"]",
                     }
-                }
-            }
+                },
+            },
         )
 
     def test_account(self):
@@ -511,9 +545,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -526,14 +558,7 @@ class SecurityHubTest(BaseTest):
 
         client = factory().client("securityhub")
         findings = client.get_findings(
-            Filters={
-                "ResourceId": [
-                    {
-                        "Value": "arn:aws:::101010101111:",
-                        "Comparison": "EQUALS"
-                    }
-                ]
-            }
+            Filters={"ResourceId": [{"Value": "arn:aws:::101010101111:", "Comparison": "EQUALS"}]}
         ).get("Findings")
         self.assertEqual(len(findings), 1)
         self.assertEqual(
@@ -542,12 +567,8 @@ class SecurityHubTest(BaseTest):
                 "Region": "us-east-1",
                 "Type": "Other",
                 "Id": "arn:aws:::101010101111:",
-                "Details": {
-                    "Other": {
-                        "account_name": "filiatra-primary"
-                    }
-                }
-            }
+                "Details": {"Other": {"account_name": "filiatra-primary"}},
+            },
         )
 
     def test_rds(self):
@@ -557,16 +578,13 @@ class SecurityHubTest(BaseTest):
             {
                 "name": "rds-finding",
                 "resource": "rds",
-                "filters": [
-                ],
+                "filters": [],
                 "actions": [
                     {
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -604,15 +622,15 @@ class SecurityHubTest(BaseTest):
                         "AllocatedStorage": "20",
                         "EngineVersion": "10.3.8",
                         "DBInstanceClass": "db.t2.micro",
-                        "DBSubnetGroupName": "default"
+                        "DBSubnetGroupName": "default",
                     }
                 },
                 "Region": "us-east-1",
                 "Type": "Other",
                 "Id": "arn:aws:rds:us-east-1:101010101111:db:testme",
-                "Tags": {
-                    "workload-type": "other"}
-            })
+                "Tags": {"workload-type": "other"},
+            },
+        )
 
     def test_larger_batch_s3(self):
         factory = self.replay_flight_data("test_larger_batch")
@@ -629,9 +647,7 @@ class SecurityHubTest(BaseTest):
                         "severity_normalized": 10,
                         "batch_size": 2,
                         "title": "EBS Testing",
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },

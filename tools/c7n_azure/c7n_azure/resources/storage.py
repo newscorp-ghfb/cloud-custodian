@@ -4,9 +4,12 @@
 import logging
 
 from azure.cosmosdb.table import TableService
-from azure.mgmt.storage.models import (IPRule, NetworkRuleSet,
-                                       StorageAccountUpdateParameters,
-                                       VirtualNetworkRule)
+from azure.mgmt.storage.models import (
+    IPRule,
+    NetworkRuleSet,
+    StorageAccountUpdateParameters,
+    VirtualNetworkRule,
+)
 from azure.storage.blob import BlobServiceClient
 from azure.storage.common.models import Logging, RetentionPolicy
 from azure.storage.file import FileService
@@ -17,8 +20,7 @@ from c7n.utils import get_annotation_prefix, local_session
 from c7n_azure.actions.base import AzureBaseAction
 from c7n_azure.actions.firewall import SetFirewallAction
 from c7n_azure.constants import BLOB_TYPE, FILE_TYPE, QUEUE_TYPE, TABLE_TYPE
-from c7n_azure.filters import (FirewallBypassFilter, FirewallRulesFilter,
-                               ValueFilter)
+from c7n_azure.filters import FirewallBypassFilter, FirewallRulesFilter, ValueFilter
 from c7n_azure.provider import resources
 from c7n_azure.resources.arm import ArmResourceManager
 from c7n_azure.storage_utils import StorageUtilities
@@ -50,88 +52,84 @@ class Storage(ArmResourceManager):
         enum_spec = ('storage_accounts', 'list', None)
         diagnostic_settings_enabled = False
         resource_type = 'Microsoft.Storage/storageAccounts'
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'kind',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'kind', 'sku.name')
 
 
 @Storage.action_registry.register('set-firewall-rules')
 class StorageSetFirewallAction(SetFirewallAction):
-    """ Set Firewall Rules Action
+    """Set Firewall Rules Action
 
-     Updates Azure Storage Firewalls and Virtual Networks settings.
+    Updates Azure Storage Firewalls and Virtual Networks settings.
 
-     By default the firewall rules are appended with the new values.  The ``append: False``
-     flag can be used to replace the old rules with the new ones on
-     the resource.
+    By default the firewall rules are appended with the new values.  The ``append: False``
+    flag can be used to replace the old rules with the new ones on
+    the resource.
 
-     You may also reference azure public cloud Service Tags by name in place of
-     an IP address.  Use ``ServiceTags.`` followed by the ``name`` of any group
-     from https://www.microsoft.com/en-us/download/details.aspx?id=56519.
+    You may also reference azure public cloud Service Tags by name in place of
+    an IP address.  Use ``ServiceTags.`` followed by the ``name`` of any group
+    from https://www.microsoft.com/en-us/download/details.aspx?id=56519.
 
-     Note that there are firewall rule number limits and that you will likely need to
-     use a regional block to fit within the limit.  The limit for storage accounts is
-     200 rules.
+    Note that there are firewall rule number limits and that you will likely need to
+    use a regional block to fit within the limit.  The limit for storage accounts is
+    200 rules.
 
-     .. code-block:: yaml
+    .. code-block:: yaml
 
-         - type: set-firewall-rules
-               bypass-rules:
-                   - Logging
-                   - Metrics
-               ip-rules:
-                   - 11.12.13.0/16
-                   - ServiceTags.AppService.CentralUS
+        - type: set-firewall-rules
+              bypass-rules:
+                  - Logging
+                  - Metrics
+              ip-rules:
+                  - 11.12.13.0/16
+                  - ServiceTags.AppService.CentralUS
 
 
-     :example:
+    :example:
 
-     Find storage accounts without any firewall rules.
+    Find storage accounts without any firewall rules.
 
-     Configure default-action to ``Deny`` and then allow:
-     - Azure Logging and Metrics services
-     - Two specific IPs
-     - Two subnets
+    Configure default-action to ``Deny`` and then allow:
+    - Azure Logging and Metrics services
+    - Two specific IPs
+    - Two subnets
 
-     .. code-block:: yaml
+    .. code-block:: yaml
 
-         policies:
-             - name: add-storage-firewall
-               resource: azure.storage
+        policies:
+            - name: add-storage-firewall
+              resource: azure.storage
 
-             filters:
-                 - type: value
-                   key: properties.networkAcls.ipRules
-                   value_type: size
-                   op: eq
-                   value: 0
+            filters:
+                - type: value
+                  key: properties.networkAcls.ipRules
+                  value_type: size
+                  op: eq
+                  value: 0
 
-             actions:
-                 - type: set-firewall-rules
-                   append: False
-                   bypass-rules:
-                       - Logging
-                       - Metrics
-                   ip-rules:
-                       - 11.12.13.0/16
-                       - 21.22.23.24
-                   virtual-network-rules:
-                       - <subnet_resource_id>
-                       - <subnet_resource_id>
+            actions:
+                - type: set-firewall-rules
+                  append: False
+                  bypass-rules:
+                      - Logging
+                      - Metrics
+                  ip-rules:
+                      - 11.12.13.0/16
+                      - 21.22.23.24
+                  virtual-network-rules:
+                      - <subnet_resource_id>
+                      - <subnet_resource_id>
 
-     """
+    """
 
     schema = type_schema(
         'set-firewall-rules',
         rinherit=SetFirewallAction.schema,
         **{
             'default-action': {'enum': ['Allow', 'Deny'], "default": 'Deny'},
-            'bypass-rules': {'type': 'array', 'items': {
-                'enum': ['AzureServices', 'Logging', 'Metrics']}},
+            'bypass-rules': {
+                'type': 'array',
+                'items': {'enum': ['AzureServices', 'Logging', 'Metrics']},
+            },
         }
     )
 
@@ -147,44 +145,51 @@ class StorageSetFirewallAction(SetFirewallAction):
 
         # Add IP rules
         if self.data.get('ip-rules') is not None:
-            existing_ip = [r['value']
-                           for r in resource['properties']['networkAcls'].get('ipRules', [])]
+            existing_ip = [
+                r['value'] for r in resource['properties']['networkAcls'].get('ipRules', [])
+            ]
             ip_rules = self._build_ip_rules(existing_ip, self.data.get('ip-rules', []))
 
             # If the user has too many rules raise exception
             if len(ip_rules) > self.rule_limit:
-                raise ValueError("Skipped updating firewall for %s. "
-                                 "%s exceeds maximum rule count of %s." %
-                                 (resource['name'], len(ip_rules), self.rule_limit))
+                raise ValueError(
+                    "Skipped updating firewall for %s. "
+                    "%s exceeds maximum rule count of %s."
+                    % (resource['name'], len(ip_rules), self.rule_limit)
+                )
 
             rule_set.ip_rules = [IPRule(ip_address_or_range=r) for r in ip_rules]
 
         # Add VNET rules
         if self.data.get('virtual-network-rules') is not None:
-            existing_vnet = \
-                [r['id'] for r in
-                 resource['properties']['networkAcls'].get('virtualNetworkRules', [])]
-            vnet_rules = \
-                self._build_vnet_rules(existing_vnet, self.data.get('virtual-network-rules', []))
-            rule_set.virtual_network_rules = \
-                [VirtualNetworkRule(virtual_network_resource_id=r) for r in vnet_rules]
+            existing_vnet = [
+                r['id']
+                for r in resource['properties']['networkAcls'].get('virtualNetworkRules', [])
+            ]
+            vnet_rules = self._build_vnet_rules(
+                existing_vnet, self.data.get('virtual-network-rules', [])
+            )
+            rule_set.virtual_network_rules = [
+                VirtualNetworkRule(virtual_network_resource_id=r) for r in vnet_rules
+            ]
 
         # Configure BYPASS
         if self.data.get('bypass-rules') is not None:
             existing_bypass = resource['properties']['networkAcls'].get('bypass', '').split(',')
             rule_set.bypass = self._build_bypass_rules(
-                existing_bypass, self.data.get('bypass-rules', []))
+                existing_bypass, self.data.get('bypass-rules', [])
+            )
 
         # Update resource
         self.client.storage_accounts.update(
             resource['resourceGroup'],
             resource['name'],
-            StorageAccountUpdateParameters(network_rule_set=rule_set))
+            StorageAccountUpdateParameters(network_rule_set=rule_set),
+        )
 
 
 @Storage.filter_registry.register('firewall-rules')
 class StorageFirewallRulesFilter(FirewallRulesFilter):
-
     def _query_rules(self, resource):
 
         if resource['properties']['networkAcls']['defaultAction'] == 'Deny':
@@ -219,6 +224,7 @@ class StorageFirewallBypassFilter(FirewallBypassFilter):
                     - Metrics
                     - Logging
     """
+
     schema = FirewallBypassFilter.schema(['AzureServices', 'Metrics', 'Logging'])
 
     def _query_bypass(self, resource):
@@ -305,13 +311,17 @@ class StorageDiagnosticSettingsFilter(ValueFilter):
 
     """
 
-    schema = type_schema('storage-diagnostic-settings',
-                         rinherit=ValueFilter.schema,
-                         required=['storage-type'],
-                         **{'storage-type': {
-                             'type': 'string',
-                             'enum': [BLOB_TYPE, QUEUE_TYPE, TABLE_TYPE, FILE_TYPE]}}
-                         )
+    schema = type_schema(
+        'storage-diagnostic-settings',
+        rinherit=ValueFilter.schema,
+        required=['storage-type'],
+        **{
+            'storage-type': {
+                'type': 'string',
+                'enum': [BLOB_TYPE, QUEUE_TYPE, TABLE_TYPE, FILE_TYPE],
+            }
+        }
+    )
 
     log = logging.getLogger('custodian.azure.storage.StorageDiagnosticSettingsFilter')
 
@@ -327,7 +337,7 @@ class StorageDiagnosticSettingsFilter(ValueFilter):
             execution_method=self.process_resource_set,
             executor_factory=self.executor_factory,
             log=self.log,
-            session=session
+            session=session,
         )
         return result
 
@@ -338,8 +348,9 @@ class StorageDiagnosticSettingsFilter(ValueFilter):
             # New SDK renamed the property, this code is to ensure back compat
             if 'analytics_logging' in settings.keys():
                 settings['logging'] = settings.pop('analytics_logging')
-            filtered_settings = super(StorageDiagnosticSettingsFilter, self).process([settings],
-                                                                                     event)
+            filtered_settings = super(StorageDiagnosticSettingsFilter, self).process(
+                [settings], event
+            )
 
             if filtered_settings:
                 matched.append(resource)
@@ -351,7 +362,8 @@ class StorageDiagnosticSettingsFilter(ValueFilter):
 
         if not (storage_prefix_property in storage_account):
             settings = StorageSettingsUtilities.get_settings(
-                self.storage_type, storage_account, session)
+                self.storage_type, storage_account, session
+            )
             storage_account[storage_prefix_property] = serialize(settings)
 
         return storage_account[storage_prefix_property]
@@ -386,26 +398,18 @@ class SetLogSettingsAction(AzureBaseAction):
     WRITE = 'write'
     DELETE = 'delete'
 
-    schema = type_schema('set-log-settings',
-                         required=['storage-types', 'log', 'retention'],
-                         **{
-                             'storage-types': {
-                                 'type': 'array',
-                                 'items': {
-                                     'type': 'string',
-                                     'enum': [BLOB_TYPE, QUEUE_TYPE, TABLE_TYPE]
-                                 }
-                             },
-                             'log': {
-                                 'type': 'array',
-                                 'items': {
-                                     'type': 'string',
-                                     'enum': [READ, WRITE, DELETE]
-                                 }
-                             },
-                             'retention': {'type': 'number'}
-                         }
-                         )
+    schema = type_schema(
+        'set-log-settings',
+        required=['storage-types', 'log', 'retention'],
+        **{
+            'storage-types': {
+                'type': 'array',
+                'items': {'type': 'string', 'enum': [BLOB_TYPE, QUEUE_TYPE, TABLE_TYPE]},
+            },
+            'log': {'type': 'array', 'items': {'type': 'string', 'enum': [READ, WRITE, DELETE]}},
+            'retention': {'type': 'number'},
+        }
+    )
     log = logging.getLogger('custodian.azure.storage.SetLogSettingsAction')
 
     def __init__(self, data, manager=None):
@@ -418,7 +422,8 @@ class SetLogSettingsAction(AzureBaseAction):
     def validate(self):
         if self.retention < 0 or self.retention > 365:
             raise PolicyValidationError(
-                'attribute: retention can not be less than 0 or greater than 365')
+                'attribute: retention can not be less than 0 or greater than 365'
+            )
 
     def process_in_parallel(self, resources, event):
         return super(SetLogSettingsAction, self).process_in_parallel(resources, event)
@@ -433,64 +438,61 @@ class SetLogSettingsAction(AzureBaseAction):
                     'write': self.WRITE in self.logs_to_enable,
                     'retention_policy': {
                         'enabled': self.retention != 0,
-                        'days': self.retention if self.retention != 0 else None  # Throws if 0
+                        'days': self.retention if self.retention != 0 else None,  # Throws if 0
                     },
-                    'version': '1.0'}
+                    'version': '1.0',
+                }
             else:
                 log_settings = Logging(
                     self.DELETE in self.logs_to_enable,
                     self.READ in self.logs_to_enable,
                     self.WRITE in self.logs_to_enable,
                     retention_policy=RetentionPolicy(
-                        enabled=self.retention != 0,
-                        days=self.retention))
+                        enabled=self.retention != 0, days=self.retention
+                    ),
+                )
 
-            StorageSettingsUtilities.update_logging(storage_type, resource,
-                                                    log_settings, self.session)
+            StorageSettingsUtilities.update_logging(
+                storage_type, resource, log_settings, self.session
+            )
 
 
 class StorageSettingsUtilities:
-
     @staticmethod
     def _get_blob_client_from_storage_account(storage_account, session):
         return BlobServiceClient(
             account_url=storage_account['properties']['primaryEndpoints']['blob'],
-            credential=session.get_credentials()
+            credential=session.get_credentials(),
         )
 
     @staticmethod
     def _get_file_client_from_storage_account(storage_account, session):
-        primary_key = StorageUtilities.get_storage_primary_key(storage_account['resourceGroup'],
-                                                               storage_account['name'],
-                                                               session)
-
-        return FileService(
-            account_name=storage_account['name'],
-            account_key=primary_key
+        primary_key = StorageUtilities.get_storage_primary_key(
+            storage_account['resourceGroup'], storage_account['name'], session
         )
+
+        return FileService(account_name=storage_account['name'], account_key=primary_key)
 
     @staticmethod
     def _get_table_client_from_storage_account(storage_account, session):
-        primary_key = StorageUtilities.get_storage_primary_key(storage_account['resourceGroup'],
-                                                               storage_account['name'],
-                                                               session)
-
-        return TableService(
-            account_name=storage_account['name'],
-            account_key=primary_key
+        primary_key = StorageUtilities.get_storage_primary_key(
+            storage_account['resourceGroup'], storage_account['name'], session
         )
+
+        return TableService(account_name=storage_account['name'], account_key=primary_key)
 
     @staticmethod
     def _get_queue_client_from_storage_account(storage_account, session):
         return QueueServiceClient(
             account_url=storage_account['properties']['primaryEndpoints']['queue'],
-            credential=session.get_credentials()
+            credential=session.get_credentials(),
         )
 
     @staticmethod
     def _get_client(storage_type, storage_account, session=None):
-        client = getattr(StorageSettingsUtilities, '_get_{}_client_from_storage_account'
-                         .format(storage_type))(storage_account, session)
+        client = getattr(
+            StorageSettingsUtilities, '_get_{}_client_from_storage_account'.format(storage_type)
+        )(storage_account, session)
         return client
 
     @staticmethod
@@ -507,8 +509,9 @@ class StorageSettingsUtilities:
 
         if storage_type in [QUEUE_TYPE, BLOB_TYPE]:
             return getattr(client, 'set_service_properties')(analytics_logging=logging_settings)
-        return getattr(client, 'set_{}_service_properties'
-                       .format(storage_type))(logging=logging_settings)
+        return getattr(client, 'set_{}_service_properties'.format(storage_type))(
+            logging=logging_settings
+        )
 
 
 @Storage.action_registry.register('require-secure-transfer')
@@ -536,7 +539,8 @@ class RequireSecureTransferAction(AzureBaseAction):
         'require-secure-transfer',
         **{
             'value': {'type': 'boolean', "default": True},
-        })
+        }
+    )
 
     def __init__(self, data, manager=None):
         super(RequireSecureTransferAction, self).__init__(data, manager)
@@ -548,5 +552,5 @@ class RequireSecureTransferAction(AzureBaseAction):
         self.client.storage_accounts.update(
             resource['resourceGroup'],
             resource['name'],
-            StorageAccountUpdateParameters(enable_https_traffic_only=self.data.get('value'))
+            StorageAccountUpdateParameters(enable_https_traffic_only=self.data.get('value')),
         )

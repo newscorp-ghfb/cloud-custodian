@@ -32,9 +32,7 @@ class OutputTest(BaseTest):
 
         output = AzureStorageOutput(
             ExecutionContext(
-                None,
-                Bag(name="xyz", provider_name='azure'),
-                Config.empty(output_dir=output_dir)
+                None, Bag(name="xyz", provider_name='azure'), Config.empty(output_dir=output_dir)
             ),
             {'url': output_dir},
         )
@@ -60,26 +58,21 @@ class OutputTest(BaseTest):
 
         output.upload()
 
-        m.assert_called_with(
-            "logs",
-            "xyz/foo.txt",
-            fh.name
-        )
+        m.assert_called_with("logs", "xyz/foo.txt", fh.name)
 
     def test_azure_output_get_default_output_dir(self):
         AzureStorageOutput.get_blob_client_wrapper = gm = mock.MagicMock()
         gm.return_value = None, "logs", 'xyz'
 
         AzureStorageOutput.get_output_vars = mock.Mock(
-            return_value={
-                'policy_name': 'MyPolicy',
-                'now': date(2018, 10, 1)
-            })
+            return_value={'policy_name': 'MyPolicy', 'now': date(2018, 10, 1)}
+        )
 
         output = self.get_azure_output()
         path = output.get_output_path(output.config['url'])
-        self.assertEqual(path,
-                         'azure://mystorage.blob.core.windows.net/logs/MyPolicy/2018/10/01/00/')
+        self.assertEqual(
+            path, 'azure://mystorage.blob.core.windows.net/logs/MyPolicy/2018/10/01/00/'
+        )
 
     def test_azure_output_get_custom_output_dir(self):
         AzureStorageOutput.get_blob_client_wrapper = gm = mock.MagicMock()
@@ -89,13 +82,15 @@ class OutputTest(BaseTest):
             return_value={
                 'account_id': 'MyAccountId',
                 'policy_name': 'MyPolicy',
-                'now': date(2018, 10, 1)
-            })
+                'now': date(2018, 10, 1),
+            }
+        )
 
         output = self.get_azure_output('{account_id}/{policy_name}/{now:%Y}')
         path = output.get_output_path(output.config['url'])
-        self.assertEqual(path,
-                         'azure://mystorage.blob.core.windows.net/logs/MyAccountId/MyPolicy/2018')
+        self.assertEqual(
+            path, 'azure://mystorage.blob.core.windows.net/logs/MyAccountId/MyPolicy/2018'
+        )
 
     def test_app_insights_logs(self):
         policy = Bag(name='test', resource_type='azure.vm', session_factory=Session)
@@ -106,10 +101,7 @@ class OutputTest(BaseTest):
 
     @patch('c7n_azure.output.MetricsOutput._put_metrics')
     def test_app_insights_metrics(self, put_mock):
-        policy = self.load_policy({
-            'name': 'test-rg',
-            'resource': 'azure.resourcegroup'
-        })
+        policy = self.load_policy({'name': 'test-rg', 'resource': 'azure.resourcegroup'})
         ctx = Bag(policy=policy, execution_id='00000000-0000-0000-0000-000000000000')
         sink = metrics_outputs.select('azure://00000000-0000-0000-0000-000000000000', ctx)
         self.assertTrue(isinstance(sink, MetricsOutput))
@@ -117,16 +109,21 @@ class OutputTest(BaseTest):
         sink.flush()
         put_mock.assert_called_once_with(
             'test-rg',
-            [{
-                'Name': 'ResourceCount',
-                'Value': 101,
-                'Dimensions':
-                    {'Policy': 'test-rg',
-                     'ResType': 'azure.resourcegroup',
-                     'SubscriptionId': local_session(Session).get_subscription_id(),
-                     'ExecutionId': '00000000-0000-0000-0000-000000000000',
-                     'ExecutionMode': 'pull',
-                     'Unit': 'Count'}}])
+            [
+                {
+                    'Name': 'ResourceCount',
+                    'Value': 101,
+                    'Dimensions': {
+                        'Policy': 'test-rg',
+                        'ResType': 'azure.resourcegroup',
+                        'SubscriptionId': local_session(Session).get_subscription_id(),
+                        'ExecutionId': '00000000-0000-0000-0000-000000000000',
+                        'ExecutionMode': 'pull',
+                        'Unit': 'Count',
+                    },
+                }
+            ],
+        )
 
     @patch('logging.Logger.error')
     def test_access_error(self, logger_mock):

@@ -8,7 +8,6 @@ from c7n.utils import local_session, type_schema
 
 @resources.register('cloudsearch')
 class CloudSearch(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "cloudsearch"
         enum_spec = ("describe_domains", "DomainStatusList", None)
@@ -26,8 +25,7 @@ class Delete(Action):
     permissions = ('cloudsearch:DeleteDomain',)
 
     def process(self, resources):
-        client = local_session(
-            self.manager.session_factory).client('cloudsearch')
+        client = local_session(self.manager.session_factory).client('cloudsearch')
         for r in resources:
             if r['Created'] is not True or r['Deleted'] is True:
                 continue

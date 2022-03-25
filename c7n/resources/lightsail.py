@@ -6,7 +6,6 @@ from c7n.query import QueryResourceManager, TypeInfo
 
 @resources.register('lightsail-instance')
 class Instance(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'lightsail'
         enum_spec = ('get_instances', 'instances', None)
@@ -17,7 +16,6 @@ class Instance(QueryResourceManager):
 
 @resources.register('lightsail-db')
 class Database(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'lightsail'
         enum_spec = ('get_relational_databases', 'relationalDatabases', None)
@@ -28,7 +26,6 @@ class Database(QueryResourceManager):
 
 @resources.register('lightsail-elb')
 class LoadBalancer(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'lightsail'
         enum_spec = ('get_load_balancers', 'loadBalancers', None)

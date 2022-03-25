@@ -15,7 +15,6 @@ from .common import BaseTest
 
 
 class TestS3Crypt(TestCase):
-
     def setUp(self):
         self.old_dir = os.getcwd()
         os.chdir(tempfile.gettempdir())
@@ -37,7 +36,6 @@ class TestS3Crypt(TestCase):
 
 
 class TestS3CryptEvent(BaseTest):
-
     @mock.patch("sys.stdout", new_callable=io.StringIO)
     def test_s3_event_simple(self, mock_stdout):
         self.patch(s3, "S3_AUGMENT_TABLE", [])
@@ -70,9 +68,7 @@ class TestS3CryptEvent(BaseTest):
                     "s3": {
                         "bucket": {"name": "test-bucket"},
                         "object": {
-                            "key": quote_plus(
-                                "/test000/!-_.*'()/&@:,$=+%2b?;/ /whatever"
-                            ),
+                            "key": quote_plus("/test000/!-_.*'()/&@:,$=+%2b?;/ /whatever"),
                             "size": 42,
                         },
                     }
@@ -93,9 +89,7 @@ class TestS3CryptEvent(BaseTest):
                 {
                     "s3": {
                         "bucket": {"name": "test-bucket"},
-                        "object": {
-                            "key": quote_plus("test-key"), "size": 42, "versionId": "99"
-                        },
+                        "object": {"key": quote_plus("test-key"), "size": 42, "versionId": "99"},
                     }
                 }
             ]

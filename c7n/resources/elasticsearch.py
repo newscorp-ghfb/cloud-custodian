@@ -17,7 +17,6 @@ from .securityhub import PostFinding
 
 
 class DescribeDomain(DescribeSource):
-
     def get_resources(self, resource_ids):
         # augment will turn these into resource dictionaries
         return resource_ids
@@ -29,12 +28,11 @@ class DescribeDomain(DescribeSource):
 
         def _augment(resource_set):
             resources = self.manager.retry(
-                client.describe_elasticsearch_domains,
-                DomainNames=resource_set)['DomainStatusList']
+                client.describe_elasticsearch_domains, DomainNames=resource_set
+            )['DomainStatusList']
             for r in resources:
                 rarn = self.manager.generate_arn(r[model.id])
-                r['Tags'] = self.manager.retry(
-                    client.list_tags, ARN=rarn).get('TagList', [])
+                r['Tags'] = self.manager.retry(client.list_tags, ARN=rarn).get('TagList', [])
             return resources
 
         for resource_set in chunks(domains, 5):
@@ -45,22 +43,17 @@ class DescribeDomain(DescribeSource):
 
 @resources.register('elasticsearch')
 class ElasticSearchDomain(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'es'
         arn = 'ARN'
         arn_type = 'domain'
-        enum_spec = (
-            'list_domain_names', 'DomainNames[].DomainName', None)
+        enum_spec = ('list_domain_names', 'DomainNames[].DomainName', None)
         id = 'DomainName'
         name = 'Name'
         dimension = "DomainName"
         cfn_type = config_type = 'AWS::Elasticsearch::Domain'
 
-    source_mapping = {
-        'describe': DescribeDomain,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeDomain, 'config': ConfigSource}
 
 
 ElasticSearchDomain.filter_registry.register('marked-for-op', TagActionFilter)
@@ -86,12 +79,11 @@ class Vpc(VpcFilter):
 
 @ElasticSearchDomain.filter_registry.register('metrics')
 class Metrics(MetricsFilter):
-
     def get_dimensions(self, resource):
-        return [{'Name': 'ClientId',
-                 'Value': self.manager.account_id},
-                {'Name': 'DomainName',
-                 'Value': resource['DomainName']}]
+        return [
+            {'Name': 'ClientId', 'Value': self.manager.account_id},
+            {'Name': 'DomainName', 'Value': resource['DomainName']},
+        ]
 
 
 @ElasticSearchDomain.filter_registry.register('kms-key')
@@ -115,6 +107,7 @@ class ElasticSearchCrossAccountAccessFilter(CrossAccountAccessFilter):
             filters:
               - type: cross-account
     """
+
     policy_attribute = 'c7n:Policy'
     permissions = ('es:DescribeElasticsearchDomainConfig',)
 
@@ -125,7 +118,8 @@ class ElasticSearchCrossAccountAccessFilter(CrossAccountAccessFilter):
                 result = self.manager.retry(
                     client.describe_elasticsearch_domain_config,
                     DomainName=r['DomainName'],
-                    ignore_err_codes=('ResourceNotFoundException',))
+                    ignore_err_codes=('ResourceNotFoundException',),
+                )
                 if result:
                     r[self.policy_attribute] = json.loads(
                         result.get('DomainConfig').get('AccessPolicies').get('Options')
@@ -152,7 +146,10 @@ class RemovePolicyStatement(RemovePolicyBase):
                 statement_ids: matched
     """
 
-    permissions = ('es:DescribeElasticsearchDomainConfig', 'es:UpdateElasticsearchDomainConfig',)
+    permissions = (
+        'es:DescribeElasticsearchDomainConfig',
+        'es:UpdateElasticsearchDomainConfig',
+    )
 
     def validate(self):
         for f in self.manager.iter_filters():
@@ -160,7 +157,8 @@ class RemovePolicyStatement(RemovePolicyBase):
                 return self
         raise PolicyValidationError(
             '`remove-statements` may only be used in '
-            'conjunction with `cross-account` filter on %s' % (self.manager.data,))
+            'conjunction with `cross-account` filter on %s' % (self.manager.data,)
+        )
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('es')
@@ -177,12 +175,12 @@ class RemovePolicyStatement(RemovePolicyBase):
             return
 
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
 
         if found:
             client.update_elasticsearch_domain_config(
-                DomainName=resource['DomainName'],
-                AccessPolicies=json.dumps(p)
+                DomainName=resource['DomainName'], AccessPolicies=json.dumps(p)
             )
 
         return
@@ -195,38 +193,45 @@ class ElasticSearchPostFinding(PostFinding):
 
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
-        payload.update(self.filter_empty({
-            'AccessPolicies': r.get('AccessPolicies'),
-            'DomainId': r['DomainId'],
-            'DomainName': r['DomainName'],
-            'Endpoint': r.get('Endpoint'),
-            'Endpoints': r.get('Endpoints'),
-            'DomainEndpointOptions': self.filter_empty({
-                'EnforceHTTPS': jmespath.search(
-                    'DomainEndpointOptions.EnforceHTTPS', r),
-                'TLSSecurityPolicy': jmespath.search(
-                    'DomainEndpointOptions.TLSSecurityPolicy', r)
-            }),
-            'ElasticsearchVersion': r['ElasticsearchVersion'],
-            'EncryptionAtRestOptions': self.filter_empty({
-                'Enabled': jmespath.search(
-                    'EncryptionAtRestOptions.Enabled', r),
-                'KmsKeyId': jmespath.search(
-                    'EncryptionAtRestOptions.KmsKeyId', r)
-            }),
-            'NodeToNodeEncryptionOptions': self.filter_empty({
-                'Enabled': jmespath.search(
-                    'NodeToNodeEncryptionOptions.Enabled', r)
-            }),
-            'VPCOptions': self.filter_empty({
-                'AvailabilityZones': jmespath.search(
-                    'VPCOptions.AvailabilityZones', r),
-                'SecurityGroupIds': jmespath.search(
-                    'VPCOptions.SecurityGroupIds', r),
-                'SubnetIds': jmespath.search('VPCOptions.SubnetIds', r),
-                'VPCId': jmespath.search('VPCOptions.VPCId', r)
-            })
-        }))
+        payload.update(
+            self.filter_empty(
+                {
+                    'AccessPolicies': r.get('AccessPolicies'),
+                    'DomainId': r['DomainId'],
+                    'DomainName': r['DomainName'],
+                    'Endpoint': r.get('Endpoint'),
+                    'Endpoints': r.get('Endpoints'),
+                    'DomainEndpointOptions': self.filter_empty(
+                        {
+                            'EnforceHTTPS': jmespath.search(
+                                'DomainEndpointOptions.EnforceHTTPS', r
+                            ),
+                            'TLSSecurityPolicy': jmespath.search(
+                                'DomainEndpointOptions.TLSSecurityPolicy', r
+                            ),
+                        }
+                    ),
+                    'ElasticsearchVersion': r['ElasticsearchVersion'],
+                    'EncryptionAtRestOptions': self.filter_empty(
+                        {
+                            'Enabled': jmespath.search('EncryptionAtRestOptions.Enabled', r),
+                            'KmsKeyId': jmespath.search('EncryptionAtRestOptions.KmsKeyId', r),
+                        }
+                    ),
+                    'NodeToNodeEncryptionOptions': self.filter_empty(
+                        {'Enabled': jmespath.search('NodeToNodeEncryptionOptions.Enabled', r)}
+                    ),
+                    'VPCOptions': self.filter_empty(
+                        {
+                            'AvailabilityZones': jmespath.search('VPCOptions.AvailabilityZones', r),
+                            'SecurityGroupIds': jmespath.search('VPCOptions.SecurityGroupIds', r),
+                            'SubnetIds': jmespath.search('VPCOptions.SubnetIds', r),
+                            'VPCId': jmespath.search('VPCOptions.VPCId', r),
+                        }
+                    ),
+                }
+            )
+        )
         return envelope
 
 
@@ -242,9 +247,8 @@ class ElasticSearchModifySG(ModifyVpcSecurityGroupsAction):
 
         for dx, d in enumerate(domains):
             client.update_elasticsearch_domain_config(
-                DomainName=d['DomainName'],
-                VPCOptions={
-                    'SecurityGroupIds': groups[dx]})
+                DomainName=d['DomainName'], VPCOptions={'SecurityGroupIds': groups[dx]}
+            )
 
 
 @ElasticSearchDomain.action_registry.register('delete')
@@ -277,6 +281,7 @@ class ElasticSearchAddTag(Tag):
                         key: DesiredTag
                         value: DesiredValue
     """
+
     permissions = ('es:AddTags',)
 
     def process_resource_set(self, client, domains, tags):
@@ -303,7 +308,8 @@ class ElasticSearchRemoveTag(RemoveTag):
             actions:
               - type: remove-tag
                 tags: ['ExpiredTag']
-        """
+    """
+
     permissions = ('es:RemoveTags',)
 
     def process_resource_set(self, client, domains, tags):
@@ -337,13 +343,15 @@ class ElasticSearchMarkForOp(TagDelayedAction):
 
 @resources.register('elasticsearch-reserved')
 class ReservedInstances(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'es'
         name = id = 'ReservedElasticsearchInstanceId'
         date = 'StartTime'
         enum_spec = (
-            'describe_reserved_elasticsearch_instances', 'ReservedElasticsearchInstances', None)
+            'describe_reserved_elasticsearch_instances',
+            'ReservedElasticsearchInstances',
+            None,
+        )
         filter_name = 'ReservedElasticsearchInstances'
         filter_type = 'list'
         arn_type = "reserved-instances"

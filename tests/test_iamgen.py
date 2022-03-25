@@ -8,7 +8,6 @@ import fnmatch
 
 
 class TestIamGen(BaseTest):
-
     def check_permissions(self, perm_db, perm_set, path):
         invalid = []
         for p in perm_set:
@@ -45,8 +44,10 @@ class TestIamGen(BaseTest):
             #    print(mgr)
 
             found = False
-            for s in (mgr.resource_type.service,
-                      getattr(mgr.resource_type, 'permission_prefix', None)):
+            for s in (
+                mgr.resource_type.service,
+                getattr(mgr.resource_type, 'permission_prefix', None),
+            ):
                 if s in perms:
                     found = True
             if not found:
@@ -58,8 +59,9 @@ class TestIamGen(BaseTest):
                 p['actions'] = [n]
                 invalid.extend(
                     self.check_permissions(
-                        perms, a({}, mgr).get_permissions(),
-                        "{k}.actions.{n}".format(k=k, n=n)))
+                        perms, a({}, mgr).get_permissions(), "{k}.actions.{n}".format(k=k, n=n)
+                    )
+                )
 
             for n, f in v.filter_registry.items():
                 if n in ('or', 'and', 'not', 'missing'):
@@ -67,13 +69,12 @@ class TestIamGen(BaseTest):
                 p['filters'] = [n]
                 invalid.extend(
                     self.check_permissions(
-                        perms, f({}, mgr).get_permissions(),
-                        "{k}.filters.{n}".format(k=k, n=n)))
+                        perms, f({}, mgr).get_permissions(), "{k}.filters.{n}".format(k=k, n=n)
+                    )
+                )
 
         if missing:
-            raise ValueError(
-                "resources missing service %s" % ('\n'.join(sorted(missing))))
+            raise ValueError("resources missing service %s" % ('\n'.join(sorted(missing))))
 
         if invalid:
-            raise ValueError(
-                "invalid permissions \n %s" % ('\n'.join(sorted(map(str, invalid)))))
+            raise ValueError("invalid permissions \n %s" % ('\n'.join(sorted(map(str, invalid)))))

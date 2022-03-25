@@ -11,8 +11,8 @@ from c7n.utils import type_schema
 
 @resources.register('dm-deployment')
 class DMDeployment(QueryResourceManager):
-    """GCP resource: https://cloud.google.com/deployment-manager/docs/reference/latest/deployments
-    """
+    """GCP resource: https://cloud.google.com/deployment-manager/docs/reference/latest/deployments"""
+
     class resource_type(TypeInfo):
         service = 'deploymentmanager'
         version = 'v2'
@@ -25,8 +25,8 @@ class DMDeployment(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             return client.execute_command(
-                'get', {'project': resource_info['project_id'],
-                        'deployment': resource_info['name']})
+                'get', {'project': resource_info['project_id'], 'deployment': resource_info['name']}
+            )
 
 
 @DMDeployment.action_registry.register('delete')

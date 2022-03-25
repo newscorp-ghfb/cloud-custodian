@@ -5,7 +5,6 @@ from .common import BaseTest
 
 
 class CloudSearch(BaseTest):
-
     def test_resource_manager(self):
         factory = self.replay_flight_data("test_cloudsearch_query")
         p = self.load_policy(
@@ -34,7 +33,5 @@ class CloudSearch(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("cloudsearch")
-        state = client.describe_domains(DomainNames=["sock-index"])["DomainStatusList"][
-            0
-        ]
+        state = client.describe_domains(DomainNames=["sock-index"])["DomainStatusList"][0]
         self.assertEqual(state["Deleted"], True)

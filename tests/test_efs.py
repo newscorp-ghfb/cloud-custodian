@@ -11,7 +11,6 @@ from operator import itemgetter
 
 
 class ElasticFileSystem(BaseTest):
-
     @functional
     def test_resource_manager(self):
         factory = self.replay_flight_data("test_efs_query")
@@ -101,9 +100,9 @@ class ElasticFileSystem(BaseTest):
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "^(alias/aws/)",
-                        "op": "regex"
+                        "op": "regex",
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -111,7 +110,8 @@ class ElasticFileSystem(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(
             resources[0]['KmsKeyId'],
-            'arn:aws:kms:us-east-1:644160558196:key/8785aeb9-a616-4e2b-bbd3-df3cde76bcc5') # NOQA
+            'arn:aws:kms:us-east-1:644160558196:key/8785aeb9-a616-4e2b-bbd3-df3cde76bcc5',
+        )  # NOQA
 
     def test_enable_lifecycle_policy(self):
         factory = self.replay_flight_data("test_enable_lifecycle_policy")
@@ -129,7 +129,7 @@ class ElasticFileSystem(BaseTest):
                         "state": "enable",
                         "rules": [{'TransitionToIA': 'AFTER_7_DAYS'}],
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -155,7 +155,7 @@ class ElasticFileSystem(BaseTest):
                         "type": "configure-lifecycle-policy",
                         "state": "disable",
                     }
-                ]
+                ],
             },
             session_factory=factory,
         )
@@ -175,7 +175,7 @@ class ElasticFileSystem(BaseTest):
                 "resource": "efs",
                 "filters": [{"Name": "c7n-test"}],
                 "actions": [{"type": "configure-lifecycle-policy", "state": "enable"}],
-            }
+            },
         )
 
     def test_filter_lifecycle_policy_present(self):
@@ -184,8 +184,7 @@ class ElasticFileSystem(BaseTest):
             {
                 "name": "efs-lifecycle-policy-enabled",
                 "resource": "efs",
-                "filters": [{"type": "lifecycle-policy",
-                            "state": "present"}],
+                "filters": [{"type": "lifecycle-policy", "state": "present"}],
             },
             session_factory=factory,
         )
@@ -199,8 +198,7 @@ class ElasticFileSystem(BaseTest):
             {
                 "name": "efs-lifecycle-policy-disabled",
                 "resource": "efs",
-                "filters": [{"type": "lifecycle-policy",
-                            "state": "absent"}],
+                "filters": [{"type": "lifecycle-policy", "state": "absent"}],
             },
             session_factory=factory,
         )
@@ -214,8 +212,9 @@ class ElasticFileSystem(BaseTest):
             {
                 "name": "efs-lifecycle-policy-enabled",
                 "resource": "efs",
-                "filters": [{"type": "lifecycle-policy",
-                            "state": "present", "value": "AFTER_7_DAYS"}],
+                "filters": [
+                    {"type": "lifecycle-policy", "state": "present", "value": "AFTER_7_DAYS"}
+                ],
             },
             session_factory=factory,
         )

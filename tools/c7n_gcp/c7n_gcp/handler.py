@@ -8,6 +8,7 @@ import uuid
 
 from c7n.config import Config
 from c7n.loader import PolicyLoader
+
 # Load resource plugins
 from c7n_gcp.entry import initialize_gcp
 
@@ -29,8 +30,7 @@ def run(event, context=None):
 
     # setup execution options
     options = Config.empty(**policy_config.pop('execution-options', {}))
-    options.update(
-        policy_config['policies'][0].get('mode', {}).get('execution-options', {}))
+    options.update(policy_config['policies'][0].get('mode', {}).get('execution-options', {}))
     # if output_dir specified use that, otherwise make a temp directory
     if not options.output_dir:
         options['output_dir'] = get_tmp_output_dir()

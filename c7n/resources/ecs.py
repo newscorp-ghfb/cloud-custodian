@@ -81,7 +81,6 @@ class ContainerConfigSource(ConfigSource):
 
 
 class ClusterDescribe(query.DescribeSource):
-
     def augment(self, resources):
         resources = super(ClusterDescribe, self).augment(resources)
         ecs_tag_normalize(resources)
@@ -90,26 +89,26 @@ class ClusterDescribe(query.DescribeSource):
 
 @resources.register('ecs')
 class ECSCluster(query.QueryResourceManager):
-
     class resource_type(query.TypeInfo):
         service = 'ecs'
         enum_spec = ('list_clusters', 'clusterArns', None)
         batch_detail_spec = (
-            'describe_clusters', 'clusters', None, 'clusters', {'include': ['TAGS']})
+            'describe_clusters',
+            'clusters',
+            None,
+            'clusters',
+            {'include': ['TAGS']},
+        )
         name = "clusterName"
         arn = id = "clusterArn"
         arn_type = 'cluster'
         config_type = cfn_type = 'AWS::ECS::Cluster'
 
-    source_mapping = {
-        'describe': ClusterDescribe,
-        'config': query.ConfigSource
-    }
+    source_mapping = {'describe': ClusterDescribe, 'config': query.ConfigSource}
 
 
 @ECSCluster.filter_registry.register('metrics')
 class ECSMetrics(MetricsFilter):
-
     def get_dimensions(self, resource):
         return [{'Name': 'ClusterName', 'Value': resource['clusterName']}]
 
@@ -129,8 +128,7 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
 
     def __init__(self, manager):
         self.manager = manager
-        self.query = query.ChildResourceQuery(
-            self.manager.session_factory, self.manager)
+        self.query = query.ChildResourceQuery(self.manager.session_factory, self.manager)
         self.query.capture_parent_id = True
 
     def get_resources(self, ids, cache=True):
@@ -150,8 +148,7 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
         results = []
         client = local_session(self.manager.session_factory).client('ecs')
         for cid, resource_ids in cluster_resources.items():
-            results.extend(
-                self.process_cluster_resources(client, cid, resource_ids))
+            results.extend(self.process_cluster_resources(client, cid, resource_ids))
         return results
 
     def augment(self, resources):
@@ -159,21 +156,20 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
         for pid, r in resources:
             parent_child_map.setdefault(pid, []).append(r)
         results = []
-        with self.manager.executor_factory(
-                max_workers=self.manager.max_workers) as w:
+        with self.manager.executor_factory(max_workers=self.manager.max_workers) as w:
             client = local_session(self.manager.session_factory).client('ecs')
             futures = {}
             for pid, services in parent_child_map.items():
-                futures[
-                    w.submit(
-                        self.process_cluster_resources, client, pid, services)
-                ] = (pid, services)
+                futures[w.submit(self.process_cluster_resources, client, pid, services)] = (
+                    pid,
+                    services,
+                )
             for f in futures:
                 pid, services = futures[f]
                 if f.exception():
                     self.manager.log.warning(
-                        'error fetching ecs resources for cluster %s: %s',
-                        pid, f.exception())
+                        'error fetching ecs resources for cluster %s: %s', pid, f.exception()
+                    )
                     continue
                 results.extend(f.result())
         return results
@@ -181,26 +177,28 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
 
 @query.sources.register('describe-ecs-service')
 class ECSServiceDescribeSource(ECSClusterResourceDescribeSource):
-
     def process_cluster_resources(self, client, cluster_id, services):
         results = []
         for service_set in chunks(services, self.manager.chunk_size):
             results.extend(
                 client.describe_services(
-                    cluster=cluster_id,
-                    include=['TAGS'],
-                    services=service_set).get('services', []))
+                    cluster=cluster_id, include=['TAGS'], services=service_set
+                ).get('services', [])
+            )
         ecs_tag_normalize(results)
         return results
 
 
 class ECSServiceConfigSource(ContainerConfigSource):
     perserve_empty = {
-        'placementConstraints', 'placementStrategy',
-        'serviceRegistries', 'Tags', 'loadBalancers'}
+        'placementConstraints',
+        'placementStrategy',
+        'serviceRegistries',
+        'Tags',
+        'loadBalancers',
+    }
 
-    mapped_keys = {
-        'role': 'roleArn', 'cluster': 'clusterArn'}
+    mapped_keys = {'role': 'roleArn', 'cluster': 'clusterArn'}
 
 
 @resources.register('ecs-service')
@@ -229,25 +227,23 @@ class Service(query.ChildResourceManager):
 
 @Service.filter_registry.register('metrics')
 class ServiceMetrics(MetricsFilter):
-
     def get_dimensions(self, resource):
         return [
             {'Name': 'ClusterName', 'Value': resource['clusterArn'].rsplit('/')[-1]},
-            {'Name': 'ServiceName', 'Value': resource['serviceName']}]
+            {'Name': 'ServiceName', 'Value': resource['serviceName']},
+        ]
 
 
 class RelatedTaskDefinitionFilter(ValueFilter):
 
     schema = type_schema('task-definition', rinherit=ValueFilter.schema)
     schema_alias = False
-    permissions = ('ecs:DescribeTaskDefinition',
-                   'ecs:ListTaskDefinitions')
+    permissions = ('ecs:DescribeTaskDefinition', 'ecs:ListTaskDefinitions')
     related_key = 'taskDefinition'
 
     def process(self, resources, event=None):
         task_def_ids = list({s[self.related_key] for s in resources})
-        task_def_manager = self.manager.get_resource_manager(
-            'ecs-task-definition')
+        task_def_manager = self.manager.get_resource_manager('ecs-task-definition')
 
         # due to model difference (multi-level containment with
         # multi-step resource iteration) and potential volume of
@@ -299,9 +295,11 @@ class ServiceTaskDefinitionFilter(RelatedTaskDefinitionFilter):
 class SubnetFilter(net_filters.SubnetFilter):
 
     RelatedIdsExpression = ""
-    expressions = ('taskSets[].networkConfiguration.awsvpcConfiguration.subnets[]',
-                'deployments[].networkConfiguration.awsvpcConfiguration.subnets[]',
-                'networkConfiguration.awsvpcConfiguration.subnets[]')
+    expressions = (
+        'taskSets[].networkConfiguration.awsvpcConfiguration.subnets[]',
+        'deployments[].networkConfiguration.awsvpcConfiguration.subnets[]',
+        'networkConfiguration.awsvpcConfiguration.subnets[]',
+    )
 
     def get_related_ids(self, resources):
         subnet_ids = set()
@@ -335,7 +333,8 @@ class UpdateService(BaseAction):
                           assignPublicIp: DISABLED
     """
 
-    schema = type_schema('modify',
+    schema = type_schema(
+        'modify',
         update={
             'desiredCount': {'type': 'integer'},
             'taskDefinition': {'type': 'string'},
@@ -344,7 +343,7 @@ class UpdateService(BaseAction):
                 'properties': {
                     'maximumPercent': {'type': 'integer'},
                     'minimumHealthyPercent': {'type': 'integer'},
-                }
+                },
             },
             'networkConfiguration': {
                 'type': 'object',
@@ -357,7 +356,7 @@ class UpdateService(BaseAction):
                                 'items': {
                                     'type': 'string',
                                 },
-                                'minItems': 1
+                                'minItems': 1,
                             },
                             'securityGroups': {
                                 'items': {
@@ -367,15 +366,15 @@ class UpdateService(BaseAction):
                             'assignPublicIp': {
                                 'type': 'string',
                                 'enum': ['ENABLED', 'DISABLED'],
-                            }
-                        }
+                            },
+                        },
                     }
-                }
+                },
             },
             'platformVersion': {'type': 'string'},
             'forceNewDeployment': {'type': 'boolean', 'default': False},
             'healthCheckGracePeriodSeconds': {'type': 'integer'},
-        }
+        },
     )
 
     permissions = ('ecs:UpdateService',)
@@ -405,8 +404,7 @@ class UpdateService(BaseAction):
             if not param:
                 continue
 
-            client.update_service(
-                cluster=r['clusterArn'], service=r['serviceName'], **param)
+            client.update_service(cluster=r['clusterArn'], service=r['serviceName'], **param)
 
 
 @Service.action_registry.register('delete')
@@ -421,15 +419,15 @@ class DeleteService(BaseAction):
         retry = get_retry(('Throttling',))
         for r in resources:
             try:
-                primary = [d for d in r['deployments']
-                           if d['status'] == 'PRIMARY'].pop()
+                primary = [d for d in r['deployments'] if d['status'] == 'PRIMARY'].pop()
                 if primary['desiredCount'] > 0:
-                    retry(client.update_service,
-                          cluster=r['clusterArn'],
-                          service=r['serviceName'],
-                          desiredCount=0)
-                retry(client.delete_service,
-                      cluster=r['clusterArn'], service=r['serviceName'])
+                    retry(
+                        client.update_service,
+                        cluster=r['clusterArn'],
+                        service=r['serviceName'],
+                        desiredCount=0,
+                    )
+                retry(client.delete_service, cluster=r['clusterArn'], service=r['serviceName'])
             except ClientError as e:
                 if e.response['Error']['Code'] != 'ServiceNotFoundException':
                     raise
@@ -437,16 +435,14 @@ class DeleteService(BaseAction):
 
 @query.sources.register('describe-ecs-task')
 class ECSTaskDescribeSource(ECSClusterResourceDescribeSource):
-
     def process_cluster_resources(self, client, cluster_id, tasks):
         results = []
         for task_set in chunks(tasks, self.manager.chunk_size):
             results.extend(
                 self.manager.retry(
-                    client.describe_tasks,
-                    cluster=cluster_id,
-                    include=['TAGS'],
-                    tasks=task_set).get('tasks', []))
+                    client.describe_tasks, cluster=cluster_id, include=['TAGS'], tasks=task_set
+                ).get('tasks', [])
+            )
         ecs_tag_normalize(results)
         return results
 
@@ -507,6 +503,7 @@ class TaskTaskDefinitionFilter(RelatedTaskDefinitionFilter):
              - type: stop
 
     """
+
     related_key = 'taskDefinitionArn'
 
 
@@ -524,10 +521,7 @@ class StopTask(BaseAction):
 
         for r in resources:
             try:
-                retry(client.stop_task,
-                      cluster=r['clusterArn'],
-                      task=r['taskArn'],
-                      reason=reason)
+                retry(client.stop_task, cluster=r['clusterArn'], task=r['taskArn'], reason=reason)
             except ClientError as e:
                 # No error code for not found.
                 if e.response['Error']['Message'] != "The referenced task was not found.":
@@ -535,7 +529,6 @@ class StopTask(BaseAction):
 
 
 class DescribeTaskDefinition(DescribeSource):
-
     def get_resources(self, ids, cache=True):
         if cache:
             resources = self.manager._get_cached_resources(ids)
@@ -553,9 +546,8 @@ class DescribeTaskDefinition(DescribeSource):
         client = local_session(self.manager.session_factory).client('ecs')
         for task_def_set in resources:
             response = self.manager.retry(
-                client.describe_task_definition,
-                taskDefinition=task_def_set,
-                include=['TAGS'])
+                client.describe_task_definition, taskDefinition=task_def_set, include=['TAGS']
+            )
             r = response['taskDefinition']
             r['tags'] = response.get('tags', [])
             results.append(r)
@@ -570,7 +562,6 @@ class ConfigECSTaskDefinition(ContainerConfigSource):
 
 @resources.register('ecs-task-definition')
 class TaskDefinition(query.QueryResourceManager):
-
     class resource_type(query.TypeInfo):
         service = 'ecs'
         arn = id = name = 'taskDefinitionArn'
@@ -578,10 +569,7 @@ class TaskDefinition(query.QueryResourceManager):
         cfn_type = config_type = 'AWS::ECS::TaskDefinition'
         arn_type = 'task-definition'
 
-    source_mapping = {
-        'config': ConfigECSTaskDefinition,
-        'describe': DescribeTaskDefinition
-    }
+    source_mapping = {'config': ConfigECSTaskDefinition, 'describe': DescribeTaskDefinition}
 
     def get_resources(self, ids, cache=True, augment=True):
         return super(TaskDefinition, self).get_resources(ids, cache, augment=False)
@@ -605,12 +593,13 @@ class DeleteTaskDefinition(BaseAction):
 
         for r in resources:
             try:
-                retry(client.deregister_task_definition,
-                      taskDefinition=r['taskDefinitionArn'])
+                retry(client.deregister_task_definition, taskDefinition=r['taskDefinitionArn'])
             except ClientError as e:
                 # No error code for not found.
-                if e.response['Error'][
-                        'Message'] != 'The specified task definition does not exist.':
+                if (
+                    e.response['Error']['Message']
+                    != 'The specified task definition does not exist.'
+                ):
                     raise
 
 
@@ -636,14 +625,12 @@ class ContainerInstance(query.ChildResourceManager):
 
 @query.sources.register('describe-ecs-container-instance')
 class ECSContainerInstanceDescribeSource(ECSClusterResourceDescribeSource):
-
     def process_cluster_resources(self, client, cluster_id, container_instances):
         results = []
         for service_set in chunks(container_instances, self.manager.chunk_size):
             r = client.describe_container_instances(
-                cluster=cluster_id,
-                include=['TAGS'],
-                containerInstances=container_instances).get('containerInstances', [])
+                cluster=cluster_id, include=['TAGS'], containerInstances=container_instances
+            ).get('containerInstances', [])
             # Many Container Instance API calls require the cluster_id, adding as a
             # custodian specific key in the resource
             for i in r:
@@ -674,16 +661,18 @@ class SetState(BaseAction):
                 - type: set-state
                   state: DRAINING
     """
-    schema = type_schema(
-        'set-state',
-        state={"type": "string", 'enum': ['DRAINING', 'ACTIVE']})
+
+    schema = type_schema('set-state', state={"type": "string", 'enum': ['DRAINING', 'ACTIVE']})
     permissions = ('ecs:UpdateContainerInstancesState',)
 
     def process(self, resources):
         cluster_map = group_by(resources, 'c7n:cluster')
         for cluster in cluster_map:
-            c_instances = [i['containerInstanceArn'] for i in cluster_map[cluster]
-                if i['status'] != self.data.get('state')]
+            c_instances = [
+                i['containerInstanceArn']
+                for i in cluster_map[cluster]
+                if i['status'] != self.data.get('state')
+            ]
             results = self.process_cluster(cluster, c_instances)
             return results
 
@@ -695,20 +684,19 @@ class SetState(BaseAction):
         for service_set in chunks(c_instances, chunk_size):
             try:
                 client.update_container_instances_state(
-                    cluster=cluster,
-                    containerInstances=service_set,
-                    status=self.data.get('state'))
+                    cluster=cluster, containerInstances=service_set, status=self.data.get('state')
+                )
             except ClientError:
                 self.manager.log.warning(
-                    'Failed to update Container Instances State: %s, cluster %s' %
-                    (service_set, cluster))
+                    'Failed to update Container Instances State: %s, cluster %s'
+                    % (service_set, cluster)
+                )
                 raise
 
 
 @ContainerInstance.action_registry.register('update-agent')
 class UpdateAgent(BaseAction):
-    """Updates the agent on a container instance
-    """
+    """Updates the agent on a container instance"""
 
     schema = type_schema('update-agent')
     permissions = ('ecs:UpdateContainerAgent',)
@@ -716,15 +704,15 @@ class UpdateAgent(BaseAction):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ecs')
         for r in resources:
-            self.process_instance(
-                client, r.get('c7n:cluster'), r.get('containerInstanceArn'))
+            self.process_instance(client, r.get('c7n:cluster'), r.get('containerInstanceArn'))
 
     def process_instance(self, client, cluster, instance):
         try:
-            client.update_container_agent(
-                cluster=cluster, containerInstance=instance)
-        except (client.exceptions.NoUpdateAvailableException,
-                client.exceptions.UpdateInProgressException):
+            client.update_container_agent(cluster=cluster, containerInstance=instance)
+        except (
+            client.exceptions.NoUpdateAvailableException,
+            client.exceptions.UpdateInProgressException,
+        ):
             return
 
 
@@ -756,6 +744,7 @@ class TagEcsResource(Tag):
                     key: target-tag
                     value: target-value
     """
+
     permissions = ('ecs:TagResource',)
     batch_size = 1
 
@@ -795,6 +784,7 @@ class RemoveTagEcsResource(RemoveTag):
                   - type: remove-tag
                     tags: ["BadTag"]
     """
+
     permissions = ('ecs:UntagResource',)
     batch_size = 1
 

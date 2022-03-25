@@ -4,7 +4,6 @@ from .common import BaseTest
 
 
 class CloudWatchInsightRule(BaseTest):
-
     def test_disable_insight_rule(self):
         factory = self.replay_flight_data("test_insight_rule_disable")
         p = self.load_policy(

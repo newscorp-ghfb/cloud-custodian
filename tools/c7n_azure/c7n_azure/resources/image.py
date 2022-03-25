@@ -25,6 +25,7 @@ class Image(ArmResourceManager):
                 value: my-test-vm-image
 
     """
+
     class resource_type(ArmResourceManager.resource_type):
         doc_groups = ['Compute']
 

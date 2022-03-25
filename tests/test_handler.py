@@ -12,7 +12,6 @@ from c7n import handler
 
 
 class HandleTest(BaseTest):
-
     def test_init_config_exec_option_merge(self):
         policy_config = {
             'execution-options': {
@@ -22,41 +21,47 @@ class HandleTest(BaseTest):
                 'tracer': 'xray',
                 'account_id': '004',
                 'dryrun': True,
-                'cache': '/foobar.cache'},
+                'cache': '/foobar.cache',
+            },
             'policies': [
-                {'mode': {
-                    'type': 'period',
-                    'schedule': "rate(1 minute)",
-                    'execution-options': {
-                        'metrics_enabled': True,
-                        'assume_role': 'arn::::007:foo',
-                        'output_dir': 's3://mybucket/output'}},
-                 'resource': 'aws.ec2',
-                 'name': 'check-dev'}
-            ]}
+                {
+                    'mode': {
+                        'type': 'period',
+                        'schedule': "rate(1 minute)",
+                        'execution-options': {
+                            'metrics_enabled': True,
+                            'assume_role': 'arn::::007:foo',
+                            'output_dir': 's3://mybucket/output',
+                        },
+                    },
+                    'resource': 'aws.ec2',
+                    'name': 'check-dev',
+                }
+            ],
+        }
         self.assertEqual(
             dict(handler.init_config(policy_config)),
-            {'assume_role': 'arn::::007:foo',
-             'metrics_enabled': 'aws',
-             'tracer': 'xray',
-             'account_id': '007',
-             'region': 'us-east-1',
-             'output_dir': 's3://mybucket/output',
+            {
+                'assume_role': 'arn::::007:foo',
+                'metrics_enabled': 'aws',
+                'tracer': 'xray',
+                'account_id': '007',
+                'region': 'us-east-1',
+                'output_dir': 's3://mybucket/output',
+                # defaults
+                'external_id': None,
+                'dryrun': False,
+                'profile': None,
+                'authorization_file': None,
+                'cache': '',
+                'regions': (),
+                'cache_period': 0,
+                'log_group': None,
+                'metrics': None,
+            },
+        )
 
-             # defaults
-             'external_id': None,
-             'dryrun': False,
-             'profile': None,
-             'authorization_file': None,
-             'cache': '',
-             'regions': (),
-             'cache_period': 0,
-             'log_group': None,
-             'metrics': None})
-
-    def setupLambdaEnv(
-            self, policy_data, environment=None, err_execs=(),
-            log_level=logging.INFO):
+    def setupLambdaEnv(self, policy_data, environment=None, err_execs=(), log_level=logging.INFO):
 
         work_dir = self.change_cwd()
         self.patch(handler, 'policy_data', None)
@@ -93,7 +98,8 @@ class HandleTest(BaseTest):
         output, executions = self.setupLambdaEnv(
             {'policies': [{'name': 'ec2', 'resource': 'ec2'}]},
             {'C7N_DEBUG_EVENT': None},
-            log_level=logging.DEBUG)
+            log_level=logging.DEBUG,
+        )
         handler.dispatch_event({'detail': {'resource': 'xyz'}}, {})
         self.assertTrue('xyz' in output.getvalue())
 
@@ -104,12 +110,13 @@ class HandleTest(BaseTest):
 
     @mock.patch('c7n.handler.PolicyCollection')
     def test_dispatch_err_event(self, mock_collection):
-        output, executions = self.setupLambdaEnv({
-            'execution-options': {
-                'output_dir': 's3://xyz',
-                'account_id': '004'},
-            'policies': [{'resource': 'ec2', 'name': 'xyz'}]},
-            log_level=logging.DEBUG)
+        output, executions = self.setupLambdaEnv(
+            {
+                'execution-options': {'output_dir': 's3://xyz', 'account_id': '004'},
+                'policies': [{'resource': 'ec2', 'name': 'xyz'}],
+            },
+            log_level=logging.DEBUG,
+        )
 
         mock_collection.from_data.return_value = []
         handler.dispatch_event({'detail': {'errorCode': 'unauthorized'}}, None)
@@ -120,28 +127,27 @@ class HandleTest(BaseTest):
         mock_collection.from_data.assert_called_once()
 
     def test_dispatch_err_handle(self):
-        output, executions = self.setupLambdaEnv({
-            'execution-options': {'output_dir': 's3://xyz', 'account_id': '004'},
-            'policies': [{'resource': 'ec2', 'name': 'xyz'}]},
-            err_execs=[PolicyExecutionError("foo")] * 2)
+        output, executions = self.setupLambdaEnv(
+            {
+                'execution-options': {'output_dir': 's3://xyz', 'account_id': '004'},
+                'policies': [{'resource': 'ec2', 'name': 'xyz'}],
+            },
+            err_execs=[PolicyExecutionError("foo")] * 2,
+        )
 
         self.assertRaises(
-            PolicyExecutionError,
-            handler.dispatch_event,
-            {'detail': {'xyz': 'oui'}}, None)
+            PolicyExecutionError, handler.dispatch_event, {'detail': {'xyz': 'oui'}}, None
+        )
 
         self.patch(handler, 'C7N_CATCH_ERR', True)
         handler.dispatch_event({'detail': {'xyz': 'oui'}}, None)
         self.assertEqual(output.getvalue().count('error during'), 2)
 
     def test_handler(self):
-        output, executions = self.setupLambdaEnv({
-            'policies': [{
-                'resource': 'asg', 'name': 'auto'}]},
+        output, executions = self.setupLambdaEnv(
+            {'policies': [{'resource': 'asg', 'name': 'auto'}]},
         )
 
-        self.assertEqual(
-            handler.dispatch_event({"detail": {"errorCode": "404"}}, None), None
-        )
+        self.assertEqual(handler.dispatch_event({"detail": {"errorCode": "404"}}, None), None)
         self.assertEqual(handler.dispatch_event({"detail": {}}, None), True)
         self.assertEqual(executions, [({"detail": {}, "debug": True}, None)])

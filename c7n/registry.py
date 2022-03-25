@@ -45,9 +45,14 @@ class PluginRegistry:
     def subscribe(self, func):
         self._subscribers.append(func)
 
-    def register(self, name, klass=None, condition=True,
-                 condition_message="Missing dependency for {}",
-                 aliases=None):
+    def register(
+        self,
+        name,
+        klass=None,
+        condition=True,
+        condition_message="Missing dependency for {}",
+        aliases=None,
+    ):
         if not condition and klass:
             return klass
         # invoked as function
@@ -65,6 +70,7 @@ class PluginRegistry:
             klass.type = name
             klass.type_aliases = aliases
             return klass
+
         return _register_class
 
     def unregister(self, name):
@@ -93,9 +99,10 @@ class PluginRegistry:
         if factory:
             return factory
 
-        return next((v for k, v in self._factories.items()
-                     if v.type_aliases and name in v.type_aliases),
-                    None)
+        return next(
+            (v for k, v in self._factories.items() if v.type_aliases and name in v.type_aliases),
+            None,
+        )
 
     def keys(self):
         return self._factories.keys()

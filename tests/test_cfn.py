@@ -60,9 +60,7 @@ class TestCFN(BaseTest):
         self.assertEqual(len(resources), 1)
 
         # this should have done nothing.
-        stacks = client.describe_stacks(StackName=stack_name).get(
-            "Stacks"
-        )
+        stacks = client.describe_stacks(StackName=stack_name).get("Stacks")
         self.assertEqual(stacks[0].get("EnableTerminationProtection"), True)
         self.assertEqual(stacks[0].get("StackStatus"), "CREATE_COMPLETE")
 
@@ -99,16 +97,12 @@ class TestCFN(BaseTest):
             time.sleep(30)
 
         # deleted stacks must be referenced by StackId
-        stacks = client.describe_stacks(StackName=resources[0]["StackId"]).get(
-            "Stacks"
-        )
+        stacks = client.describe_stacks(StackName=resources[0]["StackId"]).get("Stacks")
         self.assertEqual(stacks[0].get("StackStatus"), "DELETE_COMPLETE")
 
     def test_query(self):
         factory = self.replay_flight_data("test_cfn_query")
-        p = self.load_policy(
-            {"name": "cfn-query", "resource": "cfn"}, session_factory=factory
-        )
+        p = self.load_policy({"name": "cfn-query", "resource": "cfn"}, session_factory=factory)
         resources = p.run()
         self.assertEqual(resources, [])
 
@@ -129,9 +123,7 @@ class TestCFN(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("cloudformation")
-        stacks = client.describe_stacks(StackName=resources[0]["StackName"]).get(
-            "Stacks"
-        )
+        stacks = client.describe_stacks(StackName=resources[0]["StackName"]).get("Stacks")
         self.assertEqual(stacks[0].get("EnableTerminationProtection"), False)
 
     def test_cfn_add_tag_with_params(self):
@@ -152,9 +144,9 @@ class TestCFN(BaseTest):
         self.assertEqual(rtags, {"Env": "Dev"})
         tags = {
             t["Key"]: t["Value"]
-            for t in client.describe_stacks(StackName=resources[0]["StackName"])[
-                "Stacks"
-            ][0]["Tags"]
+            for t in client.describe_stacks(StackName=resources[0]["StackName"])["Stacks"][0][
+                "Tags"
+            ]
         }
         self.assertEqual(tags, {"Env": "Dev", "App": "Ftw"})
 
@@ -165,21 +157,15 @@ class TestCFN(BaseTest):
                 "name": "cfn-add-tag",
                 "resource": "cfn",
                 "filters": [{"tag:DesiredTag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "DesiredTag", "value": "DesiredValue"}
-                ],
+                "actions": [{"type": "tag", "key": "DesiredTag", "value": "DesiredValue"}],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory(region="us-east-1").client("cloudformation")
-        tags = client.describe_stacks(StackName=resources[0]["StackName"])["Stacks"][0][
-            "Tags"
-        ]
-        self.assertEqual(
-            [tags[0]["Key"], tags[0]["Value"]], ["DesiredTag", "DesiredValue"]
-        )
+        tags = client.describe_stacks(StackName=resources[0]["StackName"])["Stacks"][0]["Tags"]
+        self.assertEqual([tags[0]["Key"], tags[0]["Value"]], ["DesiredTag", "DesiredValue"])
 
     def test_cfn_remove_tag(self):
         session_factory = self.replay_flight_data("test_cfn_remove_tag")
@@ -195,7 +181,5 @@ class TestCFN(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory(region="us-east-1").client("cloudformation")
-        tags = client.describe_stacks(StackName=resources[0]["StackName"])["Stacks"][0][
-            "Tags"
-        ]
+        tags = client.describe_stacks(StackName=resources[0]["StackName"])["Stacks"][0]["Tags"]
         self.assertEqual(len(tags), 0)

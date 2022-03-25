@@ -8,7 +8,7 @@ from c7n.actions import ActionRegistry, BaseAction
 from c7n.filters import FilterRegistry
 from c7n.manager import resources
 from c7n.query import QueryResourceManager, TypeInfo
-from c7n.utils import (type_schema, local_session, chunks)
+from c7n.utils import type_schema, local_session, chunks
 from c7n.tags import universal_augment
 
 log = logging.getLogger('custodian.rds-param-group')
@@ -19,8 +19,7 @@ pg_actions = ActionRegistry('rds-param-group.actions')
 
 @resources.register('rds-param-group')
 class RDSParamGroup(QueryResourceManager):
-    """Resource manager for RDS parameter groups.
-    """
+    """Resource manager for RDS parameter groups."""
 
     class resource_type(TypeInfo):
 
@@ -46,8 +45,7 @@ pg_cluster_actions = ActionRegistry('rds-cluster-param-group.actions')
 
 @resources.register('rds-cluster-param-group')
 class RDSClusterParamGroup(QueryResourceManager):
-    """ Resource manager for RDS cluster parameter groups.
-    """
+    """Resource manager for RDS cluster parameter groups."""
 
     class resource_type(TypeInfo):
 
@@ -68,13 +66,11 @@ class RDSClusterParamGroup(QueryResourceManager):
 
 
 class PGMixin:
-
     def get_pg_name(self, pg):
         return pg['DBParameterGroupName']
 
 
 class PGClusterMixin:
-
     def get_pg_name(self, pg):
         return pg['DBClusterParameterGroupName']
 
@@ -103,7 +99,7 @@ class Copy(BaseAction):
 
 @pg_actions.register('copy')
 class PGCopy(PGMixin, Copy):
-    """ Action to copy an RDS parameter group.
+    """Action to copy an RDS parameter group.
 
     :example:
 
@@ -125,13 +121,13 @@ class PGCopy(PGMixin, Copy):
         client.copy_db_parameter_group(
             SourceDBParameterGroupIdentifier=name,
             TargetDBParameterGroupIdentifier=copy_name,
-            TargetDBParameterGroupDescription=desc
+            TargetDBParameterGroupDescription=desc,
         )
 
 
 @pg_cluster_actions.register('copy')
 class PGClusterCopy(PGClusterMixin, Copy):
-    """ Action to copy an RDS cluster parameter group.
+    """Action to copy an RDS cluster parameter group.
 
     :example:
 
@@ -153,7 +149,7 @@ class PGClusterCopy(PGClusterMixin, Copy):
         client.copy_db_cluster_parameter_group(
             SourceDBClusterParameterGroupIdentifier=name,
             TargetDBClusterParameterGroupIdentifier=copy_name,
-            TargetDBClusterParameterGroupDescription=desc
+            TargetDBClusterParameterGroupDescription=desc,
         )
 
 
@@ -235,7 +231,7 @@ class Modify(BaseAction):
                     'required': ['name', 'value'],
                     'name': {'type': 'string'},
                     'value': {'type': 'string'},
-                    'apply-method': {'type': 'string', 'enum': ['immediate', 'pending-reboot']}
+                    'apply-method': {'type': 'string', 'enum': ['immediate', 'pending-reboot']},
                 },
             },
         }
@@ -246,11 +242,13 @@ class Modify(BaseAction):
 
         params = []
         for param in self.data.get('params', []):
-            params.append({
-                'ParameterName': param['name'],
-                'ParameterValue': param['value'],
-                'ApplyMethod': param.get('apply-method', 'immediate'),
-            })
+            params.append(
+                {
+                    'ParameterName': param['name'],
+                    'ParameterValue': param['value'],
+                    'ApplyMethod': param.get('apply-method', 'immediate'),
+                }
+            )
 
         for param_group in param_groups:
             name = self.get_pg_name(param_group)
@@ -261,8 +259,10 @@ class Modify(BaseAction):
             changed_params = []
             for param in params:
                 param_name = param['ParameterName']
-                if (param_name not in cur_params or
-                   cur_params[param_name]['ParameterValue'] != param['ParameterValue']):
+                if (
+                    param_name not in cur_params
+                    or cur_params[param_name]['ParameterValue'] != param['ParameterValue']
+                ):
                     changed_params.append(param)
 
             # Can only do 20 elements at a time per docs, so if we have more than that we will
@@ -271,8 +271,12 @@ class Modify(BaseAction):
             for param_set in chunks(changed_params, 5):
                 self.do_modify(client, name, param_set)
 
-            self.log.info('Modified RDS parameter group %s (%i parameters changed, %i unchanged)',
-                          name, len(changed_params), len(params) - len(changed_params))
+            self.log.info(
+                'Modified RDS parameter group %s (%i parameters changed, %i unchanged)',
+                name,
+                len(changed_params),
+                len(params) - len(changed_params),
+            )
 
 
 @pg_actions.register('modify')
@@ -301,10 +305,13 @@ class PGModify(PGMixin, Modify):
 
     def get_current_params(self, client, name):
         params = client.describe_db_parameters(DBParameterGroupName=name)
-        return {x['ParameterName']: {
+        return {
+            x['ParameterName']: {
                 'ParameterValue': x.get('ParameterValue'),
-                'ApplyMethod': x['ApplyMethod']}
-                for x in params.get('Parameters', [])}
+                'ApplyMethod': x['ApplyMethod'],
+            }
+            for x in params.get('Parameters', [])
+        }
 
     def do_modify(self, client, name, params):
         client.modify_db_parameter_group(DBParameterGroupName=name, Parameters=params)
@@ -336,13 +343,15 @@ class PGClusterModify(PGClusterMixin, Modify):
 
     def get_current_params(self, client, name):
         params = client.describe_db_cluster_parameters(DBClusterParameterGroupName=name)
-        return {x['ParameterName']: {
+        return {
+            x['ParameterName']: {
                 'ParameterValue': x.get('ParameterValue'),
-                'ApplyMethod': x['ApplyMethod']}
-                for x in params.get('Parameters', [])}
+                'ApplyMethod': x['ApplyMethod'],
+            }
+            for x in params.get('Parameters', [])
+        }
 
     def do_modify(self, client, name, params):
         client.modify_db_cluster_parameter_group(
-            DBClusterParameterGroupName=name,
-            Parameters=params
+            DBClusterParameterGroupName=name, Parameters=params
         )

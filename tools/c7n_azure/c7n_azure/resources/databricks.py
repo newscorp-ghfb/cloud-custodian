@@ -32,10 +32,5 @@ class Databricks(ArmResourceManager):
         service = 'azure.mgmt.databricks'
         client = 'DatabricksClient'
         enum_spec = ('workspaces', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name')
         resource_type = 'Microsoft.Databricks/workspaces'

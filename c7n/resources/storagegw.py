@@ -7,7 +7,6 @@ from c7n.tags import universal_augment
 
 @resources.register('storage-gateway')
 class StorageGateway(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'storagegateway'
         enum_spec = ('list_gateways', 'Gateways', None)

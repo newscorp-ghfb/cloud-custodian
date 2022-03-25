@@ -49,6 +49,7 @@ class ApacheAirflowKmsFilter(KmsRelatedFilter):
                 key: c7n:AliasName
                 value: alias/aws/mwaa
     """
+
     RelatedIdsExpression = 'KmsKey'
 
 
@@ -77,8 +78,8 @@ class TagApacheAirflow(Tag):
         for r in airflow:
             try:
                 client.tag_resource(
-                    ResourceArn=r['Arn'],
-                    Tags={t['Key']: t['Value'] for t in new_tags})
+                    ResourceArn=r['Arn'], Tags={t['Key']: t['Value'] for t in new_tags}
+                )
             except client.exceptions.ResourceNotFound:
                 continue
 

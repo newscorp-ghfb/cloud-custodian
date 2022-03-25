@@ -15,24 +15,29 @@ class ApiManagementTest(BaseTest):
 
     def test_apimanagement_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-azure-apimanagement',
-                'resource': 'azure.api-management'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-azure-apimanagement', 'resource': 'azure.api-management'},
+                validate=True,
+            )
             self.assertTrue(p)
 
     @arm_template('apimanagement.json')
     def test_find_apimanagement_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-apimanagement',
-            'resource': 'azure.api-management',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cctestapimanagement*'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-apimanagement',
+                'resource': 'azure.api-management',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cctestapimanagement*',
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -44,11 +49,11 @@ class ApiManagementTest(BaseTest):
 
         resource = {
             'id': '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/'
-                  'providers/Microsoft.ApiManagement/service/test-apimanagement',
+            'providers/Microsoft.ApiManagement/service/test-apimanagement',
             'name': 'test-apimanagement',
             'type': 'Microsoft.ApiManagement/service',
             'sku': {'name': 'Developer', 'capacity': 1, 'tier': 'Developer'},
-            'resourceGroup': 'test-rg'
+            'resourceGroup': 'test-rg',
         }
 
         action.process([resource])

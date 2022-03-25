@@ -19,141 +19,170 @@ class VMTest(BaseTest):
     def test_validate_vm_schemas(self):
         with self.sign_out_patch():
 
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'offhour'},
-                    {'type': 'onhour'},
-                    {'type': 'network-interface'},
-                    {'type': 'instance-view'}
-                ],
-                'actions': [
-                    {'type': 'poweroff'},
-                    {'type': 'stop'},
-                    {'type': 'start'},
-                    {'type': 'resize', 'vmSize': 'Standard_A1_v2'},
-                    {'type': 'restart'},
-                    {'type': 'poweroff'}
-                ]
-            }, validate=True)
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {'type': 'offhour'},
+                        {'type': 'onhour'},
+                        {'type': 'network-interface'},
+                        {'type': 'instance-view'},
+                    ],
+                    'actions': [
+                        {'type': 'poweroff'},
+                        {'type': 'stop'},
+                        {'type': 'start'},
+                        {'type': 'resize', 'vmSize': 'Standard_A1_v2'},
+                        {'type': 'restart'},
+                        {'type': 'poweroff'},
+                    ],
+                },
+                validate=True,
+            )
 
             self.assertTrue(p)
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine_extensions')
     def test_vm_extensions_filter(self):
-        p = self.load_policy({
-            'name': 'test-azure-vm-extensions',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'},
-                {'type': 'vm-extensions',
-                 'key': '[].properties.type',
-                 'op': 'in',
-                 'value_type': 'swap',
-                 'value': 'CustomScript'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm-extensions',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    },
+                    {
+                        'type': 'vm-extensions',
+                        'key': '[].properties.type',
+                        'op': 'in',
+                        'value_type': 'swap',
+                        'value': 'CustomScript',
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-vm',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine_instance')
     def test_find_running(self):
-        p = self.load_policy({
-            'name': 'test-azure-vm',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'},
-                {'type': 'instance-view',
-                 'key': 'statuses[].code',
-                 'op': 'in',
-                 'value_type': 'swap',
-                 'value': 'PowerState/running'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    },
+                    {
+                        'type': 'instance-view',
+                        'key': 'statuses[].code',
+                        'op': 'in',
+                        'value_type': 'swap',
+                        'value': 'PowerState/running',
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-    fake_running_vms = [{
-        'resourceGroup': 'TEST_VM',
-        'name': 'cctestvm'
-    }]
+    fake_running_vms = [{'resourceGroup': 'TEST_VM', 'name': 'cctestvm'}]
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine')
     @patch('c7n_azure.resources.vm.InstanceViewFilter.process', return_value=fake_running_vms)
     def test_stop(self, filter_mock):
         with patch(self._get_vm_client_string() + '.begin_deallocate') as stop_action_mock:
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'eq',
-                     'value_type': 'normalize',
-                     'value': 'cctestvm'},
-                    {'type': 'instance-view',
-                     'key': 'statuses[].code',
-                     'op': 'in',
-                     'value_type': 'swap',
-                     'value': 'PowerState/running'}],
-                'actions': [
-                    {'type': 'stop'}
-                ]
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'eq',
+                            'value_type': 'normalize',
+                            'value': 'cctestvm',
+                        },
+                        {
+                            'type': 'instance-view',
+                            'key': 'statuses[].code',
+                            'op': 'in',
+                            'value_type': 'swap',
+                            'value': 'PowerState/running',
+                        },
+                    ],
+                    'actions': [{'type': 'stop'}],
+                }
+            )
             p.run()
             stop_action_mock.assert_called_with(
-                self.fake_running_vms[0]['resourceGroup'],
-                self.fake_running_vms[0]['name'])
+                self.fake_running_vms[0]['resourceGroup'], self.fake_running_vms[0]['name']
+            )
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine')
     @patch('c7n_azure.resources.vm.InstanceViewFilter.process', return_value=fake_running_vms)
     def test_poweroff(self, filter_mock):
         with patch(self._get_vm_client_string() + '.begin_power_off') as poweroff_action_mock:
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'eq',
-                     'value_type': 'normalize',
-                     'value': 'cctestvm'},
-                    {'type': 'instance-view',
-                     'key': 'statuses[].code',
-                     'op': 'in',
-                     'value_type': 'swap',
-                     'value': 'PowerState/running'}],
-                'actions': [
-                    {'type': 'poweroff'}
-                ]
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'eq',
+                            'value_type': 'normalize',
+                            'value': 'cctestvm',
+                        },
+                        {
+                            'type': 'instance-view',
+                            'key': 'statuses[].code',
+                            'op': 'in',
+                            'value_type': 'swap',
+                            'value': 'PowerState/running',
+                        },
+                    ],
+                    'actions': [{'type': 'poweroff'}],
+                }
+            )
 
             p.run()
             poweroff_action_mock.assert_called_with(
@@ -167,76 +196,88 @@ class VMTest(BaseTest):
     def test_start(self, filter_mock):
         with patch(self._get_vm_client_string() + '.begin_start') as start_action_mock:
 
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'eq',
-                     'value_type': 'normalize',
-                     'value': 'cctestvm'},
-                    {'type': 'instance-view',
-                     'key': 'statuses[].code',
-                     'op': 'in',
-                     'value_type': 'swap',
-                     'value': 'PowerState/running'}],
-                'actions': [
-                    {'type': 'start'}
-                ]
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'eq',
+                            'value_type': 'normalize',
+                            'value': 'cctestvm',
+                        },
+                        {
+                            'type': 'instance-view',
+                            'key': 'statuses[].code',
+                            'op': 'in',
+                            'value_type': 'swap',
+                            'value': 'PowerState/running',
+                        },
+                    ],
+                    'actions': [{'type': 'start'}],
+                }
+            )
             p.run()
             start_action_mock.assert_called_with(
-                self.fake_running_vms[0]['resourceGroup'],
-                self.fake_running_vms[0]['name'])
+                self.fake_running_vms[0]['resourceGroup'], self.fake_running_vms[0]['name']
+            )
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine')
     @patch('c7n_azure.resources.vm.InstanceViewFilter.process', return_value=fake_running_vms)
     def test_restart(self, filter_mock):
         with patch(self._get_vm_client_string() + '.begin_restart') as restart_action_mock:
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'eq',
-                     'value_type': 'normalize',
-                     'value': 'cctestvm'},
-                    {'type': 'instance-view',
-                     'key': 'statuses[].code',
-                     'op': 'in',
-                     'value_type': 'swap',
-                     'value': 'PowerState/running'}],
-                'actions': [
-                    {'type': 'restart'}
-                ]
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'eq',
+                            'value_type': 'normalize',
+                            'value': 'cctestvm',
+                        },
+                        {
+                            'type': 'instance-view',
+                            'key': 'statuses[].code',
+                            'op': 'in',
+                            'value_type': 'swap',
+                            'value': 'PowerState/running',
+                        },
+                    ],
+                    'actions': [{'type': 'restart'}],
+                }
+            )
             p.run()
             restart_action_mock.assert_called_with(
-                self.fake_running_vms[0]['resourceGroup'],
-                self.fake_running_vms[0]['name'])
+                self.fake_running_vms[0]['resourceGroup'], self.fake_running_vms[0]['name']
+            )
 
     @arm_template('vm.json')
     @cassette_name('virtual_machine')
     @patch('c7n_azure.resources.vm.InstanceViewFilter.process', return_value=fake_running_vms)
     def test_resize(self, resize_action_mock):
         with patch(self._get_vm_client_string() + '.begin_update') as resize_action_mock:
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'eq',
-                     'value_type': 'normalize',
-                     'value': 'cctestvm'}],
-                'actions': [
-                    {'type': 'resize',
-                     'vmSize': 'Standard_A2_v2'}
-                ]
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'eq',
+                            'value_type': 'normalize',
+                            'value': 'cctestvm',
+                        }
+                    ],
+                    'actions': [{'type': 'resize', 'vmSize': 'Standard_A2_v2'}],
+                }
+            )
             p.run()
 
         expected_hardware_profile = HardwareProfile(vm_size='Standard_A2_v2')
@@ -244,7 +285,7 @@ class VMTest(BaseTest):
         resize_action_mock.assert_called_with(
             self.fake_running_vms[0]['resourceGroup'],
             self.fake_running_vms[0]['name'],
-            VirtualMachineUpdate(hardware_profile=expected_hardware_profile)
+            VirtualMachineUpdate(hardware_profile=expected_hardware_profile),
         )
 
     @arm_template('vm.json')
@@ -253,24 +294,29 @@ class VMTest(BaseTest):
     @patch('c7n_azure.actions.delete.DeleteAction.process', return_value='')
     def test_delete(self, delete_action_mock, filter_mock):
 
-        p = self.load_policy({
-            'name': 'test-azure-vm',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'},
-                {'type': 'instance-view',
-                 'key': 'statuses[].code',
-                 'op': 'in',
-                 'value_type': 'swap',
-                 'value': 'PowerState/running'}],
-            'actions': [
-                {'type': 'delete'}
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    },
+                    {
+                        'type': 'instance-view',
+                        'key': 'statuses[].code',
+                        'op': 'in',
+                        'value_type': 'swap',
+                        'value': 'PowerState/running',
+                    },
+                ],
+                'actions': [{'type': 'delete'}],
+            }
+        )
         p.run()
         delete_action_mock.assert_called_with(self.fake_running_vms)
 
@@ -278,39 +324,51 @@ class VMTest(BaseTest):
     @cassette_name('virtual_machine_interface')
     def test_find_vm_with_public_ip(self):
 
-        p = self.load_policy({
-            'name': 'test-azure-vm',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'},
-                {'type': 'network-interface',
-                 'key': 'properties.ipConfigurations[].properties.publicIPAddress.id',
-                 'op': 'eq',
-                 'value': 'not-null'}
-            ],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    },
+                    {
+                        'type': 'network-interface',
+                        'key': 'properties.ipConfigurations[].properties.publicIPAddress.id',
+                        'op': 'eq',
+                        'value': 'not-null',
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        p = self.load_policy({
-            'name': 'test-azure-vm',
-            'resource': 'azure.vm',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'eq',
-                 'value_type': 'normalize',
-                 'value': 'cctestvm'},
-                {'type': 'network-interface',
-                 'key': 'properties.ipConfigurations[].properties.publicIPAddress.id',
-                 'op': 'eq',
-                 'value': 'null'}
-            ],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-vm',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': 'cctestvm',
+                    },
+                    {
+                        'type': 'network-interface',
+                        'key': 'properties.ipConfigurations[].properties.publicIPAddress.id',
+                        'op': 'eq',
+                        'value': 'null',
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 0)
 
@@ -322,16 +380,15 @@ class VMTest(BaseTest):
         t = t.replace(year=2018, month=8, day=24, hour=18, minute=30)
 
         with mock_datetime_now(t, datetime):
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'offhour',
-                     'default_tz': "pt",
-                     'offhour': 18,
-                     'tag': 'schedule'}
-                ],
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {'type': 'offhour', 'default_tz': "pt", 'offhour': 18, 'tag': 'schedule'}
+                    ],
+                }
+            )
 
             resources = p.run()
             self.assertEqual(len(resources), 1)
@@ -339,21 +396,23 @@ class VMTest(BaseTest):
         t = t.replace(year=2018, month=8, day=24, hour=8, minute=30)
 
         with mock_datetime_now(t, datetime):
-            p = self.load_policy({
-                'name': 'test-azure-vm',
-                'resource': 'azure.vm',
-                'filters': [
-                    {'type': 'onhour',
-                     'default_tz': "pt",
-                     'onhour': 8,
-                     'tag': 'schedule'}
-                ],
-            })
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-vm',
+                    'resource': 'azure.vm',
+                    'filters': [
+                        {'type': 'onhour', 'default_tz': "pt", 'onhour': 8, 'tag': 'schedule'}
+                    ],
+                }
+            )
 
             resources = p.run()
             self.assertEqual(len(resources), 1)
 
     def _get_vm_client_string(self):
-        client = local_session(Session)\
-            .client('azure.mgmt.compute.ComputeManagementClient').virtual_machines
+        client = (
+            local_session(Session)
+            .client('azure.mgmt.compute.ComputeManagementClient')
+            .virtual_machines
+        )
         return client.__module__ + '.' + client.__class__.__name__

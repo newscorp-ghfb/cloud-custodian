@@ -10,12 +10,10 @@ from c7n.utils import local_session, type_schema
 
 @resources.register('identity-pool')
 class CognitoIdentityPool(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'cognito-identity'
         enum_spec = ('list_identity_pools', 'IdentityPools', {'MaxResults': 60})
-        detail_spec = (
-            'describe_identity_pool', 'IdentityPoolId', 'IdentityPoolId', None)
+        detail_spec = ('describe_identity_pool', 'IdentityPoolId', 'IdentityPoolId', None)
         id = 'IdentityPoolId'
         name = 'IdentityPoolName'
         arn_type = "identitypool"
@@ -47,23 +45,19 @@ class DeleteIdentityPool(BaseAction):
             list(w.map(self.process_pool, pools))
 
     def process_pool(self, pool):
-        client = local_session(
-            self.manager.session_factory).client('cognito-identity')
+        client = local_session(self.manager.session_factory).client('cognito-identity')
         try:
             client.delete_identity_pool(IdentityPoolId=pool['IdentityPoolId'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting identity pool:\n %s" % e)
+            self.log.exception("Exception deleting identity pool:\n %s" % e)
 
 
 @resources.register('user-pool')
 class CognitoUserPool(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "cognito-idp"
         enum_spec = ('list_user_pools', 'UserPools', {'MaxResults': 60})
-        detail_spec = (
-            'describe_user_pool', 'UserPoolId', 'Id', 'UserPool')
+        detail_spec = ('describe_user_pool', 'UserPoolId', 'Id', 'UserPool')
         id = 'Id'
         name = 'Name'
         arn_type = "userpool"
@@ -95,10 +89,8 @@ class DeleteUserPool(BaseAction):
             list(w.map(self.process_pool, pools))
 
     def process_pool(self, pool):
-        client = local_session(
-            self.manager.session_factory).client('cognito-idp')
+        client = local_session(self.manager.session_factory).client('cognito-idp')
         try:
             client.delete_user_pool(UserPoolId=pool['Id'])
         except ClientError as e:
-            self.log.exception(
-                "Exception deleting user pool:\n %s" % e)
+            self.log.exception("Exception deleting user pool:\n %s" % e)

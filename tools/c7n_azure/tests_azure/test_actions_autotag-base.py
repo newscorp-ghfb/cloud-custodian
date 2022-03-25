@@ -11,17 +11,19 @@ from mock import Mock
 
 
 class ActionsAutotagBaseTest(BaseTest):
-    vm_id = "/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourcegroups/" \
-            "TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm"
+    vm_id = (
+        "/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourcegroups/"
+        "TEST_VM/providers/Microsoft.Compute/virtualMachines/cctestvm"
+    )
 
     event_dict = {
         "caller": "cloud@custodian.com",
         "id": vm_id + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/",
         "operationName": {
             "value": "Microsoft.Compute/virtualMachines/write",
-            "localizedValue": "Create or Update Virtual Machine"
+            "localizedValue": "Create or Update Virtual Machine",
         },
-        "eventTimestamp": "2019-05-01T15:20:04.8336028Z"
+        "eventTimestamp": "2019-05-01T15:20:04.8336028Z",
     }
 
     def __init__(self, *args, **kwargs):

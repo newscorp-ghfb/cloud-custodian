@@ -157,9 +157,7 @@ def parse_date(v, tz=None):
     return isinstance(v, datetime) and v or None
 
 
-def type_schema(
-        type_name, inherits=None, rinherit=None,
-        aliases=None, required=None, **props):
+def type_schema(type_name, inherits=None, rinherit=None, aliases=None, required=None, **props):
     """jsonschema generation helper
 
     params:
@@ -181,10 +179,7 @@ def type_schema(
         s = copy.deepcopy(rinherit)
         s['properties']['type'] = {'enum': type_names}
     else:
-        s = {
-            'type': 'object',
-            'properties': {
-                'type': {'enum': type_names}}}
+        s = {'type': 'object', 'properties': {'type': {'enum': type_names}}}
 
     # Ref based inheritance and additional properties don't mix well.
     # https://stackoverflow.com/questions/22689900/json-schema-allof-with-additionalproperties
@@ -209,7 +204,6 @@ def type_schema(
 
 
 class DateTimeEncoder(json.JSONEncoder):
-
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -298,15 +292,16 @@ def get_account_alias_from_sts(session):
 
 
 def query_instances(session, client=None, **query):
-    """Return a list of ec2 instances for the query.
-    """
+    """Return a list of ec2 instances for the query."""
     if client is None:
         client = session.client('ec2')
     p = client.get_paginator('describe_instances')
     results = p.paginate(**query)
-    return list(itertools.chain(
-        *[r["Instances"] for r in itertools.chain(
-            *[pp['Reservations'] for pp in results])]))
+    return list(
+        itertools.chain(
+            *[r["Instances"] for r in itertools.chain(*[pp['Reservations'] for pp in results])]
+        )
+    )
 
 
 CONN_CACHE = threading.local()
@@ -370,7 +365,7 @@ def parse_s3(s3_path):
     if ridx is None:
         key_prefix = ""
     else:
-        key_prefix = s3_path[s3_path.find('/', 5):]
+        key_prefix = s3_path[s3_path.find('/', 5) :]
     return s3_path, bucket, key_prefix
 
 
@@ -380,7 +375,7 @@ REGION_PARTITION_MAP = {
     'cn-north-1': 'aws-cn',
     'cn-northwest-1': 'aws-cn',
     'us-isob-east-1': 'aws-iso-b',
-    'us-iso-east-1': 'aws-iso'
+    'us-iso-east-1': 'aws-iso',
 }
 
 
@@ -389,8 +384,14 @@ def get_partition(region):
 
 
 def generate_arn(
-        service, resource, partition='aws',
-        region=None, account_id=None, resource_type=None, separator='/'):
+    service,
+    resource,
+    partition='aws',
+    region=None,
+    account_id=None,
+    resource_type=None,
+    separator='/',
+):
     """Generate an Amazon Resource Name.
     See http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html.
     """
@@ -399,7 +400,11 @@ def generate_arn(
     if service == 's3':
         region = ''
     arn = 'arn:%s:%s:%s:%s:' % (
-        partition, service, region if region else '', account_id if account_id else '')
+        partition,
+        service,
+        region if region else '',
+        account_id if account_id else '',
+    )
     if resource_type:
         if resource.startswith(separator):
             separator = ''
@@ -410,8 +415,7 @@ def generate_arn(
 
 
 def snapshot_identifier(prefix, db_identifier):
-    """Return an identifier for a snapshot of a database or cluster.
-    """
+    """Return an identifier for a snapshot of a database or cluster."""
     now = datetime.now()
     return '%s-%s-%s' % (prefix, db_identifier, now.strftime('%Y-%m-%d-%H-%M'))
 
@@ -440,8 +444,7 @@ def get_retry(retry_codes=(), max_attempts=8, min_delay=1, log_retries=False):
     max_delay = max(min_delay, 2) ** max_attempts
 
     def _retry(func, *args, ignore_err_codes=(), **kw):
-        for idx, delay in enumerate(
-                backoff_delays(min_delay, max_delay, jitter=True)):
+        for idx, delay in enumerate(backoff_delays(min_delay, max_delay, jitter=True)):
             try:
                 return func(*args, **kw)
             except ClientError as e:
@@ -455,14 +458,18 @@ def get_retry(retry_codes=(), max_attempts=8, min_delay=1, log_retries=False):
                     retry_log.log(
                         log_retries,
                         "retrying %s on error:%s attempt:%d last delay:%0.2f",
-                        func, e.response['Error']['Code'], idx, delay)
+                        func,
+                        e.response['Error']['Code'],
+                        idx,
+                        delay,
+                    )
             time.sleep(delay)
+
     return _retry
 
 
 def backoff_delays(start, stop, factor=2.0, jitter=False):
-    """Geometric backoff sequence w/ jitter
-    """
+    """Geometric backoff sequence w/ jitter"""
     cur = start
     while cur <= stop:
         if jitter:
@@ -494,18 +501,20 @@ class IPv4Network(ipaddress.IPv4Network):
             return self.supernet_of(other)
         return super(IPv4Network, self).__contains__(other)
 
-    if (sys.version_info.major == 3 and sys.version_info.minor <= 6):  # pragma: no cover
+    if sys.version_info.major == 3 and sys.version_info.minor <= 6:  # pragma: no cover
+
         @staticmethod
         def _is_subnet_of(a, b):
             try:
                 # Always false if one is v4 and the other is v6.
                 if a._version != b._version:
                     raise TypeError(f"{a} and {b} are not of the same version")
-                return (b.network_address <= a.network_address and
-                        b.broadcast_address >= a.broadcast_address)
+                return (
+                    b.network_address <= a.network_address
+                    and b.broadcast_address >= a.broadcast_address
+                )
             except AttributeError:
-                raise TypeError(f"Unable to test subnet containment "
-                                f"between {a} and {b}")
+                raise TypeError(f"Unable to test subnet containment " f"between {a} and {b}")
 
         def supernet_of(self, other):
             """Return True if this network is a supernet of other."""
@@ -513,7 +522,7 @@ class IPv4Network(ipaddress.IPv4Network):
 
 
 def reformat_schema(model):
-    """ Reformat schema to be in a more displayable format. """
+    """Reformat schema to be in a more displayable format."""
     if not hasattr(model, 'schema'):
         return "Model '{}' does not have a schema".format(model)
 
@@ -523,7 +532,7 @@ def reformat_schema(model):
     ret = copy.deepcopy(model.schema['properties'])
 
     if 'type' in ret:
-        del(ret['type'])
+        del ret['type']
 
     for key in model.schema.get('required', []):
         if key in ret:
@@ -553,12 +562,7 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
             # with an empty dictionary.
             source[current_key] = {}
 
-        return set_value_from_jmespath(
-            source[current_key],
-            remainder,
-            value,
-            is_first=False
-        )
+        return set_value_from_jmespath(source[current_key], remainder, value, is_first=False)
 
     # If we're down to a single key, set it.
     source[current_key] = value
@@ -609,7 +613,7 @@ def get_proxy_url(url):
         parsed.scheme + '://' + parsed.netloc,
         parsed.scheme,
         'all://' + parsed.netloc,
-        'all'
+        'all',
     ]
 
     # Set port if not defined explicitly in url.
@@ -681,32 +685,32 @@ class QueryParser:
         filters = []
         if not isinstance(data, (tuple, list)):
             raise PolicyValidationError(
-                "%s Query invalid format, must be array of dicts %s" % (
-                    cls.type_name,
-                    data))
+                "%s Query invalid format, must be array of dicts %s" % (cls.type_name, data)
+            )
         for d in data:
             if not isinstance(d, dict):
-                raise PolicyValidationError(
-                    "%s Query Filter Invalid %s" % (cls.type_name, data))
+                raise PolicyValidationError("%s Query Filter Invalid %s" % (cls.type_name, data))
             if "Name" not in d or cls.value_key not in d:
                 raise PolicyValidationError(
-                    "%s Query Filter Invalid: Missing Key or Values in %s" % (
-                        cls.type_name, data))
+                    "%s Query Filter Invalid: Missing Key or Values in %s" % (cls.type_name, data)
+                )
 
             key = d['Name']
             values = d[cls.value_key]
 
             if not cls.multi_value and isinstance(values, list):
                 raise PolicyValidationError(
-                    "%s Query Filter Invalid Key: Value:%s Must be single valued" % (
-                        cls.type_name, key))
+                    "%s Query Filter Invalid Key: Value:%s Must be single valued"
+                    % (cls.type_name, key)
+                )
             elif not cls.multi_value:
                 values = [values]
 
             if key not in cls.QuerySchema and not key.startswith('tag:'):
                 raise PolicyValidationError(
-                    "%s Query Filter Invalid Key:%s Valid: %s" % (
-                        cls.type_name, key, ", ".join(cls.QuerySchema.keys())))
+                    "%s Query Filter Invalid Key:%s Valid: %s"
+                    % (cls.type_name, key, ", ".join(cls.QuerySchema.keys()))
+                )
 
             vtype = cls.QuerySchema.get(key)
             if vtype is None and key.startswith('tag'):
@@ -714,19 +718,28 @@ class QueryParser:
 
             if not isinstance(values, list):
                 raise PolicyValidationError(
-                    "%s Query Filter Invalid Values, must be array %s" % (
-                        cls.type_name, data,))
+                    "%s Query Filter Invalid Values, must be array %s"
+                    % (
+                        cls.type_name,
+                        data,
+                    )
+                )
 
             for v in values:
                 if isinstance(vtype, tuple):
                     if v not in vtype:
                         raise PolicyValidationError(
-                            "%s Query Filter Invalid Value: %s Valid: %s" % (
-                                cls.type_name, v, ", ".join(vtype)))
+                            "%s Query Filter Invalid Value: %s Valid: %s"
+                            % (cls.type_name, v, ", ".join(vtype))
+                        )
                 elif not isinstance(v, vtype):
                     raise PolicyValidationError(
-                        "%s Query Filter Invalid Value Type %s" % (
-                            cls.type_name, data,))
+                        "%s Query Filter Invalid Value Type %s"
+                        % (
+                            cls.type_name,
+                            data,
+                        )
+                    )
 
             filters.append(d)
 

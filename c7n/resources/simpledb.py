@@ -10,7 +10,6 @@ from c7n.utils import local_session, chunks, type_schema
 
 @resources.register('simpledb')
 class SimpleDB(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = "sdb"
         enum_spec = ("list_domains", "DomainNames", None)
@@ -31,8 +30,7 @@ class SimpleDB(QueryResourceManager):
             return results
 
         with self.executor_factory(max_workers=3) as w:
-            return list(itertools.chain(
-                *w.map(_augment, chunks(resources, 20))))
+            return list(itertools.chain(*w.map(_augment, chunks(resources, 20))))
 
 
 @SimpleDB.action_registry.register('delete')

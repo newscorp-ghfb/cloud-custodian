@@ -8,7 +8,6 @@ from netaddr import IPRange, IPSet
 
 
 class IpRangeHelperTest(BaseTest):
-
     def test_empty(self):
         data = {'whatever': []}
         actual = IpRangeHelper.parse_ip_ranges(data, 'whatever')
@@ -23,22 +22,25 @@ class IpRangeHelperTest(BaseTest):
     def test_parse_range_and_net(self):
         data = {'whatever': ['0.0.0.0-10.10.10.10', '10.20.20.0/24']}
         actual = IpRangeHelper.parse_ip_ranges(data, 'whatever')
-        expected = IPSet(IPRange('0.0.0.0', '10.10.10.10')) | \
-            IPSet(IPRange('10.20.20.0', '10.20.20.255'))
+        expected = IPSet(IPRange('0.0.0.0', '10.10.10.10')) | IPSet(
+            IPRange('10.20.20.0', '10.20.20.255')
+        )
         self.assertEqual(expected, actual)
 
     def test_parse_multi_net(self):
         data = {'whatever': ['1.2.2.127/32', '1.2.2.128/25']}
         actual = IpRangeHelper.parse_ip_ranges(data, 'whatever')
-        expected = IPSet(IPRange('1.2.2.127', '1.2.2.127')) | \
-            IPSet(IPRange('1.2.2.128', '1.2.2.255'))
+        expected = IPSet(IPRange('1.2.2.127', '1.2.2.127')) | IPSet(
+            IPRange('1.2.2.128', '1.2.2.255')
+        )
         self.assertEqual(expected, actual)
 
     def test_parse_spaces(self):
         data = {'whatever': ['0.0.0.0 - 10.10.10.10', '10.20.20.0 / 24']}
         actual = IpRangeHelper.parse_ip_ranges(data, 'whatever')
-        expected = IPSet(IPRange('0.0.0.0', '10.10.10.10')) | \
-            IPSet(IPRange('10.20.20.0', '10.20.20.255'))
+        expected = IPSet(IPRange('0.0.0.0', '10.10.10.10')) | IPSet(
+            IPRange('10.20.20.0', '10.20.20.255')
+        )
         self.assertEqual(expected, actual)
 
     def test_parse_extra_dash(self):
@@ -69,8 +71,15 @@ class IpRangeHelperTest(BaseTest):
     def test_parse_alias_and_blocks(self):
         data = {'whatever': ['ServiceTags.ApiManagement.WestUS', '1.2.2.127', '1.2.2.128/25']}
         actual = IpRangeHelper.parse_ip_ranges(data, 'whatever')
-        expected = IPSet(['13.64.39.16/32', '40.112.242.148/31', '40.112.243.240/28',
-                          '1.2.2.127/32', '1.2.2.128/25'])
+        expected = IPSet(
+            [
+                '13.64.39.16/32',
+                '40.112.242.148/31',
+                '40.112.243.240/28',
+                '1.2.2.127/32',
+                '1.2.2.128/25',
+            ]
+        )
         self.assertEqual(expected, actual)
 
     @cassette_name('servicetags')

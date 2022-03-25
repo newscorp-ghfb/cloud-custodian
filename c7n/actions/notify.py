@@ -19,8 +19,7 @@ class BaseNotify(EventAction):
     batch_size = 250
 
     def expand_variables(self, message):
-        """expand any variables in the action to_from/cc_from fields.
-        """
+        """expand any variables in the action to_from/cc_from fields."""
         p = copy.deepcopy(self.data)
         if 'to_from' in self.data:
             to_from = self.data['to_from'].copy()
@@ -111,7 +110,8 @@ class Notify(BaseNotify):
         'type': 'object',
         'anyOf': [
             {'required': ['type', 'transport', 'to']},
-            {'required': ['type', 'transport', 'to_from']}],
+            {'required': ['type', 'transport', 'to_from']},
+        ],
         'properties': {
             'type': {'enum': ['notify']},
             'to': {'type': 'array', 'items': {'type': 'string'}},
@@ -125,21 +125,24 @@ class Notify(BaseNotify):
             'template': {'type': 'string'},
             'transport': {
                 'oneOf': [
-                    {'type': 'object',
-                     'required': ['type', 'queue'],
-                     'properties': {
-                         'queue': {'type': 'string'},
-                         'type': {'enum': ['sqs']}}},
-                    {'type': 'object',
-                     'required': ['type', 'topic'],
-                     'properties': {
-                         'topic': {'type': 'string'},
-                         'type': {'enum': ['sns']},
-                         'attributes': {'type': 'object'},
-                     }}]
+                    {
+                        'type': 'object',
+                        'required': ['type', 'queue'],
+                        'properties': {'queue': {'type': 'string'}, 'type': {'enum': ['sqs']}},
+                    },
+                    {
+                        'type': 'object',
+                        'required': ['type', 'topic'],
+                        'properties': {
+                            'topic': {'type': 'string'},
+                            'type': {'enum': ['sns']},
+                            'attributes': {'type': 'object'},
+                        },
+                    },
+                ]
             },
-            'assume_role': {'type': 'boolean'}
-        }
+            'assume_role': {'type': 'boolean'},
+        },
     }
 
     def __init__(self, data=None, manager=None, log_dir=None):
@@ -147,11 +150,14 @@ class Notify(BaseNotify):
         self.assume_role = data.get('assume_role', True)
 
     def validate(self):
-        if self.data.get('transport', {}).get('type') == 'sns' and \
-                self.data.get('transport').get('attributes') and \
-                'mtype' in self.data.get('transport').get('attributes').keys():
+        if (
+            self.data.get('transport', {}).get('type') == 'sns'
+            and self.data.get('transport').get('attributes')
+            and 'mtype' in self.data.get('transport').get('attributes').keys()
+        ):
             raise PolicyValidationError(
-                "attribute: mtype is a reserved attribute for sns transport")
+                "attribute: mtype is a reserved attribute for sns transport"
+            )
         return self
 
     def get_permissions(self):
@@ -162,8 +168,7 @@ class Notify(BaseNotify):
         return ()
 
     def process(self, resources, event=None):
-        alias = utils.get_account_alias_from_sts(
-            utils.local_session(self.manager.session_factory))
+        alias = utils.get_account_alias_from_sts(utils.local_session(self.manager.session_factory))
         partition = utils.get_partition(self.manager.config.region)
         message = {
             'event': event,
@@ -174,15 +179,22 @@ class Notify(BaseNotify):
             'region': self.manager.config.region,
             'execution_id': self.manager.ctx.execution_id,
             'execution_start': self.manager.ctx.start_time,
-            'policy': self.manager.data}
+            'policy': self.manager.data,
+        }
         message['action'] = self.expand_variables(message)
 
         for batch in utils.chunks(resources, self.batch_size):
             message['resources'] = self.prepare_resources(batch)
             receipt = self.send_data_message(message)
-            self.log.info("sent message:%s policy:%s template:%s count:%s" % (
-                receipt, self.manager.data['name'],
-                self.data.get('template', 'default'), len(batch)))
+            self.log.info(
+                "sent message:%s policy:%s template:%s count:%s"
+                % (
+                    receipt,
+                    self.manager.data['name'],
+                    self.data.get('template', 'default'),
+                    len(batch),
+                )
+            )
 
     def prepare_resources(self, resources):
         """Resources preparation for transport.
@@ -196,9 +208,7 @@ class Notify(BaseNotify):
         would be dynamically adjusting buffer size based on underlying
         transport.
         """
-        handler = getattr(self, "prepare_%s" % (
-            self.manager.type.replace('-', '_')),
-            None)
+        handler = getattr(self, "prepare_%s" % (self.manager.type.replace('-', '_')), None)
         if handler is None:
             return resources
         return handler(resources)
@@ -235,11 +245,12 @@ class Notify(BaseNotify):
         else:
             region = message['region']
             topic_arn = utils.generate_arn(
-                service='sns', resource=topic,
+                service='sns',
+                resource=topic,
                 account_id=message['account_id'],
-                region=message['region'])
-        client = self.manager.session_factory(
-            region=region, assume=self.assume_role).client('sns')
+                region=message['region'],
+            )
+        client = self.manager.session_factory(region=region, assume=self.assume_role).client('sns')
         attrs = {
             'mtype': {
                 'DataType': 'String',
@@ -251,9 +262,7 @@ class Notify(BaseNotify):
                 if k != 'mtype':
                     attrs[k] = {'DataType': 'String', 'StringValue': v}
         result = client.publish(
-            TopicArn=topic_arn,
-            Message=self.pack(message),
-            MessageAttributes=attrs
+            TopicArn=topic_arn, Message=self.pack(message), MessageAttributes=attrs
         )
         return result['MessageId']
 
@@ -263,7 +272,7 @@ class Notify(BaseNotify):
             region = 'us-east-1'
             queue_url = queue
         elif 'queue.amazonaws.com' in queue:
-            region = queue[len('https://'):].split('.', 1)[0]
+            region = queue[len('https://') :].split('.', 1)[0]
             queue_url = queue
         elif queue.startswith('https://sqs.'):
             region = queue.split('.', 2)[1]
@@ -273,16 +282,13 @@ class Notify(BaseNotify):
             region = queue_arn_split[3]
             owner_id = queue_arn_split[4]
             queue_name = queue_arn_split[5]
-            queue_url = "https://sqs.%s.amazonaws.com/%s/%s" % (
-                region, owner_id, queue_name)
+            queue_url = "https://sqs.%s.amazonaws.com/%s/%s" % (region, owner_id, queue_name)
         else:
             region = self.manager.config.region
             owner_id = self.manager.config.account_id
             queue_name = queue
-            queue_url = "https://sqs.%s.amazonaws.com/%s/%s" % (
-                region, owner_id, queue_name)
-        client = self.manager.session_factory(
-            region=region, assume=self.assume_role).client('sqs')
+            queue_url = "https://sqs.%s.amazonaws.com/%s/%s" % (region, owner_id, queue_name)
+        client = self.manager.session_factory(region=region, assume=self.assume_role).client('sqs')
         attrs = {
             'mtype': {
                 'DataType': 'String',
@@ -290,9 +296,8 @@ class Notify(BaseNotify):
             },
         }
         result = client.send_message(
-            QueueUrl=queue_url,
-            MessageBody=self.pack(message),
-            MessageAttributes=attrs)
+            QueueUrl=queue_url, MessageBody=self.pack(message), MessageAttributes=attrs
+        )
         return result['MessageId']
 
     @classmethod

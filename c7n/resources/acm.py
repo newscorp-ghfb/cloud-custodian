@@ -8,41 +8,40 @@ from c7n.utils import type_schema, local_session
 
 
 class DescribeCertificate(DescribeSource):
-
     def augment(self, resources):
-        return universal_augment(
-            self.manager,
-            super(DescribeCertificate, self).augment(resources))
+        return universal_augment(self.manager, super(DescribeCertificate, self).augment(resources))
 
 
 @resources.register('acm-certificate')
 class Certificate(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'acm'
         enum_spec = (
             'list_certificates',
             'CertificateSummaryList',
-            {'Includes': {
-                'keyTypes': [
-                    'RSA_2048', 'RSA_1024', 'RSA_4096',
-                    'EC_prime256v1', 'EC_secp384r1',
-                    'EC_secp521r1']}})
+            {
+                'Includes': {
+                    'keyTypes': [
+                        'RSA_2048',
+                        'RSA_1024',
+                        'RSA_4096',
+                        'EC_prime256v1',
+                        'EC_secp384r1',
+                        'EC_secp521r1',
+                    ]
+                }
+            },
+        )
         id = 'CertificateArn'
         name = 'DomainName'
         date = 'CreatedAt'
-        detail_spec = (
-            "describe_certificate", "CertificateArn",
-            'CertificateArn', 'Certificate')
+        detail_spec = ("describe_certificate", "CertificateArn", 'CertificateArn', 'Certificate')
         cfn_type = "AWS::CertificateManager::Certificate"
         config_type = "AWS::ACM::Certificate"
         arn_type = 'certificate'
         universal_taggable = object()
 
-    source_mapping = {
-        'describe': DescribeCertificate,
-        'config': ConfigSource
-    }
+    source_mapping = {'describe': DescribeCertificate, 'config': ConfigSource}
 
 
 @Certificate.action_registry.register('delete')
@@ -68,9 +67,7 @@ class CertificateDeleteAction(BaseAction):
     """
 
     schema = type_schema('delete')
-    permissions = (
-        "acm:DeleteCertificate",
-    )
+    permissions = ("acm:DeleteCertificate",)
 
     def process(self, certificates):
         client = local_session(self.manager.session_factory).client('acm')
@@ -79,11 +76,10 @@ class CertificateDeleteAction(BaseAction):
 
     def process_cert(self, client, cert):
         try:
-            self.manager.retry(
-                client.delete_certificate, CertificateArn=cert['CertificateArn'])
+            self.manager.retry(client.delete_certificate, CertificateArn=cert['CertificateArn'])
         except client.exceptions.ResourceNotFoundException:
             pass
         except client.exceptions.ResourceInUseException as e:
             self.log.warning(
-                "Exception trying to delete Certificate: %s error: %s",
-                cert['CertificateArn'], e)
+                "Exception trying to delete Certificate: %s error: %s", cert['CertificateArn'], e
+            )

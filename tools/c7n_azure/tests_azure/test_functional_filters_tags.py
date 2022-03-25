@@ -22,9 +22,12 @@ class FunctionalFiltersTagsTest(BaseTest):
             cls.initial_tags = tools.get_tags(cls.client, cls.rg_name, cls.vm_name)
 
             # Using some date in the past for marked-for-op to avoid patching utc_now
-            tools.set_tags(cls.client, cls.rg_name, cls.vm_name,
-                           {'test_filters_tag': 'test_value',
-                            'custodian_status': 'TTL: delete@2018-01-01'})
+            tools.set_tags(
+                cls.client,
+                cls.rg_name,
+                cls.vm_name,
+                {'test_filters_tag': 'test_value', 'custodian_status': 'TTL: delete@2018-01-01'},
+            )
         except Exception:
             # Can fail without real auth
             pass
@@ -49,14 +52,19 @@ class FunctionalFiltersTagsTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def _run_policy(self, filters):
-        return self.load_policy({
-            'name': 'test-tag',
-            'resource': 'azure.vm',
-            'filters': [{
-                'type': 'value',
-                'key': 'name',
-                'op': 'eq',
-                'value_type': 'normalize',
-                'value': self.vm_name
-            }] + filters
-        }).run()
+        return self.load_policy(
+            {
+                'name': 'test-tag',
+                'resource': 'azure.vm',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'eq',
+                        'value_type': 'normalize',
+                        'value': self.vm_name,
+                    }
+                ]
+                + filters,
+            }
+        ).run()

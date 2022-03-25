@@ -12,7 +12,6 @@ from .aws import shape_validate
 
 @resources.register('kafka')
 class Kafka(QueryResourceManager):
-
     class resource_type(TypeInfo):
         service = 'kafka'
         enum_spec = ('list_clusters', 'ClusterInfoList', None)
@@ -66,6 +65,7 @@ class KafkaKmsFilter(KmsRelatedFilter):
                 key: c7n:AliasName
                 value: alias/aws/kafka
     """
+
     RelatedIdsExpression = 'EncryptionInfo.EncryptionAtRest.DataVolumeKMSKeyId'
 
 
@@ -73,9 +73,8 @@ class KafkaKmsFilter(KmsRelatedFilter):
 class SetMonitoring(Action):
 
     schema = type_schema(
-        'set-monitoring',
-        config={'type': 'object', 'minProperties': 1},
-        required=('config',))
+        'set-monitoring', config={'type': 'object', 'minProperties': 1}, required=('config',)
+    )
 
     shape = 'UpdateMonitoringRequest'
     permissions = ('kafka:UpdateClusterConfiguration',)

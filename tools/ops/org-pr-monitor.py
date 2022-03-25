@@ -85,7 +85,8 @@ class RepoMetrics(MetricsOutput):
             "Timestamp": self.get_timestamp(),
             "Value": value,
             'Dimensions': [],
-            "Unit": unit}
+            "Unit": unit,
+        }
         dimensions.update(self._default_dimensions())
         for k, v in dimensions.items():
             d['Dimensions'].append({"Name": k, "Value": v})
@@ -98,11 +99,9 @@ class RepoMetrics(MetricsOutput):
 def process_commit(c, r, metrics, stats, since, now):
     # Find the oldest of the pr commit/dates
     # TODO find commit dates
-    commit_date = parse_date(max(filter(
-        None, (
-            c['authoredDate'],
-            c['committedDate'],
-            c['pushedDate']))))
+    commit_date = parse_date(
+        max(filter(None, (c['authoredDate'], c['committedDate'], c['pushedDate'])))
+    )
 
     if commit_date < since:
         return
@@ -128,58 +127,63 @@ def cli():
 
 
 @cli.command()
-@click.option('--organization', envvar="GITHUB_ORG",
-              required=True, help="Github Organization")
-@click.option('--hook-context', envvar="GITHUB_HOOK",
-              required=True, help="Webhook context name")
-@click.option('--github-url', envvar="GITHUB_API_URL",
-              default='https://api.github.com/graphql')
-@click.option('--github-token', envvar='GITHUB_TOKEN',
-              help="Github credential token")
+@click.option('--organization', envvar="GITHUB_ORG", required=True, help="Github Organization")
+@click.option('--hook-context', envvar="GITHUB_HOOK", required=True, help="Webhook context name")
+@click.option('--github-url', envvar="GITHUB_API_URL", default='https://api.github.com/graphql')
+@click.option('--github-token', envvar='GITHUB_TOKEN', help="Github credential token")
 @click.option('-v', '--verbose', help="Verbose output")
 @click.option('-m', '--metrics', help="Publish metrics")
 @click.option('--assume', help="Assume a role for publishing metrics")
 @click.option('--region', help="Region to target for metrics")
-@click.option('--since', help="Look at pull requests/commits younger than",
-              default="1 week")
-def run(organization, hook_context, github_url, github_token,
-        verbose, metrics=False, since=None, assume=None, region=None):
+@click.option('--since', help="Look at pull requests/commits younger than", default="1 week")
+def run(
+    organization,
+    hook_context,
+    github_url,
+    github_token,
+    verbose,
+    metrics=False,
+    since=None,
+    assume=None,
+    region=None,
+):
     """scan org repo status hooks"""
     logging.basicConfig(level=logging.DEBUG)
 
     since = dateparser.parse(
-        since, settings={
-            'RETURN_AS_TIMEZONE_AWARE': True, 'TO_TIMEZONE': 'UTC'})
+        since, settings={'RETURN_AS_TIMEZONE_AWARE': True, 'TO_TIMEZONE': 'UTC'}
+    )
 
     headers = {"Authorization": "token {}".format(github_token)}
 
     response = requests.post(
-        github_url, headers=headers,
-        json={'query': query, 'variables': {'organization': organization}})
+        github_url,
+        headers=headers,
+        json={'query': query, 'variables': {'organization': organization}},
+    )
 
     result = response.json()
 
     if response.status_code != 200 or 'errors' in result:
         raise Exception(
             "Query failed to run by returning code of {}. {}".format(
-                response.status_code, response.content))
+                response.status_code, response.content
+            )
+        )
 
     now = datetime.now(tzutc())
     stats = Counter()
     repo_metrics = RepoMetrics(
         Bag(session_factory=SessionFactory(region, assume_role=assume)),
-        {'namespace': DEFAULT_NAMESPACE}
+        {'namespace': DEFAULT_NAMESPACE},
     )
 
     for r in result['data']['organization']['repositories']['nodes']:
-        commits = jmespath.search(
-            'pullRequests.edges[].node[].commits[].nodes[].commit[]', r)
+        commits = jmespath.search('pullRequests.edges[].node[].commits[].nodes[].commit[]', r)
         if not commits:
             continue
         log.debug("processing repo: %s prs: %d", r['name'], len(commits))
-        repo_metrics.dims = {
-            'Hook': hook_context,
-            'Repo': '{}/{}'.format(organization, r['name'])}
+        repo_metrics.dims = {'Hook': hook_context, 'Repo': '{}/{}'.format(organization, r['name'])}
 
         # Each commit represents a separate pr
         for c in commits:
@@ -188,12 +192,10 @@ def run(organization, hook_context, github_url, github_token,
     repo_metrics.dims = None
 
     if stats['missing']:
+        repo_metrics.put_metric('RepoHookPending', stats['missing'], 'Count', Hook=hook_context)
         repo_metrics.put_metric(
-            'RepoHookPending', stats['missing'], 'Count',
-            Hook=hook_context)
-        repo_metrics.put_metric(
-            'RepoHookLatency', stats['missing_time'], 'Seconds',
-            Hook=hook_context)
+            'RepoHookLatency', stats['missing_time'], 'Seconds', Hook=hook_context
+        )
 
     if not metrics:
         print(dumps(repo_metrics.buf, indent=2))
@@ -208,5 +210,6 @@ if __name__ == '__main__':
         cli()
     except Exception:
         import traceback, sys, pdb
+
         traceback.print_exc()
         pdb.post_mortem(sys.exc_info()[-1])

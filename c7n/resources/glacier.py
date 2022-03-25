@@ -29,8 +29,8 @@ class Glacier(QueryResourceManager):
         def process_tags(resource):
             client = local_session(self.session_factory).client('glacier')
             tag_dict = self.retry(
-                client.list_tags_for_vault,
-                vaultName=resource[self.get_model().name])['Tags']
+                client.list_tags_for_vault, vaultName=resource[self.get_model().name]
+            )['Tags']
             tag_list = []
             for k, v in tag_dict.items():
                 tag_list.append({'Key': k, 'Value': v})
@@ -60,28 +60,26 @@ class GlacierCrossAccountAccessFilter(CrossAccountAccessFilter):
                       - permitted-account-01
                       - permitted-account-02
     """
+
     permissions = ('glacier:GetVaultAccessPolicy',)
 
     def process(self, resources, event=None):
         def _augment(r):
-            client = local_session(
-                self.manager.session_factory).client('glacier')
+            client = local_session(self.manager.session_factory).client('glacier')
             try:
-                r['Policy'] = client.get_vault_access_policy(
-                    vaultName=r['VaultName'])['policy']['Policy']
+                r['Policy'] = client.get_vault_access_policy(vaultName=r['VaultName'])['policy'][
+                    'Policy'
+                ]
                 return r
             except ClientError as e:
                 if e.response['Error']['Code'] == 'AccessDeniedException':
-                    self.log.warning(
-                        "Access denied getting policy glacier:%s",
-                        r['FunctionName'])
+                    self.log.warning("Access denied getting policy glacier:%s", r['FunctionName'])
 
         self.log.debug("fetching policy for %d glacier" % len(resources))
         with self.executor_factory(max_workers=3) as w:
             resources = list(filter(None, w.map(_augment, resources)))
 
-        return super(GlacierCrossAccountAccessFilter, self).process(
-            resources, event)
+        return super(GlacierCrossAccountAccessFilter, self).process(resources, event)
 
 
 @Glacier.action_registry.register('remove-statements')
@@ -111,15 +109,15 @@ class RemovePolicyStatement(RemovePolicyBase):
             try:
                 results += filter(None, [self.process_resource(client, r)])
             except Exception:
-                self.log.exception(
-                    "Error processing glacier:%s", r['VaultARN'])
+                self.log.exception("Error processing glacier:%s", r['VaultARN'])
         return results
 
     def process_resource(self, client, resource):
         if 'Policy' not in resource:
             try:
                 resource['Policy'] = client.get_vault_access_policy(
-                    vaultName=resource['VaultName'])['policy']['Policy']
+                    vaultName=resource['VaultName']
+                )['policy']['Policy']
             except ClientError as e:
                 if e.response['Error']['Code'] != "ResourceNotFoundException":
                     raise
@@ -130,22 +128,19 @@ class RemovePolicyStatement(RemovePolicyBase):
 
         p = json.loads(resource['Policy'])
         statements, found = self.process_policy(
-            p, resource, CrossAccountAccessFilter.annotation_key)
+            p, resource, CrossAccountAccessFilter.annotation_key
+        )
 
         if not found:
             return
 
         if not statements:
-            client.delete_vault_access_policy(
-                vaultName=resource['VaultName'])
+            client.delete_vault_access_policy(vaultName=resource['VaultName'])
         else:
             client.set_vault_access_policy(
-                vaultName=resource['VaultName'],
-                policy={'Policy': json.dumps(p)}
+                vaultName=resource['VaultName'], policy={'Policy': json.dumps(p)}
             )
-        return {'Name': resource['VaultName'],
-                'State': 'PolicyRemoved',
-                'Statements': found}
+        return {'Name': resource['VaultName'], 'State': 'PolicyRemoved', 'Statements': found}
 
 
 @Glacier.action_registry.register('delete')
@@ -171,5 +166,8 @@ class GlacierVaultDelete(RemovePolicyBase):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('glacier')
         for r in resources:
-            self.manager.retry(client.delete_vault, vaultName=r['VaultName'], ignore_err_codes=(
-                'ResourceNotFoundException',))
+            self.manager.retry(
+                client.delete_vault,
+                vaultName=r['VaultName'],
+                ignore_err_codes=('ResourceNotFoundException',),
+            )

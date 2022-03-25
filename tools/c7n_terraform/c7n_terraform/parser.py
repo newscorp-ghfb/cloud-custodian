@@ -148,9 +148,7 @@ class HclLocator:
             tokens = [t.replace('"', "") for t in line.split()]
             if key_set.issubset(tokens):
                 start_line = idx
-                end_line = self._get_end_line(
-                    start_line, cache_idx, self.line_cache[path]
-                )
+                end_line = self._get_end_line(start_line, cache_idx, self.line_cache[path])
                 break
 
         if not (start_line and end_line):
@@ -158,7 +156,7 @@ class HclLocator:
         return {
             "start": start_line,
             "end": end_line,
-            "lines": self.file_cache[path][start_line - 1:end_line - 1],
+            "lines": self.file_cache[path][start_line - 1 : end_line - 1],
         }
 
     def _get_end_line(self, start_line, cache_idx, lines):
@@ -167,7 +165,7 @@ class HclLocator:
         s, e = "{", "}"
         if s not in lines[cache_idx][1]:
             s, e = "(", ")"
-        for lineno, l in lines[cache_idx + 1:]:
+        for lineno, l in lines[cache_idx + 1 :]:
             if s in l:
                 idx += 1
             if e in l:

@@ -14,12 +14,12 @@ class Lookup:
             {
                 'properties': {
                     'type': {'type': 'string', 'enum': [RESOURCE_SOURCE]},
-                    'key': {'type': 'string'}
+                    'key': {'type': 'string'},
                 },
                 'additionalProperties': False,
-                'required': ['type', 'key']
+                'required': ['type', 'key'],
             }
-        ]
+        ],
     }
 
     @staticmethod
@@ -28,12 +28,7 @@ class Lookup:
         for lookup in lookup_schema['oneOf']:
             lookup['properties']['default-value'] = schema
 
-        return {
-            'oneOf': [
-                lookup_schema,
-                schema
-            ]
-        }
+        return {'oneOf': [lookup_schema, schema]}
 
     @staticmethod
     def extract(source, data=None):

@@ -31,7 +31,6 @@ def resolve(o):
 
 
 class SQSExecutor(Executor):
-
     def __init__(self, session_factory, map_queue, reduce_queue):
         self.session_factory = session_factory
         self.map_queue = map_queue
@@ -41,42 +40,39 @@ class SQSExecutor(Executor):
         self.futures = {}
 
     def submit(self, func, *args, **kwargs):
-        """Submit a function for serialized execution on sqs
-        """
+        """Submit a function for serialized execution on sqs"""
         self.op_sequence += 1
         self.sqs.send_message(
             QueueUrl=self.map_queue,
             MessageBody=utils.dumps({'args': args, 'kwargs': kwargs}),
             MessageAttributes={
-                'sequence_id': {
-                    'StringValue': str(self.op_sequence),
-                    'DataType': 'Number'},
+                'sequence_id': {'StringValue': str(self.op_sequence), 'DataType': 'Number'},
                 'op': {
                     'StringValue': named(func),
                     'DataType': 'String',
                 },
-                'ser': {
-                    'StringValue': 'json',
-                    'DataType': 'String'}}
+                'ser': {'StringValue': 'json', 'DataType': 'String'},
+            },
         )
 
-        self.futures[self.op_sequence] = f = SQSFuture(
-            self.op_sequence)
+        self.futures[self.op_sequence] = f = SQSFuture(self.op_sequence)
         return f
 
     def gather(self):
-        """Fetch results from separate queue
-        """
+        """Fetch results from separate queue"""
         limit = self.op_sequence - self.op_sequence_start
         results = MessageIterator(self.sqs, self.reduce_queue, limit)
         for m in results:
             # sequence_id from above
             msg_id = int(m['MessageAttributes']['sequence_id']['StringValue'])
-            if (not msg_id > self.op_sequence_start or not msg_id <= self.op_sequence or
-            msg_id not in self.futures):
+            if (
+                not msg_id > self.op_sequence_start
+                or not msg_id <= self.op_sequence
+                or msg_id not in self.futures
+            ):
                 raise RuntimeError(
-                    "Concurrent queue user from different "
-                    "process or previous results")
+                    "Concurrent queue user from different " "process or previous results"
+                )
             f = self.futures[msg_id]
             f.set_result(m)
             results.ack(m)
@@ -108,7 +104,8 @@ class MessageIterator:
         response = self.client.receive_message(
             QueueUrl=self.queue_url,
             WaitTimeSeconds=self.timeout,
-            MessageAttributeNames=self.msg_attributes)
+            MessageAttributeNames=self.msg_attributes,
+        )
 
         msgs = response.get('Messages', [])
         for m in msgs:
@@ -120,9 +117,7 @@ class MessageIterator:
     next = __next__  # back-compat
 
     def ack(self, m):
-        self.client.delete_message(
-            QueueUrl=self.queue_url,
-            ReceiptHandle=m['ReceiptHandle'])
+        self.client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle'])
 
 
 class SQSWorker:
@@ -151,9 +146,7 @@ class SQSWorker:
         try:
             func(*msg['args'], **msg['kwargs'])
         except Exception as e:
-            log.exception(
-                "Error invoking %s %s" % (
-                    op_name, e))
+            log.exception("Error invoking %s %s" % (op_name, e))
             return
 
 

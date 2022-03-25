@@ -9,8 +9,12 @@ from c7n.utils import local_session
 from .session import Session
 
 from c7n_azure.resources.resource_map import ResourceMap
-from msrestazure.azure_cloud import (AZURE_CHINA_CLOUD, AZURE_GERMAN_CLOUD, AZURE_PUBLIC_CLOUD,
-                                     AZURE_US_GOV_CLOUD)
+from msrestazure.azure_cloud import (
+    AZURE_CHINA_CLOUD,
+    AZURE_GERMAN_CLOUD,
+    AZURE_PUBLIC_CLOUD,
+    AZURE_US_GOV_CLOUD,
+)
 import logging
 import sys
 
@@ -28,7 +32,7 @@ class Azure(Provider):
         'AzureCloud': AZURE_PUBLIC_CLOUD,
         'AzureChinaCloud': AZURE_CHINA_CLOUD,
         'AzureGermanCloud': AZURE_GERMAN_CLOUD,
-        'AzureUSGovernment': AZURE_US_GOV_CLOUD
+        'AzureUSGovernment': AZURE_US_GOV_CLOUD,
     }
 
     cloud_endpoints = None
@@ -54,10 +58,12 @@ class Azure(Provider):
         if region:
             cloud_endpoint = self.region_to_cloud.get(region, AZURE_PUBLIC_CLOUD)
 
-        return partial(Session,
-                       subscription_id=options.account_id,
-                       authorization_file=options.authorization_file,
-                       cloud_endpoints=cloud_endpoint)
+        return partial(
+            Session,
+            subscription_id=options.account_id,
+            authorization_file=options.authorization_file,
+            cloud_endpoints=cloud_endpoint,
+        )
 
     def _get_cloud_endpoints(self, options):
         cloud_list = options.get('regions')
@@ -74,8 +80,11 @@ class Azure(Provider):
         if cloud:
             return cloud
         else:
-            log.error('Region Flag: %s not recognized. Available values: %s.',
-                      cloud_list[0], ", ".join(self.region_to_cloud.keys()))
+            log.error(
+                'Region Flag: %s not recognized. Available values: %s.',
+                cloud_list[0],
+                ", ".join(self.region_to_cloud.keys()),
+            )
             sys.exit(1)
 
 

@@ -9,22 +9,19 @@ class BatchTest(BaseTest):
 
     def test_batch_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-azure-batch',
-                'resource': 'azure.batch'
-            }, validate=True)
+            p = self.load_policy(
+                {'name': 'test-azure-batch', 'resource': 'azure.batch'}, validate=True
+            )
             self.assertTrue(p)
 
     @arm_template('batch.json')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-batch',
-            'resource': 'azure.batch',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cctest*'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-batch',
+                'resource': 'azure.batch',
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cctest*'}],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)

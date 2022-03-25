@@ -9,7 +9,6 @@ from .common import BaseTest
 
 
 class LogTest(BaseTest):
-
     def test_existing_stream(self):
         session_factory = self.replay_flight_data("test_log_existing_stream")
         client = session_factory().client("logs")
@@ -30,9 +29,7 @@ class LogTest(BaseTest):
     def test_time_flush(self):
         session_factory = self.replay_flight_data("test_log_time_flush")
         log = logging.getLogger("test-c7n")
-        handler = CloudWatchLogHandler(
-            "test-c7n-4", "alpha", session_factory=session_factory
-        )
+        handler = CloudWatchLogHandler("test-c7n-4", "alpha", session_factory=session_factory)
         handler.batch_interval = 0.1
         log.addHandler(handler)
         self.addCleanup(log.removeHandler, handler)
@@ -50,9 +47,7 @@ class LogTest(BaseTest):
     def test_transport_buffer_flush(self):
         session_factory = self.replay_flight_data("test_transport_buffer_flush")
         log = logging.getLogger("test-c7n")
-        handler = CloudWatchLogHandler(
-            "test-c7n-5", "alpha", session_factory=session_factory
-        )
+        handler = CloudWatchLogHandler("test-c7n-5", "alpha", session_factory=session_factory)
         handler.batch_size = 5
         log.addHandler(handler)
         self.addCleanup(log.removeHandler, handler)

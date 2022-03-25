@@ -16,61 +16,72 @@ class AzureBaseActionTest(BaseTest):
         self.assertEqual(2, action.log.info.call_count)
 
         action.log.info.assert_any_call(
-            ANY,
-            extra={'properties': {'resource_id': '1', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '1', 'action': 'test'}}
+        )
 
         action.log.info.assert_any_call(
-            ANY,
-            extra={'properties': {'resource_id': '2', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '2', 'action': 'test'}}
+        )
 
     def test_return_success_message(self):
         action = SampleAction()
-        action.process([
-            {'id': '1', 'name': 'one', 'message': 'foo', 'resourceGroup': 'rg'},
-            {'id': '2', 'name': 'two', 'message': 'bar'}],
-            None)
+        action.process(
+            [
+                {'id': '1', 'name': 'one', 'message': 'foo', 'resourceGroup': 'rg'},
+                {'id': '2', 'name': 'two', 'message': 'bar'},
+            ],
+            None,
+        )
 
         self.assertEqual(2, action.log.info.call_count)
 
         action.log.info.assert_any_call(
             "Action 'test' modified 'one' in resource group 'rg'. foo",
-            extra={'properties': {'resource_id': '1', 'action': 'test'}})
+            extra={'properties': {'resource_id': '1', 'action': 'test'}},
+        )
 
         action.log.info.assert_any_call(
             "Action 'test' modified 'two' in resource group 'unknown'. bar",
-            extra={'properties': {'resource_id': '2', 'action': 'test'}})
+            extra={'properties': {'resource_id': '2', 'action': 'test'}},
+        )
 
     @patch('sys.modules', return_value=[])
     def test_resource_failed(self, _):
         action = SampleAction()
-        action.process([
-            {'id': '1', 'exception': Exception('foo'), 'name': 'bar', 'type': 'vm'},
-            {'id': '2', 'message': 'foo'}],
-            None)
+        action.process(
+            [
+                {'id': '1', 'exception': Exception('foo'), 'name': 'bar', 'type': 'vm'},
+                {'id': '2', 'message': 'foo'},
+            ],
+            None,
+        )
 
         action.log.exception.assert_called_once_with(
-            ANY,
-            extra={'properties': {'resource_id': '1', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '1', 'action': 'test'}}
+        )
 
         action.log.info.assert_called_once_with(
-            ANY,
-            extra={'properties': {'resource_id': '2', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '2', 'action': 'test'}}
+        )
 
     @patch('sys.modules', return_value=[])
     def test_resource_failed_event(self, _):
         action = SampleEventAction()
-        action.process([
-            {'id': '1', 'exception': Exception('foo'), 'name': 'bar', 'type': 'vm'},
-            {'id': '2', 'message': 'foo'}],
-            None)
+        action.process(
+            [
+                {'id': '1', 'exception': Exception('foo'), 'name': 'bar', 'type': 'vm'},
+                {'id': '2', 'message': 'foo'},
+            ],
+            None,
+        )
 
         action.log.exception.assert_called_once_with(
-            ANY,
-            extra={'properties': {'resource_id': '1', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '1', 'action': 'test'}}
+        )
 
         action.log.info.assert_called_once_with(
-            ANY,
-            extra={'properties': {'resource_id': '2', 'action': 'test'}})
+            ANY, extra={'properties': {'resource_id': '2', 'action': 'test'}}
+        )
 
     def test_log_modified_resource(self):
         action = SampleEventAction()
@@ -79,24 +90,27 @@ class AzureBaseActionTest(BaseTest):
         action.log.info = logger
 
         action._log_modified_resource(
-            {'name': 'rg1', 'type': 'resourcegroups', 'resourceGroup': 'r'}, 'Message')
+            {'name': 'rg1', 'type': 'resourcegroups', 'resourceGroup': 'r'}, 'Message'
+        )
         action._log_modified_resource(
-            {'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, 'Message')
+            {'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, 'Message'
+        )
         action._log_modified_resource(
-            {'name': 'rg1', 'type': 'resourcegroups', 'resourceGroup': 'r'}, None)
-        action._log_modified_resource(
-            {'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, None)
+            {'name': 'rg1', 'type': 'resourcegroups', 'resourceGroup': 'r'}, None
+        )
+        action._log_modified_resource({'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, None)
 
-        logger.assert_has_calls([
-            call("Action 'test' modified resource group 'rg1'. Message", extra=''),
-            call("Action 'test' modified 'r1' in resource group 'rg2'. Message", extra=''),
-            call("Action 'test' modified resource group 'rg1'. ", extra=''),
-            call("Action 'test' modified 'r1' in resource group 'rg2'. ", extra='')
-        ])
+        logger.assert_has_calls(
+            [
+                call("Action 'test' modified resource group 'rg1'. Message", extra=''),
+                call("Action 'test' modified 'r1' in resource group 'rg2'. Message", extra=''),
+                call("Action 'test' modified resource group 'rg1'. ", extra=''),
+                call("Action 'test' modified 'r1' in resource group 'rg2'. ", extra=''),
+            ]
+        )
 
 
 class SampleAction(AzureBaseAction):
-
     def __init__(self):
         self.client = MagicMock()
         self.manager = MagicMock()
@@ -116,7 +130,6 @@ class SampleAction(AzureBaseAction):
 
 
 class SampleEventAction(AzureEventAction):
-
     def __init__(self):
         self.client = MagicMock()
         self.manager = MagicMock()

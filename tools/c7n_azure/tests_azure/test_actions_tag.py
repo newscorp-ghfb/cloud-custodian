@@ -18,72 +18,58 @@ class ActionsTagTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'tag',
-                     'tag': 'test',
-                     'value': 'test_value'}
-                ]),
-                validate=True))
+                tools.get_policy([{'type': 'tag', 'tag': 'test', 'value': 'test_value'}]),
+                validate=True,
+            )
+        )
 
         self.assertTrue(
             self.load_policy(
-                tools.get_policy([
-                    {'type': 'tag',
-                     'tags': {'tag1': 'test'}}
-                ]),
-                validate=True))
+                tools.get_policy([{'type': 'tag', 'tags': {'tag1': 'test'}}]), validate=True
+            )
+        )
 
-        self.assertTrue(self.load_policy({
-            'name': 'test-tag-schema-validate',
-            'resource': 'azure.vm',
-            'actions': [
-                {'type': 'tag',
-                 'tag': {
-                     'type': 'resource',
-                     'key': 'name'
-                 },
-                 'value': {
-                     'type': 'resource',
-                     'key': 'name'
-                 }},
-            ]
-        }, validate=True))
+        self.assertTrue(
+            self.load_policy(
+                {
+                    'name': 'test-tag-schema-validate',
+                    'resource': 'azure.vm',
+                    'actions': [
+                        {
+                            'type': 'tag',
+                            'tag': {'type': 'resource', 'key': 'name'},
+                            'value': {'type': 'resource', 'key': 'name'},
+                        },
+                    ],
+                },
+                validate=True,
+            )
+        )
 
         with self.assertRaises(FilterValidationError):
             # Can't have both tags and tag/value
-            self.load_policy(tools.get_policy([
-                {'type': 'tag',
-                 'tags': {'tag2': 'value2'},
-                 'tag': 'tag1',
-                 'value': 'value1'}
-            ]), validate=True)
+            self.load_policy(
+                tools.get_policy(
+                    [{'type': 'tag', 'tags': {'tag2': 'value2'}, 'tag': 'tag1', 'value': 'value1'}]
+                ),
+                validate=True,
+            )
 
         with self.assertRaises(FilterValidationError):
             # Required tags or tag/value
-            self.load_policy(tools.get_policy([
-                {'type': 'tag'}
-            ]), validate=True)
+            self.load_policy(tools.get_policy([{'type': 'tag'}]), validate=True)
 
         with self.assertRaises(FilterValidationError):
             # Empty tags
-            self.load_policy(tools.get_policy([
-                {'type': 'tag',
-                 'tags': {}}
-            ]), validate=True)
+            self.load_policy(tools.get_policy([{'type': 'tag', 'tags': {}}]), validate=True)
 
         with self.assertRaises(FilterValidationError):
             # Missing value
-            self.load_policy(tools.get_policy([
-                {'type': 'tag',
-                 'tag': 'myTag'}
-            ]), validate=True)
+            self.load_policy(tools.get_policy([{'type': 'tag', 'tag': 'myTag'}]), validate=True)
 
         with self.assertRaises(FilterValidationError):
             # Missing tag
-            self.load_policy(tools.get_policy([
-                {'type': 'tag',
-                 'value': 'myValue'}
-            ]), validate=True)
+            self.load_policy(tools.get_policy([{'type': 'tag', 'value': 'myValue'}]), validate=True)
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_add_or_update_single_tag(self, update_resource_tags):
@@ -105,20 +91,14 @@ class ActionsTagTest(BaseTest):
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_add_or_update_single_tag_from_resource(self, update_resource_tags):
-        """Verifies we can add a new tag to a VM from values on the VM
-        """
+        """Verifies we can add a new tag to a VM from values on the VM"""
 
         action = self._get_action(
             {
-                'tag': {
-                    'type': 'resource',
-                    'key': 'name'
-                },
-                'value': {
-                    'type': 'resource',
-                    'key': 'type'
-                }
-            })
+                'tag': {'type': 'resource', 'key': 'name'},
+                'value': {'type': 'resource', 'key': 'type'},
+            }
+        )
 
         resource = tools.get_resource(self.existing_tags)
 
@@ -139,17 +119,14 @@ class ActionsTagTest(BaseTest):
 
         action = self._get_action(
             {
-                'tag': {
-                    'type': 'resource',
-                    'key': 'doesnotexist',
-                    'default-value': 'default_tag'
-                },
+                'tag': {'type': 'resource', 'key': 'doesnotexist', 'default-value': 'default_tag'},
                 'value': {
                     'type': 'resource',
                     'key': 'doesnotexist',
-                    'default-value': 'default_value'
-                }
-            })
+                    'default-value': 'default_value',
+                },
+            }
+        )
 
         resource = tools.get_resource(self.existing_tags)
 

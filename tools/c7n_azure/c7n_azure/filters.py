@@ -7,14 +7,27 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import as_completed
 from datetime import timedelta
 
-from azure.mgmt.costmanagement.models import (QueryAggregation,
-                                              QueryComparisonExpression,
-                                              QueryDataset, QueryDefinition,
-                                              QueryFilter, QueryGrouping,
-                                              QueryTimePeriod, TimeframeType)
+from azure.mgmt.costmanagement.models import (
+    QueryAggregation,
+    QueryComparisonExpression,
+    QueryDataset,
+    QueryDefinition,
+    QueryFilter,
+    QueryGrouping,
+    QueryTimePeriod,
+    TimeframeType,
+)
 from c7n_azure.tags import TagHelper
-from c7n_azure.utils import (IpRangeHelper, Math, ResourceIdParser,
-                             StringUtils, ThreadHelper, now, utcnow, is_resource_group)
+from c7n_azure.utils import (
+    IpRangeHelper,
+    Math,
+    ResourceIdParser,
+    StringUtils,
+    ThreadHelper,
+    now,
+    utcnow,
+    is_resource_group,
+)
 from dateutil.parser import parse
 from azure.core.exceptions import HttpResponseError
 
@@ -35,7 +48,7 @@ scalar_ops = {
     'le': operator.le,
     'lte': operator.le,
     'lt': operator.lt,
-    'less-than': operator.lt
+    'less-than': operator.lt,
 }
 
 
@@ -112,7 +125,7 @@ class MetricFilter(Filter):
         'total': Math.sum,
         'count': Math.sum,
         'minimum': Math.min,
-        'maximum': Math.max
+        'maximum': Math.max,
     }
 
     schema = {
@@ -125,12 +138,13 @@ class MetricFilter(Filter):
             'op': {'enum': list(scalar_ops.keys())},
             'threshold': {'type': 'number'},
             'timeframe': {'type': 'number'},
-            'interval': {'enum': [
-                'PT1M', 'PT5M', 'PT15M', 'PT30M', 'PT1H', 'PT6H', 'PT12H', 'P1D']},
+            'interval': {
+                'enum': ['PT1M', 'PT5M', 'PT15M', 'PT30M', 'PT1H', 'PT6H', 'PT12H', 'P1D']
+            },
             'aggregation': {'enum': ['total', 'average', 'count', 'minimum', 'maximum']},
             'no_data_action': {'enum': ['include', 'exclude', 'to_zero']},
-            'filter': {'type': 'string'}
-        }
+            'filter': {'type': 'string'},
+        },
     }
     schema_alias = True
 
@@ -183,16 +197,16 @@ class MetricFilter(Filter):
                 interval=self.interval,
                 metricnames=self.metric,
                 aggregation=self.aggregation,
-                filter=self.get_filter(resource)
+                filter=self.get_filter(resource),
             )
         except HttpResponseError:
-            self.log.exception("Could not get metric: %s on %s" % (
-                self.metric, resource['id']))
+            self.log.exception("Could not get metric: %s on %s" % (self.metric, resource['id']))
             return None
 
         if len(metrics_data.value) > 0 and len(metrics_data.value[0].timeseries) > 0:
-            m = [getattr(item, self.aggregation)
-                for item in metrics_data.value[0].timeseries[0].data]
+            m = [
+                getattr(item, self.aggregation) for item in metrics_data.value[0].timeseries[0].data
+            ]
         else:
             m = None
 
@@ -287,13 +301,15 @@ class TagActionFilter(Filter):
 
 
     """
+
     schema = type_schema(
         'marked-for-op',
         tag={'type': 'string'},
         tz={'type': 'string'},
         skew={'type': 'number', 'minimum': 0},
         skew_hours={'type': 'number', 'minimum': 0},
-        op={'type': 'string'})
+        op={'type': 'string'},
+    )
     schema_alias = True
     current_date = None
     log = logging.getLogger('custodian.azure.filters.TagActionFilter')
@@ -302,13 +318,14 @@ class TagActionFilter(Filter):
         op = self.data.get('op')
         if self.manager and op not in self.manager.action_registry.keys():
             raise PolicyValidationError(
-                "Invalid marked-for-op op:%s in %s" % (op, self.manager.data))
+                "Invalid marked-for-op op:%s in %s" % (op, self.manager.data)
+            )
 
         tz = Time.get_tz(self.data.get('tz', 'utc'))
         if not tz:
             raise PolicyValidationError(
-                "Invalid timezone specified '%s' in %s" % (
-                    self.data.get('tz'), self.manager.data))
+                "Invalid timezone specified '%s' in %s" % (self.data.get('tz'), self.manager.data)
+            )
         return self
 
     def process(self, resources, event=None):
@@ -336,8 +353,7 @@ class TagActionFilter(Filter):
         try:
             action_date = parse(action_date_str)
         except Exception:
-            self.log.error("could not parse tag:%s value:%s on %s" % (
-                self.tag, v, i['InstanceId']))
+            self.log.error("could not parse tag:%s value:%s on %s" % (self.tag, v, i['InstanceId']))
             return False
 
         # current_date must match timezones with the parsed date string
@@ -347,8 +363,7 @@ class TagActionFilter(Filter):
         else:
             current_date = now()
 
-        return current_date >= (
-            action_date - timedelta(days=self.skew, hours=self.skew_hours))
+        return current_date >= (action_date - timedelta(days=self.skew, hours=self.skew_hours))
 
 
 class DiagnosticSettingsFilter(ValueFilter):
@@ -410,8 +425,7 @@ class DiagnosticSettingsFilter(ValueFilter):
 
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.warning(
-                        "Diagnostic settings filter error: %s" % f.exception())
+                    self.log.warning("Diagnostic settings filter error: %s" % f.exception())
                     continue
                 else:
                     results.extend(f.result())
@@ -460,9 +474,13 @@ class PolicyCompliantFilter(Filter):
                 - "Definition display name 2"
 
     """
-    schema = type_schema('policy-compliant', required=['type', 'compliant'],
-                         compliant={'type': 'boolean'},
-                         definitions={'type': 'array'})
+
+    schema = type_schema(
+        'policy-compliant',
+        required=['type', 'compliant'],
+        compliant={'type': 'boolean'},
+        definitions={'type': 'array'},
+    )
     schema_alias = True
 
     def __init__(self, data, manager=None):
@@ -478,16 +496,22 @@ class PolicyCompliantFilter(Filter):
         if self.definitions:
             policyClient = s.client("azure.mgmt.resource.policy.PolicyClient")
             definitions = [d for d in policyClient.policy_definitions.list()]
-            definition_ids = [d.id.lower() for d in definitions
-                              if d.display_name in self.definitions or
-                              d.name in self.definitions]
+            definition_ids = [
+                d.id.lower()
+                for d in definitions
+                if d.display_name in self.definitions or d.name in self.definitions
+            ]
 
         # Find non-compliant resources
         client = s.client('azure.mgmt.policyinsights.PolicyInsightsClient')
         query = client.policy_states.list_query_results_for_subscription(
-            policy_states_resource='latest', subscription_id=s.subscription_id).value
-        non_compliant = [f.resource_id.lower() for f in query
-                         if not definition_ids or f.policy_definition_id.lower() in definition_ids]
+            policy_states_resource='latest', subscription_id=s.subscription_id
+        ).value
+        non_compliant = [
+            f.resource_id.lower()
+            for f in query
+            if not definition_ids or f.policy_definition_id.lower() in definition_ids
+        ]
 
         if self.compliant:
             return [r for r in resources if r['id'].lower() not in non_compliant]
@@ -499,9 +523,7 @@ class AzureOffHour(OffHour):
 
     # Override get_tag_value because Azure stores tags differently from AWS
     def get_tag_value(self, i):
-        tag_value = TagHelper.get_tag_value(resource=i,
-                                            tag=self.tag_key,
-                                            utf_8=True)
+        tag_value = TagHelper.get_tag_value(resource=i, tag=self.tag_key, utf_8=True)
 
         if tag_value is not False:
             tag_value = tag_value.lower().strip("'\"")
@@ -512,9 +534,7 @@ class AzureOnHour(OnHour):
 
     # Override get_tag_value because Azure stores tags differently from AWS
     def get_tag_value(self, i):
-        tag_value = TagHelper.get_tag_value(resource=i,
-                                            tag=self.tag_key,
-                                            utf_8=True)
+        tag_value = TagHelper.get_tag_value(resource=i, tag=self.tag_key, utf_8=True)
 
         if tag_value is not False:
             tag_value = tag_value.lower().strip("'\"")
@@ -564,14 +584,14 @@ class FirewallRulesFilter(Filter, metaclass=ABCMeta):
             'include': {'type': 'array', 'items': {'type': 'string'}},
             'any': {'type': 'array', 'items': {'type': 'string'}},
             'only': {'type': 'array', 'items': {'type': 'string'}},
-            'equal': {'type': 'array', 'items': {'type': 'string'}}
+            'equal': {'type': 'array', 'items': {'type': 'string'}},
         },
         'oneOf': [
             {"required": ["type", "include"]},
             {"required": ["type", "any"]},
             {"required": ["type", "only"]},
-            {"required": ["type", "equal"]}
-        ]
+            {"required": ["type", "equal"]},
+        ],
     }
 
     schema_alias = True
@@ -598,7 +618,7 @@ class FirewallRulesFilter(Filter, metaclass=ABCMeta):
             event=event,
             execution_method=self._check_resources,
             executor_factory=self.executor_factory,
-            log=self.log
+            log=self.log,
         )
 
         return result
@@ -637,8 +657,7 @@ class FirewallRulesFilter(Filter, metaclass=ABCMeta):
 
 
 class FirewallBypassFilter(Filter, metaclass=ABCMeta):
-    """Filters resources by the firewall bypass rules
-    """
+    """Filters resources by the firewall bypass rules"""
 
     @staticmethod
     def schema(values):
@@ -647,8 +666,9 @@ class FirewallBypassFilter(Filter, metaclass=ABCMeta):
             required=['mode', 'list'],
             **{
                 'mode': {'enum': ['include', 'equal', 'any', 'only']},
-                'list': {'type': 'array', 'items': {'enum': values}}
-            })
+                'list': {'type': 'array', 'items': {'enum': values}},
+            }
+        )
 
     log = logging.getLogger('custodian.azure.filters.FirewallRulesFilter')
 
@@ -666,7 +686,7 @@ class FirewallBypassFilter(Filter, metaclass=ABCMeta):
             event=event,
             execution_method=self._check_resources,
             executor_factory=self.executor_factory,
-            log=self.log
+            log=self.log,
         )
 
         return result
@@ -752,10 +772,12 @@ class ResourceLockFilter(Filter):
     """
 
     schema = type_schema(
-        'resource-lock', required=['type'],
+        'resource-lock',
+        required=['type'],
         **{
             'lock-type': {'enum': ['ReadOnly', 'CanNotDelete', 'Any', 'Absent']},
-        })
+        }
+    )
 
     schema_alias = True
     log = logging.getLogger('custodian.azure.filters.ResourceLockFilter')
@@ -770,7 +792,7 @@ class ResourceLockFilter(Filter):
             event=event,
             execution_method=self._process_resource_set,
             executor_factory=self.executor_factory,
-            log=self.log
+            log=self.log,
         )
         if exceptions:
             raise exceptions[0]
@@ -781,23 +803,29 @@ class ResourceLockFilter(Filter):
         result = []
         for resource in resources:
             if is_resource_group(resource):
-                locks = [r.serialize(True) for r in
-                         client.management_locks.list_at_resource_group_level(
-                    resource['name'])]
+                locks = [
+                    r.serialize(True)
+                    for r in client.management_locks.list_at_resource_group_level(resource['name'])
+                ]
             else:
-                locks = [r.serialize(True) for r in client.management_locks.list_at_resource_level(
-                    resource['resourceGroup'],
-                    ResourceIdParser.get_namespace(resource['id']),
-                    ResourceIdParser.get_resource_name(resource.get('c7n:parent-id')) or '',
-                    ResourceIdParser.get_resource_type(resource['id']),
-                    resource['name'])]
+                locks = [
+                    r.serialize(True)
+                    for r in client.management_locks.list_at_resource_level(
+                        resource['resourceGroup'],
+                        ResourceIdParser.get_namespace(resource['id']),
+                        ResourceIdParser.get_resource_name(resource.get('c7n:parent-id')) or '',
+                        ResourceIdParser.get_resource_type(resource['id']),
+                        resource['name'],
+                    )
+                ]
 
             if StringUtils.equal('Absent', self.lock_type) and not locks:
                 result.append(resource)
             else:
                 for lock in locks:
-                    if StringUtils.equal('Any', self.lock_type) or \
-                            StringUtils.equal(lock['properties']['level'], self.lock_type):
+                    if StringUtils.equal('Any', self.lock_type) or StringUtils.equal(
+                        lock['properties']['level'], self.lock_type
+                    ):
                         result.append(resource)
                         break
 
@@ -857,18 +885,13 @@ class CostFilter(ValueFilter):
 
     preset_timeframes = [i.value for i in TimeframeType if i.value != 'Custom']
 
-    schema = type_schema('cost',
+    schema = type_schema(
+        'cost',
         rinherit=ValueFilter.schema,
         required=['timeframe'],
         key=None,
-        **{
-            'timeframe': {
-                'oneOf': [
-                    {'enum': preset_timeframes},
-                    {"type": "number", "minimum": 1}
-                ]
-            }
-        })
+        **{'timeframe': {'oneOf': [{'enum': preset_timeframes}, {"type": "number", "minimum": 1}]}}
+    )
 
     schema_alias = True
     log = logging.getLogger('custodian.azure.filters.CostFilter')
@@ -890,12 +913,15 @@ class CostFilter(ValueFilter):
             return False
 
         if any(c['Currency'] != costs[0]['Currency'] for c in costs):
-            self.log.warning('Detected different currencies for the resource {0}. Costs array: {1}'
-                             .format(i['id'], costs))
+            self.log.warning(
+                'Detected different currencies for the resource {0}. Costs array: {1}'.format(
+                    i['id'], costs
+                )
+            )
 
         total_cost = {
             'PreTaxCost': sum(c['PreTaxCost'] for c in costs),
-            'Currency': costs[0]['Currency']
+            'Currency': costs[0]['Currency'],
         }
         i[get_annotation_prefix('cost')] = total_cost
         result = super(CostFilter, self).__call__(total_cost)
@@ -924,15 +950,19 @@ class CostFilter(ValueFilter):
 
         aggregation = {'totalCost': QueryAggregation(name='PreTaxCost', function='Sum')}
 
-        grouping = [QueryGrouping(type='Dimension',
-                                  name='ResourceGroupName' if is_resource_group else 'ResourceId')]
+        grouping = [
+            QueryGrouping(
+                type='Dimension', name='ResourceGroupName' if is_resource_group else 'ResourceId'
+            )
+        ]
 
         query_filter = None
         if not is_resource_group:
             query_filter = QueryFilter(
-                dimension=QueryComparisonExpression(name='ResourceType',
-                                                    operator='In',
-                                                    values=[manager.resource_type.resource_type]))
+                dimension=QueryComparisonExpression(
+                    name='ResourceType', operator='In', values=[manager.resource_type.resource_type]
+                )
+            )
             if 'dimension' in query_filter._attribute_map:
                 query_filter._attribute_map['dimension']['key'] = 'dimensions'
 
@@ -947,10 +977,9 @@ class CostFilter(ValueFilter):
             timeframe = 'Custom'
             time_period = QueryTimePeriod(from_property=start_time, to=end_time)
 
-        definition = QueryDefinition(type='ActualCost',
-                                     timeframe=timeframe,
-                                     time_period=time_period,
-                                     dataset=dataset)
+        definition = QueryDefinition(
+            type='ActualCost', timeframe=timeframe, time_period=time_period, dataset=dataset
+        )
 
         subscription_id = manager.get_session().get_subscription_id()
 
@@ -960,11 +989,11 @@ class CostFilter(ValueFilter):
 
         if hasattr(query, '_derserializer'):
             original = query._derserializer._deserialize
-            query._derserializer._deserialize = lambda target, data: \
-                original(target, self.fix_wrap_rest_response(data))
+            query._derserializer._deserialize = lambda target, data: original(
+                target, self.fix_wrap_rest_response(data)
+            )
 
-        result_list = [{query.columns[i].name: v for i, v in enumerate(row)}
-                       for row in query.rows]
+        result_list = [{query.columns[i].name: v for i, v in enumerate(row)} for row in query.rows]
 
         for r in result_list:
             if 'ResourceGroupName' in r:
@@ -998,16 +1027,15 @@ class ParentFilter(Filter):
                   value: ProjectA
     """
 
-    schema = type_schema(
-        'parent', filter={'type': 'object'}, required=['type'])
+    schema = type_schema('parent', filter={'type': 'object'}, required=['type'])
     schema_alias = True
 
     def __init__(self, data, manager=None):
         super(ParentFilter, self).__init__(data, manager)
         self.parent_manager = self.manager.get_parent_manager()
         self.parent_filter = self.parent_manager.filter_registry.factory(
-            self.data['filter'],
-            self.parent_manager)
+            self.data['filter'], self.parent_manager
+        )
 
     def process(self, resources, event=None):
         parent_resources = self.parent_filter.process(self.parent_manager.resources())

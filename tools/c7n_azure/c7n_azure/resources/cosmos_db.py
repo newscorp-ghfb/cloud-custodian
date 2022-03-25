@@ -11,7 +11,7 @@ from azure.mgmt.cosmosdb.models import VirtualNetworkRule
 from c7n_azure import constants
 from c7n_azure.actions.base import AzureBaseAction
 from c7n_azure.actions.firewall import SetFirewallAction
-from c7n_azure.filters import (FirewallRulesFilter, MetricFilter, FirewallBypassFilter)
+from c7n_azure.filters import FirewallRulesFilter, MetricFilter, FirewallBypassFilter
 from c7n_azure.provider import resources
 from c7n_azure.query import ChildResourceManager, ChildTypeInfo
 from c7n_azure.resources.arm import ArmResourceManager
@@ -30,11 +30,7 @@ from functools import lru_cache
 max_workers = constants.DEFAULT_MAX_THREAD_WORKERS
 log = logging.getLogger('custodian.azure.cosmosdb')
 THROUGHPUT_MULTIPLIER = 100
-PORTAL_IPS = ['104.42.195.92',
-              '40.76.54.131',
-              '52.176.6.30',
-              '52.169.50.45',
-              '52.187.184.26']
+PORTAL_IPS = ['104.42.195.92', '40.76.54.131', '52.176.6.30', '52.169.50.45', '52.187.184.26']
 AZURE_CLOUD_IPS = ['0.0.0.0']  # nosec
 
 
@@ -67,18 +63,12 @@ class CosmosDB(ArmResourceManager):
         service = 'azure.mgmt.cosmosdb'
         client = 'CosmosDBManagementClient'
         enum_spec = ('database_accounts', 'list', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'kind'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'kind')
         resource_type = 'Microsoft.DocumentDB/databaseAccounts'
 
 
 @CosmosDB.filter_registry.register('firewall-rules')
 class CosmosDBFirewallRulesFilter(FirewallRulesFilter):
-
     def _query_rules(self, resource):
         ip_rules = resource['properties'].get('ipRules', [])
 
@@ -148,7 +138,6 @@ class CosmosFirewallBypassFilter(FirewallBypassFilter):
 
 
 class CosmosDBChildResource(ChildResourceManager):
-
     class resource_type(ChildTypeInfo):
         doc_groups = ['Databases']
 
@@ -157,28 +146,24 @@ class CosmosDBChildResource(ChildResourceManager):
         raise_on_exception = False
         annotate_parent = True
 
-        default_report_fields = (
-            'id',
-            '_ts',
-            '_self'
-        )
+        default_report_fields = ('id', '_ts', '_self')
 
     @staticmethod
     @lru_cache()
     def get_cosmos_key(resource_group, resource_name, client, readonly=True):
-        key_result = client.database_accounts.list_keys(
-            resource_group,
-            resource_name)
+        key_result = client.database_accounts.list_keys(resource_group, resource_name)
         return key_result.primary_readonly_master_key if readonly else key_result.primary_master_key
 
     def get_data_client(self, parent_resource):
         key = CosmosDBChildResource.get_cosmos_key(
             parent_resource['resourceGroup'],
             parent_resource.get('name'),
-            self.get_parent_manager().get_client())
+            self.get_parent_manager().get_client(),
+        )
         data_client = CosmosClient(
             url_connection=parent_resource.get('properties').get('documentEndpoint'),
-            auth={'masterKey': key})
+            auth={'masterKey': key},
+        )
         return data_client
 
 
@@ -205,14 +190,17 @@ class CosmosDBDatabase(CosmosDBChildResource):
             databases = list(data_client.ReadDatabases())
         except HTTPFailure as e:
             if e.status_code == 403:
-                log.error("403 Forbidden. Ensure identity has `Cosmos DB Account Reader` or"
-                          "`DocumentDB Accounts Contributor` and that firewall is not "
-                          "blocking access.")
+                log.error(
+                    "403 Forbidden. Ensure identity has `Cosmos DB Account Reader` or"
+                    "`DocumentDB Accounts Contributor` and that firewall is not "
+                    "blocking access."
+                )
             raise e
 
         for d in databases:
-            d.update({'c7n:document-endpoint':
-                      parent_resource.get('properties').get('documentEndpoint')})
+            d.update(
+                {'c7n:document-endpoint': parent_resource.get('properties').get('documentEndpoint')}
+            )
 
         return databases
 
@@ -242,6 +230,7 @@ class CosmosDBDatabaseMetricFilter(MetricFilter):
                 timeframe: 72
 
     """
+
     def get_resource_id(self, resource):
         return resource['c7n:parent-id']
 
@@ -285,9 +274,11 @@ class CosmosDBCollection(CosmosDBChildResource):
             databases = list(data_client.ReadDatabases())
         except HTTPFailure as e:
             if e.status_code == 403:
-                log.error("403 Forbidden. Ensure identity has `Cosmos DB Account Reader` or"
-                          "`DocumentDB Accounts Contributor` and that firewall is not "
-                          "blocking access.")
+                log.error(
+                    "403 Forbidden. Ensure identity has `Cosmos DB Account Reader` or"
+                    "`DocumentDB Accounts Contributor` and that firewall is not "
+                    "blocking access."
+                )
             raise e
 
         collections = []
@@ -295,8 +286,13 @@ class CosmosDBCollection(CosmosDBChildResource):
         for d in databases:
             container_result = list(data_client.ReadContainers(d['_self']))
             for c in container_result:
-                c.update({'c7n:document-endpoint':
-                         parent_resource.get('properties').get('documentEndpoint')})
+                c.update(
+                    {
+                        'c7n:document-endpoint': parent_resource.get('properties').get(
+                            'documentEndpoint'
+                        )
+                    }
+                )
                 c['c7n:parent'] = parent_resource
                 c['c7n:database'] = d['id']
                 collections.append(c)
@@ -329,12 +325,15 @@ class CosmosDBCollectionMetricFilter(MetricFilter):
                 timeframe: 72
 
     """
+
     def get_resource_id(self, resource):
         return resource['c7n:parent-id']
 
     def get_filter(self, resource):
-        container_filter = "DatabaseName eq '%s' and CollectionName eq '%s'" \
-            % (resource['c7n:database'], resource['id'])
+        container_filter = "DatabaseName eq '%s' and CollectionName eq '%s'" % (
+            resource['c7n:database'],
+            resource['id'],
+        )
 
         if self.filter is not None:
             container_filter = "%s and %s" % (self.filter, container_filter)
@@ -375,7 +374,7 @@ class CosmosDBOfferFilter(ValueFilter):
             self.executor_factory,
             self.manager.get_parent_manager(),
             self._process_account_set,
-            log
+            log,
         )
 
     def _process_account_set(self, resources, data_client):
@@ -385,8 +384,8 @@ class CosmosDBOfferFilter(ValueFilter):
             # Pass each resource through the base filter
             for resource in resources:
                 filtered_resource = super(CosmosDBOfferFilter, self).process(
-                    [resource['c7n:offer']],
-                    event=None)
+                    [resource['c7n:offer']], event=None
+                )
 
                 if filtered_resource:
                     matched.append(resource)
@@ -424,11 +423,7 @@ class CosmosDBReplaceOfferAction(AzureBaseAction):
     """
 
     schema = type_schema(
-        'replace-offer',
-        required=['throughput'],
-        **{
-            'throughput': {'type': 'number'}
-        }
+        'replace-offer', required=['throughput'], **{'throughput': {'type': 'number'}}
     )
 
     def _process_resources(self, resources, event):
@@ -438,7 +433,7 @@ class CosmosDBReplaceOfferAction(AzureBaseAction):
             self.manager.get_parent_manager(),
             self._process_account_set,
             log,
-            readonly=False
+            readonly=False,
         )
 
     def _process_account_set(self, resources, account_client):
@@ -484,19 +479,14 @@ class CosmosDBRestoreStateAction(CosmosDBReplaceOfferAction):
     """
 
     schema = type_schema(
-        'restore-throughput-state',
-        required=['state-tag'],
-        **{
-            'state-tag': {'type': 'string'}
-        }
+        'restore-throughput-state', required=['state-tag'], **{'state-tag': {'type': 'string'}}
     )
 
     def _process_account_set(self, resources, account_client):
         try:
             parent_account = resources[0]['c7n:parent']
             tag_name = self.data.get('state-tag')
-            container_states_tag_value = TagHelper.get_tag_value(
-                parent_account, tag_name)
+            container_states_tag_value = TagHelper.get_tag_value(parent_account, tag_name)
 
             if container_states_tag_value:
                 for state in container_states_tag_value.split(';'):
@@ -510,8 +500,7 @@ class CosmosDBRestoreStateAction(CosmosDBReplaceOfferAction):
                     if container:
                         self._process_resource(container, account_client, container_throughput)
             else:
-                log.warning('No tag {} on parent resource, {}.'.format(
-                    tag_name, parent_account))
+                log.warning('No tag {} on parent resource, {}.'.format(tag_name, parent_account))
 
         except Exception as e:
             log.warning(e)
@@ -549,11 +538,7 @@ class CosmosDBSaveStateAction(AzureBaseAction):
     """
 
     schema = type_schema(
-        'save-throughput-state',
-        required=['state-tag'],
-        **{
-            'state-tag': {'type': 'string'}
-        }
+        'save-throughput-state', required=['state-tag'], **{'state-tag': {'type': 'string'}}
     )
 
     TAG_VALUE_CHAR_LIMIT = 256
@@ -564,7 +549,7 @@ class CosmosDBSaveStateAction(AzureBaseAction):
             self.executor_factory,
             self.manager.get_parent_manager(),
             self._process_account_set,
-            log
+            log,
         )
 
     def _process_account_set(self, resources, account_client):
@@ -575,18 +560,21 @@ class CosmosDBSaveStateAction(AzureBaseAction):
         for resource in resources:
             # dividing by multiplier to reduce string size (throughputs are multiples of 100)
             throughput = int(
-                resource['c7n:offer']['content']['offerThroughput'] / THROUGHPUT_MULTIPLIER)
+                resource['c7n:offer']['content']['offerThroughput'] / THROUGHPUT_MULTIPLIER
+            )
 
-            account_tag_values.append('{}:{}'.format(
-                resource['_rid'], throughput))
+            account_tag_values.append('{}:{}'.format(resource['_rid'], throughput))
 
         tag_value = ';'.join(account_tag_values)
 
         if len(tag_value) > self.TAG_VALUE_CHAR_LIMIT:
-            raise ValueError('Can not add tag, {}, on parent resource, {}, '
-                             'because tag value exceeds allowed length.'
-                             'Add filters to reduce number of containers.'
-                             .format(tag_name, cosmos_account['name']))
+            raise ValueError(
+                'Can not add tag, {}, on parent resource, {}, '
+                'because tag value exceeds allowed length.'
+                'Add filters to reduce number of containers.'.format(
+                    tag_name, cosmos_account['name']
+                )
+            )
 
         TagHelper.add_tags(self, cosmos_account, {tag_name: tag_value})
         return resources
@@ -596,7 +584,6 @@ class CosmosDBSaveStateAction(AzureBaseAction):
 
 
 class OfferHelper:
-
     @staticmethod
     def account_key(resource):
         return resource['c7n:document-endpoint']
@@ -605,9 +592,7 @@ class OfferHelper:
     def group_by_account(resources):
         # Group all resources by account because offers are queried per account not per collection
         account_sorted = sorted(resources, key=OfferHelper.account_key)
-        account_grouped = [list(it) for k, it in groupby(
-            account_sorted,
-            OfferHelper.account_key)]
+        account_grouped = [list(it) for k, it in groupby(account_sorted, OfferHelper.account_key)]
 
         return account_grouped
 
@@ -617,7 +602,7 @@ class OfferHelper:
             ResourceIdParser.get_resource_group(account_id),
             ResourceIdParser.get_resource_name(account_id),
             manager.get_client(),
-            readonly
+            readonly,
         )
         data_client = CosmosClient(url_connection=account_endpoint, auth={'masterKey': key})
         return data_client
@@ -632,7 +617,8 @@ class OfferHelper:
 
     @staticmethod
     def execute_in_parallel_grouped_by_account(
-            resources, executor_factory, account_manager, process_resource_set, log, readonly=True):
+        resources, executor_factory, account_manager, process_resource_set, log, readonly=True
+    ):
         futures = []
         results = []
         account_grouped = OfferHelper.group_by_account(resources)
@@ -644,15 +630,16 @@ class OfferHelper:
                 account_client = OfferHelper.get_cosmos_data_client_for_account(
                     resource_set[0]['c7n:parent-id'],
                     resource_set[0]['c7n:document-endpoint'],
-                    account_manager, readonly)
+                    account_manager,
+                    readonly,
+                )
 
                 OfferHelper.populate_offer_data_for_account(resource_set, account_client)
                 futures.append(w.submit(process_resource_set, resource_set, account_client))
 
             for f in as_completed(futures):
                 if f.exception():
-                    log.warning(
-                        "CosmosDB offer processing error: %s" % f.exception())
+                    log.warning("CosmosDB offer processing error: %s" % f.exception())
                     continue
                 else:
                     results.extend(f.result())
@@ -662,90 +649,89 @@ class OfferHelper:
 
 @CosmosDB.action_registry.register('set-firewall-rules')
 class CosmosSetFirewallAction(SetFirewallAction):
-    """ Set Firewall Rules Action
+    """Set Firewall Rules Action
 
-     Updates CosmosDB Firewall settings.  Learn about the firewall at:
-     https://docs.microsoft.com/en-us/azure/cosmos-db/firewall-support
+    Updates CosmosDB Firewall settings.  Learn about the firewall at:
+    https://docs.microsoft.com/en-us/azure/cosmos-db/firewall-support
 
-     By default the firewall rules are appended with the new values.  The ``append: False``
-     flag can be used to replace the old rules with the new ones on
-     the resource.
+    By default the firewall rules are appended with the new values.  The ``append: False``
+    flag can be used to replace the old rules with the new ones on
+    the resource.
 
-     You may also reference azure public cloud Service Tags by name in place of
-     an IP address.  Use ``ServiceTags.`` followed by the ``name`` of any group
-     from https://www.microsoft.com/en-us/download/details.aspx?id=56519.
+    You may also reference azure public cloud Service Tags by name in place of
+    an IP address.  Use ``ServiceTags.`` followed by the ``name`` of any group
+    from https://www.microsoft.com/en-us/download/details.aspx?id=56519.
 
-     Note that there are firewall rule number limits.  The limit for CosmosDB is
-     1000 rules (maximum tested rule count).
+    Note that there are firewall rule number limits.  The limit for CosmosDB is
+    1000 rules (maximum tested rule count).
 
-     .. code-block:: yaml
+    .. code-block:: yaml
 
-         - type: set-firewall-rules
+        - type: set-firewall-rules
+              ip-rules:
+                  - 11.12.13.0/16
+                  - ServiceTags.AppService.CentralUS
+
+
+    :example:
+
+    Find CosmosDB accounts without any firewall rules.
+
+    Enable the firewall and allow:
+    - All Azure Cloud IP space
+    - All Portal UI IP space
+    - Two additional external IP ranges
+
+    ``append: True`` (default) ensures we only add to the existing configuration.
+
+    .. code-block:: yaml
+
+       policies:
+         - name: cosmos-firewall
+           resource: azure.cosmosdb
+           filters:
+             # The firewall is disabled
+             - type: value
+               key: properties.ipRangeFilter
+               value: empty
+           actions:
+             - type: set-firewall-rules
+               append: True
+               bypass-rules:
+                 - AzureCloud
+                 - Portal
                ip-rules:
-                   - 11.12.13.0/16
-                   - ServiceTags.AppService.CentralUS
+                 - 19.0.0.0/16
+                 - 20.0.1.2
 
 
-     :example:
+    Cosmos firewalls are disabled by simply configuring them with empty values.
+    We can do this by passing an empty array with ``append: False``
 
-     Find CosmosDB accounts without any firewall rules.
+    .. code-block:: yaml
 
-     Enable the firewall and allow:
-     - All Azure Cloud IP space
-     - All Portal UI IP space
-     - Two additional external IP ranges
-
-     ``append: True`` (default) ensures we only add to the existing configuration.
-
-     .. code-block:: yaml
-
-        policies:
-          - name: cosmos-firewall
-            resource: azure.cosmosdb
-            filters:
-              # The firewall is disabled
-              - type: value
-                key: properties.ipRangeFilter
-                value: empty
-            actions:
-              - type: set-firewall-rules
-                append: True
-                bypass-rules:
-                  - AzureCloud
-                  - Portal
-                ip-rules:
-                  - 19.0.0.0/16
-                  - 20.0.1.2
+       policies:
+         - name: cosmos-firewall-clear
+           resource: azure.cosmosdb
+           filters:
+             # The firewall is enabled
+             - not:
+               - type: value
+                 key: properties.ipRangeFilter
+                 value: empty
+           actions:
+             - type: set-firewall-rules
+               append: False
+               ip-rules: []
 
 
-     Cosmos firewalls are disabled by simply configuring them with empty values.
-     We can do this by passing an empty array with ``append: False``
-
-     .. code-block:: yaml
-
-        policies:
-          - name: cosmos-firewall-clear
-            resource: azure.cosmosdb
-            filters:
-              # The firewall is enabled
-              - not:
-                - type: value
-                  key: properties.ipRangeFilter
-                  value: empty
-            actions:
-              - type: set-firewall-rules
-                append: False
-                ip-rules: []
-
-
-     """
+    """
 
     schema = type_schema(
         'set-firewall-rules',
         rinherit=SetFirewallAction.schema,
         **{
-            'bypass-rules': {'type': 'array', 'items': {
-                'enum': ['Portal', 'AzureCloud']}},
+            'bypass-rules': {'type': 'array', 'items': {'enum': ['Portal', 'AzureCloud']}},
         }
     )
 
@@ -756,8 +742,9 @@ class CosmosSetFirewallAction(SetFirewallAction):
     def _process_resource(self, resource):
 
         # IP rules
-        existing_ip = [ip_rule['ipAddressOrRange']
-                       for ip_rule in resource['properties'].get('ipRules', [])]
+        existing_ip = [
+            ip_rule['ipAddressOrRange'] for ip_rule in resource['properties'].get('ipRules', [])
+        ]
         if self.data.get('ip-rules') is not None:
             ip_rules = self._build_ip_rules(existing_ip, self.data.get('ip-rules', []))
         else:
@@ -784,17 +771,19 @@ class CosmosSetFirewallAction(SetFirewallAction):
 
         # If the user has too many rules raise exception
         if len(ip_rules) > self.rule_limit:
-            raise ValueError("Skipped updating firewall for %s. "
-                            "%s exceeds maximum rule count of %s." %
-                            (resource['name'], len(ip_rules), self.rule_limit))
+            raise ValueError(
+                "Skipped updating firewall for %s. "
+                "%s exceeds maximum rule count of %s."
+                % (resource['name'], len(ip_rules), self.rule_limit)
+            )
 
         # Add VNET rules
-        existing_vnet = \
-            [r['id'] for r in resource['properties'].get('virtualNetworkRules', [])]
+        existing_vnet = [r['id'] for r in resource['properties'].get('virtualNetworkRules', [])]
 
         if self.data.get('virtual-network-rules') is not None:
-            vnet_rules = self._build_vnet_rules(existing_vnet,
-                                                self.data.get('virtual-network-rules', []))
+            vnet_rules = self._build_vnet_rules(
+                existing_vnet, self.data.get('virtual-network-rules', [])
+            )
         else:
             vnet_rules = existing_vnet
 
@@ -802,17 +791,19 @@ class CosmosSetFirewallAction(SetFirewallAction):
         resource['properties']['locations'] = []
         for loc in resource['properties'].get('readLocations'):
             resource['properties']['locations'].append(
-                {'location_name': loc['locationName'],
-                 'failover_priority': loc['failoverPriority'],
-                 'is_zone_redundant': loc.get('isZoneRedundant', False)})
+                {
+                    'location_name': loc['locationName'],
+                    'failover_priority': loc['failoverPriority'],
+                    'is_zone_redundant': loc.get('isZoneRedundant', False),
+                }
+            )
 
         resource['properties']['ipRules'] = [{'ipAddressOrRange': ip} for ip in ip_rules]
-        resource['properties']['virtualNetworkRules'] = \
-            [VirtualNetworkRule(id=r) for r in vnet_rules]
+        resource['properties']['virtualNetworkRules'] = [
+            VirtualNetworkRule(id=r) for r in vnet_rules
+        ]
 
         # Update resource
         self.client.database_accounts.begin_create_or_update(
-            resource['resourceGroup'],
-            resource['name'],
-            create_update_parameters=resource
+            resource['resourceGroup'], resource['name'], create_update_parameters=resource
         )

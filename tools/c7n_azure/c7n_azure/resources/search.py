@@ -32,10 +32,5 @@ class SearchService(ArmResourceManager):
         service = 'azure.mgmt.search'
         client = 'SearchManagementClient'
         enum_spec = ('services', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup',
-            'sku.name'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup', 'sku.name')
         resource_type = 'Microsoft.Search/searchServices'

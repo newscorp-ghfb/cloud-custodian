@@ -47,7 +47,8 @@ def render_function_properties(p, policy_lambda):
     if dlq:
         properties['DeadLetterQueue'] = {
             'Type': ':sns:' in dlq['TargetArn'] and 'SNS' or 'SQS',
-            'TargetArn': dlq['TargetArn']}
+            'TargetArn': dlq['TargetArn'],
+        }
     key_arn = properties.pop('KMSKeyArn')
     if key_arn:
         properties['KmsKeyArn']
@@ -60,8 +61,8 @@ def render_periodic(p, policy_lambda, sam):
     revents = {
         'PolicySchedule': {
             'Type': 'Schedule',
-            'Properties': {
-                'Schedule': p.data.get('mode', {}).get('schedule')}}
+            'Properties': {'Schedule': p.data.get('mode', {}).get('schedule')},
+        }
     }
     properties['Events'] = revents
     return properties
@@ -70,18 +71,15 @@ def render_periodic(p, policy_lambda, sam):
 def render_cwe(p, policy_lambda, sam):
     properties = render_function_properties(p, policy_lambda)
 
-    events = [e for e in policy_lambda.get_events(None)
-              if isinstance(e, mu.CloudWatchEventSource)]
+    events = [e for e in policy_lambda.get_events(None) if isinstance(e, mu.CloudWatchEventSource)]
     if not events:
         return
 
     revents = {}
     for idx, e in enumerate(events):
-        revents[
-            'PolicyTrigger%s' % string.ascii_uppercase[idx]] = {
-                'Type': 'CloudWatchEvent',
-                'Properties': {
-                    'Pattern': json.loads(e.render_event_pattern())}
+        revents['PolicyTrigger%s' % string.ascii_uppercase[idx]] = {
+            'Type': 'CloudWatchEvent',
+            'Properties': {'Pattern': json.loads(e.render_event_pattern())},
         }
     properties['Events'] = revents
     return properties
@@ -99,7 +97,7 @@ def render_config_rule(p, policy_lambda, sam):
     sam['Resources'][resource_name(p.name) + 'ConfigRule'] = {
         'Type': 'AWS::Config::ConfigRule',
         'DependsOn': resource_name(p.name) + "InvokePermission",
-        'Properties': rule_properties
+        'Properties': rule_properties,
     }
     sam['Resources'][resource_name(p.name) + 'InvokePermission'] = {
         "DependsOn": resource_name(p.name),
@@ -107,8 +105,8 @@ def render_config_rule(p, policy_lambda, sam):
         "Properties": {
             "Action": "lambda:InvokeFunction",
             "FunctionName": {"Ref": resource_name(p.name)},
-            "Principal": "config.amazonaws.com"
-        }
+            "Principal": "config.amazonaws.com",
+        },
     }
     return properties
 
@@ -122,14 +120,15 @@ SAM_RENDER_FUNCS = {
     'phd': render_cwe,
     'ec2-instance-state': render_cwe,
     'asg-instance-state': render_cwe,
-    'guard-duty': render_cwe
+    'guard-duty': render_cwe,
 }
 
 
 def dispatch_render(p, sam):
     if p.execution_mode not in SAM_RENDER_FUNCS:
-        raise ValueError("Unsupported sam deploy mode (%s) on policy: %s" % (
-            p.execution_mode, p.name))
+        raise ValueError(
+            "Unsupported sam deploy mode (%s) on policy: %s" % (p.execution_mode, p.name)
+        )
     render_func = SAM_RENDER_FUNCS[p.execution_mode]
     if render_func is None:
         return None
@@ -138,23 +137,28 @@ def dispatch_render(p, sam):
     properties['CodeUri'] = "./%s.zip" % p.name
     sam['Resources'][resource_name(p.name)] = {
         'Type': 'AWS::Serverless::Function',
-        'Properties': properties}
+        'Properties': properties,
+    }
     return policy_lambda
 
 
 def resource_name(policy_name):
     parts = policy_name.replace('_', '-').split('-')
-    return "".join(
-        [p.title() for p in parts])
+    return "".join([p.title() for p in parts])
 
 
 def setup_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-c', '--config', dest="config_file", required=True,
-        help="Policy configuration files")
-    parser.add_argument("-p", "--policies", default=None, dest='policy_filter',
-                        help="Only use named/matched policies")
+        '-c', '--config', dest="config_file", required=True, help="Policy configuration files"
+    )
+    parser.add_argument(
+        "-p",
+        "--policies",
+        default=None,
+        dest='policy_filter',
+        help="Only use named/matched policies",
+    )
     parser.add_argument("-o", "--output-dir", default=None, required=True)
     return parser
 
@@ -162,13 +166,15 @@ def setup_parser():
 def main():
     parser = setup_parser()
     options = parser.parse_args()
-    collection = PolicyLoader(
-        Config.empty()).load_file(options.config_file).filter(options.policy_filter)
+    collection = (
+        PolicyLoader(Config.empty()).load_file(options.config_file).filter(options.policy_filter)
+    )
 
     sam = {
         'AWSTemplateFormatVersion': '2010-09-09',
         'Transform': 'AWS::Serverless-2016-10-31',
-        'Resources': {}}
+        'Resources': {},
+    }
 
     for p in collection:
         if p.provider_name != 'aws':

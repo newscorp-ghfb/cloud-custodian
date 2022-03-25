@@ -15,6 +15,7 @@ from c7n.utils import local_session, type_schema
 
 try:
     import jsonpatch
+
     HAVE_JSONPATH = True
 except ImportError:
     HAVE_JSONPATH = False
@@ -41,7 +42,8 @@ class Diff(Filter):
         'diff',
         selector={'enum': ['previous', 'date', 'locked']},
         # For date selectors allow value specification
-        selector_value={'type': 'string'})
+        selector_value={'type': 'string'},
+    )
 
     permissions = ('config:GetResourceConfigHistory',)
 
@@ -51,13 +53,15 @@ class Diff(Filter):
         if 'selector' in self.data and self.data['selector'] == 'date':
             if 'selector_value' not in self.data:
                 raise PolicyValidationError(
-                    "Date version selector requires specification of date on %s" % (
-                        self.manager.data))
+                    "Date version selector requires specification of date on %s"
+                    % (self.manager.data)
+                )
             try:
                 parse_date(self.data['selector_value'])
             except ValueError:
                 raise PolicyValidationError(
-                    "Invalid date for selector_value on %s" % (self.manager.data))
+                    "Invalid date for selector_value on %s" % (self.manager.data)
+                )
 
         elif 'selector' in self.data and self.data['selector'] == 'locked':
             idx = self.manager.data['filters'].index(self.data)
@@ -69,8 +73,9 @@ class Diff(Filter):
                     found = True
             if not found:
                 raise PolicyValidationError(
-                    "locked selector needs previous use of is-locked filter on %s" % (
-                        self.manager.data))
+                    "locked selector needs previous use of is-locked filter on %s"
+                    % (self.manager.data)
+                )
         return self
 
     def process(self, resources, event=None):
@@ -91,20 +96,18 @@ class Diff(Filter):
         return results
 
     def get_revisions(self, config, resource):
-        params = dict(
-            resourceType=self.model.config_type,
-            resourceId=resource[self.model.id])
+        params = dict(resourceType=self.model.config_type, resourceId=resource[self.model.id])
         params.update(self.get_selector_params(resource))
         try:
-            revisions = config.get_resource_config_history(
-                **params)['configurationItems']
+            revisions = config.get_resource_config_history(**params)['configurationItems']
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotDiscoveredException':
                 return []
             if e.response['Error']['Code'] != ErrNotFound:
                 self.log.debug(
-                    "config - resource %s:%s not found" % (
-                        self.model.config_type, resource[self.model.id]))
+                    "config - resource %s:%s not found"
+                    % (self.model.config_type, resource[self.model.id])
+                )
                 revisions = []
             raise
         return revisions
@@ -114,8 +117,7 @@ class Diff(Filter):
         selector = self.data.get('selector', 'previous')
         if selector == 'date':
             if not self.selector_value:
-                self.selector_value = parse_date(
-                    self.data.get('selector_value'))
+                self.selector_value = parse_date(self.data.get('selector_value'))
             params['laterTime'] = self.selector_value
             params['limit'] = 3
         elif selector == 'previous':
@@ -128,15 +130,18 @@ class Diff(Filter):
     def select_revision(self, revisions):
         for rev in revisions:
             # convert unix timestamp to utc to be normalized with other dates
-            if rev['configurationItemCaptureTime'].tzinfo and \
-               isinstance(rev['configurationItemCaptureTime'].tzinfo, tzlocal):
+            if rev['configurationItemCaptureTime'].tzinfo and isinstance(
+                rev['configurationItemCaptureTime'].tzinfo, tzlocal
+            ):
                 rev['configurationItemCaptureTime'] = rev[
-                    'configurationItemCaptureTime'].astimezone(UTC)
+                    'configurationItemCaptureTime'
+                ].astimezone(UTC)
             return {
                 'date': rev['configurationItemCaptureTime'],
                 'version_id': rev['configurationStateId'],
                 'events': rev['relatedEvents'],
-                'resource': self.transform_revision(rev)}
+                'resource': self.transform_revision(rev),
+            }
 
     def transform_revision(self, revision):
         """make config revision look like describe output."""
@@ -153,11 +158,11 @@ class JsonDiff(Diff):
         'json-diff',
         selector={'enum': ['previous', 'date', 'locked']},
         # For date selectors allow value specification
-        selector_value={'type': 'string'})
+        selector_value={'type': 'string'},
+    )
 
     def diff(self, source, target):
-        source, target = (
-            self.sanitize_revision(source), self.sanitize_revision(target))
+        source, target = (self.sanitize_revision(source), self.sanitize_revision(target))
         patch = jsonpatch.JsonPatch.from_diff(source, target)
         return list(patch)
 
@@ -169,7 +174,7 @@ class JsonDiff(Diff):
 
     @classmethod
     def register_resources(klass, registry, resource_class):
-        """ meta model subscriber on resource registration.
+        """meta model subscriber on resource registration.
 
         We watch for new resource types being registered and if they
         support aws config, automatically register the jsondiff filter.

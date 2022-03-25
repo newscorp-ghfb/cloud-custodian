@@ -27,9 +27,5 @@ class TrafficManagerProfile(ArmResourceManager):
         service = 'azure.mgmt.trafficmanager'
         client = 'TrafficManagerManagementClient'
         enum_spec = ('profiles', 'list_by_subscription', None)
-        default_report_fields = (
-            'name',
-            'location',
-            'resourceGroup'
-        )
+        default_report_fields = ('name', 'location', 'resourceGroup')
         resource_type = 'Microsoft.Network/trafficmanagerprofiles'

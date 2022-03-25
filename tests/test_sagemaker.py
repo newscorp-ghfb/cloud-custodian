@@ -6,16 +6,13 @@ import botocore.exceptions as b_exc
 
 
 class TestNotebookInstance(BaseTest):
-
     def test_list_notebook_instances(self):
         session_factory = self.replay_flight_data("test_sagemaker_notebook_instances")
         p = self.load_policy(
             {
                 "name": "list-sagemaker-notebooks",
                 "resource": "sagemaker-notebook",
-                "filters": [
-                    {"type": "value", "key": "SubnetId", "value": "subnet-efbcccb7"}
-                ],
+                "filters": [{"type": "value", "key": "SubnetId", "value": "subnet-efbcccb7"}],
             },
             session_factory=session_factory,
         )
@@ -23,9 +20,7 @@ class TestNotebookInstance(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_tag_notebook_instances(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_tag_notebook_instances"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_tag_notebook_instances")
         p = self.load_policy(
             {
                 "name": "tag-sagemaker-notebooks",
@@ -43,9 +38,7 @@ class TestNotebookInstance(BaseTest):
         self.assertEqual(tags[0]["Value"], "TestValue")
 
     def test_remove_tag_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_remove_tag_notebook_instances"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_remove_tag_notebook_instances")
         p = self.load_policy(
             {
                 "name": "untag-sagemaker-notebooks",
@@ -63,9 +56,7 @@ class TestNotebookInstance(BaseTest):
         self.assertEqual(len(tags), 0)
 
     def test_mark_for_op_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_mark_for_op_notebook_instance"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_mark_for_op_notebook_instance")
         p = self.load_policy(
             {
                 "name": "sagemaker-notebooks-untagged-delete",
@@ -93,9 +84,7 @@ class TestNotebookInstance(BaseTest):
         self.assertTrue(tags[0]["Key"], "custodian_cleanup")
 
     def test_marked_for_op_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_marked_for_op_notebook_instance"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_marked_for_op_notebook_instance")
         p = self.load_policy(
             {
                 "name": "sagemaker-notebooks-untagged-delete",
@@ -115,9 +104,7 @@ class TestNotebookInstance(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_start_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_start_notebook_instance"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_start_notebook_instance")
         p = self.load_policy(
             {
                 "name": "start-sagemaker-notebook",
@@ -136,9 +123,7 @@ class TestNotebookInstance(BaseTest):
         self.assertTrue(notebook["NotebookInstanceStatus"], "Pending")
 
     def test_stop_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_stop_notebook_instance"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_stop_notebook_instance")
         p = self.load_policy(
             {
                 "name": "stop-invalid-sagemaker-notebook",
@@ -158,9 +143,7 @@ class TestNotebookInstance(BaseTest):
         self.assertTrue(notebook["NotebookInstanceStatus"], "Stopping")
 
     def test_delete_notebook_instance(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_delete_notebook_instance"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_delete_notebook_instance")
         p = self.load_policy(
             {
                 "name": "delete-unencrypted-sagemaker-notebook",
@@ -181,9 +164,7 @@ class TestNotebookInstance(BaseTest):
 
     def test_notebook_subnet(self):
         nb = "c7n-test-nb"
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_notebook_subnet_filter"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_notebook_subnet_filter")
         p = self.load_policy(
             {
                 "name": "sagemaker-notebook",
@@ -198,16 +179,12 @@ class TestNotebookInstance(BaseTest):
 
     def test_notebook_security_group(self):
         nb = "c7n-test-nb"
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_notebook_security_group_filter"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_notebook_security_group_filter")
         p = self.load_policy(
             {
                 "name": "sagemaker-notebook",
                 "resource": "sagemaker-notebook",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "SGW-SG"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "SGW-SG"}],
             },
             session_factory=session_factory,
         )
@@ -223,15 +200,13 @@ class TestNotebookInstance(BaseTest):
                 "name": "sagemaker-kms-alias",
                 "resource": "aws.sagemaker-notebook",
                 "filters": [
-                    {
-                        'NotebookInstanceName': "test-kms"
-                    },
+                    {'NotebookInstanceName': "test-kms"},
                     {
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "alias/skunk/trails",
-                    }
-                ]
+                    },
+                ],
             },
             session_factory=session_factory,
         )
@@ -242,7 +217,6 @@ class TestNotebookInstance(BaseTest):
 
 
 class TestModelInstance(BaseTest):
-
     def test_list_model(self):
         session_factory = self.replay_flight_data("test_sagemaker_model")
         p = self.load_policy(
@@ -372,7 +346,6 @@ class TestModelInstance(BaseTest):
 
 
 class TestSagemakerJob(BaseTest):
-
     def test_sagemaker_training_job_query(self):
         session_factory = self.replay_flight_data("test_sagemaker_training_job_query")
         p = self.load_policy(
@@ -407,9 +380,7 @@ class TestSagemakerJob(BaseTest):
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
-        job = client.describe_training_job(
-            TrainingJobName=resources[0]["TrainingJobName"]
-        )
+        job = client.describe_training_job(TrainingJobName=resources[0]["TrainingJobName"])
         self.assertEqual(job["TrainingJobStatus"], "Stopping")
 
     def test_tag_job(self):
@@ -430,9 +401,7 @@ class TestSagemakerJob(BaseTest):
         self.assertEqual([tags[0]["Key"], tags[0]["Value"]], ["JobTag", "JobTagValue"])
 
     def test_untag_job(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_training_job_remove_tag"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_training_job_remove_tag")
         p = self.load_policy(
             {
                 "name": "remove-training-job-tag",
@@ -450,7 +419,6 @@ class TestSagemakerJob(BaseTest):
 
 
 class TestSagemakerTransformJob(BaseTest):
-
     def test_sagemaker_transform_job_query(self):
         session_factory = self.replay_flight_data("test_sagemaker_transform_job_query")
         p = self.load_policy(
@@ -485,9 +453,7 @@ class TestSagemakerTransformJob(BaseTest):
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
-        job = client.describe_transform_job(
-            TransformJobName=resources[0]["TransformJobName"]
-        )
+        job = client.describe_transform_job(TransformJobName=resources[0]["TransformJobName"])
         self.assertEqual(job["TransformJobStatus"], "Stopping")
 
     def test_tag_transform_job(self):
@@ -508,9 +474,7 @@ class TestSagemakerTransformJob(BaseTest):
         self.assertEqual([tags[0]["Key"], tags[0]["Value"]], ["JobTag", "JobTagValue"])
 
     def test_untag_transform_job(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_transform_job_remove_tag"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_transform_job_remove_tag")
         p = self.load_policy(
             {
                 "name": "remove-transform-job-tag",
@@ -528,7 +492,6 @@ class TestSagemakerTransformJob(BaseTest):
 
 
 class TestSagemakerEndpoint(BaseTest):
-
     def test_sagemaker_endpoints(self):
         session_factory = self.replay_flight_data("test_sagemaker_endpoints")
         p = self.load_policy(
@@ -564,9 +527,7 @@ class TestSagemakerEndpoint(BaseTest):
                 "name": "endpoint-tag-missing",
                 "resource": "sagemaker-endpoint",
                 "filters": [{"tag:required-tag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "required-tag", "value": "required-value"}
-                ],
+                "actions": [{"type": "tag", "key": "required-tag", "value": "required-value"}],
             },
             session_factory=session_factory,
         )
@@ -619,9 +580,7 @@ class TestSagemakerEndpoint(BaseTest):
         self.assertTrue(tags[0], "custodian_cleanup")
 
     def test_sagemaker_endpoint_marked_for_op(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_endpoint_marked_for_op"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_endpoint_marked_for_op")
         p = self.load_policy(
             {
                 "name": "marked-failed-endpoints-delete",
@@ -642,7 +601,6 @@ class TestSagemakerEndpoint(BaseTest):
 
 
 class TestSagemakerEndpointConfig(BaseTest):
-
     def test_sagemaker_endpoint_config(self):
         session_factory = self.replay_flight_data("test_sagemaker_endpoint_config")
         p = self.load_policy(
@@ -653,9 +611,7 @@ class TestSagemakerEndpointConfig(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_sagemaker_endpoint_config_delete(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_endpoint_config_delete"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_endpoint_config_delete")
         client = session_factory(region="us-east-1").client("sagemaker")
         p = self.load_policy(
             {
@@ -685,9 +641,7 @@ class TestSagemakerEndpointConfig(BaseTest):
                 "name": "endpoint-config-tag-missing",
                 "resource": "sagemaker-endpoint-config",
                 "filters": [{"tag:required-tag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "required-tag", "value": "required-value"}
-                ],
+                "actions": [{"type": "tag", "key": "required-tag", "value": "required-value"}],
             },
             session_factory=session_factory,
         )
@@ -695,14 +649,10 @@ class TestSagemakerEndpointConfig(BaseTest):
         self.assertTrue(len(resources), 1)
         client = session_factory(region="us-east-1").client("sagemaker")
         tags = client.list_tags(ResourceArn=resources[0]["EndpointConfigArn"])["Tags"]
-        self.assertEqual(
-            [tags[0]["Key"], tags[0]["Value"]], ["required-tag", "required-value"]
-        )
+        self.assertEqual([tags[0]["Key"], tags[0]["Value"]], ["required-tag", "required-value"])
 
     def test_sagemaker_endpoint_config_remove_tag(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_endpoint_config_remove_tag"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_endpoint_config_remove_tag")
         p = self.load_policy(
             {
                 "name": "endpoint-config-required-tag-obsolete",
@@ -719,9 +669,7 @@ class TestSagemakerEndpointConfig(BaseTest):
         self.assertEqual(len(tags), 0)
 
     def test_sagemaker_endpoint_config_mark_for_op(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_endpoint_config_mark_for_op"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_endpoint_config_mark_for_op")
         p = self.load_policy(
             {
                 "name": "mark-endpoint-config-mark-for-op-delete",
@@ -752,9 +700,7 @@ class TestSagemakerEndpointConfig(BaseTest):
         self.assertTrue(tags[0], "custodian_cleanup")
 
     def test_sagemaker_endpoint_config_marked_for_op(self):
-        session_factory = self.replay_flight_data(
-            "test_sagemaker_endpoint_config_marked_for_op"
-        )
+        session_factory = self.replay_flight_data("test_sagemaker_endpoint_config_marked_for_op")
         p = self.load_policy(
             {
                 "name": "marked-failed-endpoint-config-delete",
@@ -781,15 +727,13 @@ class TestSagemakerEndpointConfig(BaseTest):
                 "name": "sagemaker-kms-alias",
                 "resource": "aws.sagemaker-endpoint-config",
                 "filters": [
-                    {
-                        "EndpointConfigName": "kms-test"
-                    },
+                    {"EndpointConfigName": "kms-test"},
                     {
                         "type": "kms-key",
                         "key": "c7n:AliasName",
                         "value": "alias/skunk/trails",
-                    }
-                ]
+                    },
+                ],
             },
             session_factory=session_factory,
         )

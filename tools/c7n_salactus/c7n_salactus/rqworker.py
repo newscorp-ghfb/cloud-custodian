@@ -37,24 +37,27 @@ def decode_ext(code, data):
 
 def encode_ext(obj):
     if isinstance(obj, datetime.datetime):
-        components = (obj.year, obj.month, obj.day, obj.hour, obj.minute,
-                      obj.second, obj.microsecond)
+        components = (
+            obj.year,
+            obj.month,
+            obj.day,
+            obj.hour,
+            obj.minute,
+            obj.second,
+            obj.microsecond,
+        )
         data = msgpack.ExtType(PackDate_ExtType, msgpack.packb(components))
         return data
-    return msgpack.ExtType(
-        PackObj_ExtType,
-        cPickle.dumps(obj, protocol=cPickle.HIGHEST_PROTOCOL))
+    return msgpack.ExtType(PackObj_ExtType, cPickle.dumps(obj, protocol=cPickle.HIGHEST_PROTOCOL))
 
 
 def dumps(o):
-    return compress(
-        msgpack.packb(o, default=encode_ext, use_bin_type=True))
+    return compress(msgpack.packb(o, default=encode_ext, use_bin_type=True))
 
 
 def loads(s):
     try:
-        return msgpack.unpackb(
-            decompress(s), ext_hook=decode_ext, encoding='utf-8')
+        return msgpack.unpackb(decompress(s), ext_hook=decode_ext, encoding='utf-8')
     except Exception:
         # we queue work occassionally from lambdas or other systems not using
         # the worker class

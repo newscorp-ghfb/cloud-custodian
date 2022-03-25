@@ -101,7 +101,6 @@ class KeyVault(ArmResourceManager):
 
 @KeyVault.filter_registry.register('firewall-rules')
 class KeyVaultFirewallRulesFilter(FirewallRulesFilter):
-
     def __init__(self, data, manager=None):
         super(KeyVaultFirewallRulesFilter, self).__init__(data, manager)
         self._log = log
@@ -148,6 +147,7 @@ class KeyVaultFirewallBypassFilter(FirewallBypassFilter):
                 list:
                     - AzureServices
     """
+
     schema = FirewallBypassFilter.schema(['AzureServices'])
 
     def _query_bypass(self, resource):
@@ -169,14 +169,18 @@ class KeyVaultFirewallBypassFilter(FirewallBypassFilter):
 
 @KeyVault.filter_registry.register('whitelist')
 class WhiteListFilter(Filter):
-    schema = type_schema('whitelist', rinherit=None,
-                         required=['key'],
-                         key={'type': 'string'},
-                         users={'type': 'array'},
-                         permissions={
-                             'certificates': {'type': 'array'},
-                             'secrets': {'type': 'array'},
-                             'keys': {'type': 'array'}})
+    schema = type_schema(
+        'whitelist',
+        rinherit=None,
+        required=['key'],
+        key={'type': 'string'},
+        users={'type': 'array'},
+        permissions={
+            'certificates': {'type': 'array'},
+            'secrets': {'type': 'array'},
+            'keys': {'type': 'array'},
+        },
+    )
     GRAPH_PROVIDED_KEYS = ['displayName', 'aadType', 'principalName']
     graph_client = None
 
@@ -194,16 +198,18 @@ class WhiteListFilter(Filter):
             # Retrieve access policies for the keyvaults
             access_policies = []
             for policy in vault.properties.access_policies:
-                access_policies.append({
-                    'tenantId': policy.tenant_id,
-                    'objectId': policy.object_id,
-                    'applicationId': policy.application_id,
-                    'permissions': {
-                        'keys': policy.permissions.keys,
-                        'secrets': policy.permissions.secrets,
-                        'certificates': policy.permissions.certificates
+                access_policies.append(
+                    {
+                        'tenantId': policy.tenant_id,
+                        'objectId': policy.object_id,
+                        'applicationId': policy.application_id,
+                        'permissions': {
+                            'keys': policy.permissions.keys,
+                            'secrets': policy.permissions.secrets,
+                            'certificates': policy.permissions.certificates,
+                        },
                     }
-                })
+                )
             # Enhance access policies with displayName, aadType and
             # principalName if necessary
             if self.key in self.GRAPH_PROVIDED_KEYS:
@@ -246,8 +252,7 @@ class WhiteListFilter(Filter):
         object_ids = [p['objectId'] for p in access_policies]
         # GraphHelper.get_principal_dictionary returns empty AADObject if not found with graph
         # or if graph is not available.
-        principal_dics = GraphHelper.get_principal_dictionary(
-            self.graph_client, object_ids, True)
+        principal_dics = GraphHelper.get_principal_dictionary(self.graph_client, object_ids, True)
 
         for policy in access_policies:
             aad_object = principal_dics[policy['objectId']]
@@ -262,29 +267,30 @@ class WhiteListFilter(Filter):
 @KeyVault.action_registry.register('update-access-policy')
 class KeyVaultUpdateAccessPolicyAction(AzureBaseAction):
     """
-        Adds Get and List key access policy to all keyvaults
+    Adds Get and List key access policy to all keyvaults
 
-            .. code-block:: yaml
+        .. code-block:: yaml
 
-              policies:
-                - name: azure-keyvault-update-access-policies
-                  resource: azure.keyvault
-                  description: |
-                    Add key get and list to all keyvault access policies
-                  actions:
-                   - type: update-access-policy
-                     operation: add
-                     access-policies:
-                      - tenant-id: 00000000-0000-0000-0000-000000000000
-                        object-id: 11111111-1111-1111-1111-111111111111
-                        permissions:
-                          keys:
-                            - Get
-                            - List
+          policies:
+            - name: azure-keyvault-update-access-policies
+              resource: azure.keyvault
+              description: |
+                Add key get and list to all keyvault access policies
+              actions:
+               - type: update-access-policy
+                 operation: add
+                 access-policies:
+                  - tenant-id: 00000000-0000-0000-0000-000000000000
+                    object-id: 11111111-1111-1111-1111-111111111111
+                    permissions:
+                      keys:
+                        - Get
+                        - List
 
     """
 
-    schema = type_schema('update-access-policy',
+    schema = type_schema(
+        'update-access-policy',
         required=['operation', 'access-policies'],
         operation={'type': 'string', 'enum': ['add', 'replace']},
         **{
@@ -298,11 +304,12 @@ class KeyVaultUpdateAccessPolicyAction(AzureBaseAction):
                         'type': 'object',
                         'keys': {'type': 'array', 'items': {'type': 'string'}},
                         'secrets': {'type': 'array', 'items': {'type': 'string'}},
-                        'certificates': {'type': 'array', 'items': {'type': 'string'}}
-                    }
-                }
+                        'certificates': {'type': 'array', 'items': {'type': 'string'}},
+                    },
+                },
             }
-        })
+        }
+    )
 
     def _prepare_processing(self):
         self.client = self.manager.get_client()
@@ -318,7 +325,7 @@ class KeyVaultUpdateAccessPolicyAction(AzureBaseAction):
                 resource_group_name=resource['resourceGroup'],
                 vault_name=resource['name'],
                 operation_kind=operation,
-                properties=access_policies
+                properties=access_policies,
             )
         except Exception as error:
             log.warning(error)
@@ -326,8 +333,12 @@ class KeyVaultUpdateAccessPolicyAction(AzureBaseAction):
     @staticmethod
     def _transform_access_policies(access_policies):
         policies = [
-            {"objectId": i['object-id'],
+            {
+                "objectId": i['object-id'],
                 "tenantId": i['tenant-id'],
-                "permissions": i['permissions']} for i in access_policies]
+                "permissions": i['permissions'],
+            }
+            for i in access_policies
+        ]
 
         return {"accessPolicies": policies}

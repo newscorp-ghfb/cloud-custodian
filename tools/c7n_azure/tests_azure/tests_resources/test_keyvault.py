@@ -1,9 +1,12 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
 from ..azure_common import BaseTest, arm_template, cassette_name
-from c7n_azure.resources.key_vault import (KeyVaultUpdateAccessPolicyAction, WhiteListFilter,
-                                           KeyVaultFirewallRulesFilter,
-                                           KeyVaultFirewallBypassFilter)
+from c7n_azure.resources.key_vault import (
+    KeyVaultUpdateAccessPolicyAction,
+    WhiteListFilter,
+    KeyVaultFirewallRulesFilter,
+    KeyVaultFirewallBypassFilter,
+)
 from c7n_azure.session import Session
 from c7n_azure.utils import GraphHelper
 from mock import patch, Mock
@@ -22,34 +25,37 @@ class KeyVaultTest(BaseTest):
 
     def test_key_vault_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy({
-                'name': 'test-key-vault',
-                'resource': 'azure.keyvault',
-                'filters': [
-                    {'type': 'whitelist',
-                     'key': 'test'}
-                ],
-                'actions': [
-                    {'type': 'update-access-policy',
-                     'operation': 'add',
-                     'access-policies': []}
-                ]
-            }, validate=True)
+            p = self.load_policy(
+                {
+                    'name': 'test-key-vault',
+                    'resource': 'azure.keyvault',
+                    'filters': [{'type': 'whitelist', 'key': 'test'}],
+                    'actions': [
+                        {'type': 'update-access-policy', 'operation': 'add', 'access-policies': []}
+                    ],
+                },
+                validate=True,
+            )
             self.assertTrue(p)
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_find_by_name(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cckeyvault1*'}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cckeyvault1*',
+                    }
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -83,22 +89,30 @@ class KeyVaultTest(BaseTest):
     @pytest.mark.skiplive
     def test_whitelist(self):
         """Tests basic whitelist functionality"""
-        p = self.load_policy({
-            'name': 'test-key-vault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cckeyvault1*'},
-                {'not': [
-                    {'type': 'whitelist',
-                     'key': 'principalName',
-                     'users': ['account1@sample.com']}
-                ]}
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-key-vault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cckeyvault1*',
+                    },
+                    {
+                        'not': [
+                            {
+                                'type': 'whitelist',
+                                'key': 'principalName',
+                                'users': ['account1@sample.com'],
+                            }
+                        ]
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
@@ -107,22 +121,30 @@ class KeyVaultTest(BaseTest):
         """Tests that a keyvault with 0 access policies is processed properly
         and doesn't raise an exception.
         """
-        p = self.load_policy({
-            'name': 'test-key-vault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cckeyvault2*'},
-                {'not': [
-                    {'type': 'whitelist',
-                     'key': 'principalName',
-                     'users': ['account1@sample.com']}
-                ]}
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-key-vault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cckeyvault2*',
+                    },
+                    {
+                        'not': [
+                            {
+                                'type': 'whitelist',
+                                'key': 'principalName',
+                                'users': ['account1@sample.com'],
+                            }
+                        ]
+                    },
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 0)
 
@@ -130,33 +152,41 @@ class KeyVaultTest(BaseTest):
     @patch.object(GraphHelper, 'get_principal_dictionary')
     def test_whitelist_not_authorized(self, get_principal_dictionary):
         """Tests that an exception is thrown when both:
-          The Microsoft Graph call fails.
+        The Microsoft Graph call fails.
 
-          This is mocked because it is impractical to have
-          identities with varying levels of graph access for
-          live test runs or recordings"""
+        This is mocked because it is impractical to have
+        identities with varying levels of graph access for
+        live test runs or recordings"""
 
         mock_response = Mock(spec=Response)
         mock_response.status_code = 403
         mock_response.reason = 'forbidden'
         get_principal_dictionary.side_effect = HttpResponseError(response=mock_response)
 
-        p = self.load_policy({
-            'name': 'test-key-vault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value_type': 'normalize',
-                 'value': 'cckeyvault1*'},
-                {'not': [
-                    {'type': 'whitelist',
-                     'key': 'principalName',
-                     'users': ['account1@sample.com']}
-                ]}
-            ]
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-key-vault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {
+                        'type': 'value',
+                        'key': 'name',
+                        'op': 'glob',
+                        'value_type': 'normalize',
+                        'value': 'cckeyvault1*',
+                    },
+                    {
+                        'not': [
+                            {
+                                'type': 'whitelist',
+                                'key': 'principalName',
+                                'users': ['account1@sample.com'],
+                            }
+                        ]
+                    },
+                ],
+            }
+        )
 
         with self.assertRaises(HttpResponseError) as e:
             p.run()
@@ -164,163 +194,186 @@ class KeyVaultTest(BaseTest):
         self.assertEqual(403, e.exception.status_code)
 
     def test_update_access_policy_action(self):
-        with patch(self._get_key_vault_client_string() + '.update_access_policy')\
-                as access_policy_action_mock:
-            p = self.load_policy({
-                'name': 'test-azure-keyvault',
-                'resource': 'azure.keyvault',
-                'filters': [
-                    {'type': 'value',
-                     'key': 'name',
-                     'op': 'glob',
-                     'value_type': 'normalize',
-                     'value': 'cckeyvault1*'}],
-                'actions': [
-                    {'type': 'update-access-policy',
-                     'operation': 'replace',
-                     'access-policies': [{
-                         'tenant-id': '00000000-0000-0000-0000-000000000000',
-                         'object-id': '11111111-1111-1111-1111-111111111111',
-                         'permissions': {'keys': ['Get']}}]}]
-            })
+        with patch(
+            self._get_key_vault_client_string() + '.update_access_policy'
+        ) as access_policy_action_mock:
+            p = self.load_policy(
+                {
+                    'name': 'test-azure-keyvault',
+                    'resource': 'azure.keyvault',
+                    'filters': [
+                        {
+                            'type': 'value',
+                            'key': 'name',
+                            'op': 'glob',
+                            'value_type': 'normalize',
+                            'value': 'cckeyvault1*',
+                        }
+                    ],
+                    'actions': [
+                        {
+                            'type': 'update-access-policy',
+                            'operation': 'replace',
+                            'access-policies': [
+                                {
+                                    'tenant-id': '00000000-0000-0000-0000-000000000000',
+                                    'object-id': '11111111-1111-1111-1111-111111111111',
+                                    'permissions': {'keys': ['Get']},
+                                }
+                            ],
+                        }
+                    ],
+                }
+            )
 
             p.run()
             access_policy_action_mock.assert_called()
 
     def test_transform_access_policies(self):
-        mock_access_policies = [{"object-id": "mockObjectId",
-                                 "tenant-id": "mockTenantId",
-                                 "permissions": {"keys": ["Get"]}}]
+        mock_access_policies = [
+            {
+                "object-id": "mockObjectId",
+                "tenant-id": "mockTenantId",
+                "permissions": {"keys": ["Get"]},
+            }
+        ]
         transformed_access_policies = KeyVaultUpdateAccessPolicyAction._transform_access_policies(
-            mock_access_policies).get("accessPolicies")[0]
+            mock_access_policies
+        ).get("accessPolicies")[0]
         self.assertTrue("objectId" in transformed_access_policies)
         self.assertTrue("tenantId" in transformed_access_policies)
         self.assertTrue("permissions" in transformed_access_policies)
 
     def _get_key_vault_client_string(self):
-        client = local_session(Session) \
-            .client('azure.mgmt.keyvault.KeyVaultManagementClient').vaults
+        client = (
+            local_session(Session).client('azure.mgmt.keyvault.KeyVaultManagementClient').vaults
+        )
         return client.__module__ + '.' + client.__class__.__name__
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_include(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'include': ['1.0.0.0']}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {'type': 'firewall-rules', 'include': ['1.0.0.0']},
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_not_include_all_ranges(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'include': ['1.0.0.0', '127.0.0.1']}],
-        }, validate=True)
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {'type': 'firewall-rules', 'include': ['1.0.0.0', '127.0.0.1']},
+                ],
+            },
+            validate=True,
+        )
         resources = p.run()
         self.assertEqual(0, len(resources))
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_include_cidr(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'include': ['128.0.0.0/1']}],
-        }, validate=True)
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {'type': 'firewall-rules', 'include': ['128.0.0.0/1']},
+                ],
+            },
+            validate=True,
+        )
         resources = p.run()
         self.assertEqual(1, len(resources))
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_not_include_cidr(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'include': ['127.0.0.0/8']}],
-        }, validate=True)
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {'type': 'firewall-rules', 'include': ['127.0.0.0/8']},
+                ],
+            },
+            validate=True,
+        )
         resources = p.run()
         self.assertEqual(0, len(resources))
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_equal(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'equal': ['0.0.0.0-126.255.255.255', '128.0.0.0-255.255.255.255']}],
-        }, validate=True)
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {
+                        'type': 'firewall-rules',
+                        'equal': ['0.0.0.0-126.255.255.255', '128.0.0.0-255.255.255.255'],
+                    },
+                ],
+            },
+            validate=True,
+        )
         resources = p.run()
         self.assertEqual(1, len(resources))
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_rules_not_equal(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'value',
-                 'key': 'name',
-                 'op': 'glob',
-                 'value': 'cckeyvault1*'},
-                {'type': 'firewall-rules',
-                 'equal': ['0.0.0.0-126.255.255.255', '128.0.0.0-255.255.255.254']}],
-        }, validate=True)
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cckeyvault1*'},
+                    {
+                        'type': 'firewall-rules',
+                        'equal': ['0.0.0.0-126.255.255.255', '128.0.0.0-255.255.255.254'],
+                    },
+                ],
+            },
+            validate=True,
+        )
         resources = p.run()
         self.assertEqual(0, len(resources))
 
     @arm_template('keyvault.json')
     @cassette_name('common')
     def test_firewall_bypass(self):
-        p = self.load_policy({
-            'name': 'test-azure-keyvault',
-            'resource': 'azure.keyvault',
-            'filters': [
-                {'type': 'firewall-bypass',
-                 'mode': 'equal',
-                 'list': ['AzureServices']}],
-        })
+        p = self.load_policy(
+            {
+                'name': 'test-azure-keyvault',
+                'resource': 'azure.keyvault',
+                'filters': [
+                    {'type': 'firewall-bypass', 'mode': 'equal', 'list': ['AzureServices']}
+                ],
+            }
+        )
         resources = p.run()
         self.assertEqual(1, len(resources))
 
 
 class KeyVaultFirewallFilterTest(BaseTest):
-
     def test_query_empty_network_acl(self):
         resource = {'properties': {}}
         expected = IPSet(['0.0.0.0/0'])
@@ -332,9 +385,14 @@ class KeyVaultFirewallFilterTest(BaseTest):
         self.assertEqual(expected, self._get_filter()._query_rules(resource))
 
     def test_query_default_action_deny(self):
-        resource = {'properties': {'networkAcls': {'defaultAction': 'Deny',
-                                                   'ipRules': [{'value': '10.0.0.0/16'},
-                                                               {'value': '8.8.8.8'}]}}}
+        resource = {
+            'properties': {
+                'networkAcls': {
+                    'defaultAction': 'Deny',
+                    'ipRules': [{'value': '10.0.0.0/16'}, {'value': '8.8.8.8'}],
+                }
+            }
+        }
         expected = IPSet(['8.8.8.8', '10.0.0.0/16'])
         self.assertEqual(expected, self._get_filter()._query_rules(resource))
 
@@ -349,8 +407,7 @@ class KeyVaultFirewallBypassFilterTest(BaseTest):
         [{}, []],
         [{'networkAcls': {'defaultAction': 'Allow', 'bypass': ''}}, ['AzureServices']],
         [{'networkAcls': {'defaultAction': 'Deny', 'bypass': ''}}, []],
-        [{'networkAcls': {'defaultAction': 'Deny', 'bypass': 'AzureServices'}},
-         ['AzureServices']],
+        [{'networkAcls': {'defaultAction': 'Deny', 'bypass': 'AzureServices'}}, ['AzureServices']],
     ]
 
     @parameterized.expand(scenarios)
