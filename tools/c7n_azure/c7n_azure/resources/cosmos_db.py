@@ -78,9 +78,7 @@ class CosmosDBFirewallRulesFilter(FirewallRulesFilter):
     def _query_rules(self, resource):
         ip_rules = resource['properties'].get('ipRules', [])
 
-        is_virtual_network_filter_enabled = resource['properties'][
-            'isVirtualNetworkFilterEnabled'
-        ]
+        is_virtual_network_filter_enabled = resource['properties']['isVirtualNetworkFilterEnabled']
         if ip_rules == []:
             if is_virtual_network_filter_enabled:
                 return IPSet()
@@ -126,9 +124,7 @@ class CosmosFirewallBypassFilter(FirewallBypassFilter):
     def _query_bypass(self, resource):
         ip_rules = resource['properties'].get('ipRules', [])
 
-        is_virtual_network_filter_enabled = resource['properties'][
-            'isVirtualNetworkFilterEnabled'
-        ]
+        is_virtual_network_filter_enabled = resource['properties']['isVirtualNetworkFilterEnabled']
         if ip_rules == []:
             if is_virtual_network_filter_enabled:
                 return []
@@ -162,11 +158,7 @@ class CosmosDBChildResource(ChildResourceManager):
     @lru_cache()
     def get_cosmos_key(resource_group, resource_name, client, readonly=True):
         key_result = client.database_accounts.list_keys(resource_group, resource_name)
-        return (
-            key_result.primary_readonly_master_key
-            if readonly
-            else key_result.primary_master_key
-        )
+        return key_result.primary_readonly_master_key if readonly else key_result.primary_master_key
 
     def get_data_client(self, parent_resource):
         key = CosmosDBChildResource.get_cosmos_key(
@@ -213,11 +205,7 @@ class CosmosDBDatabase(CosmosDBChildResource):
 
         for d in databases:
             d.update(
-                {
-                    'c7n:document-endpoint': parent_resource.get('properties').get(
-                        'documentEndpoint'
-                    )
-                }
+                {'c7n:document-endpoint': parent_resource.get('properties').get('documentEndpoint')}
             )
 
         return databases
@@ -500,18 +488,14 @@ class CosmosDBRestoreStateAction(CosmosDBReplaceOfferAction):
     """
 
     schema = type_schema(
-        'restore-throughput-state',
-        required=['state-tag'],
-        **{'state-tag': {'type': 'string'}}
+        'restore-throughput-state', required=['state-tag'], **{'state-tag': {'type': 'string'}}
     )
 
     def _process_account_set(self, resources, account_client):
         try:
             parent_account = resources[0]['c7n:parent']
             tag_name = self.data.get('state-tag')
-            container_states_tag_value = TagHelper.get_tag_value(
-                parent_account, tag_name
-            )
+            container_states_tag_value = TagHelper.get_tag_value(parent_account, tag_name)
 
             if container_states_tag_value:
                 for state in container_states_tag_value.split(';'):
@@ -520,18 +504,12 @@ class CosmosDBRestoreStateAction(CosmosDBReplaceOfferAction):
                     # restoring throughput size with multiplier since it was stored to save space
                     container_throughput = int(state_data[1]) * THROUGHPUT_MULTIPLIER
 
-                    container = next(
-                        (c for c in resources if c['_rid'] == container_rid), None
-                    )
+                    container = next((c for c in resources if c['_rid'] == container_rid), None)
 
                     if container:
-                        self._process_resource(
-                            container, account_client, container_throughput
-                        )
+                        self._process_resource(container, account_client, container_throughput)
             else:
-                log.warning(
-                    'No tag {} on parent resource, {}.'.format(tag_name, parent_account)
-                )
+                log.warning('No tag {} on parent resource, {}.'.format(tag_name, parent_account))
 
         except Exception as e:
             log.warning(e)
@@ -569,9 +547,7 @@ class CosmosDBSaveStateAction(AzureBaseAction):
     """
 
     schema = type_schema(
-        'save-throughput-state',
-        required=['state-tag'],
-        **{'state-tag': {'type': 'string'}}
+        'save-throughput-state', required=['state-tag'], **{'state-tag': {'type': 'string'}}
     )
 
     TAG_VALUE_CHAR_LIMIT = 256
@@ -593,8 +569,7 @@ class CosmosDBSaveStateAction(AzureBaseAction):
         for resource in resources:
             # dividing by multiplier to reduce string size (throughputs are multiples of 100)
             throughput = int(
-                resource['c7n:offer']['content']['offerThroughput']
-                / THROUGHPUT_MULTIPLIER
+                resource['c7n:offer']['content']['offerThroughput'] / THROUGHPUT_MULTIPLIER
             )
 
             account_tag_values.append('{}:{}'.format(resource['_rid'], throughput))
@@ -626,25 +601,19 @@ class OfferHelper:
     def group_by_account(resources):
         # Group all resources by account because offers are queried per account not per collection
         account_sorted = sorted(resources, key=OfferHelper.account_key)
-        account_grouped = [
-            list(it) for k, it in groupby(account_sorted, OfferHelper.account_key)
-        ]
+        account_grouped = [list(it) for k, it in groupby(account_sorted, OfferHelper.account_key)]
 
         return account_grouped
 
     @staticmethod
-    def get_cosmos_data_client_for_account(
-        account_id, account_endpoint, manager, readonly=True
-    ):
+    def get_cosmos_data_client_for_account(account_id, account_endpoint, manager, readonly=True):
         key = CosmosDBChildResource.get_cosmos_key(
             ResourceIdParser.get_resource_group(account_id),
             ResourceIdParser.get_resource_name(account_id),
             manager.get_client(),
             readonly,
         )
-        data_client = CosmosClient(
-            url_connection=account_endpoint, auth={'masterKey': key}
-        )
+        data_client = CosmosClient(url_connection=account_endpoint, auth={'masterKey': key})
         return data_client
 
     @staticmethod
@@ -652,9 +621,7 @@ class OfferHelper:
         if not resources[0].get('c7n:offer'):
             offers = list(account_data_client.ReadOffers())
             for resource in resources:
-                offer = next(
-                    (o for o in offers if o['resource'] == resource['_self']), None
-                )
+                offer = next((o for o in offers if o['resource'] == resource['_self']), None)
                 resource['c7n:offer'] = offer
 
     @staticmethod
@@ -681,12 +648,8 @@ class OfferHelper:
                     readonly,
                 )
 
-                OfferHelper.populate_offer_data_for_account(
-                    resource_set, account_client
-                )
-                futures.append(
-                    w.submit(process_resource_set, resource_set, account_client)
-                )
+                OfferHelper.populate_offer_data_for_account(resource_set, account_client)
+                futures.append(w.submit(process_resource_set, resource_set, account_client))
 
             for f in as_completed(futures):
                 if f.exception():
@@ -797,8 +760,7 @@ class CosmosSetFirewallAction(SetFirewallAction):
 
         # IP rules
         existing_ip = [
-            ip_rule['ipAddressOrRange']
-            for ip_rule in resource['properties'].get('ipRules', [])
+            ip_rule['ipAddressOrRange'] for ip_rule in resource['properties'].get('ipRules', [])
         ]
         if self.data.get('ip-rules') is not None:
             ip_rules = self._build_ip_rules(existing_ip, self.data.get('ip-rules', []))
@@ -833,9 +795,7 @@ class CosmosSetFirewallAction(SetFirewallAction):
             )
 
         # Add VNET rules
-        existing_vnet = [
-            r['id'] for r in resource['properties'].get('virtualNetworkRules', [])
-        ]
+        existing_vnet = [r['id'] for r in resource['properties'].get('virtualNetworkRules', [])]
 
         if self.data.get('virtual-network-rules') is not None:
             vnet_rules = self._build_vnet_rules(
@@ -855,9 +815,7 @@ class CosmosSetFirewallAction(SetFirewallAction):
                 }
             )
 
-        resource['properties']['ipRules'] = [
-            {'ipAddressOrRange': ip} for ip in ip_rules
-        ]
+        resource['properties']['ipRules'] = [{'ipAddressOrRange': ip} for ip in ip_rules]
         resource['properties']['virtualNetworkRules'] = [
             VirtualNetworkRule(id=r) for r in vnet_rules
         ]

@@ -72,10 +72,7 @@ class SubnetFilter(net_filters.SubnetFilter):
         group_ids = set()
         for r in resources:
             group_ids.update(
-                [
-                    s['SubnetIdentifier']
-                    for s in self.groups[r['CacheSubnetGroupName']]['Subnets']
-                ]
+                [s['SubnetIdentifier'] for s in self.groups[r['CacheSubnetGroupName']]['Subnets']]
             )
         return group_ids
 
@@ -141,9 +138,7 @@ class DeleteElastiCacheCluster(BaseAction):
                 )
                 self.log.debug("Taking final snapshot of %s", cluster['CacheClusterId'])
             else:
-                self.log.debug(
-                    "Skipping final snapshot of %s", cluster['CacheClusterId']
-                )
+                self.log.debug("Skipping final snapshot of %s", cluster['CacheClusterId'])
             client.delete_cache_cluster(**params)
             self.log.info('Deleted ElastiCache cluster: %s', cluster['CacheClusterId'])
 
@@ -153,14 +148,10 @@ class DeleteElastiCacheCluster(BaseAction):
                 'RetainPrimaryCluster': False,
             }
             if not skip:
-                params['FinalSnapshotIdentifier'] = snapshot_identifier(
-                    'Final', replication_group
-                )
+                params['FinalSnapshotIdentifier'] = snapshot_identifier('Final', replication_group)
             client.delete_replication_group(**params)
 
-            self.log.info(
-                'Deleted ElastiCache replication group: %s', replication_group
-            )
+            self.log.info('Deleted ElastiCache replication group: %s', replication_group)
 
 
 @actions.register('snapshot')
@@ -204,9 +195,7 @@ class SnapshotElastiCacheCluster(BaseAction):
 
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception creating cache cluster snapshot \n %s", f.exception()
-                    )
+                    self.log.error("Exception creating cache cluster snapshot \n %s", f.exception())
         return clusters
 
     def process_cluster_snapshot(self, client, cluster):
@@ -231,9 +220,7 @@ class ElasticacheClusterModifyVpcSecurityGroups(ModifyVpcSecurityGroupsAction):
     def process(self, clusters):
         replication_group_map = {}
         client = local_session(self.manager.session_factory).client('elasticache')
-        groups = super(ElasticacheClusterModifyVpcSecurityGroups, self).get_groups(
-            clusters
-        )
+        groups = super(ElasticacheClusterModifyVpcSecurityGroups, self).get_groups(clusters)
         for idx, c in enumerate(clusters):
             # build map of Replication Groups to Security Groups
             replication_group_map[c['ReplicationGroupId']] = groups[idx]
@@ -311,9 +298,7 @@ class ElastiCacheSnapshotAge(AgeFilter):
             return v
 
         # Return the earliest of the node snaphot creation times.
-        return min(
-            [to_datetime(ns['SnapshotCreateTime']) for ns in snapshot['NodeSnapshots']]
-        )
+        return min([to_datetime(ns['SnapshotCreateTime']) for ns in snapshot['NodeSnapshots']])
 
 
 @ElastiCacheSnapshot.action_registry.register('delete')
@@ -347,14 +332,10 @@ class DeleteElastiCacheSnapshot(BaseAction):
             futures = []
             client = local_session(self.manager.session_factory).client('elasticache')
             for snapshot_set in chunks(reversed(snapshots), size=50):
-                futures.append(
-                    w.submit(self.process_snapshot_set, client, snapshot_set)
-                )
+                futures.append(w.submit(self.process_snapshot_set, client, snapshot_set))
                 for f in as_completed(futures):
                     if f.exception():
-                        self.log.error(
-                            "Exception deleting snapshot set \n %s", f.exception()
-                        )
+                        self.log.error("Exception deleting snapshot set \n %s", f.exception())
         return snapshots
 
     def process_snapshot_set(self, client, snapshots_set):
@@ -451,9 +432,7 @@ class CopyClusterTags(BaseAction):
 
 def _cluster_eligible_for_snapshot(cluster):
     # added regex search to filter unsupported cachenode types
-    return cluster['Engine'] != 'memcached' and not TTYPE.match(
-        cluster['CacheNodeType']
-    )
+    return cluster['Engine'] != 'memcached' and not TTYPE.match(cluster['CacheNodeType'])
 
 
 @resources.register('elasticache-group')
@@ -509,9 +488,7 @@ class DeleteReplicationGroup(BaseAction):
         for r in resources:
             params = {'ReplicationGroupId': r['ReplicationGroupId']}
             if self.data.get('snapshot', False):
-                params.update(
-                    {'FinalSnapshotIdentifier': r['ReplicationGroupId'] + '-snapshot'}
-                )
+                params.update({'FinalSnapshotIdentifier': r['ReplicationGroupId'] + '-snapshot'})
             self.manager.retry(
                 client.delete_replication_group,
                 **params,

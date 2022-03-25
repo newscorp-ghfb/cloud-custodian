@@ -82,11 +82,7 @@ class CloudTrail(BaseTest):
 
         if self.recording:
             time.sleep(1)
-        trails = (
-            factory()
-            .client('cloudtrail')
-            .describe_trails(trailNameList=['skunk-trails'])
-        )
+        trails = factory().client('cloudtrail').describe_trails(trailNameList=['skunk-trails'])
         self.assertEqual(resources[0]['LogFileValidationEnabled'], False)
         self.assertEqual(trails['trailList'][0]['LogFileValidationEnabled'], True)
 
@@ -186,9 +182,7 @@ class CloudTrail(BaseTest):
             {
                 "name": "cloudtrail-resource",
                 "resource": "cloudtrail",
-                "filters": [
-                    {"not": [{"type": "value", "key": "Name", "value": "skunk-trails"}]}
-                ],
+                "filters": [{"not": [{"type": "value", "key": "Name", "value": "skunk-trails"}]}],
             },
             session_factory=factory,
         )

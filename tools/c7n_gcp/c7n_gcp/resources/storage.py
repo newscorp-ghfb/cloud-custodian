@@ -23,9 +23,7 @@ class Bucket(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'bucket': resource_info['bucket_name']}
-            )
+            return client.execute_command('get', {'bucket': resource_info['bucket_name']})
 
 
 @Bucket.filter_registry.register('iam-policy')
@@ -82,7 +80,5 @@ class BucketLevelAccess(MethodAction):
             'bucket': resource['name'],
             'fields': 'iamConfiguration',
             'projection': 'noAcl',  # not documented but
-            'body': {
-                'iamConfiguration': {'uniformBucketLevelAccess': {'enabled': enabled}}
-            },
+            'body': {'iamConfiguration': {'uniformBucketLevelAccess': {'enabled': enabled}}},
         }

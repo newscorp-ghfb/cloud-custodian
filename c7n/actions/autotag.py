@@ -65,9 +65,7 @@ class AutoTagUser(EventAction):
     )
 
     def get_permissions(self):
-        return self.manager.action_registry.get('tag')(
-            {}, self.manager
-        ).get_permissions()
+        return self.manager.action_registry.get('tag')({}, self.manager).get_permissions()
 
     def validate(self):
         if self.manager.data.get('mode', {}).get('type') != 'cloudtrail':
@@ -85,9 +83,7 @@ class AutoTagUser(EventAction):
     def get_tag_value(self, event):
         event = event['detail']
         utype = event['userIdentity']['type']
-        if utype not in self.data.get(
-            'user-type', ['AssumedRole', 'IAMUser', 'FederatedUser']
-        ):
+        if utype not in self.data.get('user-type', ['AssumedRole', 'IAMUser', 'FederatedUser']):
             return
 
         user = None
@@ -97,9 +93,7 @@ class AutoTagUser(EventAction):
         elif utype == "AssumedRole" or utype == "FederatedUser":
             user = event['userIdentity']['arn']
             prefix, user = user.rsplit('/', 1)
-            principal_id_value = (
-                event['userIdentity'].get('principalId', '').split(':')[0]
-            )
+            principal_id_value = event['userIdentity'].get('principalId', '').split(':')[0]
             # instance role
             if user.startswith('i-'):
                 return

@@ -109,9 +109,7 @@ class TransparentDataEncryptionFilter(Filter):
         }
     )
 
-    log = logging.getLogger(
-        'custodian.azure.sqldatabase.transparent-data-encryption-filter'
-    )
+    log = logging.getLogger('custodian.azure.sqldatabase.transparent-data-encryption-filter')
 
     def __init__(self, data, manager=None):
         super(TransparentDataEncryptionFilter, self).__init__(data, manager)
@@ -141,9 +139,9 @@ class TransparentDataEncryptionFilter(Filter):
                     resource['resourceGroup'], server_name, resource['name'], "current"
                 )
 
-                resource['properties']['transparentDataEncryption'] = tde.serialize(
-                    True
-                ).get('properties', {})
+                resource['properties']['transparentDataEncryption'] = tde.serialize(True).get(
+                    'properties', {}
+                )
 
             required_status = 'Enabled' if self.enabled else 'Disabled'
 
@@ -223,9 +221,7 @@ class DataMaskingPolicyFilter(Filter):
                 )
 
                 if dmr:
-                    resource['c7n:data-masking-policy'] = dmr.serialize(True).get(
-                        'properties', {}
-                    )
+                    resource['c7n:data-masking-policy'] = dmr.serialize(True).get('properties', {})
                 else:
                     resource['c7n:data-masking-policy'] = {}
 
@@ -288,9 +284,7 @@ class BackupRetentionPolicyHelper:
         ) = BackupRetentionPolicyHelper.get_backup_retention_policy_context(database)
 
         try:
-            response = get_operation(
-                resource_group_name, server_name, database_name, policy
-            )
+            response = get_operation(resource_group_name, server_name, database_name, policy)
         except ResourceNotFoundError:
             return None
         except AzureError as e:
@@ -309,9 +303,7 @@ class BackupRetentionPolicyHelper:
 
 class BackupRetentionPolicyBaseFilter(Filter, metaclass=abc.ABCMeta):
 
-    schema = type_schema(
-        'backup-retention-policy', **{'op': {'enum': list(scalar_ops.keys())}}
-    )
+    schema = type_schema('backup-retention-policy', **{'op': {'enum': list(scalar_ops.keys())}})
 
     def __init__(self, operations_property, retention_limit, data, manager=None):
         super(BackupRetentionPolicyBaseFilter, self).__init__(data, manager)
@@ -352,9 +344,7 @@ class BackupRetentionPolicyBaseFilter(Filter, metaclass=abc.ABCMeta):
         if retention_policy is None:
             return self._perform_op(0, self.retention_limit)
         retention = self.get_retention_from_backup_policy(retention_policy)
-        return retention is not None and self._perform_op(
-            retention, self.retention_limit
-        )
+        return retention is not None and self._perform_op(retention, self.retention_limit)
 
     def _perform_op(self, a, b):
         op = scalar_ops.get(self.data.get('op', 'eq'))
@@ -444,22 +434,16 @@ class LongTermBackupRetentionPolicyFilter(BackupRetentionPolicyBaseFilter):
         rinherit=BackupRetentionPolicyBaseFilter.schema,
         **{
             'backup-type': {
-                'enum': list(
-                    [t.name for t in BackupRetentionPolicyHelper.LongTermBackupType]
-                )
+                'enum': list([t.name for t in BackupRetentionPolicyHelper.LongTermBackupType])
             },
             'retention-period': {'type': 'number'},
-            'retention-period-units': {
-                'enum': list([u.name for u in RetentionPeriod.Units])
-            },
+            'retention-period-units': {'enum': list([u.name for u in RetentionPeriod.Units])},
         }
     )
 
     def __init__(self, data, manager=None):
         retention_period = data.get('retention-period')
-        self.retention_period_units = RetentionPeriod.Units[
-            data.get('retention-period-units')
-        ]
+        self.retention_period_units = RetentionPeriod.Units[data.get('retention-period-units')]
 
         super(LongTermBackupRetentionPolicyFilter, self).__init__(
             BackupRetentionPolicyHelper.LONG_TERM_SQL_OPERATIONS,
@@ -484,10 +468,7 @@ class LongTermBackupRetentionPolicyFilter(BackupRetentionPolicyBaseFilter):
         except ValueError:
             return None
 
-        if (
-            actual_duration_units.iso8601_symbol
-            != self.retention_period_units.iso8601_symbol
-        ):
+        if actual_duration_units.iso8601_symbol != self.retention_period_units.iso8601_symbol:
             return None
         return actual_duration
 
@@ -501,9 +482,7 @@ class BackupRetentionPolicyBaseAction(AzureBaseAction, metaclass=abc.ABCMeta):
         self.client = self.manager.get_client()
 
     def _process_resource(self, database):
-        update_operation = getattr(
-            self.client, self.operations_property
-        ).begin_create_or_update
+        update_operation = getattr(self.client, self.operations_property).begin_create_or_update
 
         (
             resource_group_name,
@@ -518,9 +497,7 @@ class BackupRetentionPolicyBaseAction(AzureBaseAction, metaclass=abc.ABCMeta):
         ).result()
 
         # Update the cached version
-        database[
-            get_annotation_prefix(self.operations_property)
-        ] = new_retention_policy.as_dict()
+        database[get_annotation_prefix(self.operations_property)] = new_retention_policy.as_dict()
 
     @abc.abstractmethod
     def _get_parameters_for_new_retention_policy(self, database):
@@ -635,21 +612,15 @@ class LongTermBackupRetentionPolicyAction(BackupRetentionPolicyBaseAction):
             self.data.get('backup-type')
         ]
         retention_period = self.data['retention-period']
-        retention_period_units = RetentionPeriod.Units[
-            self.data['retention-period-units']
-        ]
+        retention_period_units = RetentionPeriod.Units[self.data['retention-period-units']]
         self.iso8601_duration = RetentionPeriod.iso8601_duration(
             retention_period, retention_period_units
         )
 
     def _get_parameters_for_new_retention_policy(self, database):
-        get_retention_policy_operation = getattr(
-            self.client, self.operations_property
-        ).get
-        current_retention_policy = (
-            BackupRetentionPolicyHelper.get_backup_retention_policy(
-                database, get_retention_policy_operation, self.operations_property
-            )
+        get_retention_policy_operation = getattr(self.client, self.operations_property).get
+        current_retention_policy = BackupRetentionPolicyHelper.get_backup_retention_policy(
+            database, get_retention_policy_operation, self.operations_property
         )
 
         new_retention_policy = (
@@ -657,9 +628,7 @@ class LongTermBackupRetentionPolicyAction(BackupRetentionPolicyBaseAction):
             if current_retention_policy
             else {}
         )
-        new_retention_policy[
-            self.backup_type.retention_property
-        ] = self.iso8601_duration
+        new_retention_policy[self.backup_type.retention_property] = self.iso8601_duration
 
         # Make sure that the week_of_year is set properly based on what
         # the yearly backup retention is. If this is not done, the API will
@@ -667,9 +636,7 @@ class LongTermBackupRetentionPolicyAction(BackupRetentionPolicyBaseAction):
         yearly_retention = new_retention_policy.get(
             BackupRetentionPolicyHelper.LongTermBackupType.yearly.retention_property
         )
-        week_of_year = new_retention_policy.get(
-            BackupRetentionPolicyHelper.WEEK_OF_YEAR
-        )
+        week_of_year = new_retention_policy.get(BackupRetentionPolicyHelper.WEEK_OF_YEAR)
         if yearly_retention is None:
             # Without a yearly retention, the week should be 0
             new_retention_policy[BackupRetentionPolicyHelper.WEEK_OF_YEAR] = 0
@@ -694,9 +661,9 @@ class LongTermBackupRetentionPolicyAction(BackupRetentionPolicyBaseAction):
         ]
         new_retention_policy = {key: retention_policy[key] for key in keys}
 
-        new_retention_policy[
+        new_retention_policy[BackupRetentionPolicyHelper.WEEK_OF_YEAR] = retention_policy[
             BackupRetentionPolicyHelper.WEEK_OF_YEAR
-        ] = retention_policy[BackupRetentionPolicyHelper.WEEK_OF_YEAR]
+        ]
         return new_retention_policy
 
 
@@ -749,9 +716,7 @@ class Resize(AzureBaseAction):
 
     def _process_resource(self, database):
         sku = Sku(capacity=self.capacity, tier=self.tier, name=self.tier)
-        max_size_bytes = (
-            self.max_size_bytes if not 0 else database['properties']['maxSizeBytes']
-        )
+        max_size_bytes = self.max_size_bytes if not 0 else database['properties']['maxSizeBytes']
         self.client.databases.begin_update(
             database['resourceGroup'],
             ResourceIdParser.get_resource_name(database['c7n:parent-id']),

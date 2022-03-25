@@ -43,9 +43,7 @@ class SchemaValidator:
         if not errors:
             return schema.check_unique(policy_data) or []
         try:
-            resp = schema.policy_error_scope(
-                schema.specific_error(errors[0]), policy_data
-            )
+            resp = schema.policy_error_scope(schema.specific_error(errors[0]), policy_data)
             name = (
                 isinstance(errors[0].instance, dict)
                 and errors[0].instance.get('name', 'unknown')
@@ -110,13 +108,10 @@ class PolicyLoader:
                 pr = "aws.%s" % pr
             if pr in missing:
                 raise PolicyValidationError(
-                    "Policy:%s references an unknown resource:%s"
-                    % (p['name'], p['resource'])
+                    "Policy:%s references an unknown resource:%s" % (p['name'], p['resource'])
                 )
 
-    def load_data(
-        self, policy_data, file_uri, validate=None, session_factory=None, config=None
-    ):
+    def load_data(self, policy_data, file_uri, validate=None, session_factory=None, config=None):
         self.structure.validate(policy_data)
 
         # Use passed in policy exec configuration or default on loader
@@ -138,9 +133,7 @@ class PolicyLoader:
                     "Failed to validate policy %s\n %s\n" % (errors[1], errors[0])
                 )
 
-        collection = self.collection_class.from_data(
-            policy_data, config, session_factory
-        )
+        collection = self.collection_class.from_data(policy_data, config, session_factory)
 
         # non schema validation of policies isnt optional its
         # become a lazy initialization point for resources.

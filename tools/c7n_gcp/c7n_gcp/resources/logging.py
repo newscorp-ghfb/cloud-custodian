@@ -38,11 +38,7 @@ class LogProjectSink(QueryResourceManager):
         def get(client, resource_info):
             return client.execute_query(
                 'get',
-                {
-                    'sinkName': 'projects/{project_id}/sinks/{name}'.format(
-                        **resource_info
-                    )
-                },
+                {'sinkName': 'projects/{project_id}/sinks/{name}'.format(**resource_info)},
             )
 
 
@@ -115,9 +111,5 @@ class LogExclusion(QueryResourceManager):
         def get(client, resource_info):
             return client.execute_query(
                 'get',
-                {
-                    'name': 'projects/{project_id}/exclusions/{name}'.format(
-                        **resource_info
-                    )
-                },
+                {'name': 'projects/{project_id}/exclusions/{name}'.format(**resource_info)},
             )

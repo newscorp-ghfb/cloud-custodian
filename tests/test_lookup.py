@@ -18,17 +18,13 @@ class LookupTest(BaseTest):
         self.assertEqual(number_schema, lookup_default_number['oneOf'][1])
         self.assertEqual(
             number_schema,
-            lookup_default_number['oneOf'][0]['oneOf'][0]['properties'][
-                'default-value'
-            ],
+            lookup_default_number['oneOf'][0]['oneOf'][0]['properties']['default-value'],
         )
 
         self.assertEqual(string_schema, lookup_default_string['oneOf'][1])
         self.assertEqual(
             string_schema,
-            lookup_default_string['oneOf'][0]['oneOf'][0]['properties'][
-                'default-value'
-            ],
+            lookup_default_string['oneOf'][0]['oneOf'][0]['properties']['default-value'],
         )
 
     def test_extract_no_lookup(self):

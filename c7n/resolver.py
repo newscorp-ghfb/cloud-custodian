@@ -45,9 +45,7 @@ class URIResolver:
         if response.info().get('Content-Encoding') != 'gzip':
             return response.read().decode('utf-8')
 
-        data = zlib.decompress(response.read(), ZIP_OR_GZIP_HEADER_DETECT).decode(
-            'utf8'
-        )
+        data = zlib.decompress(response.read(), ZIP_OR_GZIP_HEADER_DETECT).decode('utf8')
         return data
 
     def get_s3_uri(self, uri):
@@ -131,9 +129,7 @@ class ValuesFrom:
             format = format[1:]
 
         if format not in self.supported_formats:
-            raise ValueError(
-                "Unsupported format %s for url %s", format, self.data['url']
-            )
+            raise ValueError("Unsupported format %s for url %s", format, self.data['url'])
         contents = str(self.resolver.resolve(self.data['url']))
         return contents, format
 

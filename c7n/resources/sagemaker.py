@@ -35,9 +35,7 @@ class NotebookInstance(QueryResourceManager):
 
         def _augment(r):
             # List tags for the Notebook-Instance & set as attribute
-            tags = self.retry(client.list_tags, ResourceArn=r['NotebookInstanceArn'])[
-                'Tags'
-            ]
+            tags = self.retry(client.list_tags, ResourceArn=r['NotebookInstanceArn'])['Tags']
             r['Tags'] = tags
             return r
 
@@ -69,9 +67,7 @@ class SagemakerJob(QueryResourceManager):
 
     def __init__(self, ctx, data):
         super(SagemakerJob, self).__init__(ctx, data)
-        self.queries = QueryFilter.parse(
-            self.data.get('query', [{'StatusEquals': 'InProgress'}])
-        )
+        self.queries = QueryFilter.parse(self.data.get('query', [{'StatusEquals': 'InProgress'}]))
 
     def resources(self, query=None):
         for q in self.queries:
@@ -115,9 +111,7 @@ class SagemakerTransformJob(QueryResourceManager):
 
     def __init__(self, ctx, data):
         super(SagemakerTransformJob, self).__init__(ctx, data)
-        self.queries = QueryFilter.parse(
-            self.data.get('query', [{'StatusEquals': 'InProgress'}])
-        )
+        self.queries = QueryFilter.parse(self.data.get('query', [{'StatusEquals': 'InProgress'}]))
 
     def resources(self, query=None):
         for q in self.queries:
@@ -132,9 +126,7 @@ class SagemakerTransformJob(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(j):
-            tags = self.retry(client.list_tags, ResourceArn=j['TransformJobArn'])[
-                'Tags'
-            ]
+            tags = self.retry(client.list_tags, ResourceArn=j['TransformJobArn'])['Tags']
             j['Tags'] = tags
             return j
 
@@ -184,9 +176,7 @@ class QueryFilter:
         self.value = list(self.data.values())[0]
 
         if self.key not in self.JOB_FILTERS and not self.key.startswith('tag:'):
-            raise PolicyValidationError(
-                "Job Query Filter invalid filter name %s" % (self.data)
-            )
+            raise PolicyValidationError("Job Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(
@@ -254,9 +244,7 @@ class SagemakerEndpointConfig(QueryResourceManager):
         client = local_session(self.session_factory).client('sagemaker')
 
         def _augment(e):
-            tags = self.retry(client.list_tags, ResourceArn=e['EndpointConfigArn'])[
-                'Tags'
-            ]
+            tags = self.retry(client.list_tags, ResourceArn=e['EndpointConfigArn'])['Tags']
             e['Tags'] = tags
             return e
 
@@ -485,9 +473,7 @@ class StartNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.start_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName']
-                )
+                client.start_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -524,9 +510,7 @@ class StopNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.stop_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName']
-                )
+                client.stop_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -566,9 +550,7 @@ class DeleteNotebookInstance(BaseAction):
 
         for n in resources:
             try:
-                client.delete_notebook_instance(
-                    NotebookInstanceName=n['NotebookInstanceName']
-                )
+                client.delete_notebook_instance(NotebookInstanceName=n['NotebookInstanceName'])
             except client.exceptions.ResourceNotFound:
                 pass
 
@@ -705,9 +687,7 @@ class SagemakerEndpointConfigDelete(BaseAction):
         client = local_session(self.manager.session_factory).client('sagemaker')
         for e in endpoints:
             try:
-                client.delete_endpoint_config(
-                    EndpointConfigName=e['EndpointConfigName']
-                )
+                client.delete_endpoint_config(EndpointConfigName=e['EndpointConfigName'])
             except client.exceptions.ResourceNotFound:
                 pass
 

@@ -157,13 +157,9 @@ def validate(config):
 @click.option('--tag', help='filter accounts by tag')
 @click.option('--account', '-a', help='scan only the given accounts', multiple=True)
 @click.option('--bucket', '-b', help='scan only the given buckets', multiple=True)
-@click.option(
-    '--not-account', help='exclude the given accounts from scan', multiple=True
-)
+@click.option('--not-account', help='exclude the given accounts from scan', multiple=True)
 @click.option('--not-bucket', help='exclude the given buckets from scan', multiple=True)
-@click.option(
-    '--debug', is_flag=True, default=False, help='synchronous scanning, no workers'
-)
+@click.option('--debug', is_flag=True, default=False, help='synchronous scanning, no workers')
 @click.option('--region', multiple=True, help='limit scanning to specified regions')
 def run(config, tag, bucket, account, not_bucket, not_account, debug, region):
     """Run across a set of accounts and buckets."""
@@ -198,9 +194,9 @@ def run(config, tag, bucket, account, not_bucket, not_account, debug, region):
                 account_info['visitors'] = data['visitors']
             if 'object-reporting' in data and 'object-reporting' not in account_info:
                 account_info['object-reporting'] = data['object-reporting']
-                account_info['object-reporting'][
-                    'record-prefix'
-                ] = datetime.utcnow().strftime('%Y/%m/%d')
+                account_info['object-reporting']['record-prefix'] = datetime.utcnow().strftime(
+                    '%Y/%m/%d'
+                )
             if bucket:
                 account_info['buckets'] = bucket
             if not_bucket:
@@ -319,9 +315,7 @@ def format_accounts_plain(accounts, fh):
 @click.option('--config', '-c', help="config file for accounts")
 @click.option('--tag', help="filter tags by account")
 @click.option('--tagprefix', help="group accounts by tag prefix")
-@click.option(
-    '--region', '-r', help="only consider buckets from the given region", multiple=True
-)
+@click.option('--region', '-r', help="only consider buckets from the given region", multiple=True)
 @click.option(
     '--not-region',
     help="only consider buckets not from the given region",
@@ -667,8 +661,7 @@ def inspect_partitions(bucket):
 
     keys_scanned = sum(keyset)
     click.echo(
-        "Found %d partitions %s keys scanned during partitioning"
-        % (len(partitions), keys_scanned)
+        "Found %d partitions %s keys scanned during partitioning" % (len(partitions), keys_scanned)
     )
     click.echo("\n".join(partitions))
 

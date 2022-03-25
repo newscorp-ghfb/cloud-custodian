@@ -48,9 +48,7 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         assert resources[0]['c7n:macie'] == {
-            'createdAt': datetime.datetime(
-                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()
-            ),
+            'createdAt': datetime.datetime(2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()),
             'findingPublishingFrequency': 'FIFTEEN_MINUTES',
             'master': {},
             'serviceRole': (
@@ -59,9 +57,7 @@ class AccountTests(BaseTest):
                 'AWSServiceRoleForAmazonMacie'
             ).format(p.options.account_id),
             'status': 'ENABLED',
-            'updatedAt': datetime.datetime(
-                2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()
-            ),
+            'updatedAt': datetime.datetime(2020, 12, 3, 16, 22, 14, 821000, tzinfo=tz.tzutc()),
         }
 
     def test_missing(self):
@@ -76,9 +72,7 @@ class AccountTests(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            sorted(list(resources[0].keys())), sorted(['account_id', 'account_name'])
-        )
+        self.assertEqual(sorted(list(resources[0].keys())), sorted(['account_id', 'account_name']))
 
     def test_missing_multi_region(self):
         # missing filter needs some special handling as it embeds
@@ -88,9 +82,7 @@ class AccountTests(BaseTest):
         # is missing the regional resource.
         cfg = dict(regions=["eu-west-1", "us-west-2"])
 
-        session_factory = self.replay_flight_data(
-            'test_account_missing_region_resource'
-        )
+        session_factory = self.replay_flight_data('test_account_missing_region_resource')
 
         class SessionFactory:
             def __init__(self, options):
@@ -99,9 +91,7 @@ class AccountTests(BaseTest):
             def __call__(self, region=None, assume=None):
                 return session_factory(region=self.region)
 
-        self.patch(
-            clouds['aws'], 'get_session_factory', lambda x, *args: SessionFactory(*args)
-        )
+        self.patch(clouds['aws'], 'get_session_factory', lambda x, *args: SessionFactory(*args))
 
         p = self.load_policy(
             {
@@ -135,9 +125,7 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = local_session(factory).client('ec2')
-        self.assertTrue(
-            client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault')
-        )
+        self.assertTrue(client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault'))
 
     def test_disable_encryption_by_default(self):
         factory = self.replay_flight_data('test_account_disable_ebs_encrypt')
@@ -159,9 +147,7 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = local_session(factory).client('ec2')
-        self.assertFalse(
-            client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault')
-        )
+        self.assertFalse(client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault'))
 
     def test_guard_duty_filter(self):
         factory = self.replay_flight_data('test_account_guard_duty_filter')
@@ -183,9 +169,7 @@ class AccountTests(BaseTest):
             {
                 "name": "root-mfa",
                 "resource": "account",
-                "filters": [
-                    {"type": "iam-summary", "key": "AccountMFAEnabled", "value": False}
-                ],
+                "filters": [{"type": "iam-summary", "key": "AccountMFAEnabled", "value": False}],
             },
             session_factory=session_factory,
         )
@@ -206,9 +190,7 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 0)
 
     def test_s3_public_block_filter_missing(self):
-        session_factory = self.replay_flight_data(
-            'test_account_filter_s3_public_block_missing'
-        )
+        session_factory = self.replay_flight_data('test_account_filter_s3_public_block_missing')
         p = self.load_policy(
             {
                 'name': 'account-s3-public-block',
@@ -375,9 +357,7 @@ class AccountTests(BaseTest):
             {
                 "name": "config-enabled",
                 "resource": "account",
-                "filters": [
-                    {"type": "check-config", "all-resources": True, "running": True}
-                ],
+                "filters": [{"type": "check-config", "all-resources": True, "running": True}],
             },
             session_factory=session_factory,
         )
@@ -463,17 +443,13 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources[0]["c7n:ServiceLimitsExceeded"]), 1)
 
     def test_service_limit_specific_service(self):
-        session_factory = self.replay_flight_data(
-            "test_account_service_limit_specific_service"
-        )
+        session_factory = self.replay_flight_data("test_account_service_limit_specific_service")
         p = self.load_policy(
             {
                 "name": "service-limit",
                 "resource": "account",
                 "region": "us-east-1",
-                "filters": [
-                    {"type": "service-limit", "services": ["IAM"], "threshold": 0.1}
-                ],
+                "filters": [{"type": "service-limit", "services": ["IAM"], "threshold": 0.1}],
             },
             session_factory=session_factory,
         )
@@ -548,9 +524,7 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 0)
 
     def test_missing_password_policy(self):
-        session_factory = self.replay_flight_data(
-            "test_account_missing_password_policy"
-        )
+        session_factory = self.replay_flight_data("test_account_missing_password_policy")
         p = self.load_policy(
             {
                 "name": "missing-password-policy",
@@ -634,9 +608,7 @@ class AccountTests(BaseTest):
         )
 
     def test_account_password_policy_update_first_time(self):
-        factory = self.replay_flight_data(
-            "test_account_password_policy_update_first_time"
-        )
+        factory = self.replay_flight_data("test_account_password_policy_update_first_time")
         p = self.load_policy(
             {
                 "name": "set-password-policy",
@@ -706,9 +678,7 @@ class AccountTests(BaseTest):
 
     def test_create_trail_bucket_exists_in_west(self):
         config = dict(region="us-west-1")
-        factory = self.replay_flight_data(
-            "test_cloudtrail_create_bucket_exists_in_west"
-        )
+        factory = self.replay_flight_data("test_cloudtrail_create_bucket_exists_in_west")
         p = self.load_policy(
             {
                 "name": "trail-test",
@@ -742,9 +712,7 @@ class AccountTests(BaseTest):
             {
                 "name": "raise-service-limit-policy",
                 "resource": "account",
-                "filters": [
-                    {"type": "service-limit", "services": ["EBS"], "threshold": 0.01}
-                ],
+                "filters": [{"type": "service-limit", "services": ["EBS"], "threshold": 0.01}],
                 "actions": [
                     {
                         "type": "request-limit-increase",
@@ -772,13 +740,9 @@ class AccountTests(BaseTest):
         self.assertTrue(found)
 
     def test_raise_service_limit_percent(self):
-        magic_string = (
-            "Programmatic test--PLEASE IGNORE {account} {service} in {region}"
-        )
+        magic_string = "Programmatic test--PLEASE IGNORE {account} {service} in {region}"
 
-        session_factory = self.replay_flight_data(
-            "test_account_raise_service_limit_percent"
-        )
+        session_factory = self.replay_flight_data("test_account_raise_service_limit_percent")
         p = self.load_policy(
             {
                 "name": "raise-service-limit-policy",
@@ -826,9 +790,7 @@ class AccountTests(BaseTest):
     def test_raise_service_limit_amount(self):
         magic_string = "Programmatic test--PLEASE IGNORE"
 
-        session_factory = self.replay_flight_data(
-            "test_account_raise_service_limit_percent"
-        )
+        session_factory = self.replay_flight_data("test_account_raise_service_limit_percent")
         p = self.load_policy(
             {
                 "name": "raise-service-limit-policy",
@@ -890,9 +852,7 @@ class AccountTests(BaseTest):
                 }
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     def test_enable_trail(self):
         factory = self.replay_flight_data("test_cloudtrail_enable")
@@ -1026,9 +986,7 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_glue_connection_password_encryption(self):
-        session_factory = self.replay_flight_data(
-            "test_account_glue_connection_password_filter"
-        )
+        session_factory = self.replay_flight_data("test_account_glue_connection_password_filter")
         p = self.load_policy(
             {
                 "name": "glue-security-config",
@@ -1048,9 +1006,7 @@ class AccountTests(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_get_emr_block_public_access_configuration(self):
-        session_factory = self.replay_flight_data(
-            "test_emr_block_public_access_configuration"
-        )
+        session_factory = self.replay_flight_data("test_emr_block_public_access_configuration")
         p = self.load_policy(
             {
                 'name': 'get-emr-block-public-access-configuration',
@@ -1069,16 +1025,14 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            resources[0]["c7n:emr-block-public-access"][
-                'BlockPublicAccessConfigurationMetadata'
-            ]['CreatedByArn'],
+            resources[0]["c7n:emr-block-public-access"]['BlockPublicAccessConfigurationMetadata'][
+                'CreatedByArn'
+            ],
             "arn:aws:iam::12345678901:user/test",
         )
 
     def test_set_emr_block_public_access_configuration(self):
-        session_factory = self.replay_flight_data(
-            "test_set_emr_block_public_access_configuration"
-        )
+        session_factory = self.replay_flight_data("test_set_emr_block_public_access_configuration")
         p = self.load_policy(
             {
                 'name': 'emr',
@@ -1107,15 +1061,15 @@ class AccountTests(BaseTest):
         resp = client.get_block_public_access_configuration()
 
         self.assertEqual(
-            resp["BlockPublicAccessConfiguration"][
-                "PermittedPublicSecurityGroupRuleRanges"
-            ][0]['MinRange'],
+            resp["BlockPublicAccessConfiguration"]["PermittedPublicSecurityGroupRuleRanges"][0][
+                'MinRange'
+            ],
             23,
         )
         self.assertEqual(
-            resp["BlockPublicAccessConfiguration"][
-                "PermittedPublicSecurityGroupRuleRanges"
-            ][0]['MaxRange'],
+            resp["BlockPublicAccessConfiguration"]["PermittedPublicSecurityGroupRuleRanges"][0][
+                'MaxRange'
+            ],
             23,
         )
 
@@ -1152,9 +1106,7 @@ class AccountDataEvents(BaseTest):
                     "Principal": {"Service": "cloudtrail.amazonaws.com"},
                     "Action": "s3:PutObject",
                     "Resource": "arn:aws:s3:::{}/*".format(name),
-                    "Condition": {
-                        "StringEquals": {"s3:x-amz-acl": "bucket-owner-full-control"}
-                    },
+                    "Condition": {"StringEquals": {"s3:x-amz-acl": "bucket-owner-full-control"}},
                 },
             ],
         }
@@ -1203,9 +1155,7 @@ class AccountDataEvents(BaseTest):
         self.assertEqual(
             client.get_event_selectors(TrailName=trail_name).get("EventSelectors")[-1],
             {
-                "DataResources": [
-                    {"Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::"]}
-                ],
+                "DataResources": [{"Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::"]}],
                 "IncludeManagementEvents": False,
                 "ReadWriteType": "All",
             },
@@ -1251,9 +1201,7 @@ class AccountDataEvents(BaseTest):
         self.assertEqual(
             client.get_event_selectors(TrailName=trail_name).get("EventSelectors")[0],
             {
-                "DataResources": [
-                    {"Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::"]}
-                ],
+                "DataResources": [{"Type": "AWS::S3::Object", "Values": ["arn:aws:s3:::"]}],
                 "IncludeManagementEvents": False,
                 "ReadWriteType": "All",
             },

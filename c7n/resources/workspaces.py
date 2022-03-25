@@ -75,13 +75,9 @@ class WorkspaceConnectionStatusFilter(ValueFilter):
 
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('workspaces')
-        annotate_map = {
-            r['WorkspaceId']: r for r in resources if self.annotation_key not in r
-        }
+        annotate_map = {r['WorkspaceId']: r for r in resources if self.annotation_key not in r}
         with self.executor_factory(max_workers=2) as w:
-            self.log.debug(
-                'Querying connection status for %d workspaces' % len(annotate_map)
-            )
+            self.log.debug('Querying connection status for %d workspaces' % len(annotate_map))
             for status in itertools.chain(
                 *w.map(
                     functools.partial(self.get_connection_status, client),
@@ -181,15 +177,13 @@ class WorkspaceImageCrossAccount(CrossAccountAccessFilter):
         for r in resources:
             found = False
             try:
-                accts = client.describe_workspace_image_permissions(
-                    ImageId=r['ImageId']
-                ).get('ImagePermissions')
+                accts = client.describe_workspace_image_permissions(ImageId=r['ImageId']).get(
+                    'ImagePermissions'
+                )
                 for a in accts:
                     account_id = a['SharedAccountId']
                     if account_id not in allowed_accounts:
-                        r.setdefault('c7n:CrossAccountViolations', []).append(
-                            account_id
-                        )
+                        r.setdefault('c7n:CrossAccountViolations', []).append(account_id)
                         found = True
                 if found:
                     results.append(r)
@@ -232,14 +226,10 @@ class DeleteWorkspaceImage(BaseAction):
             try:
                 client.delete_workspace_image(ImageId=r['ImageId'])
             except client.exceptions.InvalidResourceStateException as e:
-                self.log.error(
-                    f"Error deleting workspace image: {r['ImageId']} error: {e}"
-                )
+                self.log.error(f"Error deleting workspace image: {r['ImageId']} error: {e}")
                 continue
             except client.exceptions.ResourceAssociatedException as e:
-                self.log.error(
-                    f"Error deleting workspace image: {r['ImageId']} error: {e}"
-                )
+                self.log.error(f"Error deleting workspace image: {r['ImageId']} error: {e}")
                 continue
             except client.exceptions.ResourceNotFoundException:
                 continue
@@ -313,9 +303,7 @@ class WorkspacesDirectoryClientProperties(ValueFilter):
             if self.annotation_key not in directory:
                 try:
                     client_properties = (
-                        client.describe_client_properties(
-                            ResourceIds=[directory['DirectoryId']]
-                        )
+                        client.describe_client_properties(ResourceIds=[directory['DirectoryId']])
                         .get('ClientPropertiesList')[0]
                         .get('ClientProperties')
                     )
@@ -362,9 +350,7 @@ class ModifyClientProperties(BaseAction):
                     'type': 'object',
                     'additionalProperties': False,
                     'required': ['ReconnectEnabled'],
-                    'properties': {
-                        'ReconnectEnabled': {'enum': ['DISABLED', 'ENABLED']}
-                    },
+                    'properties': {'ReconnectEnabled': {'enum': ['DISABLED', 'ENABLED']}},
                 }
             },
         },

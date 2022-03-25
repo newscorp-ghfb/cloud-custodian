@@ -19,9 +19,9 @@ class DescribeTopic(DescribeSource):
         client = local_session(self.manager.session_factory).client('sns')
 
         def _augment(r):
-            tags = self.manager.retry(
-                client.list_tags_for_resource, ResourceArn=r['TopicArn']
-            )['Tags']
+            tags = self.manager.retry(client.list_tags_for_resource, ResourceArn=r['TopicArn'])[
+                'Tags'
+            ]
             r['Tags'] = tags
             return r
 
@@ -387,9 +387,7 @@ class SetEncryption(BaseAction):
                   enabled: true
     """
 
-    schema = type_schema(
-        'set-encryption', enabled={'type': 'boolean'}, key={'type': 'string'}
-    )
+    schema = type_schema('set-encryption', enabled={'type': 'boolean'}, key={'type': 'string'})
 
     permissions = (
         'sns:SetTopicAttributes',

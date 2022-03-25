@@ -147,15 +147,12 @@ class StorageSetFirewallAction(SetFirewallAction):
 
     def _process_resource(self, resource):
         # Build out the ruleset model to update the resource
-        rule_set = NetworkRuleSet(
-            default_action=self.data.get('default-action', 'Deny')
-        )
+        rule_set = NetworkRuleSet(default_action=self.data.get('default-action', 'Deny'))
 
         # Add IP rules
         if self.data.get('ip-rules') is not None:
             existing_ip = [
-                r['value']
-                for r in resource['properties']['networkAcls'].get('ipRules', [])
+                r['value'] for r in resource['properties']['networkAcls'].get('ipRules', [])
             ]
             ip_rules = self._build_ip_rules(existing_ip, self.data.get('ip-rules', []))
 
@@ -173,9 +170,7 @@ class StorageSetFirewallAction(SetFirewallAction):
         if self.data.get('virtual-network-rules') is not None:
             existing_vnet = [
                 r['id']
-                for r in resource['properties']['networkAcls'].get(
-                    'virtualNetworkRules', []
-                )
+                for r in resource['properties']['networkAcls'].get('virtualNetworkRules', [])
             ]
             vnet_rules = self._build_vnet_rules(
                 existing_vnet, self.data.get('virtual-network-rules', [])
@@ -186,9 +181,7 @@ class StorageSetFirewallAction(SetFirewallAction):
 
         # Configure BYPASS
         if self.data.get('bypass-rules') is not None:
-            existing_bypass = (
-                resource['properties']['networkAcls'].get('bypass', '').split(',')
-            )
+            existing_bypass = resource['properties']['networkAcls'].get('bypass', '').split(',')
             rule_set.bypass = self._build_bypass_rules(
                 existing_bypass, self.data.get('bypass-rules', [])
             )
@@ -245,9 +238,7 @@ class StorageFirewallBypassFilter(FirewallBypassFilter):
         if resource['properties']['networkAcls']['defaultAction'] == 'Allow':
             return ['AzureServices', 'Metrics', 'Logging']
 
-        bypass_string = (
-            resource['properties']['networkAcls'].get('bypass', '').replace(' ', '')
-        )
+        bypass_string = resource['properties']['networkAcls'].get('bypass', '').replace(' ', '')
         return list(filter(None, bypass_string.split(',')))
 
 
@@ -459,9 +450,7 @@ class SetLogSettingsAction(AzureBaseAction):
                     'write': self.WRITE in self.logs_to_enable,
                     'retention_policy': {
                         'enabled': self.retention != 0,
-                        'days': self.retention
-                        if self.retention != 0
-                        else None,  # Throws if 0
+                        'days': self.retention if self.retention != 0 else None,  # Throws if 0
                     },
                     'version': '1.0',
                 }
@@ -494,9 +483,7 @@ class StorageSettingsUtilities:
             storage_account['resourceGroup'], storage_account['name'], session
         )
 
-        return FileService(
-            account_name=storage_account['name'], account_key=primary_key
-        )
+        return FileService(account_name=storage_account['name'], account_key=primary_key)
 
     @staticmethod
     def _get_table_client_from_storage_account(storage_account, session):
@@ -504,9 +491,7 @@ class StorageSettingsUtilities:
             storage_account['resourceGroup'], storage_account['name'], session
         )
 
-        return TableService(
-            account_name=storage_account['name'], account_key=primary_key
-        )
+        return TableService(account_name=storage_account['name'], account_key=primary_key)
 
     @staticmethod
     def _get_queue_client_from_storage_account(storage_account, session):
@@ -525,9 +510,7 @@ class StorageSettingsUtilities:
 
     @staticmethod
     def get_settings(storage_type, storage_account, session=None):
-        client = StorageSettingsUtilities._get_client(
-            storage_type, storage_account, session
-        )
+        client = StorageSettingsUtilities._get_client(storage_type, storage_account, session)
 
         if storage_type in [QUEUE_TYPE, BLOB_TYPE]:
             return getattr(client, 'get_service_properties')()
@@ -535,14 +518,10 @@ class StorageSettingsUtilities:
 
     @staticmethod
     def update_logging(storage_type, storage_account, logging_settings, session=None):
-        client = StorageSettingsUtilities._get_client(
-            storage_type, storage_account, session
-        )
+        client = StorageSettingsUtilities._get_client(storage_type, storage_account, session)
 
         if storage_type in [QUEUE_TYPE, BLOB_TYPE]:
-            return getattr(client, 'set_service_properties')(
-                analytics_logging=logging_settings
-            )
+            return getattr(client, 'set_service_properties')(analytics_logging=logging_settings)
         return getattr(client, 'set_{}_service_properties'.format(storage_type))(
             logging=logging_settings
         )
@@ -586,7 +565,5 @@ class RequireSecureTransferAction(AzureBaseAction):
         self.client.storage_accounts.update(
             resource['resourceGroup'],
             resource['name'],
-            StorageAccountUpdateParameters(
-                enable_https_traffic_only=self.data.get('value')
-            ),
+            StorageAccountUpdateParameters(enable_https_traffic_only=self.data.get('value')),
         )

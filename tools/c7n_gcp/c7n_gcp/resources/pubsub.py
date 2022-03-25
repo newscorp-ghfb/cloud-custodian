@@ -64,9 +64,7 @@ class PubSubSubscription(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'subscription': resource_info['subscription_id']}
-            )
+            return client.execute_command('get', {'subscription': resource_info['subscription_id']})
 
 
 @PubSubSubscription.action_registry.register('delete')

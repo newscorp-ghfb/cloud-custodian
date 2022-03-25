@@ -22,9 +22,7 @@ class SetLabelsActionTest(BaseTest):
             )
         )
 
-        self.assertTrue(
-            self.load_policy(get_policy([{'type': 'set-labels', 'remove': ['test']}]))
-        )
+        self.assertTrue(self.load_policy(get_policy([{'type': 'set-labels', 'remove': ['test']}])))
 
         self.assertTrue(
             self.load_policy(
@@ -47,9 +45,7 @@ class SetLabelsActionTest(BaseTest):
 
 class LabelDelayedActionTest(BaseTest):
     def test_schema_validate(self):
-        self.assertTrue(
-            self.load_policy(get_policy([{'type': 'mark-for-op', 'op': 'stop'}]))
-        )
+        self.assertTrue(self.load_policy(get_policy([{'type': 'mark-for-op', 'op': 'stop'}])))
 
         with self.assertRaises(FilterValidationError):
             # Must specify op
@@ -63,9 +59,7 @@ class LabelDelayedActionTest(BaseTest):
 class LabelActionFilterTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
-            self.load_policy(
-                get_policy(None, [{'type': 'marked-for-op', 'op': 'stop'}])
-            )
+            self.load_policy(get_policy(None, [{'type': 'marked-for-op', 'op': 'stop'}]))
         )
 
         with self.assertRaises(FilterValidationError):
@@ -74,6 +68,4 @@ class LabelActionFilterTest(BaseTest):
 
         with self.assertRaises(FilterValidationError):
             # Must specify right op
-            self.load_policy(
-                get_policy(None, [{'type': 'marked-for-op', 'op': 'no-such-op'}])
-            )
+            self.load_policy(get_policy(None, [{'type': 'marked-for-op', 'op': 'no-such-op'}]))

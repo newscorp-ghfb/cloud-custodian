@@ -165,11 +165,7 @@ class ServiceAccountKey(ChildResourceManager):
             ).groups()
             return client.execute_query(
                 'get',
-                {
-                    'name': 'projects/{}/serviceAccounts/{}/keys/{}'.format(
-                        project, sa, key
-                    )
-                },
+                {'name': 'projects/{}/serviceAccounts/{}/keys/{}'.format(project, sa, key)},
             )
 
         @staticmethod
@@ -206,6 +202,4 @@ class Role(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'name': 'roles/{}'.format(resource_info['name'])}
-            )
+            return client.execute_command('get', {'name': 'roles/{}'.format(resource_info['name'])})

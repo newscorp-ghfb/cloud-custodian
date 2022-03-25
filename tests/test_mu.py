@@ -42,9 +42,7 @@ ROLE = "arn:aws:iam::644160558196:role/custodian-mu"
 def test_get_exec_options():
 
     assert get_exec_options(Config().empty()) == {'tracer': 'default'}
-    assert get_exec_options(Config().empty(output_dir='/tmp/xyz')) == {
-        'tracer': 'default'
-    }
+    assert get_exec_options(Config().empty(output_dir='/tmp/xyz')) == {'tracer': 'default'}
     assert get_exec_options(
         Config().empty(log_group='gcp', output_dir='gs://mybucket/myprefix')
     ) == {
@@ -238,9 +236,7 @@ class PolicyLambdaProvision(Publish):
         )
         p_lambda = PolicyLambda(p)
         events = p_lambda.get_events(factory)
-        self.assertEqual(
-            json.loads(events[0].render_event_pattern()), {'source': ['aws.health']}
-        )
+        self.assertEqual(json.loads(events[0].render_event_pattern()), {'source': ['aws.health']})
 
     def test_phd_mode(self):
         factory = self.replay_flight_data('test_phd_event_mode')
@@ -268,9 +264,7 @@ class PolicyLambdaProvision(Publish):
             {
                 'detail': {
                     'eventTypeCategory': ['scheduledChange'],
-                    'eventTypeCode': [
-                        'AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'
-                    ],
+                    'eventTypeCode': ['AWS_EC2_PERSISTENT_INSTANCE_RETIREMENT_SCHEDULED'],
                 },
                 'source': ['aws.health'],
             },
@@ -346,9 +340,7 @@ class PolicyLambdaProvision(Publish):
                 'mode': {
                     'type': 'cloudtrail',
                     'pattern': {
-                        'detail': {
-                            'userIdentity': {'userName': [{'anything-but': 'deputy'}]}
-                        }
+                        'detail': {'userIdentity': {'userName': [{'anything-but': 'deputy'}]}}
                     },
                     'events': [
                         {
@@ -385,9 +377,9 @@ class PolicyLambdaProvision(Publish):
         session = session_factory()
         client = session.client('sqs')
         queue_url = client.create_queue(QueueName=queue_name).get('QueueUrl')
-        queue_arn = client.get_queue_attributes(
-            QueueUrl=queue_url, AttributeNames=['QueueArn']
-        )['Attributes']['QueueArn']
+        queue_arn = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=['QueueArn'])[
+            'Attributes'
+        ]['QueueArn']
         self.addCleanup(client.delete_queue, QueueUrl=queue_url)
 
         # Setup Function
@@ -404,9 +396,7 @@ class PolicyLambdaProvision(Publish):
         self.addCleanup(manager.remove, func)
 
         # Send and Receive Check
-        client.send_message(
-            QueueUrl=queue_url, MessageBody=json.dumps({'jurassic': 'block'})
-        )
+        client.send_message(QueueUrl=queue_url, MessageBody=json.dumps({'jurassic': 'block'}))
 
         if self.recording:
             time.sleep(60)
@@ -530,15 +520,11 @@ class PolicyLambdaProvision(Publish):
 
         lines = output.getvalue().strip().split("\n")
         self.assertTrue("Updating function custodian-s3-bucket-policy code" in lines)
-        self.assertTrue(
-            "Updating function: custodian-s3-bucket-policy config MemorySize" in lines
-        )
+        self.assertTrue("Updating function: custodian-s3-bucket-policy config MemorySize" in lines)
         self.assertEqual(result["FunctionName"], result2["FunctionName"])
         # drive by coverage
         functions = [
-            i
-            for i in mgr.list_functions()
-            if i["FunctionName"] == "custodian-s3-bucket-policy"
+            i for i in mgr.list_functions() if i["FunctionName"] == "custodian-s3-bucket-policy"
         ]
         self.assertTrue(len(functions), 1)
 
@@ -689,9 +675,7 @@ class PolicyLambdaProvision(Publish):
         self.assertEqual(
             json.loads(hub_action.cwe.render_event_pattern()),
             {
-                'resources': [
-                    'arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub'
-                ],
+                'resources': ['arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub'],
                 'source': ['aws.securityhub'],
                 'detail-type': [
                     'Security Hub Findings - Custom Action',
@@ -710,17 +694,14 @@ class PolicyLambdaProvision(Publish):
             hub_action._get_arn(),
             "arn:aws:securityhub:us-east-1:644160558196:action/custom/sechub",
         )
-        self.assertEqual(
-            hub_action.get(mu_policy.name), {'event': False, 'action': None}
-        )
+        self.assertEqual(hub_action.get(mu_policy.name), {'event': False, 'action': None})
         hub_action.add(mu_policy)
         self.assertEqual(
             {
                 'event': False,
                 'action': {
                     'ActionTargetArn': (
-                        'arn:aws:securityhub:us-east-1:'
-                        '644160558196:action/custom/sechub'
+                        'arn:aws:securityhub:us-east-1:' '644160558196:action/custom/sechub'
                     ),
                     'Name': 'Account sechub',
                     'Description': 'sechub',
@@ -730,9 +711,7 @@ class PolicyLambdaProvision(Publish):
         )
         hub_action.update(mu_policy)
         hub_action.remove(mu_policy, func_deleted=True)
-        self.assertEqual(
-            hub_action.get(mu_policy.name), {'event': False, 'action': None}
-        )
+        self.assertEqual(hub_action.get(mu_policy.name), {'event': False, 'action': None})
 
     def test_cwe_schedule(self):
         session_factory = self.replay_flight_data("test_cwe_schedule", zdata=True)
@@ -771,9 +750,7 @@ class PolicyLambdaProvision(Publish):
             },
         )
 
-    key_arn = (
-        "arn:aws:kms:us-west-2:644160558196:key/" "44d25a5c-7efa-44ed-8436-b9511ea921b3"
-    )
+    key_arn = "arn:aws:kms:us-west-2:644160558196:key/" "44d25a5c-7efa-44ed-8436-b9511ea921b3"
     sns_arn = "arn:aws:sns:us-west-2:644160558196:config-topic"
 
     def create_a_lambda(self, flight, **extra):
@@ -854,9 +831,7 @@ class PolicyLambdaProvision(Publish):
         self.assert_items(tags, {"Foo": "Bar"})
 
     def test_config_coverage_for_lambda_update_from_plain(self):
-        mgr, result = self.create_a_lambda(
-            "test_config_coverage_for_lambda_update_from_plain"
-        )
+        mgr, result = self.create_a_lambda("test_config_coverage_for_lambda_update_from_plain")
         result = self.update_a_lambda(
             mgr,
             **{
@@ -977,9 +952,7 @@ class PolicyLambdaProvision(Publish):
 
         self.assertFalse(delta({}, {"KMSKeyArn": ""}))
 
-        self.assertFalse(
-            delta({}, {"VpcConfig": {"SecurityGroupIds": [], "SubnetIds": []}})
-        )
+        self.assertFalse(delta({}, {"VpcConfig": {"SecurityGroupIds": [], "SubnetIds": []}}))
 
     def test_config_defaults(self):
         p = PolicyLambda(Bag({"name": "hello", "data": {"mode": {}}}))

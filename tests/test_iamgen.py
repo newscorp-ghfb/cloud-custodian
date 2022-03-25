@@ -78,11 +78,7 @@ class TestIamGen(BaseTest):
                 )
 
         if missing:
-            raise ValueError(
-                "resources missing service %s" % ('\n'.join(sorted(missing)))
-            )
+            raise ValueError("resources missing service %s" % ('\n'.join(sorted(missing))))
 
         if invalid:
-            raise ValueError(
-                "invalid permissions \n %s" % ('\n'.join(sorted(map(str, invalid))))
-            )
+            raise ValueError("invalid permissions \n %s" % ('\n'.join(sorted(map(str, invalid)))))

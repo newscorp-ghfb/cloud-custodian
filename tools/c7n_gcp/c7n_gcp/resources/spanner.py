@@ -33,9 +33,7 @@ class SpannerInstance(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'name': resource_info['resourceName']}
-            )
+            return client.execute_command('get', {'name': resource_info['resourceName']})
 
         @staticmethod
         def get_label_params(resource, all_labels):
@@ -100,9 +98,7 @@ class SpannerInstancePatch(MethodAction):
                 nodeCount: 1
     """
 
-    schema = type_schema(
-        'set', required=['nodeCount'], **{'nodeCount': {'type': 'number'}}
-    )
+    schema = type_schema('set', required=['nodeCount'], **{'nodeCount': {'type': 'number'}})
     method_spec = {'op': 'patch'}
     method_perm = 'update'
 
@@ -150,9 +146,7 @@ class SpannerDatabaseInstance(ChildResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'name': resource_info['resourceName']}
-            )
+            return client.execute_command('get', {'name': resource_info['resourceName']})
 
 
 SpannerDatabaseInstance.action_registry.register('set-iam-policy', SetIamPolicy)

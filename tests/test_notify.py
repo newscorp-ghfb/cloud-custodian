@@ -62,9 +62,9 @@ class NotifyTest(BaseTest):
         resources = policy.run()
         self.assertEqual(policy.data.get("actions")[0].get("to"), ["to@example.com"])
         self.assertEqual(len(resources), 1)
-        messages = client.receive_message(
-            QueueUrl=queue_url, AttributeNames=["All"]
-        ).get("Messages", [])
+        messages = client.receive_message(QueueUrl=queue_url, AttributeNames=["All"]).get(
+            "Messages", []
+        )
         self.assertEqual(len(messages), 1)
 
         body = json.loads(zlib.decompress(base64.b64decode(messages[0]["Body"])))
@@ -171,9 +171,7 @@ class NotifyTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_sns_notify_with_msg_attr(self):
-        session_factory = self.replay_flight_data(
-            "test_sns_notify_action_with_msg_attr"
-        )
+        session_factory = self.replay_flight_data("test_sns_notify_action_with_msg_attr")
 
         sqs = session_factory().client('sqs')
         sns = session_factory().client('sns')
@@ -207,9 +205,9 @@ class NotifyTest(BaseTest):
         ).get('Messages')
         self.assertFalse(messages)
 
-        subscription = sns.list_subscriptions_by_topic(TopicArn=topic)['Subscriptions'][
-            0
-        ]['Endpoint']
+        subscription = sns.list_subscriptions_by_topic(TopicArn=topic)['Subscriptions'][0][
+            'Endpoint'
+        ]
         self.assertEqual(subscription, 'arn:aws:sqs:us-east-1:644160558196:test-queue')
 
         self.load_policy(policy, session_factory=session_factory).run()
@@ -256,13 +254,9 @@ class NotifyTest(BaseTest):
         session_factory = self.replay_flight_data("test_notify_region_var")
 
         ec2 = session_factory().resource("ec2")
-        instance = ec2.create_instances(ImageId="ami-6057e21a", MinCount=1, MaxCount=1)[
-            0
-        ].id
+        instance = ec2.create_instances(ImageId="ami-6057e21a", MinCount=1, MaxCount=1)[0].id
         ec2_client = session_factory().client("ec2")
-        ec2_client.create_tags(
-            Resources=[instance], Tags=[{"Key": "k1", "Value": "v1"}]
-        )
+        ec2_client.create_tags(Resources=[instance], Tags=[{"Key": "k1", "Value": "v1"}])
         self.addCleanup(ec2_client.terminate_instances, InstanceIds=[instance])
 
         sqs_client = session_factory().client("sqs")

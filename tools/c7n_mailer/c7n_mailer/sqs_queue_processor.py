@@ -57,9 +57,7 @@ class MailerSqsQueueIterator:
     next = __next__  # python2.7
 
     def ack(self, m):
-        self.aws_sqs.delete_message(
-            QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle']
-        )
+        self.aws_sqs.delete_message(QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle'])
 
 
 class MailerSqsQueueProcessor:
@@ -112,9 +110,7 @@ class MailerSqsQueueProcessor:
             if msg_kind:
                 msg_kind = msg_kind['StringValue']
             if not msg_kind == DATA_MESSAGE:
-                warning_msg = 'Unknown sqs_message or sns format %s' % (
-                    sqs_message['Body'][:50]
-                )
+                warning_msg = 'Unknown sqs_message or sns format %s' % (sqs_message['Body'][:50])
                 self.logger.warning(warning_msg)
             if parallel:
                 process_pool.apply_async(self.process_sqs_message, args=sqs_message)
@@ -155,13 +151,9 @@ class MailerSqsQueueProcessor:
         # get the map of email_to_addresses to mimetext messages (with resources baked in)
         # and send any emails (to SES or SMTP) if there are email addresses found
         email_delivery = EmailDelivery(self.config, self.session, self.logger)
-        to_addrs_to_email_messages_map = email_delivery.get_to_addrs_email_messages_map(
-            sqs_message
-        )
+        to_addrs_to_email_messages_map = email_delivery.get_to_addrs_email_messages_map(sqs_message)
         for email_to_addrs, mimetext_msg in to_addrs_to_email_messages_map.items():
-            email_delivery.send_c7n_email(
-                sqs_message, list(email_to_addrs), mimetext_msg
-            )
+            email_delivery.send_c7n_email(sqs_message, list(email_to_addrs), mimetext_msg)
 
         # this sections gets the map of sns_to_addresses to rendered_jinja messages
         # (with resources baked in) and delivers the message to each sns topic
@@ -191,29 +183,20 @@ class MailerSqsQueueProcessor:
                 pass
 
         # this section gets the map of metrics to send to datadog and delivers it
-        if any(
-            e.startswith('datadog') for e in sqs_message.get('action', ()).get('to')
-        ):
+        if any(e.startswith('datadog') for e in sqs_message.get('action', ()).get('to')):
             from .datadog_delivery import DataDogDelivery
 
             datadog_delivery = DataDogDelivery(self.config, self.session, self.logger)
-            datadog_message_packages = datadog_delivery.get_datadog_message_packages(
-                sqs_message
-            )
+            datadog_message_packages = datadog_delivery.get_datadog_message_packages(sqs_message)
 
             try:
-                datadog_delivery.deliver_datadog_messages(
-                    datadog_message_packages, sqs_message
-                )
+                datadog_delivery.deliver_datadog_messages(datadog_message_packages, sqs_message)
             except Exception:
                 traceback.print_exc()
                 pass
 
         # this section sends the full event to a Splunk HTTP Event Collector (HEC)
-        if any(
-            e.startswith('splunkhec://')
-            for e in sqs_message.get('action', ()).get('to')
-        ):
+        if any(e.startswith('splunkhec://') for e in sqs_message.get('action', ()).get('to')):
             from .splunk_delivery import SplunkHecDelivery
 
             splunk_delivery = SplunkHecDelivery(self.config, self.session, self.logger)

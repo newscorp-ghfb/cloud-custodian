@@ -339,16 +339,12 @@ class Time(Filter):
 
     def validate(self):
         if self.get_tz(self.default_tz) is None:
-            raise PolicyValidationError(
-                "Invalid timezone specified %s" % (self.default_tz)
-            )
+            raise PolicyValidationError("Invalid timezone specified %s" % (self.default_tz))
         hour = self.data.get("%shour" % self.time_type, self.DEFAULT_HR)
         if hour not in self.parser.VALID_HOURS:
             raise PolicyValidationError("Invalid hour specified %s" % (hour,))
         if 'skip-days' in self.data and 'skip-days-from' in self.data:
-            raise PolicyValidationError(
-                "Cannot specify two sets of skip days %s" % (self.data,)
-            )
+            raise PolicyValidationError("Cannot specify two sets of skip days %s" % (self.data,))
         return self
 
     def process(self, resources, event=None):
@@ -370,9 +366,7 @@ class Time(Filter):
         # Sigh delayed init, due to circle dep, process/init would be better
         # but unit testing is calling this direct.
         if self.id_key is None:
-            self.id_key = (
-                self.manager is None and 'InstanceId' or self.manager.get_model().id
-            )
+            self.id_key = self.manager is None and 'InstanceId' or self.manager.get_model().id
 
         # The resource tag is not present, if we're not running in an opt-out
         # mode, we're done.
@@ -489,9 +483,7 @@ class OffHour(Time):
     def get_default_schedule(self):
         default = {
             'tz': self.default_tz,
-            self.time_type: [
-                {'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}
-            ],
+            self.time_type: [{'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}],
         }
         if self.weekends_only:
             default[self.time_type][0]['days'] = [4]
@@ -517,9 +509,7 @@ class OnHour(Time):
     def get_default_schedule(self):
         default = {
             'tz': self.default_tz,
-            self.time_type: [
-                {'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}
-            ],
+            self.time_type: [{'hour': self.data.get("%shour" % self.time_type, self.DEFAULT_HR)}],
         }
         if self.weekends_only:
             # turn on monday

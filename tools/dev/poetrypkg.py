@@ -57,17 +57,13 @@ def cli():
     # If there is a global installation of poetry, prefer that.
     cur_poetry_python_lib = Path(os.path.expanduser('~/.local/share/pypoetry/venv/lib'))
     if cur_poetry_python_lib.exists():
-        sys.path.insert(
-            0, str(list(cur_poetry_python_lib.glob('*'))[0] / "site-packages")
-        )
+        sys.path.insert(0, str(list(cur_poetry_python_lib.glob('*'))[0] / "site-packages"))
 
     osx_poetry_python_lib = Path(
         os.path.expanduser('~/Library/Application Support/pypoetry/venv/lib')
     )
     if osx_poetry_python_lib.exists():
-        sys.path.insert(
-            0, str(list(osx_poetry_python_lib.glob('*'))[0] / "site-packages")
-        )
+        sys.path.insert(0, str(list(osx_poetry_python_lib.glob('*'))[0] / "site-packages"))
 
 
 # Override the poetry base template as all our readmes files

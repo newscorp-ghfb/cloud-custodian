@@ -39,8 +39,7 @@ DEFAULT_USER_OBJECT_ID = '00000000-0000-0000-0000-000000000002'
 DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000003'
 DEFAULT_INSTRUMENTATION_KEY = '00000000-0000-0000-0000-000000000004'
 DEFAULT_STORAGE_KEY = (
-    'DEC0DEDITtVwMoyAuTz1LioKkC+gB/EpRlQKNIaszQEhVidjWyP1kLW1z+jo'
-    '/MGFHKc+t+M20PxoraNCslng9w=='
+    'DEC0DEDITtVwMoyAuTz1LioKkC+gB/EpRlQKNIaszQEhVidjWyP1kLW1z+jo' '/MGFHKc+t+M20PxoraNCslng9w=='
 )
 DEFAULT_AZURE_CLOUD = 'AzureCloud'
 
@@ -161,9 +160,7 @@ class AzureVCRBaseTest(VCRTestCase):
         # You can't do this in setup because it is actually required by the base class
         # setup (via our callbacks), but it is also not possible to do until the base class setup
         # has completed initializing the cassette instance.
-        cassette_exists = not hasattr(self, 'cassette') or os.path.isfile(
-            self.cassette._path
-        )
+        cassette_exists = not hasattr(self, 'cassette') or os.path.isfile(self.cassette._path)
         return self.vcr_enabled and cassette_exists
 
     def _get_cassette_name(self):
@@ -196,9 +193,7 @@ class AzureVCRBaseTest(VCRTestCase):
 
     def _azure_matcher(self, r1, r2):
         """Replace all subscription ID's and ignore api-version"""
-        if [
-            (k[0].lower(), k[1].lower()) for k in set(r1.query) if k[0] != 'api-version'
-        ] != [
+        if [(k[0].lower(), k[1].lower()) for k in set(r1.query) if k[0] != 'api-version'] != [
             (k[0].lower(), k[1].lower()) for k in set(r2.query) if k[0] != 'api-version'
         ]:
             return False
@@ -315,10 +310,8 @@ class AzureVCRBaseTest(VCRTestCase):
     @staticmethod
     def _replace_subscription_id(s):
         prefixes = ['(/|%2F)?subscriptions(/|%2F)', '"subscription":\\s*"']
-        regex = (
-            r"(?P<prefix>(%s))"
-            r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}"
-            % '|'.join(['(%s)' % p for p in prefixes])
+        regex = r"(?P<prefix>(%s))" r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}" % '|'.join(
+            ['(%s)' % p for p in prefixes]
         )
 
         match = re.search(regex, s)
@@ -329,9 +322,7 @@ class AzureVCRBaseTest(VCRTestCase):
             s = s.replace(sub_id[-12:], DEFAULT_SUBSCRIPTION_ID[-12:])
         else:
             # For function apps
-            func_regex = (
-                r"^https\:\/\/[\w-]+([a-f0-9]{12})\.(blob\.core|scm\.azurewebsites)"
-            )
+            func_regex = r"^https\:\/\/[\w-]+([a-f0-9]{12})\.(blob\.core|scm\.azurewebsites)"
             func_match = re.search(func_regex, s)
             if func_match is not None:
                 sub_fragment = func_match.group(1)
@@ -342,10 +333,8 @@ class AzureVCRBaseTest(VCRTestCase):
     @staticmethod
     def _replace_tenant_id(s):
         prefixes = ['(/|%2F)graph.windows.net(/|%2F)', '"(t|T)enantId":\\s*"']
-        regex = (
-            r"(?P<prefix>(%s))"
-            r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}"
-            % '|'.join(['(%s)' % p for p in prefixes])
+        regex = r"(?P<prefix>(%s))" r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}" % '|'.join(
+            ['(%s)' % p for p in prefixes]
         )
 
         return re.sub(regex, r"\g<prefix>" + DEFAULT_TENANT_ID, s)
@@ -365,10 +354,8 @@ class AzureVCRBaseTest(VCRTestCase):
     def _replace_instrumentation_key(s):
         prefixes = ['"InstrumentationKey":\\s*"']
 
-        regex = (
-            r"(?P<prefix>(%s))"
-            r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}"
-            % '|'.join(['(%s)' % p for p in prefixes])
+        regex = r"(?P<prefix>(%s))" r"[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}" % '|'.join(
+            ['(%s)' % p for p in prefixes]
         )
 
         return re.sub(regex, r"\g<prefix>" + DEFAULT_INSTRUMENTATION_KEY, s)
@@ -382,9 +369,7 @@ class AzureVCRBaseTest(VCRTestCase):
 
 class BaseTest(TestUtils, AzureVCRBaseTest):
 
-    test_context = ExecutionContext(
-        Session, Bag(name="xyz", provider_name='azure'), Config.empty()
-    )
+    test_context = ExecutionContext(Session, Bag(name="xyz", provider_name='azure'), Config.empty())
 
     """ Azure base testing class.
     """
@@ -457,9 +442,7 @@ class BaseTest(TestUtils, AzureVCRBaseTest):
 
     def _get_test_date(self, tz=None):
         header_date = (
-            self.cassette.responses[0]['headers'].get('date')
-            if self.cassette.responses
-            else None
+            self.cassette.responses[0]['headers'].get('date') if self.cassette.responses else None
         )
 
         if header_date:
@@ -495,9 +478,7 @@ class BaseTest(TestUtils, AzureVCRBaseTest):
         )
 
     @staticmethod
-    def lro_init(
-        self, client, initial_response, deserialization_callback, polling_method
-    ):
+    def lro_init(self, client, initial_response, deserialization_callback, polling_method):
         self._client = client
         self._response = (
             initial_response.response
@@ -513,18 +494,14 @@ class BaseTest(TestUtils, AzureVCRBaseTest):
             deserialization_callback = deserialization_callback.deserialize
 
         # Might raise a AzureError
-        self._polling_method.initialize(
-            self._client, self._response, deserialization_callback
-        )
+        self._polling_method.initialize(self._client, self._response, deserialization_callback)
 
         self._thread = None
         self._done = None
         self._exception = None
 
     @staticmethod
-    def lro_init_legacy(
-        self, client, initial_response, deserialization_callback, polling_method
-    ):
+    def lro_init_legacy(self, client, initial_response, deserialization_callback, polling_method):
         self._client = client if isinstance(client, ServiceClient) else client._client
         self._response = (
             initial_response.response
@@ -540,9 +517,7 @@ class BaseTest(TestUtils, AzureVCRBaseTest):
             deserialization_callback = deserialization_callback.deserialize
 
         # Might raise a CloudError
-        self._polling_method.initialize(
-            self._client, self._response, deserialization_callback
-        )
+        self._polling_method.initialize(self._client, self._response, deserialization_callback)
 
         self._thread = None
         self._done = None
@@ -570,9 +545,7 @@ def arm_template(template):
         def wrapper(*args, **kwargs):
             template_file_path = os.path.join(BASE_FOLDER, "templates", template)
             if not os.path.isfile(template_file_path):
-                return args[0].fail(
-                    "ARM template {} is not found".format(template_file_path)
-                )
+                return args[0].fail("ARM template {} is not found".format(template_file_path))
             return func(*args, **kwargs)
 
         return wrapper

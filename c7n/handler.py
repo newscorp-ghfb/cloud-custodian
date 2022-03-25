@@ -60,17 +60,11 @@ def init_env_globals():
     """
     global C7N_SKIP_EVTERR, C7N_DEBUG_EVENT, C7N_CATCH_ERR
 
-    C7N_SKIP_EVTERR = (
-        os.environ.get('C7N_SKIP_ERR_EVENT', 'yes') == 'yes' and True or False
-    )
+    C7N_SKIP_EVTERR = os.environ.get('C7N_SKIP_ERR_EVENT', 'yes') == 'yes' and True or False
 
-    C7N_DEBUG_EVENT = (
-        os.environ.get('C7N_DEBUG_EVENT', 'yes') == 'yes' and True or False
-    )
+    C7N_DEBUG_EVENT = os.environ.get('C7N_DEBUG_EVENT', 'yes') == 'yes' and True or False
 
-    C7N_CATCH_ERR = (
-        os.environ.get('C7N_CATCH_ERR', 'no').strip().lower() == 'yes' and True or False
-    )
+    C7N_CATCH_ERR = os.environ.get('C7N_CATCH_ERR', 'no').strip().lower() == 'yes' and True or False
 
 
 def init_config(policy_config):
@@ -111,9 +105,7 @@ def init_config(policy_config):
         account_id = exec_options['account_id']
 
     # merge with policy specific configuration
-    exec_options.update(
-        policy_config['policies'][0].get('mode', {}).get('execution-options', {})
-    )
+    exec_options.update(policy_config['policies'][0].get('mode', {}).get('execution-options', {}))
 
     # if using assume role in lambda ensure that the correct
     # execution account is captured in options.

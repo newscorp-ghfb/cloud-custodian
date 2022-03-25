@@ -46,8 +46,7 @@ class Missing(Filter):
         )
         if not collection:
             raise PolicyValidationError(
-                "policy %s missing filter empty embedded policy"
-                % (self.manager.ctx.policy.name)
+                "policy %s missing filter empty embedded policy" % (self.manager.ctx.policy.name)
             )
         self.embedded_policy = list(collection).pop()
         self.embedded_policy.validate()

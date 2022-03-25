@@ -482,9 +482,7 @@ class BlobOutput(DirectoryOutput):
     def get_output_path(self, output_url):
         if '{' not in output_url:
             date_path = datetime.datetime.utcnow().strftime('%Y/%m/%d/%H')
-            return "/".join(
-                [s.strip('/') for s in [output_url, self.ctx.policy.name, date_path]]
-            )
+            return "/".join([s.strip('/') for s in [output_url, self.ctx.policy.name, date_path]])
         return output_url.format(**self.get_output_vars()).rstrip('/')
 
     def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
@@ -497,9 +495,7 @@ class BlobOutput(DirectoryOutput):
     def upload(self):
         for root, dirs, files in os.walk(self.root_dir):
             for f in files:
-                key = "/".join(
-                    filter(None, [self.key_prefix, root[len(self.root_dir) :], f])
-                )
+                key = "/".join(filter(None, [self.key_prefix, root[len(self.root_dir) :], f]))
                 self.upload_file(os.path.join(root, f), key)
 
     def upload_file(self, path, key):

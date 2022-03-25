@@ -29,9 +29,7 @@ class RDSTest(BaseTest):
         source = p.resource_manager.get_source("config")
         resource_config = json.loads(event["invokingEvent"])["configurationItem"]
         resource = source.load_resource(resource_config)
-        self.assertEqual(
-            resource["Tags"], [{u"Key": u"workload-type", u"Value": u"other"}]
-        )
+        self.assertEqual(resource["Tags"], [{u"Key": u"workload-type", u"Value": u"other"}])
 
     def test_rds_stop(self):
         session_factory = self.replay_flight_data("test_rds_stop")
@@ -220,9 +218,7 @@ class RDSTest(BaseTest):
     def test_rds_mark_hours(self):
         localtz = tzutil.gettz("Etc/UTC")
         dt = datetime.datetime.now(localtz)
-        dt = dt.replace(
-            year=2018, month=5, day=9, hour=21, minute=20, second=0, microsecond=0
-        )
+        dt = dt.replace(year=2018, month=5, day=9, hour=21, minute=20, second=0, microsecond=0)
         session_factory = self.replay_flight_data("test_rds_mark_hours")
         session = session_factory(region="us-east-1")
         rds = session.client("rds")
@@ -240,9 +236,7 @@ class RDSTest(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
 
-        resource = rds.list_tags_for_resource(
-            ResourceName=resources[0]["DBInstanceArn"]
-        )
+        resource = rds.list_tags_for_resource(ResourceName=resources[0]["DBInstanceArn"])
         tags = [t["Value"] for t in resource["TagList"] if t["Key"] == "maid_status"]
         result = datetime.datetime.strptime(
             tags[0].strip().split("@", 1)[-1], "%Y/%m/%d %H%M %Z"
@@ -303,9 +297,7 @@ class RDSTest(BaseTest):
 
     def test_rds_snapshot(self):
         session_factory = self.replay_flight_data("test_rds_snapshot")
-        dt = datetime.datetime.now().replace(
-            year=2017, month=12, day=11, hour=14, minute=9
-        )
+        dt = datetime.datetime.now().replace(year=2017, month=12, day=11, hour=14, minute=9)
         suffix = dt.strftime("%Y-%m-%d-%H-%M")
         p = self.load_policy(
             {
@@ -430,15 +422,11 @@ class RDSTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_rds_available_engine_upgrades(self):
-        session_factory = self.replay_flight_data(
-            "test_rds_available_engine_upgrades", zdata=True
-        )
+        session_factory = self.replay_flight_data("test_rds_available_engine_upgrades", zdata=True)
         client = session_factory().client("rds")
         upgrades = rds._get_available_engine_upgrades(client)
         self.assertEqual(upgrades["postgres"]["9.3.1"], "9.3.14")
-        self.assertEqual(
-            upgrades["sqlserver-ex"]["10.50.6000.34.v1"], "10.50.6529.0.v1"
-        )
+        self.assertEqual(upgrades["sqlserver-ex"]["10.50.6000.34.v1"], "10.50.6529.0.v1")
         upgrades = rds._get_available_engine_upgrades(client, major=True)
         self.assertEqual(upgrades["postgres"]["9.3.1"], "9.4.9")
         self.assertEqual(upgrades["postgres"]["9.4.9"], "9.5.4")
@@ -730,9 +718,7 @@ class RDSTest(BaseTest):
         self.assertFalse(db_info["DBInstances"][0]["DeletionProtection"])
 
     def test_rds_modify_db_enable_cloudwatch(self):
-        session_factory = self.replay_flight_data(
-            "test_rds_modify_db_enable_cloudwatch"
-        )
+        session_factory = self.replay_flight_data("test_rds_modify_db_enable_cloudwatch")
         p = self.load_policy(
             {
                 "name": "rds-modify-enable-cloudwatch",
@@ -769,9 +755,7 @@ class RDSTest(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client("rds")
         db_info = client.describe_db_instances(DBInstanceIdentifier="database-2")
-        self.assertIn(
-            'error', db_info["DBInstances"][0]["EnabledCloudwatchLogsExports"]
-        )
+        self.assertIn('error', db_info["DBInstances"][0]["EnabledCloudwatchLogsExports"])
 
     def test_rds_modify_db_validation_monitoring_error(self):
         with self.assertRaises(PolicyValidationError) as err:
@@ -816,9 +800,7 @@ class RDSTest(BaseTest):
         )
 
     def test_rds_modify_db_enable_perfinsights(self):
-        session_factory = self.replay_flight_data(
-            "test_rds_modify_db_enable_perfinsights"
-        )
+        session_factory = self.replay_flight_data("test_rds_modify_db_enable_perfinsights")
         p = self.load_policy(
             {
                 "name": "rds-modify-enable-perfinsights",
@@ -838,9 +820,7 @@ class RDSTest(BaseTest):
                 "actions": [
                     {
                         "type": "modify-db",
-                        "update": [
-                            {"property": "EnablePerformanceInsights", "value": True}
-                        ],
+                        "update": [{"property": "EnablePerformanceInsights", "value": True}],
                         "immediate": True,
                     }
                 ],
@@ -859,18 +839,16 @@ class RDSSnapshotTest(BaseTest):
         session_factory = self.replay_flight_data("test_rds_snapshot_copy_tags_enable")
         client = session_factory(region="us-east-1").client("rds")
         self.assertFalse(
-            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")[
-                "DBInstances"
-            ][0]["CopyTagsToSnapshot"]
+            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")["DBInstances"][0][
+                "CopyTagsToSnapshot"
+            ]
         )
 
         p = self.load_policy(
             {
                 "name": "rds-enable-snapshot-tag-copy",
                 "resource": "rds",
-                "filters": [
-                    {"type": "value", "key": "Engine", "value": "mysql", "op": "eq"}
-                ],
+                "filters": [{"type": "value", "key": "Engine", "value": "mysql", "op": "eq"}],
                 "actions": [{"type": "set-snapshot-copy-tags", "enable": True}],
             },
             session_factory=session_factory,
@@ -880,9 +858,9 @@ class RDSSnapshotTest(BaseTest):
         self.assertEqual(resources[0]["DBInstanceIdentifier"], "mydbinstance")
 
         self.assertTrue(
-            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")[
-                "DBInstances"
-            ][0]["CopyTagsToSnapshot"]
+            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")["DBInstances"][0][
+                "CopyTagsToSnapshot"
+            ]
         )
 
         self.assertDeprecation(
@@ -898,18 +876,16 @@ class RDSSnapshotTest(BaseTest):
         session_factory = self.replay_flight_data("test_rds_snapshot_copy_tags_disable")
         client = session_factory(region="us-east-1").client("rds")
         self.assertTrue(
-            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")[
-                "DBInstances"
-            ][0]["CopyTagsToSnapshot"]
+            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")["DBInstances"][0][
+                "CopyTagsToSnapshot"
+            ]
         )
 
         p = self.load_policy(
             {
                 "name": "rds-enable-snapshot-tag-copy",
                 "resource": "rds",
-                "filters": [
-                    {"type": "value", "key": "Engine", "value": "mysql", "op": "eq"}
-                ],
+                "filters": [{"type": "value", "key": "Engine", "value": "mysql", "op": "eq"}],
                 "actions": [{"type": "set-snapshot-copy-tags", "enable": False}],
             },
             session_factory=session_factory,
@@ -919,9 +895,9 @@ class RDSSnapshotTest(BaseTest):
         self.assertEqual(resources[0]["DBInstanceIdentifier"], "mydbinstance")
 
         self.assertFalse(
-            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")[
-                "DBInstances"
-            ][0]["CopyTagsToSnapshot"]
+            client.describe_db_instances(DBInstanceIdentifier="mydbinstance")["DBInstances"][0][
+                "CopyTagsToSnapshot"
+            ]
         )
 
     def test_rds_snapshot_access(self):
@@ -937,10 +913,7 @@ class RDSSnapshotTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 2)
         self.assertEqual(
-            {
-                r["DBSnapshotIdentifier"]: r["c7n:CrossAccountViolations"]
-                for r in resources
-            },
+            {r["DBSnapshotIdentifier"]: r["c7n:CrossAccountViolations"] for r in resources},
             {"tidx-pub": ["all"], "tidx-rdx": ["619193117841"]},
         )
 
@@ -974,9 +947,7 @@ class RDSSnapshotTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["DBSnapshotIdentifier"], "rds:originb-2016-12-28-09-15"
-        )
+        self.assertEqual(resources[0]["DBSnapshotIdentifier"], "rds:originb-2016-12-28-09-15")
 
     def test_rds_cross_region_copy_lambda(self):
         self.assertRaises(
@@ -1075,9 +1046,9 @@ class RDSSnapshotTest(BaseTest):
         self.assertEqual(snapshots[0]["DBInstanceIdentifier"], "originb")
         tags = {
             t["Key"]: t["Value"]
-            for t in client.list_tags_for_resource(
-                ResourceName=resources[0]["c7n:CopiedSnapshot"]
-            )["TagList"]
+            for t in client.list_tags_for_resource(ResourceName=resources[0]["c7n:CopiedSnapshot"])[
+                "TagList"
+            ]
         }
         self.assertEqual(
             {
@@ -1208,18 +1179,16 @@ class RDSSnapshotTest(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["DBInstanceIdentifier"], "c7n-test-pa")
         self.assertFalse(
-            client.describe_db_instances(DBInstanceIdentifier="c7n-test-pa")[
-                "DBInstances"
-            ][0]["PubliclyAccessible"]
+            client.describe_db_instances(DBInstanceIdentifier="c7n-test-pa")["DBInstances"][0][
+                "PubliclyAccessible"
+            ]
         )
 
     def _get_effective_permissions(self, client, snapshot_id):
-        attributes = client.describe_db_snapshot_attributes(
-            DBSnapshotIdentifier=snapshot_id
-        )["DBSnapshotAttributesResult"]["DBSnapshotAttributes"]
-        attr_map = {
-            attr["AttributeName"]: attr["AttributeValues"] for attr in attributes
-        }
+        attributes = client.describe_db_snapshot_attributes(DBSnapshotIdentifier=snapshot_id)[
+            "DBSnapshotAttributesResult"
+        ]["DBSnapshotAttributes"]
+        attr_map = {attr["AttributeName"]: attr["AttributeValues"] for attr in attributes}
         return set(attr_map.get("restore", []))
 
     def test_set_permissions(self):
@@ -1236,9 +1205,7 @@ class RDSSnapshotTest(BaseTest):
                 "resource": "rds-snapshot",
                 "source": "config",
                 "query": [{"clause": f"resourceId = '{target_snapshot_id}'"}],
-                "actions": [
-                    {"type": "set-permissions", "add": [add], "remove": [remove, "all"]}
-                ],
+                "actions": [{"type": "set-permissions", "add": [add], "remove": [remove, "all"]}],
             },
             session_factory=session_factory,
             config={"region": "us-east-2"},
@@ -1343,9 +1310,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #
         # Results in 4 DB Instances with default Security Group attached
 
-        session_factory = self.replay_flight_data(
-            "test_rds_remove_matched_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_rds_remove_matched_security_groups")
         p = self.load_policy(
             {
                 "name": "rds-remove-matched-security-groups",
@@ -1372,9 +1337,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
             {
                 "name": "rds-verify-remove-matched-security-groups",
                 "resource": "rds",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -1646,13 +1609,9 @@ class Resize(BaseTest):
         wait_until = lambda state: self.wait_until(waiting_client, dbid, state)  # NOQA
         wait_until("available")
 
-        describe = lambda: client.describe_db_instances(
-            DBInstanceIdentifier=dbid
-        )[  # NOQA
+        describe = lambda: client.describe_db_instances(DBInstanceIdentifier=dbid)[  # NOQA
             "DBInstances"
-        ][
-            0
-        ]
+        ][0]
 
         def resize(**kw):
             action = {"type": "resize", "percent": 10}
@@ -1661,9 +1620,7 @@ class Resize(BaseTest):
                 {
                     "name": "rds-resize-up",
                     "resource": "rds",
-                    "filters": [
-                        {"type": "value", "key": "DBInstanceIdentifier", "value": dbid}
-                    ],
+                    "filters": [{"type": "value", "key": "DBInstanceIdentifier", "value": dbid}],
                     "actions": [action],
                 },
                 config={"region": "us-west-2"},
@@ -1703,9 +1660,7 @@ class TestReservedRDSInstance(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReservedDBInstanceId"], "ri-2019-05-06-14-19-06-332"
-        )
+        self.assertEqual(resources[0]["ReservedDBInstanceId"], "ri-2019-05-06-14-19-06-332")
 
 
 class RDSEventSubscription(BaseTest):

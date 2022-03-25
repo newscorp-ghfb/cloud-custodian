@@ -6,9 +6,7 @@ from .common import BaseTest
 class UserPool(BaseTest):
     def test_query_user_pool(self):
         factory = self.replay_flight_data("test_cognito-user-pool")
-        p = self.load_policy(
-            {"name": "users", "resource": "user-pool"}, session_factory=factory
-        )
+        p = self.load_policy({"name": "users", "resource": "user-pool"}, session_factory=factory)
         resources = p.run()
         self.assertEqual(
             sorted([n["Name"] for n in resources]),

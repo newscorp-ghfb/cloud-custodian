@@ -72,9 +72,7 @@ class CloudWatchLogHandler(logging.Handler):
         retry = get_retry(('ThrottlingException',))
         try:
             client = self.session_factory().client('logs')
-            logs = retry(client.describe_log_groups, logGroupNamePrefix=self.log_group)[
-                'logGroups'
-            ]
+            logs = retry(client.describe_log_groups, logGroupNamePrefix=self.log_group)['logGroups']
             if not [l for l in logs if l['logGroupName'] == self.log_group]:
                 retry(client.create_log_group, logGroupName=self.log_group)
         except ClientError as e:
@@ -192,9 +190,7 @@ class Transport:
             response = self.client.put_log_events(**params)
         except ClientError as e:
             if Error.code(e) in (Error.AlreadyAccepted, Error.InvalidToken):
-                self.sequences[stream] = e.response['Error']['Message'].rsplit(" ", 1)[
-                    -1
-                ]
+                self.sequences[stream] = e.response['Error']['Message'].rsplit(" ", 1)[-1]
                 return self.send_group(k, messages)
             self.error = e
             return

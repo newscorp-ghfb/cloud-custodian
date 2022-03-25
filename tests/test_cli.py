@@ -45,11 +45,7 @@ class CliTest(BaseTest):
         try:
             cli.main()
         except SystemExit as e:
-            self.fail(
-                "Expected sys.exit would not be called. Exit code was ({})".format(
-                    e.code
-                )
-            )
+            self.fail("Expected sys.exit would not be called. Exit code was ({})".format(e.code))
         return out.getvalue(), err.getvalue()
 
     def run_and_expect_failure(self, argv, exit_code):
@@ -107,9 +103,7 @@ class ValidateTest(CliTest):
                     "name": "foo",
                     "resource": "s3",
                     "filters": [{"tag:custodian_tagging": "not-null"}],
-                    "actions": [
-                        {"type": "untag", "tags": {"custodian_cleanup": "yes"}}
-                    ],
+                    "actions": [{"type": "untag", "tags": {"custodian_cleanup": "yes"}}],
                 }
             ]
         }
@@ -126,9 +120,7 @@ class ValidateTest(CliTest):
         self.run_and_expect_failure(["custodian", "validate"], 1)
 
         # nonexistent file given
-        self.run_and_expect_exception(
-            ["custodian", "validate", "fake.yaml"], ValueError
-        )
+        self.run_and_expect_exception(["custodian", "validate", "fake.yaml"], ValueError)
 
         valid_policies = {
             "policies": [
@@ -182,15 +174,11 @@ class SchemaTest(CliTest):
         self.assertTrue(len(data['aws']['aws.ec2']['actions']) > 10)
 
     def test_schema_alias(self):
-        stdout, stderr = self.run_and_expect_success(
-            ["custodian", "schema", "aws.network-addr"]
-        )
+        stdout, stderr = self.run_and_expect_success(["custodian", "schema", "aws.network-addr"])
         self.assertIn("aws.elastic-ip:", stdout)
 
     def test_schema_alias_unqualified(self):
-        stdout, stderr = self.run_and_expect_success(
-            ["custodian", "schema", "network-addr"]
-        )
+        stdout, stderr = self.run_and_expect_success(["custodian", "schema", "network-addr"])
         self.assertIn("aws.elastic-ip:", stdout)
 
     def test_schema(self):
@@ -236,9 +224,7 @@ class SchemaTest(CliTest):
         self.run_and_expect_failure(["custodian", "schema", "ec2.arglbargle"], 1)
 
         # invalid item
-        self.run_and_expect_failure(
-            ["custodian", "schema", "ec2.filters.nonexistent"], 1
-        )
+        self.run_and_expect_failure(["custodian", "schema", "ec2.filters.nonexistent"], 1)
 
         # invalid number of selectors
         self.run_and_expect_failure(["custodian", "schema", "ec2.filters.and.foo"], 1)
@@ -330,9 +316,7 @@ class ReportTest(CliTest):
         }
         yaml_file = self.write_policy_file(valid_policies)
 
-        output = self.get_output(
-            ["custodian", "report", "-s", self.output_dir, yaml_file]
-        )
+        output = self.get_output(["custodian", "report", "-s", self.output_dir, yaml_file])
         self.assertIn("InstanceId", output)
         self.assertIn("i-014296505597bf519", output)
 
@@ -369,9 +353,7 @@ class ReportTest(CliTest):
         temp_dir = self.get_temp_dir()
         empty_policies = {"policies": []}
         yaml_file = self.write_policy_file(empty_policies)
-        self.run_and_expect_failure(
-            ["custodian", "report", "-s", temp_dir, yaml_file], 1
-        )
+        self.run_and_expect_failure(["custodian", "report", "-s", temp_dir, yaml_file], 1)
 
         # more than 1 policy
         policies = {
@@ -381,9 +363,7 @@ class ReportTest(CliTest):
             ]
         }
         yaml_file = self.write_policy_file(policies)
-        self.run_and_expect_failure(
-            ["custodian", "report", "-s", temp_dir, yaml_file], 1
-        )
+        self.run_and_expect_failure(["custodian", "report", "-s", temp_dir, yaml_file], 1)
 
     def test_warning_on_empty_policy_filter(self):
         # This test is to examine the warning output supplied when -p is used and
@@ -440,23 +420,17 @@ class LogsTest(CliTest):
         p_data = {
             "name": "test-policy",
             "resource": "rds",
-            "filters": [
-                {"key": "GroupName", "type": "security-group", "value": "default"}
-            ],
+            "filters": [{"key": "GroupName", "type": "security-group", "value": "default"}],
             "actions": [{"days": 10, "type": "retention"}],
         }
         yaml_file = self.write_policy_file({"policies": [p_data]})
         output_dir = os.path.join(os.path.dirname(__file__), "data", "logs")
-        self.run_and_expect_failure(
-            ["custodian", "logs", "-s", output_dir, yaml_file], 1
-        )
+        self.run_and_expect_failure(["custodian", "logs", "-s", output_dir, yaml_file], 1)
 
 
 class RunTest(CliTest):
     def test_ec2(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_state_transition_age_filter"
-        )
+        session_factory = self.replay_flight_data("test_ec2_state_transition_age_filter")
 
         from c7n.policy import PolicyCollection
 
@@ -501,9 +475,7 @@ class RunTest(CliTest):
     def test_error(self):
         from c7n.policy import Policy
 
-        self.patch(
-            Policy, "__call__", lambda x: (_ for _ in ()).throw(Exception("foobar"))
-        )
+        self.patch(Policy, "__call__", lambda x: (_ for _ in ()).throw(Exception("foobar")))
 
         #
         # Make sure that if the policy causes an exception we error out
@@ -631,9 +603,7 @@ class MetricsTest(CliTest):
         }
         yaml_file = self.write_policy_file(policy)
 
-        self.run_and_expect_failure(
-            ["custodian", "metrics", "--start", "1", yaml_file], 1
-        )
+        self.run_and_expect_failure(["custodian", "metrics", "--start", "1", yaml_file], 1)
 
 
 class MiscTest(CliTest):
@@ -652,9 +622,7 @@ class MiscTest(CliTest):
         temp_dir = self.get_temp_dir()
         yaml_file = self.write_policy_file({})
         nonexistent = yaml_file + ".bad"
-        self.run_and_expect_failure(
-            ["custodian", "run", "-s", temp_dir, yaml_file, nonexistent], 1
-        )
+        self.run_and_expect_failure(["custodian", "run", "-s", temp_dir, yaml_file, nonexistent], 1)
 
     def test_duplicate_policy(self):
         policy = {
@@ -668,9 +636,7 @@ class MiscTest(CliTest):
         }
         temp_dir = self.get_temp_dir()
         yaml_file = self.write_policy_file(policy)
-        self.run_and_expect_failure(
-            ["custodian", "run", "-s", temp_dir, yaml_file, yaml_file], 1
-        )
+        self.run_and_expect_failure(["custodian", "run", "-s", temp_dir, yaml_file, yaml_file], 1)
 
     def test_failure_with_no_default_region(self):
         policy = {"policies": [{"name": "will-never-run", "resource": "ec2"}]}

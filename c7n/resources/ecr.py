@@ -26,9 +26,9 @@ class DescribeECR(DescribeSource):
         results = []
         for r in resources:
             try:
-                r['Tags'] = client.list_tags_for_resource(
-                    resourceArn=r['repositoryArn']
-                ).get('tags')
+                r['Tags'] = client.list_tags_for_resource(resourceArn=r['repositoryArn']).get(
+                    'tags'
+                )
                 results.append(r)
             except client.exceptions.RepositoryNotFoundException:
                 continue
@@ -55,9 +55,7 @@ class ECRImageQuery(ChildResourceQuery):
         m = self.resolve(resource_manager.resource_type)
         params = {}
         resources = self.filter(resource_manager, **params)
-        resources = [
-            r for r in resources if "{}/{}".format(r[0], r[1][m.id]) in identities
-        ]
+        resources = [r for r in resources if "{}/{}".format(r[0], r[1][m.id]) in identities]
 
         return resources
 
@@ -107,9 +105,7 @@ ECR_POLICY_SCHEMA = {
     'properties': {
         'Sid': {'type': 'string'},
         'Effect': {'type': 'string', 'enum': ['Allow', 'Deny']},
-        'Principal': {
-            'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]
-        },
+        'Principal': {'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]},
         'NotPrincipal': {'anyOf': [{'type': 'object'}, {'type': 'array'}]},
         'Action': {
             'anyOf': [
@@ -193,9 +189,7 @@ class ModifyPolicyStatement(ModifyPolicyBase):
         for r in resources:
             try:
                 policy = json.loads(
-                    client.get_repository_policy(repositoryName=r["repositoryName"])[
-                        "policyText"
-                    ]
+                    client.get_repository_policy(repositoryName=r["repositoryName"])["policyText"]
                 )
             except client.exceptions.RepositoryPolicyNotFoundException:
                 policy = {}
@@ -328,9 +322,9 @@ class ECRCrossAccountAccessFilter(CrossAccountAccessFilter):
 
         def _augment(r):
             try:
-                r['Policy'] = client.get_repository_policy(
-                    repositoryName=r['repositoryName']
-                )['policyText']
+                r['Policy'] = client.get_repository_policy(repositoryName=r['repositoryName'])[
+                    'policyText'
+                ]
             except client.exceptions.RepositoryPolicyNotFoundException:
                 return None
             return r
@@ -377,14 +371,10 @@ def lifecycle_rule_validate(policy, rule):
     #
     # https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lp_evaluation_rules
 
-    if (
-        rule['selection']['tagStatus'] == 'tagged'
-        and 'tagPrefixList' not in rule['selection']
-    ):
+    if rule['selection']['tagStatus'] == 'tagged' and 'tagPrefixList' not in rule['selection']:
         raise PolicyValidationError(
             (
-                "{} has invalid lifecycle rule {} tagPrefixList "
-                "required for tagStatus: tagged"
+                "{} has invalid lifecycle rule {} tagPrefixList " "required for tagStatus: tagged"
             ).format(policy.name, rule)
         )
     if (
@@ -397,10 +387,7 @@ def lifecycle_rule_validate(policy, rule):
                 "required for countType: sinceImagePushed"
             ).format(policy.name, rule)
         )
-    if (
-        rule['selection']['countType'] == 'imageCountMoreThan'
-        and 'countUnit' in rule['selection']
-    ):
+    if rule['selection']['countType'] == 'imageCountMoreThan' and 'countUnit' in rule['selection']:
         raise PolicyValidationError(
             (
                 "{} has invalid lifecycle rule {} countUnit "
@@ -503,9 +490,7 @@ class SetLifecycle(Action):
 
     def validate(self):
         if self.data.get('state') is False and 'rules' in self.data:
-            raise PolicyValidationError(
-                "set-lifecycle can't use statements and state: false"
-            )
+            raise PolicyValidationError("set-lifecycle can't use statements and state: false")
         elif self.data.get('state', True) and not self.data.get('rules'):
             raise PolicyValidationError("set-lifecycle requires rules with state: true")
         for r in self.data.get('rules', []):
@@ -558,9 +543,7 @@ class RemovePolicyStatement(RemovePolicyBase):
             try:
                 results += filter(None, [self.process_resource(client, r)])
             except Exception:
-                self.log.exception(
-                    "Error processing ecr registry:%s", r['repositoryArn']
-                )
+                self.log.exception("Error processing ecr registry:%s", r['repositoryArn'])
         return results
 
     def process_resource(self, client, resource):

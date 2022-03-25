@@ -91,16 +91,14 @@ class EffectiveRouteTableFilter(ValueFilter):
             try:
                 if 'routes' not in resource:
                     rg = resource['resourceGroup']
-                    route_table = (
-                        client.network_interfaces.begin_get_effective_route_table(
-                            rg, resource['name']
-                        ).result()
-                    )
+                    route_table = client.network_interfaces.begin_get_effective_route_table(
+                        rg, resource['name']
+                    ).result()
 
                     resource['routes'] = route_table.serialize()
-                    filtered_effective_route_table = super(
-                        EffectiveRouteTableFilter, self
-                    ).process([resource], event)
+                    filtered_effective_route_table = super(EffectiveRouteTableFilter, self).process(
+                        [resource], event
+                    )
 
                     if filtered_effective_route_table:
                         matched.append(resource)

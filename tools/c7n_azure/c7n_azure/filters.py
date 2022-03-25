@@ -150,9 +150,7 @@ class MetricFilter(Filter):
                     'P1D',
                 ]
             },
-            'aggregation': {
-                'enum': ['total', 'average', 'count', 'minimum', 'maximum']
-            },
+            'aggregation': {'enum': ['total', 'average', 'count', 'minimum', 'maximum']},
             'no_data_action': {'enum': ['include', 'exclude', 'to_zero']},
             'filter': {'type': 'string'},
         },
@@ -170,9 +168,7 @@ class MetricFilter(Filter):
         # Number of hours from current UTC time
         self.timeframe = float(self.data.get('timeframe', self.DEFAULT_TIMEFRAME))
         # Interval as defined by Azure SDK
-        self.interval = isodate.parse_duration(
-            self.data.get('interval', self.DEFAULT_INTERVAL)
-        )
+        self.interval = isodate.parse_duration(self.data.get('interval', self.DEFAULT_INTERVAL))
         # Aggregation as defined by Azure SDK
         self.aggregation = self.data.get('aggregation', self.DEFAULT_AGGREGATION)
         # Aggregation function to be used locally
@@ -192,9 +188,7 @@ class MetricFilter(Filter):
         self.timespan = "{}/{}".format(start_time, end_time)
 
         # Create Azure Monitor client
-        self.client = self.manager.get_client(
-            'azure.mgmt.monitor.MonitorManagementClient'
-        )
+        self.client = self.manager.get_client('azure.mgmt.monitor.MonitorManagementClient')
 
         # Process each resource in a separate thread, returning all that pass filter
         with self.executor_factory(max_workers=3) as w:
@@ -215,15 +209,12 @@ class MetricFilter(Filter):
                 filter=self.get_filter(resource),
             )
         except HttpResponseError:
-            self.log.exception(
-                "Could not get metric: %s on %s" % (self.metric, resource['id'])
-            )
+            self.log.exception("Could not get metric: %s on %s" % (self.metric, resource['id']))
             return None
 
         if len(metrics_data.value) > 0 and len(metrics_data.value[0].timeseries) > 0:
             m = [
-                getattr(item, self.aggregation)
-                for item in metrics_data.value[0].timeseries[0].data
+                getattr(item, self.aggregation) for item in metrics_data.value[0].timeseries[0].data
             ]
         else:
             m = None
@@ -342,8 +333,7 @@ class TagActionFilter(Filter):
         tz = Time.get_tz(self.data.get('tz', 'utc'))
         if not tz:
             raise PolicyValidationError(
-                "Invalid timezone specified '%s' in %s"
-                % (self.data.get('tz'), self.manager.data)
+                "Invalid timezone specified '%s' in %s" % (self.data.get('tz'), self.manager.data)
             )
         return self
 
@@ -372,9 +362,7 @@ class TagActionFilter(Filter):
         try:
             action_date = parse(action_date_str)
         except Exception:
-            self.log.error(
-                "could not parse tag:%s value:%s on %s" % (self.tag, v, i['InstanceId'])
-            )
+            self.log.error("could not parse tag:%s value:%s on %s" % (self.tag, v, i['InstanceId']))
             return False
 
         # current_date must match timezones with the parsed date string
@@ -384,9 +372,7 @@ class TagActionFilter(Filter):
         else:
             current_date = now()
 
-        return current_date >= (
-            action_date - timedelta(days=self.skew, hours=self.skew_hours)
-        )
+        return current_date >= (action_date - timedelta(days=self.skew, hours=self.skew_hours))
 
 
 class DiagnosticSettingsFilter(ValueFilter):
@@ -448,9 +434,7 @@ class DiagnosticSettingsFilter(ValueFilter):
 
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.warning(
-                        "Diagnostic settings filter error: %s" % f.exception()
-                    )
+                    self.log.warning("Diagnostic settings filter error: %s" % f.exception())
                     continue
                 else:
                     results.extend(f.result())
@@ -467,9 +451,7 @@ class DiagnosticSettingsFilter(ValueFilter):
             # put an empty item in when no diag settings, so the absent operator can function
             if not settings:
                 settings = [{}]
-            filtered_settings = super(DiagnosticSettingsFilter, self).process(
-                settings, event=None
-            )
+            filtered_settings = super(DiagnosticSettingsFilter, self).process(settings, event=None)
 
             if filtered_settings:
                 matched.append(resource)
@@ -826,17 +808,13 @@ class ResourceLockFilter(Filter):
         return resources
 
     def _process_resource_set(self, resources, event=None):
-        client = self.manager.get_client(
-            'azure.mgmt.resource.locks.ManagementLockClient'
-        )
+        client = self.manager.get_client('azure.mgmt.resource.locks.ManagementLockClient')
         result = []
         for resource in resources:
             if is_resource_group(resource):
                 locks = [
                     r.serialize(True)
-                    for r in client.management_locks.list_at_resource_group_level(
-                        resource['name']
-                    )
+                    for r in client.management_locks.list_at_resource_group_level(resource['name'])
                 ]
             else:
                 locks = [
@@ -844,10 +822,7 @@ class ResourceLockFilter(Filter):
                     for r in client.management_locks.list_at_resource_level(
                         resource['resourceGroup'],
                         ResourceIdParser.get_namespace(resource['id']),
-                        ResourceIdParser.get_resource_name(
-                            resource.get('c7n:parent-id')
-                        )
-                        or '',
+                        ResourceIdParser.get_resource_name(resource.get('c7n:parent-id')) or '',
                         ResourceIdParser.get_resource_type(resource['id']),
                         resource['name'],
                     )
@@ -924,20 +899,14 @@ class CostFilter(ValueFilter):
         rinherit=ValueFilter.schema,
         required=['timeframe'],
         key=None,
-        **{
-            'timeframe': {
-                'oneOf': [{'enum': preset_timeframes}, {"type": "number", "minimum": 1}]
-            }
-        }
+        **{'timeframe': {'oneOf': [{'enum': preset_timeframes}, {"type": "number", "minimum": 1}]}}
     )
 
     schema_alias = True
     log = logging.getLogger('custodian.azure.filters.CostFilter')
 
     def __init__(self, data, manager=None):
-        data[
-            'key'
-        ] = 'PreTaxCost'  # can also be Currency, but now only PreTaxCost is supported
+        data['key'] = 'PreTaxCost'  # can also be Currency, but now only PreTaxCost is supported
         super(CostFilter, self).__init__(data, manager)
         self.cached_costs = None
 
@@ -947,11 +916,7 @@ class CostFilter(ValueFilter):
 
         id = i['id'].lower() + "/"
 
-        costs = [
-            k.copy()
-            for k in self.cached_costs
-            if (k['ResourceId'] + '/').startswith(id)
-        ]
+        costs = [k.copy() for k in self.cached_costs if (k['ResourceId'] + '/').startswith(id)]
 
         if not costs:
             return False
@@ -1013,9 +978,7 @@ class CostFilter(ValueFilter):
             if 'dimension' in query_filter._attribute_map:
                 query_filter._attribute_map['dimension']['key'] = 'dimensions'
 
-        dataset = QueryDataset(
-            grouping=grouping, aggregation=aggregation, filter=query_filter
-        )
+        dataset = QueryDataset(grouping=grouping, aggregation=aggregation, filter=query_filter)
 
         timeframe = self.data['timeframe']
         time_period = None
@@ -1045,15 +1008,11 @@ class CostFilter(ValueFilter):
                 target, self.fix_wrap_rest_response(data)
             )
 
-        result_list = [
-            {query.columns[i].name: v for i, v in enumerate(row)} for row in query.rows
-        ]
+        result_list = [{query.columns[i].name: v for i, v in enumerate(row)} for row in query.rows]
 
         for r in result_list:
             if 'ResourceGroupName' in r:
-                r['ResourceId'] = (
-                    scope + '/resourcegroups/' + r.pop('ResourceGroupName')
-                )
+                r['ResourceId'] = scope + '/resourcegroups/' + r.pop('ResourceGroupName')
             r['ResourceId'] = r['ResourceId'].lower()
 
         return result_list

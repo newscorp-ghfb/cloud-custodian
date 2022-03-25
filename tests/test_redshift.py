@@ -23,9 +23,9 @@ class TestRedshift(BaseTest):
         if self.recording:
             time.sleep(2)
         client = factory().client('redshift')
-        cluster = client.describe_clusters(
-            ClusterIdentifier=resources[0]['ClusterIdentifier']
-        ).get('Clusters')[0]
+        cluster = client.describe_clusters(ClusterIdentifier=resources[0]['ClusterIdentifier']).get(
+            'Clusters'
+        )[0]
         assert cluster['ClusterStatus'] == 'pausing'
 
     def test_redshift_resume(self):
@@ -45,9 +45,9 @@ class TestRedshift(BaseTest):
         if self.recording:
             time.sleep(2)
         client = factory().client('redshift')
-        cluster = client.describe_clusters(
-            ClusterIdentifier=resources[0]['ClusterIdentifier']
-        ).get('Clusters')[0]
+        cluster = client.describe_clusters(ClusterIdentifier=resources[0]['ClusterIdentifier']).get(
+            'Clusters'
+        )[0]
         assert cluster['ClusterStatus'] == 'resuming'
 
     def test_redshift_security_group_filter(self):
@@ -56,9 +56,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-query",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=factory,
         )
@@ -72,9 +70,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-query",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "subnet", "key": "MapPublicIpOnLaunch", "value": True}
-                ],
+                "filters": [{"type": "subnet", "key": "MapPublicIpOnLaunch", "value": True}],
             },
             session_factory=factory,
         )
@@ -129,9 +125,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-cluster-mark",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "value", "key": "ClusterIdentifier", "value": "c7n"}
-                ],
+                "filters": [{"type": "value", "key": "ClusterIdentifier", "value": "c7n"}],
                 "actions": [{"type": "mark-for-op", "days": 30, "op": "delete"}],
             },
             session_factory=factory,
@@ -151,9 +145,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-cluster-unmark",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "value", "key": "ClusterIdentifier", "value": "c7n"}
-                ],
+                "filters": [{"type": "value", "key": "ClusterIdentifier", "value": "c7n"}],
                 "actions": [{"type": "unmark"}],
             },
             session_factory=factory,
@@ -201,9 +193,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-retention",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "value", "key": "ClusterIdentifier", "value": "aaa"}
-                ],
+                "filters": [{"type": "value", "key": "ClusterIdentifier", "value": "aaa"}],
                 "actions": [{"type": "retention", "days": 21}],
             },
             session_factory=session_factory,
@@ -234,9 +224,7 @@ class TestRedshift(BaseTest):
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        cluster = client.describe_clusters(
-            ClusterIdentifier=resources[0]["ClusterIdentifier"]
-        )
+        cluster = client.describe_clusters(ClusterIdentifier=resources[0]["ClusterIdentifier"])
         id_cluster = cluster.get("Clusters")[0].get("ClusterIdentifier")
         snapshot = client.describe_cluster_snapshots(
             SnapshotIdentifier="backup-test-cluster-2017-01-12"
@@ -258,9 +246,7 @@ class TestRedshift(BaseTest):
             {
                 "name": "redshift-vpc-routing",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "value", "key": "EnhancedVpcRouting", "value": True}
-                ],
+                "filters": [{"type": "value", "key": "EnhancedVpcRouting", "value": True}],
                 "actions": [{"type": "enable-vpc-routing", "value": False}],
             },
             session_factory=factory,
@@ -269,13 +255,9 @@ class TestRedshift(BaseTest):
         self.assertEqual(len(resources), 1)
 
         # Ensure that the cluster starts to modify EnhancedVpcRouting value.
-        response = client.describe_clusters(
-            ClusterIdentifier=resources[0]["ClusterIdentifier"]
-        )
+        response = client.describe_clusters(ClusterIdentifier=resources[0]["ClusterIdentifier"])
         cluster = response["Clusters"][0]
-        self.assertEqual(
-            cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"]
-        )
+        self.assertEqual(cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"])
         self.assertEqual(cluster["ClusterStatus"], "modifying")
         self.assertTrue(cluster["PendingModifiedValues"]["EnhancedVpcRouting"])
 
@@ -295,9 +277,7 @@ class TestRedshift(BaseTest):
         self.assertEqual(len(resources), 1)
 
         cluster = client.describe_clusters(ClusterIdentifier="c7n-rs")["Clusters"][0]
-        self.assertEqual(
-            cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"]
-        )
+        self.assertEqual(cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"])
         self.assertFalse(cluster["PubliclyAccessible"])
 
     def test_redshift_kms_alias(self):
@@ -353,9 +333,7 @@ class TestRedshift(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         cluster = client.describe_clusters(ClusterIdentifier="test")["Clusters"][0]
-        self.assertEqual(
-            cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"]
-        )
+        self.assertEqual(cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"])
         self.assertTrue(cluster['AllowVersionUpgrade'])
         self.assertEqual(cluster["MaintenanceTrackName"], "current")
 
@@ -380,9 +358,7 @@ class TestRedshift(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         cluster = client.describe_clusters(ClusterIdentifier="test")["Clusters"][0]
-        self.assertEqual(
-            cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"]
-        )
+        self.assertEqual(cluster["ClusterIdentifier"], resources[0]["ClusterIdentifier"])
         self.assertFalse(cluster['PubliclyAccessible'])
 
     def test_redshift_set_attributes_error(self):
@@ -527,9 +503,7 @@ class TestRedshiftSnapshot(BaseTest):
         self.assertFalse("maid_status" in tag_map)
 
     def test_redshift_snapshot_revoke_access(self):
-        session_factory = self.replay_flight_data(
-            "test_redshift_snapshot_revoke_cross_account"
-        )
+        session_factory = self.replay_flight_data("test_redshift_snapshot_revoke_cross_account")
         p = self.load_policy(
             {
                 "name": "redshift-snapshot-revoke-cross-account",
@@ -560,9 +534,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #        - translates to 1 cluster marked non-compliant
         #
         # Results in 2 clusters with default Security Group attached
-        session_factory = self.replay_flight_data(
-            "test_redshift_remove_matched_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_redshift_remove_matched_security_groups")
         p = self.load_policy(
             {
                 "name": "redshift-remove-matched-security-groups",
@@ -589,9 +561,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
             {
                 "name": "redshift-verify-remove-matched-security-groups",
                 "resource": "redshift",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -748,6 +718,4 @@ class TestReservedNode(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["ReservedNodeId"], "1ba8e2e3-bc01-4d65-b35d-a4a3e931547e"
-        )
+        self.assertEqual(resources[0]["ReservedNodeId"], "1ba8e2e3-bc01-4d65-b35d-a4a3e931547e")

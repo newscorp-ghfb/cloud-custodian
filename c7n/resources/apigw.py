@@ -199,9 +199,7 @@ class UpdateApi(BaseAction):
     def process(self, resources):
         client = utils.local_session(self.manager.session_factory).client('apigateway')
         for r in resources:
-            client.update_rest_api(
-                restApiId=r['id'], patchOperations=self.data['patch']
-            )
+            client.update_rest_api(restApiId=r['id'], patchOperations=self.data['patch'])
 
 
 @RestApi.action_registry.register('delete')
@@ -743,9 +741,7 @@ class FilterRestMethod(ValueFilter):
     def process_task_set(self, client, task_set):
         results = []
         for r, m in task_set:
-            method = client.get_method(
-                restApiId=r['restApiId'], resourceId=r['id'], httpMethod=m
-            )
+            method = client.get_method(restApiId=r['restApiId'], resourceId=r['id'], httpMethod=m)
             method.pop('ResponseMetadata', None)
             method['restApiId'] = r['restApiId']
             method['resourceId'] = r['id']

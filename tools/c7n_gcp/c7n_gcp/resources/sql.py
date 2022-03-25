@@ -183,9 +183,7 @@ class SqlBackupRun(SqlInstanceChildWithSelfLink):
             :param insert_time: a UTC ISO formatted date time string
             :return: an integer number of microseconds since unix epoch
             """
-            delta = parse(insert_time).replace(tzinfo=None) - datetime.utcfromtimestamp(
-                0
-            )
+            delta = parse(insert_time).replace(tzinfo=None) - datetime.utcfromtimestamp(0)
             return int(delta.total_seconds()) * 1000 + int(delta.microseconds / 1000)
 
 
@@ -212,13 +210,9 @@ class SqlSslCert(SqlInstanceChildWithSelfLink):
 
         @staticmethod
         def get(client, event):
-            self_link = jmespath.search(
-                'protoPayload.response.clientCert.certInfo.selfLink', event
-            )
+            self_link = jmespath.search('protoPayload.response.clientCert.certInfo.selfLink', event)
             self_link_re = '.*?/projects/(.*?)/instances/(.*?)/sslCerts/(.*)'
-            project, instance, sha_1_fingerprint = re.match(
-                self_link_re, self_link
-            ).groups()
+            project, instance, sha_1_fingerprint = re.match(self_link_re, self_link).groups()
             parameters = {
                 'project': project,
                 'instance': instance,

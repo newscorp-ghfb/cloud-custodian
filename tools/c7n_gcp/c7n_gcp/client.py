@@ -191,9 +191,7 @@ class Session:
             )
         self._credentials = with_scopes_if_required(credentials, list(CLOUD_SCOPES))
         if use_rate_limiter:
-            self._rate_limiter = RateLimiter(
-                max_calls=quota_max_calls, period=quota_period
-            )
+            self._rate_limiter = RateLimiter(max_calls=quota_max_calls, period=quota_period)
         else:
             self._rate_limiter = None
         self._http = http
@@ -347,9 +345,7 @@ class ServiceClient:
             http = self._http_replay
         else:
             http = _build_http()
-        authorized_http = google_auth_httplib2.AuthorizedHttp(
-            self._credentials, http=http
-        )
+        authorized_http = google_auth_httplib2.AuthorizedHttp(self._credentials, http=http)
         if self._use_cached_http:
             self._local.http = authorized_http
         return authorized_http

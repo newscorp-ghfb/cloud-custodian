@@ -56,8 +56,7 @@ class ResourceQuery:
             raise
 
         raise TypeError(
-            "Enumerating resources resulted in a return"
-            "value which could not be iterated."
+            "Enumerating resources resulted in a return" "value which could not be iterated."
         )
 
     @staticmethod
@@ -109,13 +108,9 @@ class ResourceGraphSource:
         # empty scope will return all resource
         query_scope = ""
         if self.manager.resource_type.resource_type != 'armresource':
-            query_scope = (
-                "where type =~ '%s'" % self.manager.resource_type.resource_type
-            )
+            query_scope = "where type =~ '%s'" % self.manager.resource_type.resource_type
 
-        query = QueryRequest(
-            query=query_scope, subscriptions=[session.get_subscription_id()]
-        )
+        query = QueryRequest(query=query_scope, subscriptions=[session.get_subscription_id()])
         res = client.resources(query)
         cols = [c['name'] for c in res.data['columns']]
         data = [dict(zip(cols, r)) for r in res.data['rows']]
@@ -342,9 +337,7 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
 
     def get_parent_manager(self):
         if not self.parent_manager:
-            self.parent_manager = self.get_resource_manager(
-                self.resource_type.parent_manager_name
-            )
+            self.parent_manager = self.get_resource_manager(self.resource_type.parent_manager_name)
 
         return self.parent_manager
 
@@ -366,9 +359,7 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
         #   - static values stored in 'extra_args' dict (e.g. some type)
         #   - dynamic values are retrieved via 'extra_args' method (e.g. parent name)
         if extra_args:
-            params.update(
-                {key: extra_args[key](parent_resource) for key in extra_args.keys()}
-            )
+            params.update({key: extra_args[key](parent_resource) for key in extra_args.keys()})
 
         params.update(type_info.extra_args(parent_resource))
 
@@ -383,15 +374,13 @@ class ChildResourceManager(QueryResourceManager, metaclass=QueryMeta):
         if isinstance(result, Iterable):
             # KeyVault items don't have `serialize` method now
             return [
-                (r.serialize(True) if hasattr(r, 'serialize') else serialize(r))
-                for r in result
+                (r.serialize(True) if hasattr(r, 'serialize') else serialize(r)) for r in result
             ]
         elif hasattr(result, 'value'):
             return [r.serialize(True) for r in result.value]
 
         raise TypeError(
-            "Enumerating resources resulted in a return"
-            "value which could not be iterated."
+            "Enumerating resources resulted in a return" "value which could not be iterated."
         )
 
     @staticmethod

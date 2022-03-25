@@ -46,9 +46,7 @@ class ResourceGroupTest(BaseTest):
 
     @arm_template('emptyrg.json')
     def test_delete_resource_group(self):
-        with patch(
-            self._get_mgmt_client_string() + '.begin_delete'
-        ) as begin_delete_mock:
+        with patch(self._get_mgmt_client_string() + '.begin_delete') as begin_delete_mock:
             p = self.load_policy(
                 {
                     'name': 'test-azure-resource-group',

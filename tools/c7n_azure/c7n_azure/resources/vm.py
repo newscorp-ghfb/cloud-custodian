@@ -251,9 +251,7 @@ class VMExtensionsFilter(ValueFilter):
     def __call__(self, i):
         if 'c7n:vm-extensions' not in i:
             client = self.manager.get_client()
-            extensions = client.virtual_machine_extensions.list(
-                i['resourceGroup'], i['name']
-            )
+            extensions = client.virtual_machine_extensions.list(i['resourceGroup'], i['name'])
             i['c7n:vm-extensions'] = [e.serialize(True) for e in extensions.value]
 
         return super(VMExtensionsFilter, self).__call__(i['c7n:vm-extensions'])
@@ -279,9 +277,7 @@ class VmPowerOffAction(AzureBaseAction):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
-        self.client.virtual_machines.begin_power_off(
-            resource['resourceGroup'], resource['name']
-        )
+        self.client.virtual_machines.begin_power_off(resource['resourceGroup'], resource['name'])
 
 
 @VirtualMachine.action_registry.register('stop')
@@ -295,9 +291,7 @@ class VmStopAction(AzureBaseAction):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
-        self.client.virtual_machines.begin_deallocate(
-            resource['resourceGroup'], resource['name']
-        )
+        self.client.virtual_machines.begin_deallocate(resource['resourceGroup'], resource['name'])
 
 
 @VirtualMachine.action_registry.register('start')
@@ -311,9 +305,7 @@ class VmStartAction(AzureBaseAction):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
-        self.client.virtual_machines.begin_start(
-            resource['resourceGroup'], resource['name']
-        )
+        self.client.virtual_machines.begin_start(resource['resourceGroup'], resource['name'])
 
 
 @VirtualMachine.action_registry.register('restart')
@@ -327,9 +319,7 @@ class VmRestartAction(AzureBaseAction):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
-        self.client.virtual_machines.begin_restart(
-            resource['resourceGroup'], resource['name']
-        )
+        self.client.virtual_machines.begin_restart(resource['resourceGroup'], resource['name'])
 
 
 @VirtualMachine.action_registry.register('resize')
@@ -357,9 +347,7 @@ class VmResizeAction(AzureBaseAction):
                 vmSize: Standard_A2_v2
     """
 
-    schema = type_schema(
-        'resize', required=['vmSize'], **{'vmSize': {'type': 'string'}}
-    )
+    schema = type_schema('resize', required=['vmSize'], **{'vmSize': {'type': 'string'}})
 
     def __init__(self, data, manager=None):
         super(VmResizeAction, self).__init__(data, manager)

@@ -20,8 +20,7 @@ class ActionTest(BaseTest):
             {'app': 'Z', 'state': {'status': 'running'}},
         ]
         assert {'X', 'Z'} == {
-            r['app']
-            for r in a.filter_resources(resources, 'state.status', ('running',))
+            r['app'] for r in a.filter_resources(resources, 'state.status', ('running',))
         }
         assert log_output.getvalue().strip() == (
             'set-x implicitly filtered 2 of 3 resources key:state.status on running'
@@ -46,9 +45,7 @@ class ActionTest(BaseTest):
 
 class ActionRegistryTest(BaseTest):
     def test_error_bad_action_type(self):
-        self.assertRaises(
-            PolicyValidationError, ActionRegistry("test.actions").factory, {}, None
-        )
+        self.assertRaises(PolicyValidationError, ActionRegistry("test.actions").factory, {}, None)
 
     def test_error_unregistered_action_type(self):
         self.assertRaises(

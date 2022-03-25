@@ -79,9 +79,7 @@ class Delete(BaseAction):
                         EnableTerminationProtection=False,
                         StackName=stack['StackName'],
                     )
-                    self.manager.retry(
-                        client.delete_stack, StackName=stack['StackName']
-                    )
+                    self.manager.retry(client.delete_stack, StackName=stack['StackName'])
                 else:
                     # no force, so just log an error and move on
                     self.log.error(

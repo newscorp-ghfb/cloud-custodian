@@ -62,9 +62,7 @@ class TestOpsWorksStack(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["Name"], "test-delete-opswork-stack")
         client = factory().client("opsworks")
-        remainder = client.describe_stack_summary(StackId=resources[0]["StackId"])[
-            "StackSummary"
-        ]
+        remainder = client.describe_stack_summary(StackId=resources[0]["StackId"])["StackSummary"]
         self.assertEqual(remainder["InstancesCount"]["Stopping"], 1)
 
     def test_delete_opsworks_stacks(self):

@@ -57,9 +57,7 @@ class Subscription(ResourceManager, metaclass=QueryMeta):
         return self.resource_type
 
     def resources(self):
-        return self.filter_resources(
-            [self._get_subscription(self.session_factory, self.config)]
-        )
+        return self.filter_resources([self._get_subscription(self.session_factory, self.config)])
 
     def get_resources(self, resource_ids):
         return [self._get_subscription(self.session_factory, self.config)]
@@ -67,9 +65,7 @@ class Subscription(ResourceManager, metaclass=QueryMeta):
     def _get_subscription(self, session_factory, config):
         session = local_session(session_factory)
         client = SubscriptionClient(session.get_credentials())
-        details = client.subscriptions.get(
-            subscription_id=session.get_subscription_id()
-        )
+        details = client.subscriptions.get(subscription_id=session.get_subscription_id())
         return details.serialize(True)
 
 
@@ -118,15 +114,10 @@ class AddPolicy(BaseAction):
 
     def process(self, subscriptions):
         self.session = local_session(self.manager.session_factory)
-        self.policyClient = self.session.client(
-            "azure.mgmt.resource.policy.PolicyClient"
-        )
+        self.policyClient = self.session.client("azure.mgmt.resource.policy.PolicyClient")
 
         self.scope = (
-            '/subscriptions/'
-            + self.session.subscription_id
-            + '/'
-            + self.data.get('scope', '')
+            '/subscriptions/' + self.session.subscription_id + '/' + self.data.get('scope', '')
         )
         self.policyDefinition = self._get_definition_id(self.policyDefinitionName)
         if self.policyDefinition is None:

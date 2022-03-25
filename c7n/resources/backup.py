@@ -55,9 +55,7 @@ class BackupPlan(QueryResourceManager):
 
 class DescribeVault(DescribeSource):
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeVault, self).augment(resources)
-        )
+        return universal_augment(self.manager, super(DescribeVault, self).augment(resources))
 
     def get_resources(self, resource_ids, cache=True):
         client = local_session(self.manager.session_factory).client('backup')

@@ -8,9 +8,7 @@ from gcp_common import BaseTest
 class DMDeploymentTest(BaseTest):
     def test_deployment_query(self):
         project_id = 'cloud-custodian'
-        session_factory = self.replay_flight_data(
-            'dm-deployment-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('dm-deployment-query', project_id=project_id)
 
         policy = {'name': 'all-deployments', 'resource': 'gcp.dm-deployment'}
 
@@ -21,9 +19,7 @@ class DMDeploymentTest(BaseTest):
 
     def test_deployment_get(self):
         project_id = 'cloud-custodian'
-        session_factory = self.replay_flight_data(
-            'dm-deployment-get', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('dm-deployment-get', project_id=project_id)
 
         policy = {'name': 'one-deployment', 'resource': 'gcp.dm-deployment'}
 
@@ -56,10 +52,6 @@ class DMDeploymentTest(BaseTest):
             time.sleep(3)
 
         client = p.resource_manager.get_client()
-        result = client.execute_query(
-            'list', {'project': project_id, 'filter': 'name = lamp-1'}
-        )
+        result = client.execute_query('list', {'project': project_id, 'filter': 'name = lamp-1'})
 
-        self.assertEqual(
-            result['deployments'][0]['operation']['operationType'], 'delete'
-        )
+        self.assertEqual(result['deployments'][0]['operation']['operationType'], 'delete')

@@ -43,9 +43,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage.get_queue_client_by_storage_account')
     @patch('tempfile.mkdtemp', return_value='test_path')
     def test_init(self, _1, _2, _3, _4, _5):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
         jobs = host.scheduler.get_jobs()
         update_policy_job = [j for j in jobs if j.id == 'update_policies']
         poll_queue_job = [j for j in jobs if j.id == 'poll_queue']
@@ -86,9 +84,7 @@ class ContainerHostTest(BaseTest):
         get_blob_client_mock.return_value = (client_mock, None, None)
 
         # init
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # cleanup
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
@@ -126,9 +122,7 @@ class ContainerHostTest(BaseTest):
         get_blob_client_mock.return_value = (client_mock, None, None)
 
         # init
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # cleanup
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
@@ -201,9 +195,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Host.prepare_queue_storage')
     @patch('c7n_azure.container_host.host.Storage.get_queue_client_by_storage_account')
     @patch('c7n_azure.container_host.host.Storage.get_blob_client_by_uri')
-    def test_update_policies_create_content_hash(
-        self, get_blob_client_mock, _1, _2, _3, _4
-    ):
+    def test_update_policies_create_content_hash(self, get_blob_client_mock, _1, _2, _3, _4):
         client_mock = Mock()
         client_mock.list_blobs.return_value = [
             ContainerHostTest.get_mock_blob("blob1.yml", None),  # no hash
@@ -217,9 +209,7 @@ class ContainerHostTest(BaseTest):
 
         client_mock.get_blob_properties = get_blob_properties
 
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # cleanup
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
@@ -257,9 +247,7 @@ class ContainerHostTest(BaseTest):
 
         client_mock.create_blob_from_bytes = create_blob_from_bytes
 
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # cleanup
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
@@ -288,9 +276,7 @@ class ContainerHostTest(BaseTest):
         client_mock.list_blobs.side_effect = AzureHttpError("failed to list blobs", 400)
         get_blob_client_mock.return_value = (client_mock, None, None)
 
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
         with self.assertRaises(AzureHttpError):
             host.update_policies()
         client_mock.list_blobs.assert_called()
@@ -307,9 +293,7 @@ class ContainerHostTest(BaseTest):
         ]
         client_mock.get_blob_to_path = self.download_missing_mode_policy_blob
         get_blob_client_mock.return_value = (client_mock, None, None)
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
         host.update_policies()
         self.assertEqual(1, len(host.policies.items()))
@@ -325,17 +309,13 @@ class ContainerHostTest(BaseTest):
     ):
         blob_name = "path/to/blob.yml"
         client_mock = Mock()
-        client_mock.list_blobs.return_value = [
-            ContainerHostTest.get_mock_blob(blob_name, 'blob')
-        ]
+        client_mock.list_blobs.return_value = [ContainerHostTest.get_mock_blob(blob_name, 'blob')]
         client_mock.get_blob_to_path = self.download_policy_blob
         get_blob_client_mock.return_value = (client_mock, None, None)
 
         self.addCleanup(lambda: shutil.rmtree(host.policy_cache))
 
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
         host.update_policies()
         self.assertEqual(1, len(host.policies.items()))
         jobs = host.scheduler.get_jobs()
@@ -350,9 +330,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.AzureEventSubscription')
     @patch('c7n_azure.container_host.host.EventSubscriptionFilter')
     def test_update_event_subscriptions(self, event_filter_mock, _0, _1, _2, _3, _4):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         host.event_queue_name = 'testq'
 
@@ -409,9 +387,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage')
     @patch('c7n_azure.container_host.host.Host.run_policies_for_event')
     def test_poll_queue(self, run_policy_mock, storage_mock, _1, _2, _3):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         host.policies = {
             'one': {
@@ -475,9 +451,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.BlockingScheduler.start')
     @patch('c7n_azure.container_host.host.BlockingScheduler.add_job')
     def test_run_policy_for_event(self, add_job_mock, _0, _1, _2, _3):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         host.policies = {
             'one': {
@@ -536,9 +510,7 @@ class ContainerHostTest(BaseTest):
     def test_unload_policy_file_with_yaml_error(
         self, os_unlink, yaml_safe_load, _1, _2, _3, _4, _5
     ):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # Create a bad yaml file
         file_path = tempfile.mktemp(suffix=".yaml")
@@ -558,12 +530,8 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage.get_queue_client_by_storage_account')
     @patch('c7n_azure.container_host.host.Storage.get_blob_client_by_uri')
     @patch('os.unlink')
-    def test_unload_policy_file_that_was_never_loaded(
-        self, os_unlink, _1, _2, _3, _4, _5
-    ):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+    def test_unload_policy_file_that_was_never_loaded(self, os_unlink, _1, _2, _3, _4, _5):
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         policy_string = """
                             policies:
@@ -591,12 +559,8 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage.get_queue_client_by_storage_account')
     @patch('c7n_azure.container_host.host.Storage.get_blob_client_by_uri')
     @patch('os.unlink')
-    def test_unload_policy_file_without_name(
-        self, os_unlink, yaml_safe_load, _1, _2, _3, _4
-    ):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+    def test_unload_policy_file_without_name(self, os_unlink, yaml_safe_load, _1, _2, _3, _4):
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # Create a bad yaml file (no name field)
         file_path = tempfile.mktemp(suffix=".yaml")
@@ -625,9 +589,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage.get_blob_client_by_uri')
     @patch('os.unlink')
     def test_unload_policy_file_with_bad_schema(self, os_unlink, _1, _2, _3, _4, _5):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
 
         # Schedule is invalid
         policy_string = """
@@ -657,9 +619,7 @@ class ContainerHostTest(BaseTest):
     @patch('c7n_azure.container_host.host.Storage.get_queue_client_by_storage_account')
     @patch('c7n_azure.container_host.host.Storage.get_blob_client_by_uri')
     def test_run_policy_handles_exceptions(self, _1, _2, _3, _4, _5):
-        host = Host(
-            DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE
-        )
+        host = Host(DEFAULT_EVENT_QUEUE_ID, DEFAULT_EVENT_QUEUE_NAME, DEFAULT_POLICY_STORAGE)
         mock_policy = Mock()
         mock_policy.push.side_effect = Exception()
         host.run_policy(mock_policy, None, None)

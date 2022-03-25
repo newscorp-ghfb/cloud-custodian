@@ -153,16 +153,12 @@ class FilterRegistry(PluginRegistry):
         else:
             filter_type = data.get('type')
         if not filter_type:
-            raise PolicyValidationError(
-                "%s Invalid Filter %s" % (self.plugin_type, data)
-            )
+            raise PolicyValidationError("%s Invalid Filter %s" % (self.plugin_type, data))
         filter_class = self.get(filter_type)
         if filter_class is not None:
             return filter_class(data, manager)
         else:
-            raise PolicyValidationError(
-                "%s Invalid filter type %s" % (self.plugin_type, data)
-            )
+            raise PolicyValidationError("%s Invalid filter type %s" % (self.plugin_type, data))
 
 
 def trim_runtime(filters):
@@ -228,9 +224,7 @@ class Filter(Element):
                 values, r.get(self.matched_annotation_key)
             )
         elif block_op == 'or':
-            r[self.matched_annotation_key] = union_list(
-                values, r.get(self.matched_annotation_key)
-            )
+            r[self.matched_annotation_key] = union_list(values, r.get(self.matched_annotation_key))
 
 
 class BaseValueFilter(Filter):
@@ -487,13 +481,9 @@ class ValueFilter(BaseValueFilter):
         """
         for field in ('op', 'value'):
             if field not in self.data:
-                raise PolicyValidationError(
-                    "Missing '%s' in value filter %s" % (field, self.data)
-                )
+                raise PolicyValidationError("Missing '%s' in value filter %s" % (field, self.data))
 
-        if not (
-            isinstance(self.data['value'], int) or isinstance(self.data['value'], list)
-        ):
+        if not (isinstance(self.data['value'], int) or isinstance(self.data['value'], list)):
             raise PolicyValidationError(
                 "`value` must be an integer in resource_count filter %s" % self.data
             )
@@ -504,9 +494,7 @@ class ValueFilter(BaseValueFilter):
             or self.data['op'] in {'regex', 'regex-case'}
             or 'value_regex' in self.data
         ):
-            raise PolicyValidationError(
-                "Invalid operator in value filter %s" % self.data
-            )
+            raise PolicyValidationError("Invalid operator in value filter %s" % self.data)
 
         return self
 
@@ -531,14 +519,10 @@ class ValueFilter(BaseValueFilter):
             and 'value_from' not in self.data
             and 'value' in self.required_keys
         ):
-            raise PolicyValidationError(
-                "Missing 'value' in value filter %s" % self.data
-            )
+            raise PolicyValidationError("Missing 'value' in value filter %s" % self.data)
         if 'op' in self.data:
             if not self.data['op'] in OPERATORS:
-                raise PolicyValidationError(
-                    "Invalid operator in value filter %s" % self.data
-                )
+                raise PolicyValidationError("Invalid operator in value filter %s" % self.data)
             if self.data['op'] in {'regex', 'regex-case'}:
                 # Sanity check that we can compile
                 try:
@@ -570,9 +554,7 @@ class ValueFilter(BaseValueFilter):
         return super(ValueFilter, self).process(resources, event)
 
     def get_resource_value(self, k, i):
-        return super(ValueFilter, self).get_resource_value(
-            k, i, self.data.get('value_regex')
-        )
+        return super(ValueFilter, self).get_resource_value(k, i, self.data.get('value_regex'))
 
     def match(self, i):
         if self.v is None and len(self.data) == 1:
@@ -664,9 +646,7 @@ class ValueFilter(BaseValueFilter):
         elif self.vtype == 'cidr':
             s = parse_cidr(sentinel)
             v = parse_cidr(value)
-            if isinstance(s, ipaddress._BaseAddress) and isinstance(
-                v, ipaddress._BaseNetwork
-            ):
+            if isinstance(s, ipaddress._BaseAddress) and isinstance(v, ipaddress._BaseNetwork):
                 return v, s
             return s, v
         elif self.vtype == 'cidr_size':
@@ -751,8 +731,7 @@ class EventFilter(ValueFilter):
     def validate(self):
         if 'mode' not in self.manager.data:
             raise PolicyValidationError(
-                "Event filters can only be used with lambda policies in %s"
-                % (self.manager.data,)
+                "Event filters can only be used with lambda policies in %s" % (self.manager.data,)
             )
         return self
 

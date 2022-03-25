@@ -109,9 +109,7 @@ class ServiceAccountKeyTest(BaseTest):
     def test_service_account_key_query(self):
         project_id = "cloud-custodian"
 
-        session_factory = self.replay_flight_data(
-            'iam-service-account-key-query', project_id
-        )
+        session_factory = self.replay_flight_data('iam-service-account-key-query', project_id)
 
         policy = self.load_policy(
             {

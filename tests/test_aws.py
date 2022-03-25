@@ -96,9 +96,7 @@ class TestArnResolver:
         ]
 
         factory = test.replay_flight_data('test_arn_resolve_resources')
-        p = test.load_policy(
-            {'name': 'resolve', 'resource': 'aws.ec2'}, session_factory=factory
-        )
+        p = test.load_policy({'name': 'resolve', 'resource': 'aws.ec2'}, session_factory=factory)
         resolver = aws.ArnResolver(p.resource_manager)
         load_resources(('aws.sqs', 'aws.lambda'))
         test.patch(SQS, 'executor_factory', MainThreadExecutor)
@@ -241,9 +239,7 @@ class ArnTest(BaseTest):
 
 class UtilTest(BaseTest):
     def test_default_account_id_assume(self):
-        config = Bag(
-            assume_role='arn:aws:iam::644160558196:role/custodian-mu', account_id=None
-        )
+        config = Bag(assume_role='arn:aws:iam::644160558196:role/custodian-mu', account_id=None)
         aws._default_account_id(config)
         self.assertEqual(config.account_id, '644160558196')
 
@@ -398,9 +394,7 @@ class OutputLogsTest(BaseTest):
         log_output = output.log_outputs.select('aws://somewhere', ctx)
         self.assertEqual(log_output.log_group, 'somewhere')
 
-        log_output = output.log_outputs.select(
-            "aws:///somewhere/out?stream={region}/{policy}", ctx
-        )
+        log_output = output.log_outputs.select("aws:///somewhere/out?stream={region}/{policy}", ctx)
         self.assertEqual(log_output.log_group, 'somewhere/out')
         self.assertEqual(log_output.construct_stream_name(), 'us-east-1/test')
 
@@ -411,9 +405,7 @@ class OutputLogsTest(BaseTest):
             options=Bag(account_id='001100', region='us-east-1'),
             policy=Bag(name='test', resource_type='ec2'),
         )
-        log_output = output.log_outputs.select(
-            'aws://master/custodian?region=us-east-2', ctx
-        )
+        log_output = output.log_outputs.select('aws://master/custodian?region=us-east-2', ctx)
         stream = log_output.get_handler()
         self.assertTrue(stream.log_group == 'custodian')
         self.assertTrue(stream.log_stream == '001100/us-east-1/test')

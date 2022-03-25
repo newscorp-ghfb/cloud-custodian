@@ -9,9 +9,7 @@ class RedisTest(BaseTest):
 
     def test_redis_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy(
-                {'name': 'test-redis', 'resource': 'azure.redis'}, validate=True
-            )
+            p = self.load_policy({'name': 'test-redis', 'resource': 'azure.redis'}, validate=True)
             self.assertTrue(p)
 
     @arm_template('redis.json')

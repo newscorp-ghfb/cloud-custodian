@@ -26,17 +26,13 @@ class BaseNotify(EventAction):
             to_from['url'] = to_from['url'].format(**message)
             if 'expr' in to_from:
                 to_from['expr'] = to_from['expr'].format(**message)
-            p.setdefault('to', []).extend(
-                ValuesFrom(to_from, self.manager).get_values()
-            )
+            p.setdefault('to', []).extend(ValuesFrom(to_from, self.manager).get_values())
         if 'cc_from' in self.data:
             cc_from = self.data['cc_from'].copy()
             cc_from['url'] = cc_from['url'].format(**message)
             if 'expr' in cc_from:
                 cc_from['expr'] = cc_from['expr'].format(**message)
-            p.setdefault('cc', []).extend(
-                ValuesFrom(cc_from, self.manager).get_values()
-            )
+            p.setdefault('cc', []).extend(ValuesFrom(cc_from, self.manager).get_values())
         return p
 
     def pack(self, message):
@@ -175,9 +171,7 @@ class Notify(BaseNotify):
         return ()
 
     def process(self, resources, event=None):
-        alias = utils.get_account_alias_from_sts(
-            utils.local_session(self.manager.session_factory)
-        )
+        alias = utils.get_account_alias_from_sts(utils.local_session(self.manager.session_factory))
         partition = utils.get_partition(self.manager.config.region)
         message = {
             'event': event,
@@ -217,9 +211,7 @@ class Notify(BaseNotify):
         would be dynamically adjusting buffer size based on underlying
         transport.
         """
-        handler = getattr(
-            self, "prepare_%s" % (self.manager.type.replace('-', '_')), None
-        )
+        handler = getattr(self, "prepare_%s" % (self.manager.type.replace('-', '_')), None)
         if handler is None:
             return resources
         return handler(resources)
@@ -261,9 +253,7 @@ class Notify(BaseNotify):
                 account_id=message['account_id'],
                 region=message['region'],
             )
-        client = self.manager.session_factory(
-            region=region, assume=self.assume_role
-        ).client('sns')
+        client = self.manager.session_factory(region=region, assume=self.assume_role).client('sns')
         attrs = {
             'mtype': {
                 'DataType': 'String',
@@ -309,9 +299,7 @@ class Notify(BaseNotify):
                 owner_id,
                 queue_name,
             )
-        client = self.manager.session_factory(
-            region=region, assume=self.assume_role
-        ).client('sqs')
+        client = self.manager.session_factory(region=region, assume=self.assume_role).client('sqs')
         attrs = {
             'mtype': {
                 'DataType': 'String',

@@ -60,9 +60,7 @@ class ConfigCrossAccountFilter(CrossAccountAccessFilter):
         allowed_regions = set(self.data.get('allowed_regions', ()))
 
         matched = []
-        auths = client.describe_aggregation_authorizations().get(
-            'AggregationAuthorizations', []
-        )
+        auths = client.describe_aggregation_authorizations().get('AggregationAuthorizations', [])
 
         for a in auths:
             if a['AuthorizedAccountId'] not in allowed_accounts or (

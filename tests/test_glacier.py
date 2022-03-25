@@ -19,9 +19,7 @@ class GlacierTagTest(BaseTest):
             {
                 "name": "glacier",
                 "resource": "glacier",
-                "filters": [
-                    {"type": "value", "key": "VaultName", "value": "c7n-glacier-test"}
-                ],
+                "filters": [{"type": "value", "key": "VaultName", "value": "c7n-glacier-test"}],
                 "actions": [{"type": "tag", "key": "abc", "value": "xyz"}],
             },
             session_factory=session_factory,
@@ -126,13 +124,11 @@ class GlacierStatementTest(BaseTest):
         self.assertEqual([r["VaultName"] for r in resources], [name])
 
         data = json.loads(
-            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get(
-                "policy"
-            )["Policy"]
+            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get("policy")[
+                "Policy"
+            ]
         )
-        self.assertEqual(
-            [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
-        )
+        self.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
 
     @functional
     def test_glacier_remove_named(self):
@@ -168,9 +164,7 @@ class GlacierStatementTest(BaseTest):
                 "name": "glacier-rm-named",
                 "resource": "glacier",
                 "filters": [{"VaultName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["WhatIsIt"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["WhatIsIt"]}],
             },
             session_factory=session_factory,
         )
@@ -224,9 +218,7 @@ class GlacierStatementTest(BaseTest):
                 "name": "glacier-rm-statement",
                 "resource": "glacier",
                 "filters": [{"VaultName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=session_factory,
         )
@@ -235,9 +227,9 @@ class GlacierStatementTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get(
-                "policy"
-            )["Policy"]
+            client.get_vault_access_policy(vaultName=resources[0]["VaultName"]).get("policy")[
+                "Policy"
+            ]
         )
         self.assertTrue("RemoveMe" not in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -249,9 +241,7 @@ class GlacierVaultTest(BaseTest):
             {
                 "name": "glacier-vault-delete",
                 "resource": "aws.glacier",
-                "filters": [
-                    {"type": "value", "key": "VaultName", "value": "c7n-test-delete"}
-                ],
+                "filters": [{"type": "value", "key": "VaultName", "value": "c7n-test-delete"}],
                 "actions": [{"type": "delete"}],
             },
             session_factory=session_factory,
@@ -261,6 +251,4 @@ class GlacierVaultTest(BaseTest):
         client = session_factory().client("glacier")
         with self.assertRaises(ClientError) as e:
             client.describe_vault(vaultName='c7n-test-delete')
-        self.assertEqual(
-            e.exception.response['Error']['Code'], 'ResourceNotFoundException'
-        )
+        self.assertEqual(e.exception.response['Error']['Code'], 'ResourceNotFoundException')

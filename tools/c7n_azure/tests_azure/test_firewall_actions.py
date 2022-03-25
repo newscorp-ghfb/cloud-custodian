@@ -26,15 +26,11 @@ class FirewallActionsTest(BaseTest):
 
         action = StorageSetFirewallAction(data)
         action.append = False
-        rules = action._build_vnet_rules(
-            ['Hello', 'World'], data['virtual-network-rules']
-        )
+        rules = action._build_vnet_rules(['Hello', 'World'], data['virtual-network-rules'])
         self.assertEqual(sorted(['id1', 'id2']), sorted(rules))
 
         action.append = True
-        rules = action._build_vnet_rules(
-            ['Hello', 'World'], data['virtual-network-rules']
-        )
+        rules = action._build_vnet_rules(['Hello', 'World'], data['virtual-network-rules'])
         self.assertEqual(sorted(['id1', 'id2', 'Hello', 'World']), sorted(rules))
 
     def test_build_ip_rules(self):

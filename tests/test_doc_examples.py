@@ -17,9 +17,7 @@ def get_doc_examples(resources):
     policies = []
     seen = set()
     for resource_name, v in resources.items():
-        for k, cls in itertools.chain(
-            v.filter_registry.items(), v.action_registry.items()
-        ):
+        for k, cls in itertools.chain(v.filter_registry.items(), v.action_registry.items()):
             if cls in seen:
                 continue
             seen.add(cls)

@@ -268,8 +268,7 @@ class Modify(BaseAction):
                 param_name = param['ParameterName']
                 if (
                     param_name not in cur_params
-                    or cur_params[param_name]['ParameterValue']
-                    != param['ParameterValue']
+                    or cur_params[param_name]['ParameterValue'] != param['ParameterValue']
                 ):
                     changed_params.append(param)
 

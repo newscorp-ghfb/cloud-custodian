@@ -107,9 +107,7 @@ class TestEcsService(BaseTest):
                 "name": "all-ecs-to-update",
                 "resource": "ecs-service",
                 "filters": [
-                    {
-                        "networkConfiguration.awsvpcConfiguration.assignPublicIp": "ENABLED"
-                    },
+                    {"networkConfiguration.awsvpcConfiguration.assignPublicIp": "ENABLED"},
                     {"serviceName": test_service_name},
                 ],
                 "actions": [
@@ -136,16 +134,12 @@ class TestEcsService(BaseTest):
             services=[test_service_name],
         )["services"][0]
         self.assertEqual(
-            svc_current['networkConfiguration']['awsvpcConfiguration'][
-                'assignPublicIp'
-            ],
+            svc_current['networkConfiguration']['awsvpcConfiguration']['assignPublicIp'],
             'DISABLED',
         )
 
     def test_ecs_service_autoscaling_offhours(self):
-        session_factory = self.replay_flight_data(
-            "test_ecs_service_autoscaling_offhours"
-        )
+        session_factory = self.replay_flight_data("test_ecs_service_autoscaling_offhours")
         test_service_name = 'custodian-service-autoscaling-test'
 
         p = self.load_policy(
@@ -176,9 +170,7 @@ class TestEcsService(BaseTest):
         self.assertEqual(svc_current['desiredCount'], 0)
 
     def test_ecs_service_autoscaling_onhours(self):
-        session_factory = self.replay_flight_data(
-            "test_ecs_service_autoscaling_onhours"
-        )
+        session_factory = self.replay_flight_data("test_ecs_service_autoscaling_onhours")
         test_service_name = 'custodian-service-autoscaling-test'
 
         p = self.load_policy(
@@ -304,9 +296,7 @@ class TestEcsTaskDefinition(BaseTest):
         for r in resources:
             for c in r["containerDefinitions"]:
                 images.add(c["image"])
-        self.assertEqual(
-            sorted(images), ["nginx:latest", "postgres:latest", "redis:latest"]
-        )
+        self.assertEqual(sorted(images), ["nginx:latest", "postgres:latest", "redis:latest"])
 
     def test_task_definition_delete(self):
         session_factory = self.replay_flight_data("test_ecs_task_def_delete")
@@ -321,9 +311,7 @@ class TestEcsTaskDefinition(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["containerDefinitions"][0]["image"], "postgres:latest"
-        )
+        self.assertEqual(resources[0]["containerDefinitions"][0]["image"], "postgres:latest")
         self.assertEqual(resources[0]["status"], "ACTIVE")
         arns = (
             session_factory()
@@ -346,9 +334,7 @@ class TestEcsTaskDefinition(BaseTest):
         self.assertEqual(
             len(
                 fnmatch.filter(
-                    os.listdir(
-                        os.path.join(self.placebo_dir, "test_ecs_task_def_query")
-                    ),
+                    os.listdir(os.path.join(self.placebo_dir, "test_ecs_task_def_query")),
                     "*.json",
                 )
             ),
@@ -420,9 +406,7 @@ class TestEcsTaskDefinition(BaseTest):
                 'image': 'httpd:2.4',
                 'mountPoints': [],
                 'name': 'fargate-app-2',
-                'portMappings': [
-                    {'containerPort': 80, 'hostPort': 80, 'protocol': 'tcp'}
-                ],
+                'portMappings': [{'containerPort': 80, 'hostPort': 80, 'protocol': 'tcp'}],
                 'volumesFrom': [],
             }
         ]
@@ -430,9 +414,9 @@ class TestEcsTaskDefinition(BaseTest):
         client = session_factory().client("ecs")
         self.assertEqual(
             len(
-                client.list_tags_for_resource(
-                    resourceArn=resources[0]["taskDefinitionArn"]
-                ).get("tags")
+                client.list_tags_for_resource(resourceArn=resources[0]["taskDefinitionArn"]).get(
+                    "tags"
+                )
             ),
             0,
         )
@@ -445,9 +429,7 @@ class TestEcsTask(BaseTest):
             {'name': 'tasks', 'resource': 'ecs-task'}, session_factory=session_factory
         )
         tasks = p.resource_manager.get_resources(
-            [
-                'arn:aws:ecs:us-east-1:644160558196:task/devx/21b23041dec947b996fcc7a8aa606d64'
-            ]
+            ['arn:aws:ecs:us-east-1:644160558196:task/devx/21b23041dec947b996fcc7a8aa606d64']
         )
         self.assertEqual(len(tasks), 1)
         self.assertEqual(tasks[0]['launchType'], 'FARGATE')
@@ -456,9 +438,7 @@ class TestEcsTask(BaseTest):
         self.assertRaises(
             PolicyExecutionError,
             p.resource_manager.get_resources,
-            [
-                'arn:aws:ecs:us-east-1:644160558196:task/21b23041dec947b996fcc7a8aa606d64'
-            ],
+            ['arn:aws:ecs:us-east-1:644160558196:task/21b23041dec947b996fcc7a8aa606d64'],
         )
 
     def test_task_resource(self):
@@ -515,9 +495,7 @@ class TestEcsContainerInstance(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_container_instance_update_agent(self):
-        session_factory = self.replay_flight_data(
-            "test_ecs_container_instance_update_agent"
-        )
+        session_factory = self.replay_flight_data("test_ecs_container_instance_update_agent")
         p = self.load_policy(
             {
                 "name": "container-instance-update-agent",
@@ -534,14 +512,10 @@ class TestEcsContainerInstance(BaseTest):
             cluster="default",
             containerInstances=["a8a469ef-009f-40f8-9639-3a0d9c6a9b9e"],
         )["containerInstances"][0]["versionInfo"]["agentVersion"]
-        self.assertNotEqual(
-            updated_version, resources[0]["versionInfo"]["agentVersion"]
-        )
+        self.assertNotEqual(updated_version, resources[0]["versionInfo"]["agentVersion"])
 
     def test_container_instance_set_state(self):
-        session_factory = self.replay_flight_data(
-            "test_ecs_container_instance_set_state"
-        )
+        session_factory = self.replay_flight_data("test_ecs_container_instance_set_state")
         p = self.load_policy(
             {
                 "name": "container-instance-update-agent",
@@ -563,9 +537,7 @@ class TestEcsContainerInstance(BaseTest):
             {
                 "name": "ecs-container-instance-subnet",
                 "resource": "ecs-container-instance",
-                "filters": [
-                    {"type": "subnet", "key": "tag:NetworkLocation", "value": "Public"}
-                ],
+                "filters": [{"type": "subnet", "key": "tag:NetworkLocation", "value": "Public"}],
             },
             session_factory=session_factory,
         )

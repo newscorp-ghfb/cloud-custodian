@@ -131,22 +131,12 @@ class AccessControlTest(BaseTest):
         self.assertTrue(scope_filter.is_scope(resource_group_scope, rg_type))
         self.assertFalse(scope_filter.is_scope(sub_scope, rg_type))
         self.assertFalse(scope_filter.is_scope(management_group_scope, rg_type))
-        self.assertFalse(
-            scope_filter.is_scope("/subscriptions/resourceGroups", rg_type)
-        )
-        self.assertFalse(
-            scope_filter.is_scope("/subscriptions/resourceGroups/", rg_type)
-        )
-        self.assertFalse(
-            scope_filter.is_scope("/subscriptions/resourceGroup/", rg_type)
-        )
-        self.assertFalse(
-            scope_filter.is_scope("/subscription/resourceGroups/foo", rg_type)
-        )
+        self.assertFalse(scope_filter.is_scope("/subscriptions/resourceGroups", rg_type))
+        self.assertFalse(scope_filter.is_scope("/subscriptions/resourceGroups/", rg_type))
+        self.assertFalse(scope_filter.is_scope("/subscriptions/resourceGroup/", rg_type))
+        self.assertFalse(scope_filter.is_scope("/subscription/resourceGroups/foo", rg_type))
         self.assertFalse(scope_filter.is_scope("/foo/bar/xyz", rg_type))
-        self.assertFalse(
-            scope_filter.is_scope(resource_group_scope + "/vm/bar", rg_type)
-        )
+        self.assertFalse(scope_filter.is_scope(resource_group_scope + "/vm/bar", rg_type))
 
     def test_scope_filter_management_group(self):
         sub_scope = "/subscriptions/111-111-1111"

@@ -75,12 +75,8 @@ class LambdaInvoke(EventAction):
             read_timeout=self.data.get('timeout', 90),
             region_name=self.data.get('region', None),
         )
-        client = utils.local_session(self.manager.session_factory).client(
-            'lambda', config=config
-        )
-        alias = utils.get_account_alias_from_sts(
-            utils.local_session(self.manager.session_factory)
-        )
+        client = utils.local_session(self.manager.session_factory).client('lambda', config=config)
+        alias = utils.get_account_alias_from_sts(utils.local_session(self.manager.session_factory))
 
         payload = {
             'version': VERSION,

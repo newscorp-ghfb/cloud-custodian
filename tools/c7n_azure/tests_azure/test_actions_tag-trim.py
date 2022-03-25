@@ -80,9 +80,7 @@ class TagsTest(BaseTest):
     def test_tag_trim_space_0_removes_all_tags_but_preserve(self, update_resource_tags):
         """Verifies tag trim removes all other tags but tags listed in preserve"""
 
-        action = self._get_action(
-            {'space': 0, 'preserve': [k for k in self.existing_tags.keys()]}
-        )
+        action = self._get_action({'space': 0, 'preserve': [k for k in self.existing_tags.keys()]})
 
         tags = self.existing_tags.copy()
         tags.update(
@@ -107,9 +105,7 @@ class TagsTest(BaseTest):
     def test_tag_trim_warns_no_candidates(self, logger_mock, update_resource_tags):
         """Verifies tag trim warns when there are no candidates to trim"""
 
-        action = self._get_action(
-            {'space': 0, 'preserve': [k for k in self.existing_tags.keys()]}
-        )
+        action = self._get_action({'space': 0, 'preserve': [k for k in self.existing_tags.keys()]})
 
         tags = self.existing_tags.copy()
         resource = tools.get_resource(tags)

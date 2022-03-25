@@ -165,9 +165,7 @@ class AutoTagCreator(BaseTest):
         resources = policy.push(event, None)
         auto_tag_user.data = {"tag": "Owner", "principal_id_tag": "OwnerId"}
         result = auto_tag_user.process(resources, event)
-        self.assertEqual(
-            result, {"Owner": "Radiant", "OwnerId": "AROAIFMJLHZRIKEFRKUUF"}
-        )
+        self.assertEqual(result, {"Owner": "Radiant", "OwnerId": "AROAIFMJLHZRIKEFRKUUF"})
 
         # check that it does not sets principalId with assumeRole
         policy = self.load_policy(

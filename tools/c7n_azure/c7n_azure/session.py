@@ -39,9 +39,7 @@ log = logging.getLogger('custodian.azure.session')
 
 
 class AzureCredential:
-    def __init__(
-        self, cloud_endpoints, authorization_file=None, subscription_id_override=None
-    ):
+    def __init__(self, cloud_endpoints, authorization_file=None, subscription_id_override=None):
         # type: (*str, *str) -> None
 
         if authorization_file:
@@ -69,9 +67,7 @@ class AzureCredential:
         try:
             if keyvault_secret_id:
                 self._auth_params.update(
-                    json.loads(
-                        get_keyvault_secret(keyvault_client_id, keyvault_secret_id)
-                    )
+                    json.loads(get_keyvault_secret(keyvault_client_id, keyvault_secret_id))
                 )
         except HTTPError as e:
             e.message = (
@@ -258,9 +254,7 @@ class Session:
 
             if 'subscription_id' in klass_parameters:
                 client_args['subscription_id'] = self.subscription_id
-                client_args[
-                    'base_url'
-                ] = self.cloud_endpoints.endpoints.resource_manager
+                client_args['base_url'] = self.cloud_endpoints.endpoints.resource_manager
             elif 'vault_url' in klass_parameters:
                 client_args['vault_url'] = vault_url
             client = klass(**client_args)
@@ -269,9 +263,7 @@ class Session:
             # Override send() method to log request limits & custom retries
             service_client = client._client
             service_client.orig_send = service_client.send
-            service_client.send = types.MethodType(
-                custodian_azure_send_override, service_client
-            )
+            service_client.send = types.MethodType(custodian_azure_send_override, service_client)
 
             # Don't respect retry_after_header to implement custom retries
             service_client.config.retry_policy.policy.respect_retry_after_header = False
@@ -371,15 +363,9 @@ class Session:
 
         # Use dedicated function env vars if available
         if all(k in os.environ for k in function_auth_variables):
-            function_auth_params['client_id'] = os.environ[
-                constants.ENV_FUNCTION_CLIENT_ID
-            ]
-            function_auth_params['client_secret'] = os.environ[
-                constants.ENV_FUNCTION_CLIENT_SECRET
-            ]
-            function_auth_params['tenant_id'] = os.environ[
-                constants.ENV_FUNCTION_TENANT_ID
-            ]
+            function_auth_params['client_id'] = os.environ[constants.ENV_FUNCTION_CLIENT_ID]
+            function_auth_params['client_secret'] = os.environ[constants.ENV_FUNCTION_CLIENT_SECRET]
+            function_auth_params['tenant_id'] = os.environ[constants.ENV_FUNCTION_TENANT_ID]
 
         # Verify SP authentication parameters
         if any(k not in function_auth_params.keys() for k in required_params):

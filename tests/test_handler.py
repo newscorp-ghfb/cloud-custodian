@@ -61,9 +61,7 @@ class HandleTest(BaseTest):
             },
         )
 
-    def setupLambdaEnv(
-        self, policy_data, environment=None, err_execs=(), log_level=logging.INFO
-    ):
+    def setupLambdaEnv(self, policy_data, environment=None, err_execs=(), log_level=logging.INFO):
 
         work_dir = self.change_cwd()
         self.patch(handler, 'policy_data', None)
@@ -153,8 +151,6 @@ class HandleTest(BaseTest):
             {'policies': [{'resource': 'asg', 'name': 'auto'}]},
         )
 
-        self.assertEqual(
-            handler.dispatch_event({"detail": {"errorCode": "404"}}, None), None
-        )
+        self.assertEqual(handler.dispatch_event({"detail": {"errorCode": "404"}}, None), None)
         self.assertEqual(handler.dispatch_event({"detail": {}}, None), True)
         self.assertEqual(executions, [({"detail": {}, "debug": True}, None)])

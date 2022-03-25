@@ -96,9 +96,7 @@ class SetShieldProtection(BaseAction):
         'shield:CreateProtection',
         'shield:ListProtections',
     )
-    schema = type_schema(
-        'set-shield', state={'type': 'boolean'}, sync={'type': 'boolean'}
-    )
+    schema = type_schema('set-shield', state={'type': 'boolean'}, sync={'type': 'boolean'})
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client(
@@ -122,9 +120,7 @@ class SetShieldProtection(BaseAction):
                 )
                 continue
             try:
-                ShieldRetry(
-                    client.create_protection, Name=r[model.name], ResourceArn=arn
-                )
+                ShieldRetry(client.create_protection, Name=r[model.name], ResourceArn=arn)
             except ClientError as e:
                 if e.response['Error']['Code'] == 'ResourceAlreadyExistsException':
                     continue

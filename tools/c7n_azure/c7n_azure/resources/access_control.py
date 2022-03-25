@@ -120,9 +120,7 @@ class RoleAssignment(QueryResourceManager):
             if resource['properties']['principalId'] in principal_dics.keys():
                 graph_resource = principal_dics[resource['properties']['principalId']]
                 if graph_resource.object_id:
-                    resource['principalName'] = GraphHelper.get_principal_name(
-                        graph_resource
-                    )
+                    resource['principalName'] = GraphHelper.get_principal_name(graph_resource)
                     resource['displayName'] = graph_resource.display_name
                     resource['aadType'] = graph_resource.object_type
 
@@ -405,6 +403,4 @@ class DeleteAssignmentAction(AzureBaseAction):
         self.client = self.manager.get_client()
 
     def _process_resource(self, resource):
-        self.client.role_assignments.delete(
-            resource['properties']['scope'], resource['name']
-        )
+        self.client.role_assignments.delete(resource['properties']['scope'], resource['name'])

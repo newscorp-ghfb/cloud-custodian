@@ -27,9 +27,7 @@ class AccessAnalyzer(ValueFilter):
 
     """
 
-    schema = type_schema(
-        'iam-analyzer', analyzer={'type': 'string'}, rinherit=ValueFilter.schema
-    )
+    schema = type_schema('iam-analyzer', analyzer={'type': 'string'}, rinherit=ValueFilter.schema)
     schema_alias = True
     permissions = ('access-analyzer:ListFindings', 'access-analyzer:ListAnalyzers')
     supported_types = (
@@ -70,9 +68,7 @@ class AccessAnalyzer(ValueFilter):
         return results
 
     def get_findings(self, client, analyzer_arn, resources):
-        for resource_set in chunks(
-            zip(self.manager.get_arns(resources), resources), 20
-        ):
+        for resource_set in chunks(zip(self.manager.get_arns(resources), resources), 20):
             resource_set = dict(resource_set)
             filters = {
                 'status': {'eq': ['ACTIVE']},

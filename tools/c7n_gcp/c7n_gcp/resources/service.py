@@ -29,9 +29,7 @@ class Service(QueryResourceManager):
 
         @staticmethod
         def get(client, resource_info):
-            return client.execute_command(
-                'get', {'name': resource_info['resourceName']}
-            )
+            return client.execute_command('get', {'name': resource_info['resourceName']})
 
     def get_resource_query(self):
         # https://cloud.google.com/service-usage/docs/reference/rest/v1/services/list

@@ -115,9 +115,7 @@ class GCPMetricsFilter(Filter):
         duration = timedelta(days)
 
         self.metric = self.data['name']
-        self.metric_key = (
-            self.data.get('metric-key') or self.manager.resource_type.metric_key
-        )
+        self.metric_key = self.data.get('metric-key') or self.manager.resource_type.metric_key
         self.aligner = self.data.get('aligner', 'ALIGN_NONE')
         self.reducer = self.data.get('reducer', 'REDUCE_NONE')
         self.group_by_fields = self.data.get('group-by-fields', [])

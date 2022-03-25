@@ -192,13 +192,11 @@ class HierarchyAction(MethodAction):
 
         for r in resources:
             client = self.get_client(session, self.manager.resource_type)
-            ancestors = client.execute_command(
-                'getAncestry', {'projectId': r['projectId']}
-            ).get('ancestor')
+            ancestors = client.execute_command('getAncestry', {'projectId': r['projectId']}).get(
+                'ancestor'
+            )
             parents[r['projectId']] = [
-                a['resourceId']['id']
-                for a in ancestors
-                if a['resourceId']['type'] == 'folder'
+                a['resourceId']['id'] for a in ancestors if a['resourceId']['type'] == 'folder'
             ]
         self.parents = parents
         self.folder_ids = set(itertools.chain(*self.parents.values()))

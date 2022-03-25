@@ -59,9 +59,7 @@ class MessageQueue(BaseTest):
             {
                 'name': 'test-message-broker-kms-filter',
                 'resource': 'message-broker',
-                'filters': [
-                    {'type': 'kms-key', 'key': 'c7n:AliasName', 'value': 'alias/aws/mq'}
-                ],
+                'filters': [{'type': 'kms-key', 'key': 'c7n:AliasName', 'value': 'alias/aws/mq'}],
             },
             session_factory=session_factory,
         )
@@ -110,9 +108,7 @@ class MessageQueue(BaseTest):
         if self.recording:
             time.sleep(1)
         tags = client.list_tags(ResourceArn=resources[0]["BrokerArn"])["Tags"]
-        self.assertEqual(
-            {t['Key']: t['Value'] for t in resources[0]['Tags']}, {'Role': 'Dev'}
-        )
+        self.assertEqual({t['Key']: t['Value'] for t in resources[0]['Tags']}, {'Role': 'Dev'})
         self.assertEqual(
             tags,
             {
@@ -142,7 +138,5 @@ class MessageQueue(BaseTest):
         if self.recording:
             time.sleep(1)
         tags = client.list_tags(ResourceArn=resources[0]["Arn"])["Tags"]
-        self.assertEqual(
-            {t['Key']: t['Value'] for t in resources[0]['Tags']}, {'Role': 'Dev'}
-        )
+        self.assertEqual({t['Key']: t['Value'] for t in resources[0]['Tags']}, {'Role': 'Dev'})
         self.assertEqual(tags, {'Env': 'Dev'})

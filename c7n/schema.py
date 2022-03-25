@@ -76,11 +76,7 @@ def check_unique(data):
             counter.pop(k)
     if counter:
         return [
-            ValueError(
-                "Only one policy with a given name allowed, duplicates: {}".format(
-                    counter
-                )
-            ),
+            ValueError("Only one policy with a given name allowed, duplicates: {}".format(counter)),
             list(counter.keys())[0],
         ]
 
@@ -184,9 +180,7 @@ def generate(resource_types=()):
             'properties': {
                 'Sid': {'type': 'string'},
                 'Effect': {'type': 'string', 'enum': ['Allow', 'Deny']},
-                'Principal': {
-                    'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]
-                },
+                'Principal': {'anyOf': [{'type': 'string'}, {'type': 'object'}, {'type': 'array'}]},
                 'NotPrincipal': {'anyOf': [{'type': 'object'}, {'type': 'array'}]},
                 'Action': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
                 'NotAction': {'anyOf': [{'type': 'string'}, {'type': 'array'}]},
@@ -256,27 +250,21 @@ def generate(resource_types=()):
                                 'type': 'object',
                                 'additionalProperties': False,
                                 'properties': {
-                                    'or': {
-                                        '$ref': '#/definitions/policy/properties/conditions'
-                                    }
+                                    'or': {'$ref': '#/definitions/policy/properties/conditions'}
                                 },
                             },
                             {
                                 'type': 'object',
                                 'additionalProperties': False,
                                 'properties': {
-                                    'not': {
-                                        '$ref': '#/definitions/policy/properties/conditions'
-                                    }
+                                    'not': {'$ref': '#/definitions/policy/properties/conditions'}
                                 },
                             },
                             {
                                 'type': 'object',
                                 'additionalProperties': False,
                                 'properties': {
-                                    'and': {
-                                        '$ref': '#/definitions/policy/properties/conditions'
-                                    }
+                                    'and': {'$ref': '#/definitions/policy/properties/conditions'}
                                 },
                             },
                             {'$ref': '#/definitions/filters/value'},
@@ -345,16 +333,13 @@ def generate(resource_types=()):
                 if not resource_type.type_aliases:
                     continue
                 elif not {
-                    "%s.%s" % (cloud_name, ralias)
-                    for ralias in resource_type.type_aliases
+                    "%s.%s" % (cloud_name, ralias) for ralias in resource_type.type_aliases
                 }.intersection(resource_types):
                     continue
 
             aliases = []
             if resource_type.type_aliases:
-                aliases.extend(
-                    ["%s.%s" % (cloud_name, a) for a in resource_type.type_aliases]
-                )
+                aliases.extend(["%s.%s" % (cloud_name, a) for a in resource_type.type_aliases])
                 # aws gets legacy aliases with no cloud prefix
                 if cloud_name == 'aws':
                     aliases.extend(resource_type.type_aliases)
@@ -416,10 +401,8 @@ def process_resource(
             if action_alias in definitions['actions']:
 
                 if definitions['actions'][action_alias] != a.schema:  # NOQA
-                    msg = (
-                        "Schema mismatch on type:{} action:{} w/ schema alias ".format(
-                            type_name, action_name
-                        )
+                    msg = "Schema mismatch on type:{} action:{} w/ schema alias ".format(
+                        type_name, action_name
                     )
                     raise SyntaxError(msg)
             else:
@@ -428,10 +411,7 @@ def process_resource(
         else:
             r['actions'][action_name] = a.schema
             action_refs.append(
-                {
-                    '$ref': '#/definitions/resources/%s/actions/%s'
-                    % (type_name, action_name)
-                }
+                {'$ref': '#/definitions/resources/%s/actions/%s' % (type_name, action_name)}
             )
 
     # one word action shortcuts
@@ -458,18 +438,13 @@ def process_resource(
         else:
             r['filters'][filter_name] = f.schema
             filter_refs.append(
-                {
-                    '$ref': '#/definitions/resources/%s/filters/%s'
-                    % (type_name, filter_name)
-                }
+                {'$ref': '#/definitions/resources/%s/filters/%s' % (type_name, filter_name)}
             )
 
     # one word filter shortcuts
     filter_refs.append({'enum': list(resource_type.filter_registry.keys())})
 
-    block_fref = '#/definitions/resources/%s/policy/allOf/1/properties/filters' % (
-        type_name
-    )
+    block_fref = '#/definitions/resources/%s/policy/allOf/1/properties/filters' % (type_name)
     filter_refs.extend(
         [
             {
@@ -565,9 +540,7 @@ def resource_vocabulary(cloud_name=None, qualify_name=True, aliases=True):
         if aliases and resource_type.type_aliases:
             provider = type_name.split('.', 1)[0]
             for type_alias in resource_type.type_aliases:
-                vocabulary['aliases'][
-                    "{}.{}".format(provider, type_alias)
-                ] = vocabulary[type_name]
+                vocabulary['aliases']["{}.{}".format(provider, type_alias)] = vocabulary[type_name]
                 if provider == 'aws':
                     vocabulary['aliases'][type_alias] = vocabulary[type_name]
             vocabulary[type_name]['resource_type'] = type_name

@@ -65,11 +65,7 @@ class ContainerConfigSource(ConfigSource):
                 lk = k[0].lower() + k[1:]
                 data[lk] = data.pop(k)
                 # describe doesn't return empty list/dict by default
-                if (
-                    isinstance(v, (list, dict))
-                    and not v
-                    and lk not in cls.preserve_empty
-                ):
+                if isinstance(v, (list, dict)) and not v and lk not in cls.preserve_empty:
                     data.pop(lk)
                 elif isinstance(v, (dict, list)):
                     data[lk] = cls.lower_keys(v)
@@ -132,9 +128,7 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
 
     def __init__(self, manager):
         self.manager = manager
-        self.query = query.ChildResourceQuery(
-            self.manager.session_factory, self.manager
-        )
+        self.query = query.ChildResourceQuery(self.manager.session_factory, self.manager)
         self.query.capture_parent_id = True
 
     def get_resources(self, ids, cache=True):
@@ -166,9 +160,10 @@ class ECSClusterResourceDescribeSource(query.ChildDescribeSource):
             client = local_session(self.manager.session_factory).client('ecs')
             futures = {}
             for pid, services in parent_child_map.items():
-                futures[
-                    w.submit(self.process_cluster_resources, client, pid, services)
-                ] = (pid, services)
+                futures[w.submit(self.process_cluster_resources, client, pid, services)] = (
+                    pid,
+                    services,
+                )
             for f in futures:
                 pid, services = futures[f]
                 if f.exception():
@@ -395,9 +390,7 @@ class UpdateService(BaseAction):
 
             # Handle network separately as it requires atomic updating, and populating
             # defaults from the resource.
-            net_update = update.get('networkConfiguration', {}).get(
-                'awsvpcConfiguration'
-            )
+            net_update = update.get('networkConfiguration', {}).get('awsvpcConfiguration')
             if net_update:
                 net_param = dict(r['networkConfiguration']['awsvpcConfiguration'])
                 param['networkConfiguration'] = {'awsvpcConfiguration': net_param}
@@ -413,9 +406,7 @@ class UpdateService(BaseAction):
             if not param:
                 continue
 
-            client.update_service(
-                cluster=r['clusterArn'], service=r['serviceName'], **param
-            )
+            client.update_service(cluster=r['clusterArn'], service=r['serviceName'], **param)
 
 
 @Service.action_registry.register('delete')
@@ -430,9 +421,7 @@ class DeleteService(BaseAction):
         retry = get_retry(('Throttling',))
         for r in resources:
             try:
-                primary = [
-                    d for d in r['deployments'] if d['status'] == 'PRIMARY'
-                ].pop()
+                primary = [d for d in r['deployments'] if d['status'] == 'PRIMARY'].pop()
                 if primary['desiredCount'] > 0:
                     retry(
                         client.update_service,
@@ -549,10 +538,7 @@ class StopTask(BaseAction):
                 )
             except ClientError as e:
                 # No error code for not found.
-                if (
-                    e.response['Error']['Message']
-                    != "The referenced task was not found."
-                ):
+                if e.response['Error']['Message'] != "The referenced task was not found.":
                     raise
 
 
@@ -700,9 +686,7 @@ class SetState(BaseAction):
                   state: DRAINING
     """
 
-    schema = type_schema(
-        'set-state', state={"type": "string", 'enum': ['DRAINING', 'ACTIVE']}
-    )
+    schema = type_schema('set-state', state={"type": "string", 'enum': ['DRAINING', 'ACTIVE']})
     permissions = ('ecs:UpdateContainerInstancesState',)
 
     def process(self, resources):
@@ -746,9 +730,7 @@ class UpdateAgent(BaseAction):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ecs')
         for r in resources:
-            self.process_instance(
-                client, r.get('c7n:cluster'), r.get('containerInstanceArn')
-            )
+            self.process_instance(client, r.get('c7n:cluster'), r.get('containerInstanceArn'))
 
     def process_instance(self, client, cluster, instance):
         try:
@@ -840,9 +822,7 @@ class RemoveTagEcsResource(RemoveTag):
                 continue
             client.untag_resource(resourceArn=r[self.id_key], tagKeys=keys)
         if old_arns != 0:
-            self.log.warn(
-                "Couldn't untag %d resource(s). Needs new ARN format", old_arns
-            )
+            self.log.warn("Couldn't untag %d resource(s). Needs new ARN format", old_arns)
 
 
 @ECSCluster.action_registry.register('mark-for-op')
@@ -901,9 +881,7 @@ class ECSTaggable(Filter):
 
     def process(self, resources, event=None):
         if not self.data.get('state'):
-            return [
-                r for r in resources if not ecs_taggable(self.manager.resource_type, r)
-            ]
+            return [r for r in resources if not ecs_taggable(self.manager.resource_type, r)]
         else:
             return [r for r in resources if ecs_taggable(self.manager.resource_type, r)]
 

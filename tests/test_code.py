@@ -41,10 +41,7 @@ class CodeArtifact(BaseTest):
         assert resources[0]['name'] == 'dop'
         if self.recording:
             time.sleep(3)
-        assert (
-            factory().client('codeartifact').list_repositories().get('repositories')
-            == []
-        )
+        assert factory().client('codeartifact').list_repositories().get('repositories') == []
 
 
 class CodeCommit(BaseTest):
@@ -155,9 +152,7 @@ class CodeBuild(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -282,9 +277,7 @@ class CodeDeploy(BaseTest):
         self.assertEqual(len(resources), 1)
         client = factory().client('codedeploy')
         arn = p.resource_manager.generate_arn(resources[0]["applicationName"])
-        self.assertEqual(
-            len(client.list_tags_for_resource(ResourceArn=arn).get('Tags')), 0
-        )
+        self.assertEqual(len(client.list_tags_for_resource(ResourceArn=arn).get('Tags')), 0)
 
     def test_codedeploy_deploymentgroup_delete(self):
         factory = self.replay_flight_data('test_codedeploy_deploymentgroup_delete')

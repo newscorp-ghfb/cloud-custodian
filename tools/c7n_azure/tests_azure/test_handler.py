@@ -34,9 +34,7 @@ class HandlerTest(BaseTest):
             initialize_mock.call_args_list[0][0][0]['authorization_file'],
             context['auth_file'],
         )
-        self.assertEqual(
-            initialize_mock.call_args_list[0][0][0]['test_option'], "test_value"
-        )
+        self.assertEqual(initialize_mock.call_args_list[0][0][0]['test_option'], "test_value")
 
     def test_run_empty_policy(self):
         context = {

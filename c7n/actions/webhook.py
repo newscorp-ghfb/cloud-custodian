@@ -116,8 +116,7 @@ class Webhook(EventAction):
             )
 
             self.log.info(
-                "%s got response %s with URL %s"
-                % (self.method, res.status, prepared_url)
+                "%s got response %s with URL %s" % (self.method, res.status, prepared_url)
             )
         except urllib3.exceptions.HTTPError as e:
             self.log.error("Error calling %s. Code: %s" % (prepared_url, e.reason))
@@ -148,9 +147,7 @@ class Webhook(EventAction):
         if not self.query_params:
             return self.url
 
-        evaluated_params = {
-            k: jmespath.search(v, resource) for k, v in self.query_params.items()
-        }
+        evaluated_params = {k: jmespath.search(v, resource) for k, v in self.query_params.items()}
 
         url_parts = list(parse.urlparse(self.url))
         query = dict(parse.parse_qsl(url_parts[4]))

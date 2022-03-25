@@ -54,25 +54,20 @@ class StorageContainerTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(2, len(resources))
-        self.assertEqual(
-            {'containerone', 'containertwo'}, {c['name'] for c in resources}
-        )
+        self.assertEqual({'containerone', 'containertwo'}, {c['name'] for c in resources})
 
     @arm_template('storage.json')
     @cassette_name('containers')
     def test_set_public_access(self):
         with patch(
             'azure.mgmt.storage.v%s.operations.'
-            'BlobContainersOperations.update'
-            % self._get_storage_management_client_api_string()
+            'BlobContainersOperations.update' % self._get_storage_management_client_api_string()
         ) as update_container_mock:
             p = self.load_policy(
                 {
                     'name': 'test-azure-storage-container-enum',
                     'resource': 'azure.storage-container',
-                    'filters': [
-                        {'type': 'value', 'key': 'name', 'value': 'containerone'}
-                    ],
+                    'filters': [{'type': 'value', 'key': 'name', 'value': 'containerone'}],
                     'actions': [{'type': 'set-public-access', 'value': 'None'}],
                 },
                 validate=True,

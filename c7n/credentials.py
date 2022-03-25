@@ -49,9 +49,7 @@ class SessionFactory:
                 self.external_id,
             )
         else:
-            session = Session(
-                region_name=region or self.region, profile_name=self.profile
-            )
+            session = Session(region_name=region or self.region, profile_name=self.profile)
 
         return self.update(session)
 
@@ -68,9 +66,7 @@ class SessionFactory:
         self._subscribers = subscribers
 
 
-def assumed_session(
-    role_arn, session_name, session=None, region=None, external_id=None
-):
+def assumed_session(role_arn, session_name, session=None, region=None, external_id=None):
     """STS Role assume a boto3.Session
 
     With automatic credential renewal.

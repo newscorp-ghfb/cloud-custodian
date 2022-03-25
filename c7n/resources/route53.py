@@ -73,9 +73,7 @@ def _describe_route53_tags(model, resources, session_factory, executor_factory, 
                     'ResourceId' in resource_tag_set
                     and resource_tag_set['ResourceId'] in resource_map
                 ):
-                    resource_map[resource_tag_set['ResourceId']][
-                        'Tags'
-                    ] = resource_tag_set['Tags']
+                    resource_map[resource_tag_set['ResourceId']]['Tags'] = resource_tag_set['Tags']
 
     with executor_factory(max_workers=2) as w:
         return list(w.map(process_tags, chunks(resources, 20)))
@@ -143,9 +141,9 @@ class Route53Domain(QueryResourceManager):
     def augment(self, domains):
         client = local_session(self.session_factory).client('route53domains')
         for d in domains:
-            d['Tags'] = self.retry(
-                client.list_tags_for_domain, DomainName=d['DomainName']
-            )['TagList']
+            d['Tags'] = self.retry(client.list_tags_for_domain, DomainName=d['DomainName'])[
+                'TagList'
+            ]
         return domains
 
 
@@ -242,8 +240,7 @@ class Delete(BaseAction):
                 )
             except client.exceptions.HostedZoneNotEmpty as e:
                 self.log.warning(
-                    "HostedZone: %s cannot be deleted, "
-                    "set force to remove all records in zone",
+                    "HostedZone: %s cannot be deleted, " "set force to remove all records in zone",
                     hz['Name'],
                 )
                 error = e
@@ -350,11 +347,7 @@ class SetQueryLogging(BaseAction):
             # By forcing use of a filter we ensure both getting to right set of
             # resources as well avoiding an extra api call here, as we'll reuse
             # the annotation from the filter for logging config.
-            if not [
-                f
-                for f in self.manager.iter_filters()
-                if isinstance(f, IsQueryLoggingEnabled)
-            ]:
+            if not [f for f in self.manager.iter_filters() if isinstance(f, IsQueryLoggingEnabled)]:
                 raise ValueError(
                     "set-query-logging when deleting requires "
                     "use of query-logging-enabled filter in policy"
@@ -376,9 +369,7 @@ class SetQueryLogging(BaseAction):
 
     def process(self, resources):
         if self.manager.config.region != 'us-east-1':
-            self.log.warning(
-                "set-query-logging should be only be performed region: us-east-1"
-            )
+            self.log.warning("set-query-logging should be only be performed region: us-east-1")
 
         client = local_session(self.manager.session_factory).client('route53')
         state = self.data.get('state', True)
@@ -425,17 +416,13 @@ class SetQueryLogging(BaseAction):
                 groups = log_manager.get_resources([common_prefix], augment=False)
             else:
                 groups = list(
-                    itertools.chain(
-                        *[log_manager.get_resources([g]) for g in group_names]
-                    )
+                    itertools.chain(*[log_manager.get_resources([g]) for g in group_names])
                 )
 
         missing = group_names.difference({g['logGroupName'] for g in groups})
 
         # Logs groups must be created in us-east-1 for route53.
-        client = local_session(self.manager.session_factory).client(
-            'logs', region_name='us-east-1'
-        )
+        client = local_session(self.manager.session_factory).client('logs', region_name='us-east-1')
 
         for g in missing:
             client.create_log_group(logGroupName=g)
@@ -461,9 +448,7 @@ class SetQueryLogging(BaseAction):
 
         client.put_resource_policy(
             policyName='Route53LogWrites',
-            policyDocument=json.dumps(
-                {"Version": "2012-10-17", "Statement": [statement]}
-            ),
+            policyDocument=json.dumps({"Version": "2012-10-17", "Statement": [statement]}),
         )
 
     def check_route53_permissions(self, client, group_names):

@@ -56,8 +56,6 @@ class CommandsValidateTest(BaseTest):
             validate_yaml_policies(yaml_validate_options)
         # if there is a bad policy in the batch being validated, there should be an exit 1
         self.assertEqual(exit.exception.code, 1)
-        yaml_validate_options.configs.remove(
-            "tests/data/test_policies/ebs-BADVALIDATION.yml"
-        )
+        yaml_validate_options.configs.remove("tests/data/test_policies/ebs-BADVALIDATION.yml")
         # if there are only good policy, it should exit none
         self.assertIsNone(validate_yaml_policies(yaml_validate_options))

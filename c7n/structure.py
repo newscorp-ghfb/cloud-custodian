@@ -65,10 +65,7 @@ class StructureParser:
         pdata = data.get('policies', [])
         if not isinstance(pdata, list):
             raise PolicyValidationError(
-                (
-                    '`policies` key should be an array/list found: %s'
-                    % (type(pdata).__name__)
-                )
+                ('`policies` key should be an array/list found: %s' % (type(pdata).__name__))
             )
         for p in pdata:
             self.validate_policy(p)

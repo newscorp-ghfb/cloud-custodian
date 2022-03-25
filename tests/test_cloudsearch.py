@@ -33,7 +33,5 @@ class CloudSearch(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("cloudsearch")
-        state = client.describe_domains(DomainNames=["sock-index"])["DomainStatusList"][
-            0
-        ]
+        state = client.describe_domains(DomainNames=["sock-index"])["DomainStatusList"][0]
         self.assertEqual(state["Deleted"], True)

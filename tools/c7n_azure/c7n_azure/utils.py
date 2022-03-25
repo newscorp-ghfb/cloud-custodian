@@ -25,9 +25,7 @@ from netaddr import IPNetwork, IPRange, IPSet
 
 from c7n_azure import constants
 
-resource_group_regex = re.compile(
-    r'/subscriptions/[^/]+/resourceGroups/[^/]+(/)?$', re.IGNORECASE
-)
+resource_group_regex = re.compile(r'/subscriptions/[^/]+/resourceGroups/[^/]+(/)?$', re.IGNORECASE)
 
 
 class ResourceIdParser:
@@ -141,9 +139,9 @@ def custodian_azure_send_override(self, request, headers=None, content=None, **k
             if retry_after is None:
                 # we want to attempt retries even when azure fails to send a header
                 # this has been a constant source of instability in larger environments
-                retry_after = (
-                    constants.DEFAULT_RETRY_AFTER * retries
-                ) + random.randint(1, constants.DEFAULT_RETRY_AFTER)
+                retry_after = (constants.DEFAULT_RETRY_AFTER * retries) + random.randint(
+                    1, constants.DEFAULT_RETRY_AFTER
+                )
             if retry_after < constants.DEFAULT_MAX_RETRY_AFTER:
                 send_logger.warning(
                     'Received retriable error code %i. Retry-After: %i'
@@ -192,9 +190,7 @@ class ThreadHelper:
         else:
             with executor_factory(max_workers=max_workers) as w:
                 for resource_set in chunks(resources, chunk_size):
-                    futures.append(
-                        w.submit(execution_method, resource_set, event, **kwargs)
-                    )
+                    futures.append(w.submit(execution_method, resource_set, event, **kwargs))
 
                 for f in as_completed(futures):
                     if f.exception():
@@ -234,9 +230,7 @@ class GraphHelper:
     log = logging.getLogger('custodian.azure.utils.GraphHelper')
 
     @staticmethod
-    def get_principal_dictionary(
-        graph_client, object_ids, raise_on_graph_call_error=False
-    ):
+    def get_principal_dictionary(graph_client, object_ids, raise_on_graph_call_error=False):
         """Retrieves Azure AD Objects for corresponding object ids passed.
         :param graph_client: A client for Microsoft Graph.
         :param object_ids: The object ids to retrieve Azure AD objects for.
@@ -315,9 +309,7 @@ class PortsRangeHelper:
         """Extracts ports ranges from the string
         Returns an array of PortsRange tuples
         """
-        return [
-            PortsRangeHelper._get_port_range(r) for r in ports.split(',') if r != ''
-        ]
+        return [PortsRangeHelper._get_port_range(r) for r in ports.split(',') if r != '']
 
     @staticmethod
     def _get_rule_port_ranges(rule):
@@ -326,13 +318,10 @@ class PortsRangeHelper:
         """
         properties = rule['properties']
         if 'destinationPortRange' in properties:
-            return [
-                PortsRangeHelper._get_port_range(properties['destinationPortRange'])
-            ]
+            return [PortsRangeHelper._get_port_range(properties['destinationPortRange'])]
         else:
             return [
-                PortsRangeHelper._get_port_range(r)
-                for r in properties['destinationPortRanges']
+                PortsRangeHelper._get_port_range(r) for r in properties['destinationPortRanges']
             ]
 
     @staticmethod
@@ -386,17 +375,12 @@ class PortsRangeHelper:
         for it in range(1, len(data)):
             if data[first] == data[it] - (it - first):
                 continue
-            result.append(
-                PortsRangeHelper.PortsRange(start=data[first], end=data[it - 1])
-            )
+            result.append(PortsRangeHelper.PortsRange(start=data[first], end=data[it - 1]))
             first = it
 
         # Update tuples with strings, representing ranges
         result.append(PortsRangeHelper.PortsRange(start=data[first], end=data[-1]))
-        result = [
-            str(x.start) if x.start == x.end else "%i-%i" % (x.start, x.end)
-            for x in result
-        ]
+        result = [str(x.start) if x.start == x.end else "%i-%i" % (x.start, x.end) for x in result]
         return result
 
     @staticmethod
@@ -476,9 +460,7 @@ class IpRangeHelper:
                 result.update(resolved_set)
             else:
                 if len(r) > 2:
-                    raise Exception(
-                        'Invalid range. Use x.x.x.x-y.y.y.y or x.x.x.x or x.x.x.x/y.'
-                    )
+                    raise Exception('Invalid range. Use x.x.x.x-y.y.y.y or x.x.x.x or x.x.x.x/y.')
                 result.add(IPRange(*r) if len(r) == 2 else IPNetwork(r[0]))
         return result
 
@@ -503,9 +485,7 @@ class AppInsightsHelper:
         from c7n_azure.session import Session
 
         s = local_session(Session)
-        client = s.client(
-            'azure.mgmt.applicationinsights.ApplicationInsightsManagementClient'
-        )
+        client = s.client('azure.mgmt.applicationinsights.ApplicationInsightsManagementClient')
         try:
             insights = client.components.get(resource_group_name, resource_name)
             return insights.instrumentation_key
@@ -522,9 +502,7 @@ class ManagedGroupHelper:
     @staticmethod
     def get_subscriptions_list(managed_resource_group, session):
         client = session.client('azure.mgmt.managementgroups.ManagementGroupsAPI')
-        result = client.management_groups.get_descendants(
-            group_id=managed_resource_group
-        )
+        result = client.management_groups.get_descendants(group_id=managed_resource_group)
 
         subscriptions = [r.name for r in result if '/subscriptions' in r.type]
         return subscriptions
@@ -577,9 +555,7 @@ class RetentionPeriod:
         period = int(match.group(1))
         iso8601_symbol = match.group(2)
         units = next(
-            units
-            for units in RetentionPeriod.Units
-            if units.iso8601_symbol == iso8601_symbol
+            units for units in RetentionPeriod.Units if units.iso8601_symbol == iso8601_symbol
         )
         return period, units
 
@@ -603,9 +579,7 @@ def get_service_tag_list():
 
     s = local_session(Session)  # type: Session
 
-    client = s.client(
-        'azure.mgmt.network._network_management_client.NetworkManagementClient'
-    )
+    client = s.client('azure.mgmt.network._network_management_client.NetworkManagementClient')
 
     return client.service_tags.list('westus')
 
@@ -621,11 +595,7 @@ def get_service_tag_ip_space(resource_name='AzureCloud', region=None):
     if region:
         name_filter += '.' + region.lower()
 
-    ip_lists = [
-        v.properties.address_prefixes
-        for v in tags.values
-        if name_filter == v.name.lower()
-    ]
+    ip_lists = [v.properties.address_prefixes for v in tags.values if name_filter == v.name.lower()]
 
     return list(itertools.chain.from_iterable(ip_lists))
 

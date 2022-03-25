@@ -48,9 +48,7 @@ class CloudHSMClusterTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0].get('ClusterId'), 'cluster-pqczsunscng')
-        self.assertEqual(
-            resources[0].get('SubnetMapping'), {"us-east-1a": "subnet-914763e7"}
-        )
+        self.assertEqual(resources[0].get('SubnetMapping'), {"us-east-1a": "subnet-914763e7"})
         if self.recording:
             time.sleep(25)
         self.assertEqual(

@@ -62,9 +62,7 @@ class CloudFunctionManager:
     def __init__(self, session_factory, region):
         self.session_factory = session_factory
         self.session = local_session(session_factory)
-        self.client = self.session.client(
-            'cloudfunctions', 'v1', 'projects.locations.functions'
-        )
+        self.client = self.session.client('cloudfunctions', 'v1', 'projects.locations.functions')
         self.region = region
 
     def list_functions(self, prefix=None):
@@ -84,9 +82,7 @@ class CloudFunctionManager:
         # delete event sources
         for e in func.events:
             e.remove(func)
-        func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func.name
-        )
+        func_name = "projects/{}/locations/{}/functions/{}".format(project, self.region, func.name)
         try:
             return self.client.execute_command('delete', {'name': func_name})
         except errors.HttpError as e:
@@ -96,9 +92,7 @@ class CloudFunctionManager:
     def publish(self, func):
         """publish the given function."""
         project = self.session.get_default_project()
-        func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func.name
-        )
+        func_name = "projects/{}/locations/{}/functions/{}".format(project, self.region, func.name)
         func_info = self.get(func.name)
         source_url = None
 
@@ -150,9 +144,7 @@ class CloudFunctionManager:
     def get(self, func_name, qualifier=None):
         """Get the details on a given function."""
         project = self.session.get_default_project()
-        func_name = "projects/{}/locations/{}/functions/{}".format(
-            project, self.region, func_name
-        )
+        func_name = "projects/{}/locations/{}/functions/{}".format(project, self.region, func_name)
         try:
             return self.client.execute_query('get', {'name': func_name})
         except errors.HttpError as e:
@@ -172,9 +164,7 @@ class CloudFunctionManager:
         http = self._get_http_client(self.client)
         source_headers, _ = http.request(source_info['downloadUrl'], 'HEAD')
         # 'x-goog-hash': 'crc32c=tIfQ9A==, md5=DqrN06/NbVGsG+3CdrVK+Q=='
-        deployed_checksum = (
-            source_headers['x-goog-hash'].split(',')[-1].split('=', 1)[-1]
-        )
+        deployed_checksum = source_headers['x-goog-hash'].split(',')[-1].split('=', 1)[-1]
         modified = deployed_checksum != checksum
         log.debug(
             "archive modified:%s checksum %r deployed checksum %r",
@@ -498,9 +488,7 @@ class PubSubSource(EventSource):
         else:
             found['members'].append(publisher)
 
-        client.execute_command(
-            'setIamPolicy', {'resource': topic, 'body': {'policy': policy}}
-        )
+        client.execute_command('setIamPolicy', {'resource': topic, 'body': {'policy': policy}})
 
     def add(self, func):
         self.ensure_topic()
@@ -526,9 +514,7 @@ class SecurityCenterSubscriber(EventSource):
 
         Returns the notification config name.
         """
-        client = self.session.client(
-            'securitycenter', 'v1', 'organizations.notificationConfigs'
-        )
+        client = self.session.client('securitycenter', 'v1', 'organizations.notificationConfigs')
         config_name = "organizations/{}/notificationConfigs/{}".format(
             self.data["org"], self.notification_name()
         )
@@ -550,9 +536,7 @@ class SecurityCenterSubscriber(EventSource):
                 self.session.get_default_project(), self.data['topic']
             ),
             'streamingConfig': {
-                "filter": "resource.type=\"{}\"".format(
-                    self.resource.resource_type.scc_type
-                )
+                "filter": "resource.type=\"{}\"".format(self.resource.resource_type.scc_type)
             },
         }
         client.execute_command(
@@ -569,9 +553,7 @@ class SecurityCenterSubscriber(EventSource):
         self.ensure_notification_config()
 
     def remove(self, func):
-        client = self.session.client(
-            'securitycenter', 'v1', 'organizations.notificationConfigs'
-        )
+        client = self.session.client('securitycenter', 'v1', 'organizations.notificationConfigs')
         config_name = "organizations/{}/notificationConfigs/{}".format(
             self.data["org"], self.notification_name()
         )
@@ -611,9 +593,7 @@ class PeriodicEvent(EventSource):
         target.add(func)
         job = self.get_job_config(func, target)
 
-        client = self.session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
-        )
+        client = self.session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
 
         delta = self.diff_job(client, job)
         if delta:
@@ -642,9 +622,7 @@ class PeriodicEvent(EventSource):
         if not job['name'].rsplit('/', 1)[-1].startswith(self.prefix):
             return
 
-        client = self.session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
-        )
+        client = self.session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
 
         return client.execute_command('delete', {'name': job['name']})
 
@@ -693,9 +671,7 @@ class PeriodicEvent(EventSource):
         elif self.target_type == 'pubsub':
             job['pubsubTarget'] = {
                 'topicName': target.get_topic_param(),
-                'data': base64.b64encode("{\"schedule\": true}".encode('utf-8')).decode(
-                    'utf-8'
-                ),
+                'data': base64.b64encode("{\"schedule\": true}".encode('utf-8')).decode('utf-8'),
             }
         return job
 
@@ -723,9 +699,7 @@ class LogSubscriber(EventSource):
 
     def get_log(self):
         scope_type, scope_id, _, log_id = self.data['log'].split('/', 3)
-        return LogInfo(
-            scope_type=scope_type, scope_id=scope_id, id=log_id, name=self.data['log']
-        )
+        return LogInfo(scope_type=scope_type, scope_id=scope_id, id=log_id, name=self.data['log'])
 
     def get_log_filter(self):
         return self.data.get('filter')
@@ -810,9 +784,7 @@ class LogSubscriber(EventSource):
             return
         parent = self.get_parent(self.get_log())
         _, sink_path, _ = self.get_sink()
-        client = self.session.client(
-            'logging', 'v2', '%s.sinks' % (parent.split('/', 1)[0])
-        )
+        client = self.session.client('logging', 'v2', '%s.sinks' % (parent.split('/', 1)[0]))
         try:
             client.execute_command('delete', {'sinkName': sink_path})
         except HttpError as e:

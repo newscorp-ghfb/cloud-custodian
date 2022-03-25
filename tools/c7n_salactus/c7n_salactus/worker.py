@@ -267,8 +267,7 @@ def bucket_key_count(client, bucket):
             {'Name': 'BucketName', 'Value': bucket['name']},
             {'Name': 'StorageType', 'Value': 'AllStorageTypes'},
         ],
-        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        - timedelta(1),
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
         EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 60 * 24,
         Statistics=['Minimum'],
@@ -298,15 +297,9 @@ def process_account(account_info):
         )
 
     account_buckets = account_info.pop('buckets', None)
-    buckets = [
-        n['Name']
-        for n in buckets
-        if not account_buckets or n['Name'] in account_buckets
-    ]
+    buckets = [n['Name'] for n in buckets if not account_buckets or n['Name'] in account_buckets]
     account_not_buckets = account_info.pop('not-buckets', None)
-    buckets = [
-        n for n in buckets if not account_not_buckets or n not in account_not_buckets
-    ]
+    buckets = [n for n in buckets if not account_not_buckets or n not in account_not_buckets]
     log.info("processing %d buckets in account %s", len(buckets), account_info['name'])
     for bucket_set in chunks(buckets, 50):
         invoke(process_bucket_set, account_info, bucket_set)
@@ -332,9 +325,7 @@ def process_bucket_set(account_info, buckets):
             error = None
 
             try:
-                location = client.get_bucket_location(Bucket=b).get(
-                    'LocationConstraint'
-                )
+                location = client.get_bucket_location(Bucket=b).get('LocationConstraint')
             except Exception as e:
                 error = e
                 location = None
@@ -346,9 +337,7 @@ def process_bucket_set(account_info, buckets):
             else:
                 region = location
 
-            if account_info.get('regions', ()) and region not in account_info.get(
-                'regions', ()
-            ):
+            if account_info.get('regions', ()) and region not in account_info.get('regions', ()):
                 continue
 
             info['region'] = region
@@ -378,9 +367,7 @@ def process_bucket_set(account_info, buckets):
 
             versioning = s3.get_bucket_versioning(Bucket=b)
             info['versioned'] = (
-                versioning
-                and versioning.get('Status', '') in ('Enabled', 'Suspended')
-                or False
+                versioning and versioning.get('Status', '') in ('Enabled', 'Suspended') or False
             )
             connection.hset('bucket-versions', bid, int(info['versioned']))
 
@@ -395,9 +382,9 @@ def dispatch_object_source(client, account_info, bid, bucket_info):
     Choices are bucket partition, inventory, or direct pagination.
     """
 
-    if account_info.get('inventory') and bucket_info['keycount'] > account_info[
-        'inventory'
-    ].get('bucket-size-threshold', DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD):
+    if account_info.get('inventory') and bucket_info['keycount'] > account_info['inventory'].get(
+        'bucket-size-threshold', DEFAULT_INVENTORY_BUCKET_SIZE_THRESHOLD
+    ):
         inventory_info = get_bucket_inventory(
             client,
             bucket_info['name'],
@@ -618,9 +605,7 @@ def detect_partition_strategy(bid, delimiters=('/', '-'), prefix=''):
     connection=connection,
     result_ttl=0,
 )
-def process_bucket_partitions(
-    bid, prefix_set=('',), partition='/', strategy=None, limit=4
-):
+def process_bucket_partitions(bid, prefix_set=('',), partition='/', strategy=None, limit=4):
     """Split up a bucket keyspace into smaller sets for parallel iteration."""
     if strategy is None:
         return detect_partition_strategy(bid)
@@ -687,13 +672,7 @@ def process_bucket_partitions(
                 log.info("Recursive detection")
                 return detect_partition_strategy(bid, prefix=prefix)
 
-            invoke(
-                process_bucket_iterator,
-                bid,
-                prefix,
-                delimiter=partition,
-                **continuation_params
-            )
+            invoke(process_bucket_iterator, bid, prefix, delimiter=partition, **continuation_params)
 
         # If the queue get too deep, then go parallel
         if len(prefix_queue) > PARTITION_QUEUE_THRESHOLD:
@@ -749,9 +728,7 @@ def process_bucket_inventory(bid, inventory_bucket, inventory_prefix):
 
     # find any key visitors with inventory filtering
     account_info = json.loads(connection.hget('bucket-accounts', account))
-    ifilters = [
-        v.inventory_filter for v in get_key_visitors(account_info) if v.inventory_filter
-    ]
+    ifilters = [v.inventory_filter for v in get_key_visitors(account_info) if v.inventory_filter]
 
     with bucket_ops(bid, 'inventory'):
         page_iterator = load_bucket_inventory(

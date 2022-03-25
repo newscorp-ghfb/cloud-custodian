@@ -23,9 +23,7 @@ class RecordSetTest(BaseTest):
             {
                 'name': 'test-find-by-name',
                 'resource': 'azure.recordset',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'www'}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'www'}],
             }
         )
 
@@ -38,11 +36,7 @@ class DeleteRecordSetTest(BaseTest):
     @classmethod
     def setUpClass(cls, *args, **kwargs):
         super(DeleteRecordSetTest, cls).setUpClass(*args, **kwargs)
-        cls.client = (
-            local_session(Session)
-            .client('azure.mgmt.dns.DnsManagementClient')
-            .record_sets
-        )
+        cls.client = local_session(Session).client('azure.mgmt.dns.DnsManagementClient').record_sets
 
     def tearDown(self, *args, **kwargs):
         super(DeleteRecordSetTest, self).tearDown(*args, **kwargs)
@@ -100,8 +94,6 @@ class DeleteRecordSetTest(BaseTest):
         self._assert_record_set_not_present(record_set_name, rg, zone)
 
     def _assert_record_set_not_present(self, name, resource_group, dns_zone):
-        record_sets = DeleteRecordSetTest.client.list_by_dns_zone(
-            resource_group, dns_zone
-        )
+        record_sets = DeleteRecordSetTest.client.list_by_dns_zone(resource_group, dns_zone)
         record_set = next((rs for rs in record_sets if rs.name == name), None)
         self.assertIsNone(record_set)

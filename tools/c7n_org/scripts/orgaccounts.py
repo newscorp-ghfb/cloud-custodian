@@ -46,9 +46,7 @@ log = logging.getLogger('orgaccounts')
     type=click.File('w'),
     help="File to store the generated config (default stdout)",
 )
-@click.option(
-    '-a', '--active', is_flag=True, default=False, help="Get only active accounts"
-)
+@click.option('-a', '--active', is_flag=True, default=False, help="Get only active accounts")
 @click.option(
     '-i',
     '--ignore',
@@ -146,9 +144,7 @@ def get_sub_ous(client, ou):
     results = [ou]
     ou_pager = client.get_paginator('list_organizational_units_for_parent')
     for sub_ou in (
-        ou_pager.paginate(ParentId=ou['Id'])
-        .build_full_result()
-        .get('OrganizationalUnits')
+        ou_pager.paginate(ParentId=ou['Id']).build_full_result().get('OrganizationalUnits')
     ):
         sub_ou['Path'] = "/%s/%s" % (ou['Path'].strip('/'), sub_ou['Name'])
         results.extend(get_sub_ous(client, sub_ou))
@@ -163,17 +159,11 @@ def get_accounts_for_ou(client, ou, active, recursive=True, ignoredAccounts=()):
 
     account_pager = client.get_paginator('list_accounts_for_parent')
     for ou in ous:
-        for a in (
-            account_pager.paginate(ParentId=ou['Id'])
-            .build_full_result()
-            .get('Accounts', [])
-        ):
+        for a in account_pager.paginate(ParentId=ou['Id']).build_full_result().get('Accounts', []):
             a['Path'] = ou['Path']
             a['Tags'] = {
                 t['Key']: t['Value']
-                for t in client.list_tags_for_resource(ResourceId=a['Id']).get(
-                    'Tags', ()
-                )
+                for t in client.list_tags_for_resource(ResourceId=a['Id']).get('Tags', ())
             }
             if a['Id'] in ignoredAccounts:
                 continue

@@ -163,9 +163,7 @@ class KeyVaultFirewallBypassFilter(FirewallBypassFilter):
         if resource['properties']['networkAcls']['defaultAction'] == 'Allow':
             return ['AzureServices']
 
-        bypass_string = (
-            resource['properties']['networkAcls'].get('bypass', '').replace(' ', '')
-        )
+        bypass_string = resource['properties']['networkAcls'].get('bypass', '').replace(' ', '')
         return list(filter(None, bypass_string.split(',')))
 
 
@@ -254,9 +252,7 @@ class WhiteListFilter(Filter):
         object_ids = [p['objectId'] for p in access_policies]
         # GraphHelper.get_principal_dictionary returns empty AADObject if not found with graph
         # or if graph is not available.
-        principal_dics = GraphHelper.get_principal_dictionary(
-            self.graph_client, object_ids, True
-        )
+        principal_dics = GraphHelper.get_principal_dictionary(self.graph_client, object_ids, True)
 
         for policy in access_policies:
             aad_object = principal_dics[policy['objectId']]

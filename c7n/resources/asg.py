@@ -134,9 +134,7 @@ class LaunchInfo:
             return (lid['LaunchTemplateId'], lid.get('Version', '$Default'))
 
         if 'MixedInstancesPolicy' in asg:
-            mip_spec = asg['MixedInstancesPolicy']['LaunchTemplate'][
-                'LaunchTemplateSpecification'
-            ]
+            mip_spec = asg['MixedInstancesPolicy']['LaunchTemplate']['LaunchTemplateSpecification']
             return (mip_spec['LaunchTemplateId'], mip_spec.get('Version', '$Default'))
 
         # we've noticed some corner cases where the asg name is the lc name, but not
@@ -218,9 +216,7 @@ class SubnetFilter(net_filters.SubnetFilter):
     def get_related_ids(self, asgs):
         subnet_ids = set()
         for asg in asgs:
-            subnet_ids.update(
-                [sid.strip() for sid in asg.get('VPCZoneIdentifier', '').split(',')]
-            )
+            subnet_ids.update([sid.strip() for sid in asg.get('VPCZoneIdentifier', '').split(',')])
         return subnet_ids
 
 
@@ -277,9 +273,7 @@ class ConfigValidFilter(Filter):
 
     def validate(self):
         if self.manager.data.get('mode'):
-            raise PolicyValidationError(
-                "invalid-config makes too many queries to be run in lambda"
-            )
+            raise PolicyValidationError("invalid-config makes too many queries to be run in lambda")
         return self
 
     def initialize(self, asgs):
@@ -335,9 +329,7 @@ class ConfigValidFilter(Filter):
                     continue
                 snaps.add(bd['Ebs']['SnapshotId'].strip())
         manager = self.manager.get_resource_manager('ebs-snapshot')
-        return {
-            s['SnapshotId'] for s in manager.get_resources(list(snaps), cache=False)
-        }
+        return {s['SnapshotId'] for s in manager.get_resources(list(snaps), cache=False)}
 
     def process(self, asgs, event=None):
         self.initialize(asgs)
@@ -368,8 +360,7 @@ class ConfigValidFilter(Filter):
         if cfg is None:
             errors.append(('invalid-config', cfg_id))
             self.log.debug(
-                "asg:%s no launch config or template found"
-                % asg['AutoScalingGroupName']
+                "asg:%s no launch config or template found" % asg['AutoScalingGroupName']
             )
             asg['Invalid'] = errors
             return True
@@ -543,9 +534,7 @@ class NotEncryptedFilter(Filter):
             # image deregistered/unavailable or exclude_image set
             if image is not None:
                 image_block_devs = {
-                    bd['DeviceName']
-                    for bd in image['BlockDeviceMappings']
-                    if 'Ebs' in bd
+                    bd['DeviceName'] for bd in image['BlockDeviceMappings'] if 'Ebs' in bd
                 }
             else:
                 image_block_devs = set()
@@ -647,8 +636,7 @@ class ImageFilter(ValueFilter):
         # Finally, if we have no image...
         if not image:
             self.log.warning(
-                "Could not locate image for instance:%s ami:%s"
-                % (i['InstanceId'], i["ImageId"])
+                "Could not locate image for instance:%s ami:%s" % (i['InstanceId'], i["ImageId"])
             )
             # Match instead on empty skeleton?
             return False
@@ -875,8 +863,7 @@ class CapacityDelta(Filter):
         return [
             a
             for a in asgs
-            if len(a['Instances']) < a['DesiredCapacity']
-            or len(a['Instances']) < a['MinSize']
+            if len(a['Instances']) < a['DesiredCapacity'] or len(a['Instances']) < a['MinSize']
         ]
 
 
@@ -929,9 +916,7 @@ class UserDataFilter(ValueFilter):
                 if not launch_config.get('UserData'):
                     asg[self.annotation] = None
                 else:
-                    asg[self.annotation] = deserialize_user_data(
-                        launch_config['UserData']
-                    )
+                    asg[self.annotation] = deserialize_user_data(launch_config['UserData'])
             if self.match(asg):
                 results.append(asg)
         return results
@@ -996,13 +981,9 @@ class Resize(Action):
         **{
             'min-size': {'type': 'integer', 'minimum': 0},
             'max-size': {'type': 'integer', 'minimum': 0},
-            'desired-size': {
-                "anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]
-            },
+            'desired-size': {"anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]},
             # support previous key name with underscore
-            'desired_size': {
-                "anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]
-            },
+            'desired_size': {"anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]},
             'save-options-tag': {'type': 'string'},
             'restore-options-tag': {'type': 'string'},
         }
@@ -1048,9 +1029,7 @@ class Resize(Action):
 
                 if 'desired-size' in self.data:
                     if self.data['desired-size'] == 'current':
-                        update['DesiredCapacity'] = min(
-                            current_size, a['DesiredCapacity']
-                        )
+                        update['DesiredCapacity'] = min(current_size, a['DesiredCapacity'])
                         if 'MinSize' not in update:
                             # unless we were given a new value for min_size then
                             # ensure it is at least as low as current_size
@@ -1080,18 +1059,14 @@ class Resize(Action):
                         dict(
                             Key=self.data['save-options-tag'],
                             PropagateAtLaunch=False,
-                            Value=';'.join(
-                                {'%s=%d' % (param, a[param]) for param in asg_params}
-                            ),
+                            Value=';'.join({'%s=%d' % (param, a[param]) for param in asg_params}),
                             ResourceId=a['AutoScalingGroupName'],
                             ResourceType='auto-scaling-group',
                         )
                     ]
                     self.manager.retry(client.create_or_update_tags, Tags=tags)
 
-                self.log.debug(
-                    'Resizing ASG %s with %s' % (a['AutoScalingGroupName'], str(update))
-                )
+                self.log.debug('Resizing ASG %s with %s' % (a['AutoScalingGroupName'], str(update)))
                 self.manager.retry(
                     client.update_auto_scaling_group,
                     AutoScalingGroupName=a['AutoScalingGroupName'],
@@ -1141,9 +1116,7 @@ class RemoveTag(Action):
         with self.executor_factory(max_workers=2) as w:
             futures = {}
             for asg_set in chunks(asgs, self.batch_size):
-                futures[
-                    w.submit(self.process_resource_set, client, asg_set, tags)
-                ] = asg_set
+                futures[w.submit(self.process_resource_set, client, asg_set, tags)] = asg_set
             for f in as_completed(futures):
                 asg_set = futures[f]
                 if f.exception():
@@ -1235,9 +1208,7 @@ class Tag(Action):
         with self.executor_factory(max_workers=2) as w:
             futures = {}
             for asg_set in chunks(asgs, self.batch_size):
-                futures[
-                    w.submit(self.process_resource_set, client, asg_set, tags)
-                ] = asg_set
+                futures[w.submit(self.process_resource_set, client, asg_set, tags)] = asg_set
             for f in as_completed(futures):
                 asg_set = futures[f]
                 if f.exception():
@@ -1363,9 +1334,7 @@ class PropagateTags(Action):
         extra_tags = []
 
         for i in instances:
-            instance_tags.update(
-                [t['Key'] for t in i['Tags'] if not t['Key'].startswith('aws:')]
-            )
+            instance_tags.update([t['Key'] for t in i['Tags'] if not t['Key'].startswith('aws:')])
         for k, v in instance_tags.items():
             if not v >= instance_count:
                 extra_tags.append(k)
@@ -1395,17 +1364,13 @@ class PropagateTags(Action):
     def get_instance_map(self, asgs):
         instance_ids = [
             i['InstanceId']
-            for i in list(
-                itertools.chain(*[g['Instances'] for g in asgs if g['Instances']])
-            )
+            for i in list(itertools.chain(*[g['Instances'] for g in asgs if g['Instances']]))
         ]
         if not instance_ids:
             return {}
         return {
             i['InstanceId']: i
-            for i in self.manager.get_resource_manager('ec2').get_resources(
-                instance_ids
-            )
+            for i in self.manager.get_resource_manager('ec2').get_resources(instance_ids)
         }
 
 
@@ -1557,9 +1522,7 @@ class MarkForOp(TagDelayedAction):
         d = {
             'op': self.data.get('op', 'stop'),
             'tag': self.data.get('key', self.data.get('tag', DEFAULT_TAG)),
-            'msg': self.data.get(
-                'message', self.data.get('msg', self.default_template)
-            ),
+            'msg': self.data.get('message', self.data.get('msg', self.default_template)),
             'tz': self.data.get('tz', 'utc'),
             'days': self.data.get('days', 0),
             'hours': self.data.get('hours', 0),
@@ -1649,8 +1612,7 @@ class Suspend(Action):
                 'IncorrectInstanceState',
             ):
                 self.log.warning(
-                    "Erroring stopping asg instances %s %s"
-                    % (asg['AutoScalingGroupName'], e)
+                    "Erroring stopping asg instances %s %s" % (asg['AutoScalingGroupName'], e)
                 )
                 return
             raise
@@ -1687,9 +1649,7 @@ class Resume(Action):
         original_count = len(asgs)
         asgs = [a for a in asgs if a['SuspendedProcesses']]
         self.delay = self.data.get('delay', 30)
-        self.log.debug(
-            "Filtered from %d to %d suspended asgs", original_count, len(asgs)
-        )
+        self.log.debug("Filtered from %d to %d suspended asgs", original_count, len(asgs))
 
         session = local_session(self.manager.session_factory)
         ec2_client = session.client('ec2')

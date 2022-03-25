@@ -120,9 +120,7 @@ class DeleteComputeEnvironment(BaseAction):
     valid_origin_status = ('VALID', 'INVALID')
 
     def delete_environment(self, client, r):
-        client.delete_compute_environment(
-            computeEnvironment=r['computeEnvironmentName']
-        )
+        client.delete_compute_environment(computeEnvironment=r['computeEnvironmentName'])
 
     def process(self, resources):
         resources = self.filter_resources(

@@ -214,19 +214,13 @@ class ArnResolver:
 
         # this would benefit from a class cache {service} -> rtypes
         for type_name, klass in AWS.resources.items():
-            if (
-                type_name in ('rest-account', 'account')
-                or klass.resource_type.arn is False
-            ):
+            if type_name in ('rest-account', 'account') or klass.resource_type.arn is False:
                 continue
-            if arn.service != (
-                klass.resource_type.arn_service or klass.resource_type.service
-            ):
+            if arn.service != (klass.resource_type.arn_service or klass.resource_type.service):
                 continue
             if (
                 type_name in ('asg', 'ecs-task')
-                and "%s%s"
-                % (klass.resource_type.arn_type, klass.resource_type.arn_separator)
+                and "%s%s" % (klass.resource_type.arn_type, klass.resource_type.arn_separator)
                 in arn.resource_type
             ):
                 return type_name
@@ -278,9 +272,7 @@ class MetricsOutput(Metrics):
         if self.region:
             d['Dimensions'].append({'Name': 'Region', 'Value': self.ctx.options.region})
         if self.destination:
-            d['Dimensions'].append(
-                {'Name': 'Account', 'Value': self.ctx.options.account_id or ''}
-            )
+            d['Dimensions'].append({'Name': 'Account', 'Value': self.ctx.options.account_id or ''})
         return d
 
     def _put_metrics(self, ns, metrics):
@@ -653,9 +645,7 @@ class AWS(Provider):
                 _, resource_type = p.resource_type.split('.', 1)
             else:
                 resource_type = p.resource_type
-            available_regions = service_region_map.get(
-                resource_service_map.get(resource_type), ()
-            )
+            available_regions = service_region_map.get(resource_service_map.get(resource_type), ())
 
             # its a global service/endpoint, use user provided region
             # or us-east-1.
@@ -670,9 +660,7 @@ class AWS(Provider):
 
             for region in svc_regions:
                 if available_regions and region not in available_regions:
-                    level = (
-                        'all' in options.regions and logging.DEBUG or logging.WARNING
-                    )
+                    level = 'all' in options.regions and logging.DEBUG or logging.WARNING
                     # TODO: fixme
                     policy_collection.log.log(
                         level,

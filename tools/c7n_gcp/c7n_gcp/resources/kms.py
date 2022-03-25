@@ -58,8 +58,7 @@ class KmsKeyRing(QueryResourceManager):
             else GcpLocation.get_service_locations('kms')
         )
         project_locations = [
-            'projects/{}/locations/{}'.format(project, location)
-            for location in locations
+            'projects/{}/locations/{}'.format(project, location) for location in locations
         ]
         key_rings = []
         for location in project_locations:

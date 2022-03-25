@@ -41,9 +41,7 @@ class StackDriverMetrics(Metrics):
 
     DESCRIPTOR_COMMON = {
         'metricsKind': 'GAUGE',
-        'labels': [
-            {'key': 'policy', 'valueType': 'STRING', 'description': 'Custodian Policy'}
-        ],
+        'labels': [{'key': 'policy', 'valueType': 'STRING', 'description': 'Custodian Policy'}],
     }
 
     METRICS_DESCRIPTORS = {
@@ -92,9 +90,7 @@ class StackDriverMetrics(Metrics):
                 'list',
                 {
                     'name': 'projects/%s' % self.project_id,
-                    'filter': 'metric.type=startswith("{}")'.format(
-                        self.METRICS_PREFIX
-                    ),
+                    'filter': 'metric.type=startswith("{}")'.format(self.METRICS_PREFIX),
                 },
             ).get('metricsDescriptors', [])
         }
@@ -105,9 +101,7 @@ class StackDriverMetrics(Metrics):
             created = True
             md = self.METRICS_DESCRIPTORS[name]
             md.update(self.DESCRIPTOR_COMMON)
-            client.execute_command(
-                'create', {'name': 'projects/%s' % self.project_id, 'body': md}
-            )
+            client.execute_command('create', {'name': 'projects/%s' % self.project_id, 'body': md})
 
         if created:
             self.log.info("Initializing StackDriver Metrics Descriptors")

@@ -32,8 +32,7 @@ class TestECR(BaseTest):
     def create_repository(self, client, name):
         """Create the named repository. Delete existing one first if applicable."""
         existing_repos = {
-            r["repositoryName"]
-            for r in client.describe_repositories().get("repositories")
+            r["repositoryName"] for r in client.describe_repositories().get("repositories")
         }
         if name in existing_repos:
             client.delete_repository(repositoryName=name)
@@ -59,9 +58,7 @@ class TestECR(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['repositoryName'], 'testrepo')
         client = factory().client('ecr')
-        repo = client.describe_repositories(repositoryNames=['testrepo'])[
-            'repositories'
-        ][0]
+        repo = client.describe_repositories(repositoryNames=['testrepo'])['repositories'][0]
         self.assertJmes('imageScanningConfiguration.scanOnPush', repo, True)
 
     def test_ecr_set_immutability(self):
@@ -82,9 +79,7 @@ class TestECR(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['repositoryName'], 'testrepo')
         client = factory().client('ecr')
-        repo = client.describe_repositories(repositoryNames=['testrepo'])[
-            'repositories'
-        ][0]
+        repo = client.describe_repositories(repositoryNames=['testrepo'])['repositories'][0]
         self.assertEqual(repo['imageTagMutability'], 'IMMUTABLE')
 
     def test_ecr_lifecycle_policy(self):
@@ -171,9 +166,9 @@ class TestECR(BaseTest):
         client = factory().client('ecr')
         tags = {
             t['Key']: t['Value']
-            for t in client.list_tags_for_resource(
-                resourceArn=resources[0]['repositoryArn']
-            ).get('tags')
+            for t in client.list_tags_for_resource(resourceArn=resources[0]['repositoryArn']).get(
+                'tags'
+            )
         }
         self.assertEqual(
             tags,
@@ -256,13 +251,11 @@ class TestECR(BaseTest):
         resources = p.run()
         self.assertEqual([r["repositoryName"] for r in resources], [name])
         data = json.loads(
-            client.get_repository_policy(
-                repositoryName=resources[0]["repositoryName"]
-            ).get("policyText")
+            client.get_repository_policy(repositoryName=resources[0]["repositoryName"]).get(
+                "policyText"
+            )
         )
-        self.assertEqual(
-            [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
-        )
+        self.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
 
     @functional
     def test_ecr_remove_named(self):
@@ -294,9 +287,7 @@ class TestECR(BaseTest):
                 "name": "ecr-stat",
                 "resource": "ecr",
                 "filters": [{"repositoryName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["WhatIsIt"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["WhatIsIt"]}],
             },
             session_factory=session_factory,
         )
@@ -313,9 +304,7 @@ class TestECR(BaseTest):
         pass
 
     def test_ecr_image_filter_security_finding(self):
-        session_factory = self.replay_flight_data(
-            "test_ecr_image_filter_security_finding"
-        )
+        session_factory = self.replay_flight_data("test_ecr_image_filter_security_finding")
         p = self.load_policy(
             {
                 "name": "query-ecr-image-with-finding",
@@ -324,12 +313,8 @@ class TestECR(BaseTest):
                     {
                         "type": "finding",
                         "query": {
-                            "RecordState": [
-                                {"Value": "ACTIVE", "Comparison": "EQUALS"}
-                            ],
-                            "Title": [
-                                {"Value": "CVE-2021-44228", "Comparison": "PREFIX"}
-                            ],
+                            "RecordState": [{"Value": "ACTIVE", "Comparison": "EQUALS"}],
+                            "Title": [{"Value": "CVE-2021-44228", "Comparison": "PREFIX"}],
                         },
                     }
                 ],

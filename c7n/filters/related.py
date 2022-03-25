@@ -61,9 +61,7 @@ class RelatedResourceFilter(ValueFilter):
             self.data['value'] = self.get_resource_value(self.data['key'], resource)
 
         if self.data.get('value_type') == 'resource_count':
-            count_matches = OPERATORS[self.data.get('op')](
-                len(related_ids), self.data.get('value')
-            )
+            count_matches = OPERATORS[self.data.get('op')](len(related_ids), self.data.get('value'))
             if count_matches:
                 self._add_annotations(related_ids, resource)
             return count_matches
@@ -129,9 +127,7 @@ class RelatedResourceByIdFilter(RelatedResourceFilter):
         return related
 
     def get_related_by_ids(self, resources):
-        RelatedResourceKey = (
-            self.RelatedResourceByIdExpression or self.RelatedIdsExpression
-        )
+        RelatedResourceKey = self.RelatedResourceByIdExpression or self.RelatedIdsExpression
         ids = jmespath.search("%s" % RelatedResourceKey, resources)
         if isinstance(ids, str):
             ids = [ids]
@@ -146,9 +142,7 @@ class RelatedResourceByIdFilter(RelatedResourceFilter):
             self.data['value'] = self.get_resource_value(self.data['key'], resource)
 
         if self.data.get('value_type') == 'resource_count':
-            count_matches = OPERATORS[self.data.get('op')](
-                len(related_ids), self.data.get('value')
-            )
+            count_matches = OPERATORS[self.data.get('op')](len(related_ids), self.data.get('value'))
             if count_matches:
                 self._add_annotations(related_ids, resource)
             return count_matches
@@ -186,13 +180,9 @@ class ChildResourceFilter(RelatedResourceFilter):
             child_resource_manager.session_factory,
             child_resource_manager,
         )
-        children = child_query.filter(
-            child_resource_manager, parent_ids=list(parent_ids)
-        )
+        children = child_query.filter(child_resource_manager, parent_ids=list(parent_ids))
         for r in children:
-            self.child_resources.setdefault(r[self.ChildResourceParentKey], []).append(
-                r
-            )
+            self.child_resources.setdefault(r[self.ChildResourceParentKey], []).append(r)
 
         return self.child_resources
 

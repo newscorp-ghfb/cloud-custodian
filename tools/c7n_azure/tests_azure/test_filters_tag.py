@@ -26,9 +26,7 @@ class TagsTest(BaseTest):
     @arm_template('vm.json')
     def test_tag_filter(self):
 
-        resources = [
-            tools.get_resource({'Pythontest': 'ItWorks', 'Another-Tag-1': 'value1'})
-        ]
+        resources = [tools.get_resource({'Pythontest': 'ItWorks', 'Another-Tag-1': 'value1'})]
 
         config = [
             ({'tag:Pythontest': 'present'}, 1),

@@ -116,9 +116,7 @@ class Bucket:
     @property
     def inventory(self):
         # formatted...
-        return (
-            bool(self.data['buckets-inventory'].get(self.bucket_id)) and 'yes' or 'no'
-        )
+        return bool(self.data['buckets-inventory'].get(self.bucket_id)) and 'yes' or 'no'
 
     @property
     def account(self):
@@ -216,16 +214,12 @@ def get_data():
     data['buckets-complete'] = list(conn.smembers('buckets-complete'))
     data['buckets-start'] = conn.hgetall('buckets-starts')
     data['buckets-inventory'] = conn.hgetall('buckets-inventory')
-    data['bucket-partitions'] = {
-        k: int(v) for k, v in conn.hgetall('bucket-partition').items()
-    }
+    data['bucket-partitions'] = {k: int(v) for k, v in conn.hgetall('bucket-partition').items()}
     data['buckets-error'] = conn.hgetall('buckets-unknown-errors')
 
     data['bucket-size'] = {k: float(v) for k, v in conn.hgetall('bucket-sizes').items()}
     data['bucket-region'] = conn.hgetall('bucket-regions')
-    data['bucket-versions'] = {
-        k: bool(int(v)) for k, v in conn.hgetall('bucket-versions').items()
-    }
+    data['bucket-versions'] = {k: bool(int(v)) for k, v in conn.hgetall('bucket-versions').items()}
 
     # key stats
     for k in (
@@ -245,12 +239,8 @@ def get_data():
     data['keys-count'] = {k: float(v) for k, v in conn.hgetall('keys-count').items()}
     data['keys-time'] = {k: float(v) for k, v in conn.hgetall('keys-time').items()}
 
-    data['bucket-pages'] = {
-        k: float(v) for k, v in conn.hgetall('bucket-pages').items()
-    }
-    data['bucket-pages-time'] = {
-        k: float(v) for k, v in conn.hgetall('bucket-pages-time').items()
-    }
+    data['bucket-pages'] = {k: float(v) for k, v in conn.hgetall('bucket-pages').items()}
+    data['bucket-pages-time'] = {k: float(v) for k, v in conn.hgetall('bucket-pages-time').items()}
 
     return data
 

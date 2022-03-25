@@ -50,9 +50,7 @@ class BackupVaultTest(BaseTest):
             session_factory=factory,
         )
         resources = p.resource_manager.get_resources(['Default'])
-        self.assertEqual(
-            resources[0]['Tags'], [{'Key': 'target-tag', 'Value': 'target-value'}]
-        )
+        self.assertEqual(resources[0]['Tags'], [{'Key': 'target-tag', 'Value': 'target-value'}])
 
     def test_backup_vault_tag_untag(self):
         factory = self.replay_flight_data("test_backup_vault_tag_untag")

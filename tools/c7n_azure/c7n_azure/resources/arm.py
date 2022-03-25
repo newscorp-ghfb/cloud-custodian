@@ -59,19 +59,13 @@ class ArmResourceManager(QueryResourceManager, metaclass=QueryMeta):
     def augment(self, resources):
         for resource in resources:
             if 'id' in resource:
-                resource['resourceGroup'] = ResourceIdParser.get_resource_group(
-                    resource['id']
-                )
+                resource['resourceGroup'] = ResourceIdParser.get_resource_group(resource['id'])
         return resources
 
     def get_resources(self, resource_ids):
-        resource_client = self.get_client(
-            'azure.mgmt.resource.ResourceManagementClient'
-        )
+        resource_client = self.get_client('azure.mgmt.resource.ResourceManagementClient')
         data = [
-            resource_client.resources.get_by_id(
-                rid, self._session.resource_api_version(rid)
-            )
+            resource_client.resources.get_by_id(rid, self._session.resource_api_version(rid))
             for rid in resource_ids
         ]
         return self.augment([r.serialize(True) for r in data])
@@ -105,9 +99,7 @@ class ArmResourceManager(QueryResourceManager, metaclass=QueryMeta):
             resource_class.filter_registry.register('cost', CostFilter)
 
         resource_class.filter_registry.register('metric', MetricFilter)
-        resource_class.filter_registry.register(
-            'policy-compliant', PolicyCompliantFilter
-        )
+        resource_class.filter_registry.register('policy-compliant', PolicyCompliantFilter)
         resource_class.filter_registry.register('resource-lock', ResourceLockFilter)
         resource_class.action_registry.register('lock', LockAction)
         resource_class.filter_registry.register('offhour', AzureOffHour)
@@ -116,14 +108,10 @@ class ArmResourceManager(QueryResourceManager, metaclass=QueryMeta):
         resource_class.action_registry.register('delete', DeleteAction)
 
         if resource_class.resource_type.diagnostic_settings_enabled:
-            resource_class.filter_registry.register(
-                'diagnostic-settings', DiagnosticSettingsFilter
-            )
+            resource_class.filter_registry.register('diagnostic-settings', DiagnosticSettingsFilter)
 
 
-class ChildArmResourceManager(
-    ChildResourceManager, ArmResourceManager, metaclass=QueryMeta
-):
+class ChildArmResourceManager(ChildResourceManager, ArmResourceManager, metaclass=QueryMeta):
     class resource_type(ChildTypeInfo, ArmTypeInfo):
         pass
 

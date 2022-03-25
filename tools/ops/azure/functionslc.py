@@ -44,9 +44,7 @@ def wait_for_remote_builds(deployments):
 
             if params['status'] == DeploymentStatus.Active:
                 continue
-            log.info(
-                "Remote build for %s finished with status %s.", name, params['status']
-            )
+            log.info("Remote build for %s finished with status %s.", name, params['status'])
             finished += 1
 
         if finished < total:
@@ -79,17 +77,11 @@ def get_build_status(scm_uri):
 
 
 @click.command(help="Waits for Azure Functions deployment status for given policies")
-@click.option(
-    "--config", "-c", required=True, multiple=True, help="List of config files"
-)
+@click.option("--config", "-c", required=True, multiple=True, help="List of config files")
 def cli(**kwargs):
     policy_config = Config.empty()
     policies = PolicyCollection(
-        [
-            p
-            for p in load_policies(kwargs['config'], policy_config)
-            if p.provider_name == 'azure'
-        ],
+        [p for p in load_policies(kwargs['config'], policy_config) if p.provider_name == 'azure'],
         policy_config,
     )
 

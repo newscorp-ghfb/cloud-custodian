@@ -33,9 +33,7 @@ class Network(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
             path_param_re = re.compile('.*?/projects/(.*?)/global/networks/(.*)')
-            project, network = path_param_re.match(
-                resource_info["resourceName"]
-            ).groups()
+            project, network = path_param_re.match(resource_info["resourceName"]).groups()
             return client.execute_query('get', {'project': project, 'network': network})
 
 
@@ -65,12 +63,8 @@ class Subnet(QueryResourceManager):
         @staticmethod
         def get(client, resource_info):
 
-            path_param_re = re.compile(
-                '.*?projects/(.*?)/regions/(.*?)/subnetworks/(.*)'
-            )
-            project, region, subnet = path_param_re.match(
-                resource_info["resourceName"]
-            ).groups()
+            path_param_re = re.compile('.*?projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
+            project, region, subnet = path_param_re.match(resource_info["resourceName"]).groups()
             return client.execute_query(
                 'get', {'project': project, 'region': region, 'subnetwork': subnet}
             )
@@ -81,9 +75,7 @@ class SubnetAction(MethodAction):
     path_param_re = re.compile('.*?/projects/(.*?)/regions/(.*?)/subnetworks/(.*)')
 
     def get_resource_params(self, model, resource):
-        project, region, subnet = self.path_param_re.match(
-            resource['selfLink']
-        ).groups()
+        project, region, subnet = self.path_param_re.match(resource['selfLink']).groups()
         return {'project': project, 'region': region, 'subnetwork': subnet}
 
 

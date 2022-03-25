@@ -96,10 +96,7 @@ class SubnetFilter(net_filters.SubnetFilter):
         group_ids = set()
         for r in resources:
             group_ids.update(
-                [
-                    s['SubnetIdentifier']
-                    for s in self.groups[r['DBSubnetGroup']]['Subnets']
-                ]
+                [s['SubnetIdentifier'] for s in self.groups[r['DBSubnetGroup']]['Subnets']]
             )
         return group_ids
 
@@ -166,9 +163,7 @@ class Delete(BaseAction):
                         DBInstanceIdentifier=instance['DBInstanceIdentifier'],
                         SkipFinalSnapshot=True,
                     )
-                    self.log.info(
-                        'Deleted RDS instance: %s', instance['DBInstanceIdentifier']
-                    )
+                    self.log.info('Deleted RDS instance: %s', instance['DBInstanceIdentifier'])
 
             params = {'DBClusterIdentifier': cluster['DBClusterIdentifier']}
             if skip:
@@ -237,13 +232,9 @@ class RetentionWindow(BaseAction):
         retention_type = self.data.get('enforce', 'min').lower()
 
         if retention_type == 'min':
-            self.set_retention_window(
-                client, cluster, max(current_retention, new_retention)
-            )
+            self.set_retention_window(client, cluster, max(current_retention, new_retention))
         elif retention_type == 'max':
-            self.set_retention_window(
-                client, cluster, min(current_retention, new_retention)
-            )
+            self.set_retention_window(client, cluster, min(current_retention, new_retention))
         elif retention_type == 'exact':
             self.set_retention_window(client, cluster, new_retention)
 
@@ -563,17 +554,11 @@ class SetPermissions(rds.SetPermissions):
                     t['AttributeName']: t['AttributeValues']
                     for t in self.manager.retry(
                         client.describe_db_cluster_snapshot_attributes,
-                        DBClusterSnapshotIdentifier=snapshot[
-                            'DBClusterSnapshotIdentifier'
-                        ],
-                    )['DBClusterSnapshotAttributesResult'][
-                        'DBClusterSnapshotAttributes'
-                    ]
+                        DBClusterSnapshotIdentifier=snapshot['DBClusterSnapshotIdentifier'],
+                    )['DBClusterSnapshotAttributesResult']['DBClusterSnapshotAttributes']
                 }
                 snapshot[CrossAccountSnapshot.attributes_key] = attrs
-            remove_accounts = snapshot[CrossAccountSnapshot.attributes_key].get(
-                'restore', []
-            )
+            remove_accounts = snapshot[CrossAccountSnapshot.attributes_key].get('restore', [])
         elif remove_accounts == 'matched':
             remove_accounts = snapshot.get(CrossAccountSnapshot.annotation_key, [])
 
@@ -618,15 +603,11 @@ class RDSClusterSnapshotDelete(BaseAction):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for snapshot_set in chunks(reversed(snapshots), size=50):
-                futures.append(
-                    w.submit(self.process_snapshot_set, client, snapshot_set)
-                )
+                futures.append(w.submit(self.process_snapshot_set, client, snapshot_set))
             for f in as_completed(futures):
                 if f.exception():
                     error = f.exception()
-                    self.log.error(
-                        "Exception deleting snapshot set \n %s", f.exception()
-                    )
+                    self.log.error("Exception deleting snapshot set \n %s", f.exception())
         if error:
             raise error
         return snapshots

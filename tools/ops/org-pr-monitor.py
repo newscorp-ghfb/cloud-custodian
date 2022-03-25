@@ -127,23 +127,15 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    '--organization', envvar="GITHUB_ORG", required=True, help="Github Organization"
-)
-@click.option(
-    '--hook-context', envvar="GITHUB_HOOK", required=True, help="Webhook context name"
-)
-@click.option(
-    '--github-url', envvar="GITHUB_API_URL", default='https://api.github.com/graphql'
-)
+@click.option('--organization', envvar="GITHUB_ORG", required=True, help="Github Organization")
+@click.option('--hook-context', envvar="GITHUB_HOOK", required=True, help="Webhook context name")
+@click.option('--github-url', envvar="GITHUB_API_URL", default='https://api.github.com/graphql')
 @click.option('--github-token', envvar='GITHUB_TOKEN', help="Github credential token")
 @click.option('-v', '--verbose', help="Verbose output")
 @click.option('-m', '--metrics', help="Publish metrics")
 @click.option('--assume', help="Assume a role for publishing metrics")
 @click.option('--region', help="Region to target for metrics")
-@click.option(
-    '--since', help="Look at pull requests/commits younger than", default="1 week"
-)
+@click.option('--since', help="Look at pull requests/commits younger than", default="1 week")
 def run(
     organization,
     hook_context,
@@ -187,9 +179,7 @@ def run(
     )
 
     for r in result['data']['organization']['repositories']['nodes']:
-        commits = jmespath.search(
-            'pullRequests.edges[].node[].commits[].nodes[].commit[]', r
-        )
+        commits = jmespath.search('pullRequests.edges[].node[].commits[].nodes[].commit[]', r)
         if not commits:
             continue
         log.debug("processing repo: %s prs: %d", r['name'], len(commits))
@@ -205,9 +195,7 @@ def run(
     repo_metrics.dims = None
 
     if stats['missing']:
-        repo_metrics.put_metric(
-            'RepoHookPending', stats['missing'], 'Count', Hook=hook_context
-        )
+        repo_metrics.put_metric('RepoHookPending', stats['missing'], 'Count', Hook=hook_context)
         repo_metrics.put_metric(
             'RepoHookLatency', stats['missing_time'], 'Seconds', Hook=hook_context
         )

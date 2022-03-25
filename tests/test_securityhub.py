@@ -24,9 +24,7 @@ class SecurityHubMode(BaseTest):
         event = event_data("event-securityhub-iamkey-finding-action.json")
         hub = policy.get_execution_mode()
         resources = hub.resolve_import_finding(event)
-        self.assertEqual(
-            sorted(resources), sorted(['arn:aws:iam::644160558196:user/kapil'])
-        )
+        self.assertEqual(sorted(resources), sorted(['arn:aws:iam::644160558196:user/kapil']))
         resources = hub.resolve_resources(event)
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['UserName'], 'kapil')
@@ -103,9 +101,7 @@ class SecurityHubMode(BaseTest):
         )
         output = self.capture_logging(policy.log.name, level=logging.INFO)
         results = hub.run(event, {})
-        self.assertIn(
-            'Assuming member role:arn:aws:iam::644160558196', output.getvalue()
-        )
+        self.assertIn('Assuming member role:arn:aws:iam::644160558196', output.getvalue())
         self.assertEqual(
             results[('644160558196', 'us-east-1')][0]['FunctionName'],
             'custodian-enterprise-ec2-instances-no-elastic-ip-isolate',
@@ -182,9 +178,7 @@ class SecurityHubTest(BaseTest):
         client = factory().client("securityhub")
         findings = client.get_findings(
             Filters={
-                "ResourceAwsS3BucketOwnerId": [
-                    {"Value": "Unknown", "Comparison": "EQUALS"}
-                ],
+                "ResourceAwsS3BucketOwnerId": [{"Value": "Unknown", "Comparison": "EQUALS"}],
                 "ResourceId": [
                     {
                         "Value": "arn:aws:::c7n-test-public-bucket",
@@ -223,9 +217,7 @@ class SecurityHubTest(BaseTest):
                         "severity": 10,
                         "severity_normalized": 10,
                         "severity_label": "INFORMATIONAL",
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -273,9 +265,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -314,9 +304,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -427,9 +415,7 @@ class SecurityHubTest(BaseTest):
                     {
                         'type': 'post-finding',
                         'severity': 10,
-                        'types': [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        'types': ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -455,9 +441,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -514,9 +498,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -569,9 +551,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -584,11 +564,7 @@ class SecurityHubTest(BaseTest):
 
         client = factory().client("securityhub")
         findings = client.get_findings(
-            Filters={
-                "ResourceId": [
-                    {"Value": "arn:aws:::101010101111:", "Comparison": "EQUALS"}
-                ]
-            }
+            Filters={"ResourceId": [{"Value": "arn:aws:::101010101111:", "Comparison": "EQUALS"}]}
         ).get("Findings")
         self.assertEqual(len(findings), 1)
         self.assertEqual(
@@ -614,9 +590,7 @@ class SecurityHubTest(BaseTest):
                         "type": "post-finding",
                         "severity": 10,
                         "severity_normalized": 10,
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },
@@ -679,9 +653,7 @@ class SecurityHubTest(BaseTest):
                         "severity_normalized": 10,
                         "batch_size": 2,
                         "title": "EBS Testing",
-                        "types": [
-                            "Software and Configuration Checks/AWS Security Best Practices"
-                        ],
+                        "types": ["Software and Configuration Checks/AWS Security Best Practices"],
                     }
                 ],
             },

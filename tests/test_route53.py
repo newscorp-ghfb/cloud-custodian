@@ -256,9 +256,7 @@ class Route53DomainTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory(region="us-east-1").client("route53domains")
-        tags = client.list_tags_for_domain(DomainName=resources[0]["DomainName"])[
-            "TagList"
-        ]
+        tags = client.list_tags_for_domain(DomainName=resources[0]["DomainName"])["TagList"]
         self.assertEqual([tags[0]["Key"], tags[0]["Value"]], ["TestTag", "TestValue"])
 
     def test_route53_domain_remove_tag(self):
@@ -275,9 +273,7 @@ class Route53DomainTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory(region="us-east-1").client("route53domains")
-        tags = client.list_tags_for_domain(DomainName=resources[0]["DomainName"])[
-            "TagList"
-        ]
+        tags = client.list_tags_for_domain(DomainName=resources[0]["DomainName"])["TagList"]
         self.assertEqual(len(tags), 0)
 
 

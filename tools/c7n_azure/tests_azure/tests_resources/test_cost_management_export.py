@@ -13,13 +13,9 @@ class CostManagementExportTest(BaseTest):
     class MockExecutionHistory:
         def __init__(self, submitted_time_list):
             self.value = []
-            MockExecutionItem = namedtuple(
-                'MockExecutionItem', ['submitted_time', 'serialize']
-            )
+            MockExecutionItem = namedtuple('MockExecutionItem', ['submitted_time', 'serialize'])
             for t in submitted_time_list:
-                self.value.append(
-                    MockExecutionItem(submitted_time=t, serialize=lambda b: '')
-                )
+                self.value.append(MockExecutionItem(submitted_time=t, serialize=lambda b: ''))
 
     def test_schema_validate(self):
         self.assertTrue(
@@ -31,9 +27,7 @@ class CostManagementExportTest(BaseTest):
         )
 
         with self.assertRaises(PolicyValidationError):
-            self._get_policy(
-                filters=[{'type': 'last-execution', 'age': -1}], validate=True
-            )
+            self._get_policy(filters=[{'type': 'last-execution', 'age': -1}], validate=True)
 
     @arm_template('cost-management-export.json')
     @cassette_name('common')
@@ -106,8 +100,7 @@ class CostManagementExportTest(BaseTest):
             {
                 'name': 'cost-management-export',
                 'resource': 'azure.cost-management-export',
-                'filters': [{'type': 'value', 'key': 'name', 'value': 'cccostexport'}]
-                + filters,
+                'filters': [{'type': 'value', 'key': 'name', 'value': 'cccostexport'}] + filters,
                 'actions': actions,
             },
             validate=validate,

@@ -26,15 +26,10 @@ def test_tagged_log_group_delete(test, log_delete):
 
     resources = p.run()
     assert len(resources) == 1
-    assert (
-        resources[0]['logGroupName']
-        == log_delete['aws_cloudwatch_log_group.test_group.name']
-    )
+    assert resources[0]['logGroupName'] == log_delete['aws_cloudwatch_log_group.test_group.name']
     client = factory().client('logs')
     assert (
-        client.describe_log_groups(logGroupNamePrefix=resources[0]['logGroupName']).get(
-            'logGroups'
-        )
+        client.describe_log_groups(logGroupNamePrefix=resources[0]['logGroupName']).get('logGroups')
         == []
     )
 
@@ -61,9 +56,7 @@ class LogGroupTest(BaseTest):
             {
                 'name': 'test-log-group-kms-filter',
                 'resource': 'log-group',
-                'filters': [
-                    {'type': 'kms-key', 'key': 'c7n:AliasName', 'value': 'alias/cw'}
-                ],
+                'filters': [{'type': 'kms-key', 'key': 'c7n:AliasName', 'value': 'alias/cw'}],
             },
             session_factory=session_factory,
         )
@@ -126,9 +119,7 @@ class LogGroupTest(BaseTest):
             client.put_log_events(
                 logGroupName=log_group,
                 logStreamName=log_stream,
-                logEvents=[
-                    {'timestamp': int(time.time() * 1000), 'message': 'message 1'}
-                ],
+                logEvents=[{'timestamp': int(time.time() * 1000), 'message': 'message 1'}],
             )
             time.sleep(5)
 
@@ -254,9 +245,7 @@ class LogGroupTest(BaseTest):
         mock_factory.region = 'us-east-1'
         mock_factory().client(
             'logs'
-        ).exceptions.ResourceNotFoundException = (
-            client.exceptions.ResourceNotFoundException
-        )
+        ).exceptions.ResourceNotFoundException = client.exceptions.ResourceNotFoundException
         mock_factory().client(
             'logs'
         ).delete_log_group.side_effect = client.exceptions.ResourceNotFoundException(
@@ -292,9 +281,7 @@ class LogGroupTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["logGroupName"], log_group)
-        self.assertEqual(
-            client.describe_log_groups(logGroupNamePrefix=log_group)['logGroups'], []
-        )
+        self.assertEqual(client.describe_log_groups(logGroupNamePrefix=log_group)['logGroups'], [])
 
     @functional
     def test_encrypt(self):
@@ -367,9 +354,7 @@ class LogGroupTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_log_metric_filter_alarm(self):
-        session_factory = self.replay_flight_data(
-            'test_log_group_log_metric_filter_alarm'
-        )
+        session_factory = self.replay_flight_data('test_log_group_log_metric_filter_alarm')
         p = self.load_policy(
             {
                 "name": "log-metric",

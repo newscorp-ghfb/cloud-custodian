@@ -28,9 +28,7 @@ from c7n.config import Bag, Config
 
 
 C7N_VALIDATE = bool(os.environ.get("C7N_VALIDATE", ""))
-skip_if_not_validating = unittest.skipIf(
-    not C7N_VALIDATE, reason="We are not validating schemas."
-)
+skip_if_not_validating = unittest.skipIf(not C7N_VALIDATE, reason="We are not validating schemas.")
 functional = pytest.mark.functional
 
 C7N_FUNCTIONAL = strtobool(os.environ.get('C7N_FUNCTIONAL', 'no'))
@@ -178,9 +176,7 @@ class CustodianTestCore:
                 del kwargs[key]
         os.environ.update(kwargs)
 
-    def capture_logging(
-        self, name=None, level=logging.INFO, formatter=None, log_file=None
-    ):
+    def capture_logging(self, name=None, level=logging.INFO, formatter=None, log_file=None):
         if log_file is None:
             log_file = TextTestIO()
         log_handler = logging.StreamHandler(log_file)

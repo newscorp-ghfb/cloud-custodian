@@ -9,9 +9,7 @@ class AksTest(BaseTest):
 
     def test_aks_schema_validate(self):
         with self.sign_out_patch():
-            p = self.load_policy(
-                {'name': 'test-azure-aks', 'resource': 'azure.aks'}, validate=True
-            )
+            p = self.load_policy({'name': 'test-azure-aks', 'resource': 'azure.aks'}, validate=True)
             self.assertTrue(p)
 
     @arm_template('cdnprofile.json')

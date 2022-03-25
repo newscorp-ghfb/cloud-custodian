@@ -66,14 +66,10 @@ class GenericArmResource(ArmResourceManager):
         for rid in resource_ids:
             resource = None
             if is_resource_group_id(rid):
-                resource = client.resource_groups.get(
-                    ResourceIdParser.get_resource_group(rid)
-                )
+                resource = client.resource_groups.get(ResourceIdParser.get_resource_group(rid))
                 resource.type = RESOURCE_GROUPS_TYPE
             else:
-                resource = client.resources.get_by_id(
-                    rid, self._session.resource_api_version(rid)
-                )
+                resource = client.resources.get_by_id(rid, self._session.resource_api_version(rid))
             result.append(resource)
 
         return self.augment([r.serialize(True) for r in result])

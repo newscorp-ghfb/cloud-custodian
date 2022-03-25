@@ -40,8 +40,7 @@ class Function(QueryResourceManager):
                 'get',
                 {
                     'name': (
-                        'projects/{project_id}/locations/'
-                        '{location_id}/functions/{function_name}'
+                        'projects/{project_id}/locations/' '{location_id}/functions/{function_name}'
                     ).format(**resource_info)
                 },
             )

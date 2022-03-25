@@ -66,18 +66,16 @@ class HealthEvents(QueryResourceManager):
         client = local_session(self.session_factory).client('health')
         for resource_set in chunks(resources, 10):
             event_map = {r['arn']: r for r in resource_set}
-            event_details = client.describe_event_details(
-                eventArns=list(event_map.keys())
-            )['successfulSet']
+            event_details = client.describe_event_details(eventArns=list(event_map.keys()))[
+                'successfulSet'
+            ]
             for d in event_details:
                 event_map[d['event']['arn']]['Description'] = d['eventDescription'][
                     'latestDescription'
                 ]
 
             event_arns = [
-                r['arn']
-                for r in resource_set
-                if r['eventTypeCategory'] != 'accountNotification'
+                r['arn'] for r in resource_set if r['eventTypeCategory'] != 'accountNotification'
             ]
 
             if not event_arns:
@@ -85,17 +83,12 @@ class HealthEvents(QueryResourceManager):
             paginator = client.get_paginator('describe_affected_entities')
             entities = list(
                 itertools.chain(
-                    *[
-                        p['entities']
-                        for p in paginator.paginate(filter={'eventArns': event_arns})
-                    ]
+                    *[p['entities'] for p in paginator.paginate(filter={'eventArns': event_arns})]
                 )
             )
 
             for e in entities:
-                event_map[e.pop('eventArn')].setdefault('AffectedEntities', []).append(
-                    e
-                )
+                event_map[e.pop('eventArn')].setdefault('AffectedEntities', []).append(e)
 
         return resources
 
@@ -116,9 +109,7 @@ class QueryFilter:
         results = []
         for d in data:
             if not isinstance(d, dict):
-                raise PolicyValidationError(
-                    "Health Query Filter Invalid structure %s" % d
-                )
+                raise PolicyValidationError("Health Query Filter Invalid structure %s" % d)
             results.append(cls(d).validate())
         return results
 
@@ -134,9 +125,7 @@ class QueryFilter:
         self.value = list(self.data.values())[0]
 
         if self.key not in HEALTH_VALID_FILTERS:
-            raise PolicyValidationError(
-                "Health Query Filter invalid filter name %s" % (self.data)
-            )
+            raise PolicyValidationError("Health Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(

@@ -32,9 +32,7 @@ class DeprecationTest(BaseTest):
         )
 
     def test_field(self):
-        deprecation = deprecated.field(
-            'severity_normalized', 'severity_label', '2021-06-30'
-        )
+        deprecation = deprecated.field('severity_normalized', 'severity_label', '2021-06-30')
         self.assertTrue(deprecation.check({'severity_normalized': '10'}))
         self.assertFalse(deprecation.check({'no-match': 'ignored'}))
         self.assertEqual(
@@ -53,21 +51,15 @@ class ReportTest(BaseTest):
         locator = Mock()
         locator.find.return_value = "somefile.yml:1234"
         report = deprecated.Report("some-policy")
-        self.assertEqual(
-            report.format(locator), "policy 'some-policy' (somefile.yml:1234)"
-        )
+        self.assertEqual(report.format(locator), "policy 'some-policy' (somefile.yml:1234)")
         locator.find.assert_called_with("some-policy")
 
     def test_conditions(self):
         report = deprecated.Report(
             "some-policy",
             conditions=[
-                deprecated.field(
-                    'start', 'value filter in condition block', '2021-06-30'
-                ),
-                deprecated.field(
-                    'end', 'value filter in condition block', '2021-06-30'
-                ),
+                deprecated.field('start', 'value filter in condition block', '2021-06-30'),
+                deprecated.field('end', 'value filter in condition block', '2021-06-30'),
             ],
         )
         self.assertTrue(report)
@@ -114,9 +106,7 @@ class ReportTest(BaseTest):
                     'mark-for-op:',
                     deprecated.optional_fields(('hours', 'days'), '2021-06-30'),
                 ),
-                deprecated.Context(
-                    'mark-for-op:', deprecated.optional_field('tag', '2021-06-30')
-                ),
+                deprecated.Context('mark-for-op:', deprecated.optional_field('tag', '2021-06-30')),
             ],
         )
         self.assertTrue(report)

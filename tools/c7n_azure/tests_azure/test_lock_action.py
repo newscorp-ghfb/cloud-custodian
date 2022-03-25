@@ -38,9 +38,7 @@ class LockActionTest(BaseTest):
                     resource['name'], resource['lock']
                 )
             else:
-                self.client.management_locks.delete_by_scope(
-                    resource['id'], resource['lock']
-                )
+                self.client.management_locks.delete_by_scope(resource['id'], resource['lock'])
         super(LockActionTest, self).tearDown()
 
     def test_valid_policy(self):
@@ -142,9 +140,7 @@ class LockActionTest(BaseTest):
 
         locks = [
             r.serialize(True)
-            for r in self.client.management_locks.list_at_resource_group_level(
-                'test_locked'
-            )
+            for r in self.client.management_locks.list_at_resource_group_level('test_locked')
             if r.name == 'rglock'
         ]
 

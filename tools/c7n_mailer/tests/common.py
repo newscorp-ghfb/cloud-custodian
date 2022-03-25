@@ -168,9 +168,7 @@ SQS_MESSAGE_3 = {
     'region': 'us-east-1',
     'action': {
         'type': 'notify',
-        'to': [
-            'datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'
-        ],
+        'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'],
     },
     'policy': {
         'filters': [{'Attachments': []}, {'tag:maid_status': 'absent'}],
@@ -179,9 +177,7 @@ SQS_MESSAGE_3 = {
             {'type': 'mark-for-op', 'days': 15, 'op': 'delete'},
             {
                 'type': 'notify',
-                'to': [
-                    'datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'
-                ],
+                'to': ['datadog://?metric_name=EBS_volume.available.size&metric_value_tag=Size'],
             },
         ],
         'comments': 'We are deleting your EBS volumes.',

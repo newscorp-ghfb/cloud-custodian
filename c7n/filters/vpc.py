@@ -69,9 +69,7 @@ class DefaultVpcBase(Filter):
         if self.default_vpc is None:
             self.log.debug("querying default vpc %s" % vpc_id)
             client = local_session(self.manager.session_factory).client('ec2')
-            vpcs = [
-                v['VpcId'] for v in client.describe_vpcs()['Vpcs'] if v['IsDefault']
-            ]
+            vpcs = [v['VpcId'] for v in client.describe_vpcs()['Vpcs'] if v['IsDefault']]
             if vpcs:
                 self.default_vpc = vpcs.pop()
         return vpc_id == self.default_vpc and True or False
@@ -124,8 +122,7 @@ class NetworkLocation(Filter):
             'compare': {
                 'type': 'array',
                 'description': (
-                    'Which elements of network location should be considered when'
-                    ' matching.'
+                    'Which elements of network location should be considered when' ' matching.'
                 ),
                 'default': ['resource', 'subnet', 'security-group'],
                 'items': {'enum': ['resource', 'subnet', 'security-group']},
@@ -170,9 +167,7 @@ class NetworkLocation(Filter):
 
         # filter options
         key = self.data.get('key')
-        self.compare = self.data.get(
-            'compare', ['subnet', 'security-group', 'resource']
-        )
+        self.compare = self.data.get('compare', ['subnet', 'security-group', 'resource'])
         self.max_cardinality = self.data.get('max-cardinality', 1)
         self.match = self.data.get('match', 'not-equal')
         self.missing_ok = self.data.get('missing-ok', False)
@@ -180,11 +175,7 @@ class NetworkLocation(Filter):
         results = []
         for r in resources:
             resource_sgs = self.filter_ignored(
-                [
-                    related_sg[sid]
-                    for sid in self.sg.get_related_ids([r])
-                    if sid in related_sg
-                ]
+                [related_sg[sid] for sid in self.sg.get_related_ids([r]) if sid in related_sg]
             )
             resource_subnets = self.filter_ignored(
                 [
@@ -228,20 +219,15 @@ class NetworkLocation(Filter):
             }
 
             if not self.missing_ok and None in subnet_values.values():
-                evaluation.append(
-                    {'reason': 'SubnetLocationAbsent', 'subnets': subnet_values}
-                )
+                evaluation.append({'reason': 'SubnetLocationAbsent', 'subnets': subnet_values})
             subnet_space = set(filter(None, subnet_values.values()))
 
             if len(subnet_space) > self.max_cardinality:
-                evaluation.append(
-                    {'reason': 'SubnetLocationCardinality', 'subnets': subnet_values}
-                )
+                evaluation.append({'reason': 'SubnetLocationCardinality', 'subnets': subnet_values})
 
         if 'security-group' in self.compare:
             sg_values = {
-                rsg[self.sg_model.id]: self.sg.get_resource_value(key, rsg)
-                for rsg in resource_sgs
+                rsg[self.sg_model.id]: self.sg.get_resource_value(key, rsg) for rsg in resource_sgs
             }
             if not self.missing_ok and None in sg_values.values():
                 evaluation.append(
@@ -277,14 +263,8 @@ class NetworkLocation(Filter):
         if 'resource' in self.compare:
             r_value = self.vf.get_resource_value(key, r)
             if not self.missing_ok and r_value is None:
-                evaluation.append(
-                    {'reason': 'ResourceLocationAbsent', 'resource': r_value}
-                )
-            elif (
-                'security-group' in self.compare
-                and resource_sgs
-                and r_value not in sg_space
-            ):
+                evaluation.append({'reason': 'ResourceLocationAbsent', 'resource': r_value})
+            elif 'security-group' in self.compare and resource_sgs and r_value not in sg_space:
                 evaluation.append(
                     {
                         'reason': 'ResourceLocationMismatch',
@@ -292,11 +272,7 @@ class NetworkLocation(Filter):
                         'security-groups': sg_values,
                     }
                 )
-            elif (
-                'subnet' in self.compare
-                and resource_subnets
-                and r_value not in subnet_space
-            ):
+            elif 'subnet' in self.compare and resource_subnets and r_value not in subnet_space:
                 evaluation.append(
                     {
                         'reason': 'ResourceLocationMismatch',
@@ -306,9 +282,7 @@ class NetworkLocation(Filter):
                 )
             if 'security-group' in self.compare and resource_sgs:
                 mismatched_sgs = {
-                    sg_id: sg_value
-                    for sg_id, sg_value in sg_values.items()
-                    if sg_value != r_value
+                    sg_id: sg_value for sg_id, sg_value in sg_values.items() if sg_value != r_value
                 }
                 if mismatched_sgs:
                     evaluation.append(

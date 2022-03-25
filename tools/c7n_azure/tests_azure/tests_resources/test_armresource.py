@@ -198,9 +198,7 @@ class ArmResourceTest(BaseTest):
                 {'type': 'metric', 'aggregation': 'total', 'op': 'lt', 'threshold': 0},
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     def test_metric_filter_invalid_missing_op(self):
         policy = {
@@ -222,9 +220,7 @@ class ArmResourceTest(BaseTest):
                 },
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     def test_metric_filter_invalid_missing_threshold(self):
         policy = {
@@ -246,9 +242,7 @@ class ArmResourceTest(BaseTest):
                 },
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     fake_arm_resources = [
         {

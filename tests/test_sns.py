@@ -59,13 +59,9 @@ class TestSNS(BaseTest):
         self.assertEqual([r["TopicArn"] for r in resources], [topic_arn])
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
-        self.assertEqual(
-            [s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"]
-        )
+        self.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
 
     @functional
     def test_sns_remove_named(self):
@@ -106,9 +102,7 @@ class TestSNS(BaseTest):
                 "name": "sns-rm-named",
                 "resource": "sns",
                 "filters": [{"TopicArn": topic_arn}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=session_factory,
         )
@@ -117,9 +111,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
         self.assertTrue("RemoveMe" not in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -178,13 +170,9 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
-        self.assertTrue(
-            "ReplaceWithMe" in [s["Sid"] for s in data.get("Statement", ())]
-        )
+        self.assertTrue("ReplaceWithMe" in [s["Sid"] for s in data.get("Statement", ())])
 
     @functional
     def test_sns_account_id_template(self):
@@ -229,9 +217,7 @@ class TestSNS(BaseTest):
                                 "Action": "SNS:Publish",
                                 "Resource": topic_arn,
                                 "Condition": {
-                                    "StringEquals": {
-                                        "AWS:SourceAccount": "{account_id}"
-                                    },
+                                    "StringEquals": {"AWS:SourceAccount": "{account_id}"},
                                     "ArnLike": {"aws:SourceArn": "arn:aws:s3:*:*:*"},
                                 },
                             }
@@ -247,9 +233,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
         self.assertTrue(
             "__default_statement_ID_" + self.account_id
@@ -310,9 +294,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
         self.assertTrue("RemoveMe" not in [s["Sid"] for s in data.get("Statement", ())])
 
@@ -371,17 +353,13 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
         self.assertTrue("AddMe" in [s["Sid"] for s in data.get("Statement", ())])
 
     @functional
     def test_sns_modify_add_and_remove_policy(self):
-        session_factory = self.replay_flight_data(
-            "test_sns_modify_add_and_remove_policy"
-        )
+        session_factory = self.replay_flight_data("test_sns_modify_add_and_remove_policy")
         client = session_factory().client("sns")
         name = "test_sns_modify_add_and_remove_policy"
         topic_arn = client.create_topic(Name=name)["TopicArn"]
@@ -441,9 +419,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         data = json.loads(
-            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])[
-                "Attributes"
-            ]["Policy"]
+            client.get_topic_attributes(TopicArn=resources[0]["TopicArn"])["Attributes"]["Policy"]
         )
         statement_ids = {s["Sid"] for s in data.get("Statement", ())}
         self.assertTrue("AddMe" in statement_ids)
@@ -563,9 +539,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
-            "Tags"
-        ]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
         self.assertEqual(tags[0]["Value"], "added")
 
     def test_sns_remove_tag(self):
@@ -589,9 +563,7 @@ class TestSNS(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
-            "Tags"
-        ]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
         self.assertEqual(len(tags), 0)
 
     def test_sns_mark_for_op(self):
@@ -618,9 +590,7 @@ class TestSNS(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client("sns")
-        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])[
-            "Tags"
-        ]
+        tags = client.list_tags_for_resource(ResourceArn=resources[0]["TopicArn"])["Tags"]
         self.assertTrue(tags[0]["Key"], "custodian_cleanup")
 
     def test_sns_post_finding(self):
@@ -632,9 +602,7 @@ class TestSNS(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -660,9 +628,7 @@ class TestSNS(BaseTest):
                 'Type': 'AwsSnsTopic',
             },
         )
-        shape_validate(
-            rfinding['Details']['AwsSnsTopic'], 'AwsSnsTopicDetails', 'securityhub'
-        )
+        shape_validate(rfinding['Details']['AwsSnsTopic'], 'AwsSnsTopicDetails', 'securityhub')
 
     def test_sns_config(self):
         session_factory = self.replay_flight_data("test_sns_config")

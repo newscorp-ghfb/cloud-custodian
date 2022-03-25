@@ -89,9 +89,7 @@ class EMRCluster(QueryResourceManager):
         return result
 
     def augment(self, resources):
-        client = local_session(self.get_resource_manager('emr').session_factory).client(
-            'emr'
-        )
+        client = local_session(self.get_resource_manager('emr').session_factory).client('emr')
         result = []
         # remap for cwmetrics
         for r in resources:
@@ -212,9 +210,7 @@ class Terminate(BaseAction):
         client = local_session(self.manager.session_factory).client('emr')
         cluster_ids = [emr['Id'] for emr in emrs]
         if self.data.get('force'):
-            client.set_termination_protection(
-                JobFlowIds=cluster_ids, TerminationProtected=False
-            )
+            client.set_termination_protection(JobFlowIds=cluster_ids, TerminationProtected=False)
             time.sleep(self.delay)
         client.terminate_job_flows(JobFlowIds=cluster_ids)
         self.log.info("Deleted emrs: %s", cluster_ids)
@@ -247,9 +243,7 @@ class QueryFilter:
         self.value = list(self.data.values())[0]
 
         if self.key not in EMR_VALID_FILTERS and not self.key.startswith('tag:'):
-            raise PolicyValidationError(
-                "EMR Query Filter invalid filter name %s" % (self.data)
-            )
+            raise PolicyValidationError("EMR Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(

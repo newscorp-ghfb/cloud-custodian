@@ -27,9 +27,7 @@ class NotifyTest(BaseTest):
             {
                 'name': 'test-notify',
                 'resource': 'gcp.pubsub-topic',
-                'filters': [
-                    {'name': 'projects/cloud-custodian/topics/gcptestnotifytopic'}
-                ],
+                'filters': [{'name': 'projects/cloud-custodian/topics/gcptestnotifytopic'}],
                 'actions': [
                     {
                         'type': 'notify',

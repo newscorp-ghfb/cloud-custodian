@@ -61,9 +61,7 @@ class RouteTableTest(BaseTest):
                     {
                         'type': 'value',
                         'key': 'properties.subnets[?ends_with(id, \'{}\')] | [0]'.format(
-                            RouteTableTest._subnet_id_suffix(
-                                RouteTableTest.allowed_subnet_name
-                            )
+                            RouteTableTest._subnet_id_suffix(RouteTableTest.allowed_subnet_name)
                         ),
                         'value': 'not-null',
                     },
@@ -91,9 +89,7 @@ class RouteTableTest(BaseTest):
                     {
                         'type': 'value',
                         'key': 'properties.subnets[?ends_with(id, \'{}\')] | [0]'.format(
-                            RouteTableTest._subnet_id_suffix(
-                                RouteTableTest.disallowed_subnet_name
-                            )
+                            RouteTableTest._subnet_id_suffix(RouteTableTest.disallowed_subnet_name)
                         ),
                         'value': 'not-null',
                     },
@@ -102,9 +98,7 @@ class RouteTableTest(BaseTest):
         )
 
         resources = p.run()
-        self.assertEqual(
-            len(resources), 0, "A route table is routing to a disallowed subnet"
-        )
+        self.assertEqual(len(resources), 0, "A route table is routing to a disallowed subnet")
 
     @arm_template('route-table-and-vnet.json')
     def test_detect_route_only_routes_to_specific_subnets(self):
@@ -123,9 +117,7 @@ class RouteTableTest(BaseTest):
                     {
                         'type': 'value',
                         'key': 'properties.subnets[?ends_with(id, \'{}\')] | [0]'.format(
-                            RouteTableTest._subnet_id_suffix(
-                                RouteTableTest.allowed_subnet_name
-                            )
+                            RouteTableTest._subnet_id_suffix(RouteTableTest.allowed_subnet_name)
                         ),
                         'value': 'not-null',
                     },
@@ -161,6 +153,4 @@ class RouteTableTest(BaseTest):
         self.assertEqual(1, len(subnets), "There should only be one subnet")
 
         subnet = subnets[0]
-        self.assertIn(
-            RouteTableTest.allowed_subnet_name, subnet.get('id'), "Incorrect subnet"
-        )
+        self.assertIn(RouteTableTest.allowed_subnet_name, subnet.get('id'), "Incorrect subnet")

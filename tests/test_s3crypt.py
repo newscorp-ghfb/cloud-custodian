@@ -68,9 +68,7 @@ class TestS3CryptEvent(BaseTest):
                     "s3": {
                         "bucket": {"name": "test-bucket"},
                         "object": {
-                            "key": quote_plus(
-                                "/test000/!-_.*'()/&@:,$=+%2b?;/ /whatever"
-                            ),
+                            "key": quote_plus("/test000/!-_.*'()/&@:,$=+%2b?;/ /whatever"),
                             "size": 42,
                         },
                     }

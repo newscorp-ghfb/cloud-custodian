@@ -43,9 +43,7 @@ class AzurePythonPackageArchive(PythonPackageArchive):
 class FunctionPackage:
     log = logging.getLogger('custodian.azure.function_package.FunctionPackage')
 
-    def __init__(
-        self, name, function_path=None, target_sub_ids=None, cache_override_path=None
-    ):
+    def __init__(self, name, function_path=None, target_sub_ids=None, cache_override_path=None):
         self.pkg = None
         self.name = name
         self.function_path = function_path or os.path.join(
@@ -142,9 +140,7 @@ class FunctionPackage:
             binding['queueName'] = queue_name
 
         else:
-            self.log.error(
-                "Mode not yet supported for Azure functions (%s)" % mode_type
-            )
+            self.log.error("Mode not yet supported for Azure functions (%s)" % mode_type)
 
         return json.dumps(config, indent=2)
 
@@ -182,8 +178,7 @@ class FunctionPackage:
         r = requests.get(status_url, verify=self.enable_ssl_cert)
         if r.status_code != 200:
             self.log.error(
-                "Application service returned an error.\n%s\n%s"
-                % (r.status_code, r.text)
+                "Application service returned an error.\n%s\n%s" % (r.status_code, r.text)
             )
             return False
 
@@ -194,9 +189,7 @@ class FunctionPackage:
         # update perms of the package
         os.chmod(self.pkg.path, 0o0644)
 
-        zip_api_url = (
-            '%s/api/zipdeploy?isAsync=true&synctriggers=true' % deployment_creds.scm_uri
-        )
+        zip_api_url = '%s/api/zipdeploy?isAsync=true&synctriggers=true' % deployment_creds.scm_uri
         headers = {'content-type': 'application/octet-stream'}
         self.log.info("Publishing Function package from %s" % self.pkg.path)
 
@@ -211,9 +204,7 @@ class FunctionPackage:
                 verify=self.enable_ssl_cert,
             )
         except requests.exceptions.ReadTimeout:
-            self.log.error(
-                "Your Function App deployment timed out after 5 minutes. Try again."
-            )
+            self.log.error("Your Function App deployment timed out after 5 minutes. Try again.")
 
         r.raise_for_status()
 

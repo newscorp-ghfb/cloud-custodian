@@ -313,9 +313,7 @@ class AzurePolicyModeTest(BaseTest):
                 'mode': {
                     'type': FUNCTION_EVENT_TRIGGER_MODE,
                     'events': ['VmWrite'],
-                    'provision-options': {
-                        'identity': {'type': 'UserAssigned', 'id': 'mike'}
-                    },
+                    'provision-options': {'identity': {'type': 'UserAssigned', 'id': 'mike'}},
                 },
             }
         )
@@ -336,9 +334,7 @@ class AzurePolicyModeTest(BaseTest):
                 'mode': {
                     'type': FUNCTION_EVENT_TRIGGER_MODE,
                     'events': ['VmWrite'],
-                    'provision-options': {
-                        'identity': {'type': 'UserAssigned', 'id': 'mike'}
-                    },
+                    'provision-options': {'identity': {'type': 'UserAssigned', 'id': 'mike'}},
                 },
             }
         )
@@ -397,9 +393,7 @@ class AzurePolicyModeTest(BaseTest):
         self.assertEqual(params.app_insights['resource_group_name'], 'test')
         self.assertEqual(params.service_plan['resource_group_name'], "test")
 
-        self.assertTrue(
-            params.function_app['name'].startswith('test-azure-serverless-mode-')
-        )
+        self.assertTrue(params.function_app['name'].startswith('test-azure-serverless-mode-'))
 
     def test_init_azure_function_mode_no_service_plan_name(self):
         p = self.load_policy(
@@ -425,13 +419,9 @@ class AzurePolicyModeTest(BaseTest):
 
         self.assertTrue(params.storage_account['name'].startswith('custodian'))
         self.assertEqual(params.storage_account['location'], "eastus")
-        self.assertEqual(
-            params.storage_account['resource_group_name'], 'cloud-custodian'
-        )
+        self.assertEqual(params.storage_account['resource_group_name'], 'cloud-custodian')
 
-        self.assertTrue(
-            params.function_app['name'].startswith('test-azure-serverless-mode-')
-        )
+        self.assertTrue(params.function_app['name'].startswith('test-azure-serverless-mode-'))
 
     def test_init_azure_function_mode_invalid_policy_name(self):
         p = self.load_policy(
@@ -457,9 +447,7 @@ class AzurePolicyModeTest(BaseTest):
 
         function_mode = AzureFunctionMode(p)
         params = function_mode.get_function_app_params()
-        self.assertRegex(
-            params.function_app['name'], "invalid-policy-name1-[a-zA-Z0-9]+"
-        )
+        self.assertRegex(params.function_app['name'], "invalid-policy-name1-[a-zA-Z0-9]+")
 
     def test_init_azure_function_mode_with_resource_ids(self):
         ai_id = (
@@ -507,9 +495,7 @@ class AzurePolicyModeTest(BaseTest):
         self.assertEqual(params.service_plan['name'], "testsp")
         self.assertEqual(params.service_plan['resource_group_name'], "testrg")
 
-        self.assertTrue(
-            params.function_app['name'].startswith('test-azure-serverless-mode-')
-        )
+        self.assertTrue(params.function_app['name'].startswith('test-azure-serverless-mode-'))
 
     def test_event_grid_mode_creates_advanced_filtered_subscription(self):
         p = self.load_policy(
@@ -520,9 +506,7 @@ class AzurePolicyModeTest(BaseTest):
             }
         )
 
-        with mock.patch(
-            'c7n_azure.azure_events.AzureEventSubscription.create'
-        ) as mock_create:
+        with mock.patch('c7n_azure.azure_events.AzureEventSubscription.create') as mock_create:
             storage_account = StorageAccount(id=1, location='westus')
             event_mode = AzureEventGridMode(p)
             event_mode.target_subscription_ids = [DEFAULT_SUBSCRIPTION_ID]
@@ -533,9 +517,7 @@ class AzurePolicyModeTest(BaseTest):
             # verify the advanced filter created
             event_filter = args[4].advanced_filters[0]
             self.assertEqual(event_filter.key, 'Data.OperationName')
-            self.assertEqual(
-                event_filter.values, ['Microsoft.Compute/virtualMachines/write']
-            )
+            self.assertEqual(event_filter.values, ['Microsoft.Compute/virtualMachines/write'])
             self.assertEqual(event_filter.operator_type, 'StringIn')
 
     def test_event_grid_mode_creates_advanced_filtered_subscription_with_multiple_events(
@@ -558,9 +540,7 @@ class AzurePolicyModeTest(BaseTest):
             }
         )
 
-        with mock.patch(
-            'c7n_azure.azure_events.AzureEventSubscription.create'
-        ) as mock_create:
+        with mock.patch('c7n_azure.azure_events.AzureEventSubscription.create') as mock_create:
             storage_account = StorageAccount(id=1, location='westus')
             event_mode = AzureEventGridMode(p)
             event_mode.target_subscription_ids = [DEFAULT_SUBSCRIPTION_ID]
@@ -591,12 +571,8 @@ class AzurePolicyModeTest(BaseTest):
         r = AzureFunctionMode.extract_properties({}, 'v', {'v': 'default'})
         self.assertEqual(r, {'v': 'default'})
 
-        r = AzureFunctionMode.extract_properties(
-            {'v': resource_id}, 'v', {'v': 'default'}
-        )
-        self.assertEqual(
-            r, {'id': resource_id, 'name': 'test', 'resource_group_name': 'rg'}
-        )
+        r = AzureFunctionMode.extract_properties({'v': resource_id}, 'v', {'v': 'default'})
+        self.assertEqual(r, {'id': resource_id, 'name': 'test', 'resource_group_name': 'rg'})
 
         r = AzureFunctionMode.extract_properties(
             {'v': {'test1': 'value1', 'testCamel': 'valueCamel'}},
@@ -610,9 +586,7 @@ class AzurePolicyModeTest(BaseTest):
             'v',
             {'t1': None, 'nested_value': {'test_camel': None}, 't2': 'v2'},
         )
-        self.assertEqual(
-            r, {'t1': 'v1', 't2': 'v2', 'nested_value': {'test_camel': 'valueCamel'}}
-        )
+        self.assertEqual(r, {'t1': 'v1', 't2': 'v2', 'nested_value': {'test_camel': 'valueCamel'}})
 
     @arm_template('emptyrg.json')
     @cassette_name('resourcegroup')
@@ -624,9 +598,7 @@ class AzurePolicyModeTest(BaseTest):
                 'mode': {
                     'type': FUNCTION_EVENT_TRIGGER_MODE,
                     'events': ['ResourceGroupWrite'],
-                    'provision-options': {
-                        'servicePlan': {'name': 'test-cloud-custodian'}
-                    },
+                    'provision-options': {'servicePlan': {'name': 'test-cloud-custodian'}},
                 },
                 'resource': 'azure.resourcegroup',
                 'filters': [
@@ -735,9 +707,7 @@ class AzurePolicyModeTest(BaseTest):
 
         event = {'subject': string_as_is}
         policy.resource_manager.resource_type.resource_type = 'armresource'
-        self.assertEqual(
-            AzureModeCommon.extract_resource_id(policy, event), string_as_is
-        )
+        self.assertEqual(AzureModeCommon.extract_resource_id(policy, event), string_as_is)
 
     @staticmethod
     def get_sample_event():

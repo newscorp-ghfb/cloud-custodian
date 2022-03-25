@@ -25,9 +25,7 @@ class PostgresqlDatabaseTest(BaseTest):
             {
                 'name': 'test-get-database-by-name',
                 'resource': 'azure.postgresql-database',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestdb'}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestdb'}],
             }
         )
 

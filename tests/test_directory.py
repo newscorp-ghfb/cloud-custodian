@@ -14,13 +14,11 @@ class CloudDirectoryTest(BaseTest):
         self.addCleanup(client.delete_schema, SchemaArn=schema_arn)
         schema_data = load_data("sample-clouddir-schema.json")
 
-        client.put_schema_from_json(
-            SchemaArn=schema_arn, Document=json.dumps(schema_data)
-        )
+        client.put_schema_from_json(SchemaArn=schema_arn, Document=json.dumps(schema_data))
 
-        published_schema = client.publish_schema(
-            DevelopmentSchemaArn=schema_arn, Version="1"
-        ).get("PublishedSchemaArn")
+        published_schema = client.publish_schema(DevelopmentSchemaArn=schema_arn, Version="1").get(
+            "PublishedSchemaArn"
+        )
         self.addCleanup(client.delete_schema, SchemaArn=published_schema)
 
         dir_info = client.create_directory(Name="c7n-test", SchemaArn=published_schema)
@@ -56,9 +54,7 @@ class DirectoryTests(BaseTest):
                 "name": "tag-directory",
                 "resource": "directory",
                 "filters": [{"tag:RequiredTag": "absent"}],
-                "actions": [
-                    {"type": "tag", "key": "RequiredId", "value": "RequiredValue"}
-                ],
+                "actions": [{"type": "tag", "key": "RequiredId", "value": "RequiredValue"}],
             },
             session_factory=session_factory,
         )

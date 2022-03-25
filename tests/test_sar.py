@@ -22,9 +22,7 @@ class SARTest(BaseTest):
             {
                 'name': 'test-sar',
                 'resource': 'aws.serverless-app',
-                'filters': [
-                    {'type': 'cross-account', 'whitelist_orgids': ['o-4adkskbcff']}
-                ],
+                'filters': [{'type': 'cross-account', 'whitelist_orgids': ['o-4adkskbcff']}],
             },
             session_factory=factory,
         )

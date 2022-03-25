@@ -63,9 +63,7 @@ def resolve_dateref(since, repo):
 
 def schema_outline_from_docker(tag):
     client = docker.from_env()
-    result = client.containers.run(
-        f"cloudcustodian/c7n:{tag}", "schema --outline --json"
-    )
+    result = client.containers.run(f"cloudcustodian/c7n:{tag}", "schema --outline --json")
     return json.loads(result)
 
 
@@ -164,10 +162,7 @@ def schema_diff(schema_old, schema_new):
                 added = attrs[f'{category}_added']
                 removed = attrs[f'{category}_removed']
                 if added:
-                    added = [
-                        link(resource=resource, category=category, element=el)
-                        for el in added
-                    ]
+                    added = [link(resource=resource, category=category, element=el) for el in added]
                     out.append(f"  - added {category}: " f"{listify(added, bt=False)}")
                 if removed:
                     out.append(f"  - removed {category}: {listify(removed)}")

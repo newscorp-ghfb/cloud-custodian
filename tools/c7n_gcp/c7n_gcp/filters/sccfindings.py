@@ -43,9 +43,7 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
         self.findings_by_resource = {}
         query_params = {'filter': self.get_resource_filter(resources), 'pageSize': 1000}
         session = local_session(self.manager.session_factory)
-        client = session.client(
-            "securitycenter", "v1", "organizations.sources.findings"
-        )
+        client = session.client("securitycenter", "v1", "organizations.sources.findings")
         findings_paged_list = list(
             client.execute_paged_query(
                 'list',
@@ -64,9 +62,7 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
     def get_resource_filter(self, resources):
         resource_filter = []
         for r in resources:
-            resource_filter.append(
-                'resourceName:"{}"'.format(r[self.manager.resource_type.name])
-            )
+            resource_filter.append('resourceName:"{}"'.format(r[self.manager.resource_type.name]))
             resource_filter.append(' OR ')
         resource_filter.pop()
 
@@ -82,15 +78,11 @@ class SecurityComandCenterFindingsFilter(ValueFilter):
     def process_resource(self, resource):
         if not resource.get(self.annotation_key):
             resource_name = resource[self.manager.resource_type.name]
-            resource[self.annotation_key] = self.findings_by_resource.get(
-                resource_name, []
-            )
+            resource[self.annotation_key] = self.findings_by_resource.get(resource_name, [])
 
         if self.data.get('key'):
             resource[self.annotation_key] = [
-                finding
-                for finding in resource[self.annotation_key]
-                if self.match(finding)
+                finding for finding in resource[self.annotation_key] if self.match(finding)
             ]
         return len(resource[self.annotation_key]) > 0
 

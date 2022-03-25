@@ -44,9 +44,7 @@ def get_resource(existing_tags):
 
 def get_resource_group_resource(existing_tags):
     resource = GenericResource(tags=existing_tags).serialize()
-    resource[
-        'id'
-    ] = '/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourceGroups/test_rg'
+    resource['id'] = '/subscriptions/ea42f556-5106-4743-99b0-c129bfa71a47/resourceGroups/test_rg'
     resource['name'] = 'test_rg'
     resource['type'] = 'resourceGroups'
     return resource
@@ -63,6 +61,4 @@ def get_tags(client, rg_name, vm_name):
 
 
 def set_tags(client, rg_name, vm_name, tags):
-    client.virtual_machines.begin_update(
-        rg_name, vm_name, VirtualMachineUpdate(tags=tags)
-    )
+    client.virtual_machines.begin_update(rg_name, vm_name, VirtualMachineUpdate(tags=tags))

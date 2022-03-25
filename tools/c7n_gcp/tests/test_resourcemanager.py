@@ -34,8 +34,7 @@ class LimitsTest(BaseTest):
         output = self.capture_logging('custodian.policy', level=logging.ERROR)
         self.assertRaises(ResourceLimitExceeded, p.run)
         self.assertTrue(
-            "policy:limits exceeded resource-limit:2.5% found:1 total:"
-            in output.getvalue()
+            "policy:limits exceeded resource-limit:2.5% found:1 total:" in output.getvalue()
         )
         self.assertEqual(p.ctx.metrics.buf[0]['MetricName'], 'ResourceLimitExceeded')
 
@@ -49,26 +48,19 @@ class LimitsTest(BaseTest):
         p.ctx.metrics.flush = mock.MagicMock()
         output = self.capture_logging('custodian.policy', level=logging.ERROR)
         self.assertRaises(ResourceLimitExceeded, p.run)
-        self.assertTrue(
-            "policy:limits exceeded resource-limit:1 found:" in output.getvalue()
-        )
+        self.assertTrue("policy:limits exceeded resource-limit:1 found:" in output.getvalue())
         self.assertEqual(p.ctx.metrics.buf[0]['MetricName'], 'ResourceLimitExceeded')
 
 
 class OrganizationTest(BaseTest):
     def test_project_get(self):
-        factory = self.replay_flight_data(
-            'organization-get-resource', project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('organization-get-resource', project_id='cloud-custodian')
         p = self.load_policy(
             {'name': 'organization', 'resource': 'gcp.organization'},
             session_factory=factory,
         )
         org = p.resource_manager.get_resource(
-            {
-                "resourceName": "//cloudresourcemanager.googleapis.com/"
-                "organizations/111111111111"
-            }
+            {"resourceName": "//cloudresourcemanager.googleapis.com/" "organizations/111111111111"}
         )
         self.assertEqual(org['lifecycleState'], 'ACTIVE')
         self.assertEqual(org['displayName'], 'custodian.com')
@@ -94,9 +86,7 @@ class OrganizationTest(BaseTest):
             {
                 'name': 'gcp-organization-set-iam-policy',
                 'resource': 'gcp.organization',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'value': resource_full_name}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'value': resource_full_name}],
                 'actions': [
                     {
                         'type': 'set-iam-policy',
@@ -161,17 +151,12 @@ class FolderTest(BaseTest):
 
 class ProjectTest(BaseTest):
     def test_project_get(self):
-        factory = self.replay_flight_data(
-            'project-get-resource', project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('project-get-resource', project_id='cloud-custodian')
         p = self.load_policy(
             {'name': 'project', 'resource': 'gcp.project'}, session_factory=factory
         )
         project = p.resource_manager.get_resource(
-            {
-                "resourceName": "//cloudresourcemanager.googleapis.com/"
-                "projects/cloud-custodian"
-            }
+            {"resourceName": "//cloudresourcemanager.googleapis.com/" "projects/cloud-custodian"}
         )
         self.assertEqual(project['lifecycleState'], 'ACTIVE')
         self.assertEqual(project['name'], 'cloud-custodian')
@@ -180,9 +165,7 @@ class ProjectTest(BaseTest):
     def test_propagate_tags(self):
         factory = self.replay_flight_data('project-propagate-tags')
 
-        label_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'folder-labels.json'
-        )
+        label_path = os.path.join(os.path.dirname(__file__), 'data', 'folder-labels.json')
 
         p = self.load_policy(
             {
@@ -296,9 +279,7 @@ class ProjectTest(BaseTest):
                 'resource': 'gcp.project',
                 'query': [{'filter': 'id:c7n-test-target'}],
                 'filters': [{'tag:app': 'absent'}],
-                'actions': [
-                    {'type': 'set-labels', 'labels': {'env_type': 'dev', 'app': 'c7n'}}
-                ],
+                'actions': [{'type': 'set-labels', 'labels': {'env_type': 'dev', 'app': 'c7n'}}],
             },
             session_factory=factory,
         )
@@ -317,9 +298,7 @@ class ProjectTest(BaseTest):
             {
                 'name': 'gcp-project-set-iam-policy',
                 'resource': 'gcp.project',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'value': resource_full_name}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'value': resource_full_name}],
                 'actions': [
                     {
                         'type': 'set-iam-policy',

@@ -29,9 +29,7 @@ class Directory(QueryResourceManager):
         client = local_session(self.session_factory).client('ds')
 
         def _add_tags(d):
-            d['Tags'] = client.list_tags_for_resource(ResourceId=d['DirectoryId']).get(
-                'Tags', []
-            )
+            d['Tags'] = client.list_tags_for_resource(ResourceId=d['DirectoryId']).get('Tags', [])
             return d
 
         return list(map(_add_tags, directories))
@@ -107,9 +105,7 @@ class DirectoryRemoveTag(RemoveTag):
     def process_resource_set(self, client, directories, tags):
         for d in directories:
             try:
-                client.remove_tags_from_resource(
-                    ResourceId=d['DirectoryId'], TagKeys=tags
-                )
+                client.remove_tags_from_resource(ResourceId=d['DirectoryId'], TagKeys=tags)
             except client.exceptions.EntityDoesNotExistException:
                 continue
 

@@ -13,6 +13,4 @@ class ResourceMetaTest(BaseTest):
                 missing.append(name)
 
         if missing:
-            raise KeyError(
-                "Following resources are missing id metadata %s" % " ".join(missing)
-            )
+            raise KeyError("Following resources are missing id metadata %s" % " ".join(missing))

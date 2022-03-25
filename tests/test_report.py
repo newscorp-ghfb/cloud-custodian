@@ -43,9 +43,7 @@ class TestEC2Report(BaseTest):
         ]
 
         # First do a test with adding custom fields to the normal ones
-        formatter = Formatter(
-            self.p.resource_manager.resource_type, extra_fields=extra_fields
-        )
+        formatter = Formatter(self.p.resource_manager.resource_type, extra_fields=extra_fields)
         recs = [self.records["full"]]
         rows = [self.rows["full_custom"]]
         self.assertEqual(formatter.to_csv(recs), rows)
@@ -139,8 +137,5 @@ class TestMultiReport(BaseTest):
         ]
 
         self.assertTrue(
-            all(
-                strip_output_path(p, policy_name) == f"logs/{policy_name}"
-                for p in output_paths
-            )
+            all(strip_output_path(p, policy_name) == f"logs/{policy_name}" for p in output_paths)
         )

@@ -34,8 +34,6 @@ class ServiceTest(BaseTest):
             {'name': 'one-service', 'resource': 'gcp.service'}, session_factory=factory
         )
         service = p.resource_manager.get_resource(
-            {
-                'resourceName': 'projects/stacklet-sam/services/deploymentmanager.googleapis.com'
-            }
+            {'resourceName': 'projects/stacklet-sam/services/deploymentmanager.googleapis.com'}
         )
         self.assertJmes('config.name', service, 'deploymentmanager.googleapis.com')

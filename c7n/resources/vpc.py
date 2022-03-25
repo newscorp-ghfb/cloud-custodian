@@ -135,24 +135,16 @@ class FlowLogFilter(Filter):
                     dest_type_match = (destination_type is None) or op(
                         fl['LogDestinationType'], destination_type
                     )
-                    dest_match = (destination is None) or op(
-                        fl['LogDestination'], destination
-                    )
-                    status_match = (status is None) or op(
-                        fl['FlowLogStatus'], status.upper()
-                    )
+                    dest_match = (destination is None) or op(fl['LogDestination'], destination)
+                    status_match = (status is None) or op(fl['FlowLogStatus'], status.upper())
                     delivery_status_match = (delivery_status is None) or op(
                         fl['DeliverLogsStatus'], delivery_status.upper()
                     )
                     traffic_type_match = (traffic_type is None) or op(
                         fl['TrafficType'], traffic_type.upper()
                     )
-                    log_group_match = (log_group is None) or op(
-                        fl.get('LogGroupName'), log_group
-                    )
-                    log_format_match = (log_format is None) or op(
-                        fl.get('LogFormat'), log_format
-                    )
+                    log_group_match = (log_group is None) or op(fl.get('LogGroupName'), log_group)
+                    log_format_match = (log_format is None) or op(fl.get('LogFormat'), log_format)
                     # combine all conditions to check if flow log matches the spec
                     fl_match = (
                         status_match
@@ -422,8 +414,7 @@ class DhcpOptionsFilter(Filter):
             Filters=[{'Name': 'dhcp-options-id', 'Values': option_ids}]
         ).get('DhcpOptions', ()):
             options_map[options['DhcpOptionsId']] = {
-                o['Key']: [v['Value'] for v in o['Values']]
-                for o in options['DhcpConfigurations']
+                o['Key']: [v['Value'] for v in o['Values']] for o in options['DhcpConfigurations']
             }
 
         for vpc in resources:
@@ -678,9 +669,7 @@ class SecurityGroupApplyPatch(BaseAction):
 
     def validate(self):
         diff_filters = [
-            n
-            for n in self.manager.iter_filters()
-            if isinstance(n, SecurityGroupDiffFilter)
+            n for n in self.manager.iter_filters() if isinstance(n, SecurityGroupDiffFilter)
         ]
         if not len(diff_filters):
             raise PolicyValidationError("resource patching requires diff filter")
@@ -712,9 +701,7 @@ class SecurityGroupPatch:
         ),
     }
 
-    retry = staticmethod(
-        get_retry(('RequestLimitExceeded', 'Client.RequestLimitExceeded'))
-    )
+    retry = staticmethod(get_retry(('RequestLimitExceeded', 'Client.RequestLimitExceeded')))
 
     def apply_delta(self, client, target, change_set):
         if 'tags' in change_set:
@@ -735,9 +722,7 @@ class SecurityGroupPatch:
         if 'added' in tag_delta:
             tags.extend([{'Key': k, 'Value': v} for k, v in tag_delta['added'].items()])
         if 'updated' in tag_delta:
-            tags.extend(
-                [{'Key': k, 'Value': v} for k, v in tag_delta['updated'].items()]
-            )
+            tags.extend([{'Key': k, 'Value': v} for k, v in tag_delta['updated'].items()])
         if tags:
             self.retry(client.create_tags, Resources=[group['GroupId']], Tags=tags)
 
@@ -790,9 +775,7 @@ class SGUsage(Filter):
                 GroupId=[r['GroupId'] for r in resource_set]
             )['SecurityGroupReferenceSet']:
                 peered_ids.add(sg_ref['GroupId'])
-        self.log.debug(
-            "%d of %d groups w/ peered refs", len(peered_ids), len(resources)
-        )
+        self.log.debug("%d of %d groups w/ peered refs", len(peered_ids), len(resources))
         return [r for r in resources if r['GroupId'] not in peered_ids]
 
     def get_scanners(self):
@@ -834,9 +817,7 @@ class SGUsage(Filter):
 
     def get_lambda_sgs(self):
         sg_ids = set()
-        for func in self.manager.get_resource_manager('lambda').resources(
-            augment=False
-        ):
+        for func in self.manager.get_resource_manager('lambda').resources(augment=False):
             if 'VpcConfig' not in func:
                 continue
             for g in func['VpcConfig']['SecurityGroupIds']:
@@ -870,9 +851,7 @@ class SGUsage(Filter):
         expr = jmespath.compile(
             'EcsParameters.NetworkConfiguration.awsvpcConfiguration.SecurityGroups[]'
         )
-        for rule in self.manager.get_resource_manager('event-rule-target').resources(
-            augment=False
-        ):
+        for rule in self.manager.get_resource_manager('event-rule-target').resources(augment=False):
             ids = expr.search(rule)
             if ids:
                 sg_ids.update(ids)
@@ -1304,9 +1283,7 @@ class SGPermission(Filter):
         if not sg_perm:
             return False
 
-        sg_group_ids = [
-            p['GroupId'] for p in sg_perm if p.get('UserId', '') == owner_id
-        ]
+        sg_group_ids = [p['GroupId'] for p in sg_perm if p.get('UserId', '') == owner_id]
         sg_resources = self.manager.get_resources(sg_group_ids)
         vf = ValueFilter(sg_refs, self.manager)
         vf.annotate = False
@@ -1356,9 +1333,7 @@ class SGPermission(Filter):
             perm_matches['cidrs'] = self.process_cidrs(perm)
             perm_matches['self-refs'] = self.process_self_reference(perm, sg_id)
             perm_matches['sg-refs'] = self.process_sg_references(perm, owner_id)
-            perm_match_values = list(
-                filter(lambda x: x is not None, perm_matches.values())
-            )
+            perm_match_values = list(filter(lambda x: x is not None, perm_matches.values()))
 
             # account for one python behavior any([]) == False, all([]) == True
             if match_op == all and not perm_match_values:
@@ -1369,9 +1344,7 @@ class SGPermission(Filter):
                 matched.append(perm)
 
         if matched:
-            resource.setdefault('Matched%s' % self.ip_permissions_key, []).extend(
-                matched
-            )
+            resource.setdefault('Matched%s' % self.ip_permissions_key, []).extend(matched)
             return True
 
 
@@ -1386,9 +1359,7 @@ SGPermissionSchema = {
             {'$ref': '#/definitions/filters/value'},
         ]
     },
-    'FromPort': {
-        'oneOf': [{'$ref': '#/definitions/filters/value'}, {'type': 'integer'}]
-    },
+    'FromPort': {'oneOf': [{'$ref': '#/definitions/filters/value'}, {'type': 'integer'}]},
     'ToPort': {'oneOf': [{'$ref': '#/definitions/filters/value'}, {'type': 'integer'}]},
     'UserIdGroupPairs': {},
     'IpRanges': {},
@@ -1492,9 +1463,7 @@ class RemovePermissions(BaseAction):
         for r in resources:
             for label, perms in [('ingress', i_perms), ('egress', e_perms)]:
                 if perms == 'matched':
-                    key = 'MatchedIpPermissions%s' % (
-                        label == 'egress' and 'Egress' or ''
-                    )
+                    key = 'MatchedIpPermissions%s' % (label == 'egress' and 'Egress' or '')
                     groups = r.get(key, ())
                 elif perms == 'all':
                     key = 'IpPermissions%s' % (label == 'egress' and 'Egress' or '')
@@ -1675,9 +1644,7 @@ class NetworkInterface(query.QueryResourceManager):
 
 
 NetworkInterface.filter_registry.register('flow-logs', FlowLogFilter)
-NetworkInterface.filter_registry.register(
-    'network-location', net_filters.NetworkLocation
-)
+NetworkInterface.filter_registry.register('network-location', net_filters.NetworkLocation)
 
 
 @NetworkInterface.filter_registry.register('subnet')
@@ -1818,10 +1785,7 @@ class DeleteNetworkInterface(BaseAction):
                     NetworkInterfaceId=r['NetworkInterfaceId'],
                 )
             except ClientError as err:
-                if (
-                    not err.response['Error']['Code']
-                    == 'InvalidNetworkInterfaceID.NotFound'
-                ):
+                if not err.response['Error']['Code'] == 'InvalidNetworkInterfaceID.NotFound':
                     raise
 
 
@@ -1855,11 +1819,7 @@ class SubnetRoute(net_filters.SubnetFilter):
     def get_related_ids(self, resources):
         if self.RelatedIdMapping is None:
             return super(SubnetRoute, self).get_related_ids(resources)
-        return list(
-            itertools.chain(
-                *[self.RelatedIdMapping[r['RouteTableId']] for r in resources]
-            )
-        )
+        return list(itertools.chain(*[self.RelatedIdMapping[r['RouteTableId']] for r in resources]))
 
     def get_related(self, resources):
         rt_subnet_map = {}
@@ -1922,9 +1882,7 @@ class TransitGateway(query.QueryResourceManager):
 class TransitGatewayAttachmentQuery(query.ChildResourceQuery):
     def get_parent_parameters(self, params, parent_id, parent_key):
         merged_params = dict(params)
-        merged_params.setdefault('Filters', []).append(
-            {'Name': parent_key, 'Values': [parent_id]}
-        )
+        merged_params.setdefault('Filters', []).append({'Name': parent_key, 'Values': [parent_id]})
         return merged_params
 
 
@@ -1981,9 +1939,7 @@ class CrossAccountPeer(CrossAccountAccessFilter):
     def process(self, resources, event=None):
         results = []
         accounts = self.get_accounts()
-        owners = map(
-            jmespath.compile, ('AccepterVpcInfo.OwnerId', 'RequesterVpcInfo.OwnerId')
-        )
+        owners = map(jmespath.compile, ('AccepterVpcInfo.OwnerId', 'RequesterVpcInfo.OwnerId'))
 
         for r in resources:
             for o_expr in owners:
@@ -2025,10 +1981,7 @@ class MissingRoute(Filter):
             for k in ('AccepterVpcInfo', 'RequesterVpcInfo'):
                 if r[k]['OwnerId'] != self.manager.config.account_id:
                     continue
-                if (
-                    r[k].get('Region')
-                    and r['k']['Region'] != self.manager.config.region
-                ):
+                if r[k].get('Region') and r['k']['Region'] != self.manager.config.region:
                     continue
                 if r[k]['VpcId'] not in routed_vpcs[r['VpcPeeringConnectionId']]:
                     results.append(r)
@@ -2272,10 +2225,7 @@ class DeleteInternetGateway(BaseAction):
             try:
                 client.delete_internet_gateway(InternetGatewayId=r['InternetGatewayId'])
             except ClientError as err:
-                if (
-                    not err.response['Error']['Code']
-                    == 'InvalidInternetGatewayId.NotFound'
-                ):
+                if not err.response['Error']['Code'] == 'InvalidInternetGatewayId.NotFound':
                     raise
 
 
@@ -2495,9 +2445,7 @@ class DeleteUnusedKeyPairs(BaseAction):
     schema = type_schema('delete')
 
     def validate(self):
-        if not [
-            f for f in self.manager.iter_filters() if isinstance(f, UnusedKeyPairs)
-        ]:
+        if not [f for f in self.manager.iter_filters() if isinstance(f, UnusedKeyPairs)]:
             raise PolicyValidationError(
                 "delete should be used in conjunction with the unused filter on %s"
                 % (self.manager.data,)
@@ -2579,8 +2527,7 @@ class CreateFlowLogs(BaseAction):
         for r in dvalidation.get('required', ()):
             if not self.data.get(r):
                 raise PolicyValidationError(
-                    'Required %s missing for destination-type:%s'
-                    % (r, destination_type)
+                    'Required %s missing for destination-type:%s' % (r, destination_type)
                 )
         for r in dvalidation.get('absent', ()):
             if r in self.data:
@@ -2598,13 +2545,11 @@ class CreateFlowLogs(BaseAction):
         return self
 
     def delete_flow_logs(self, client, rids):
-        flow_logs = client.describe_flow_logs(
-            Filters=[{'Name': 'resource-id', 'Values': rids}]
-        )['FlowLogs']
+        flow_logs = client.describe_flow_logs(Filters=[{'Name': 'resource-id', 'Values': rids}])[
+            'FlowLogs'
+        ]
         try:
-            results = client.delete_flow_logs(
-                FlowLogIds=[f['FlowLogId'] for f in flow_logs]
-            )
+            results = client.delete_flow_logs(FlowLogIds=[f['FlowLogId'] for f in flow_logs])
 
             for r in results['Unsuccessful']:
                 self.log.exception(
@@ -2614,9 +2559,7 @@ class CreateFlowLogs(BaseAction):
                 )
         except ClientError as e:
             if e.response['Error']['Code'] == 'InvalidParameterValue':
-                self.log.exception(
-                    'delete flow-log: %s', e.response['Error']['Message']
-                )
+                self.log.exception('delete flow-log: %s', e.response['Error']['Message'])
             else:
                 raise
 
@@ -2638,10 +2581,7 @@ class CreateFlowLogs(BaseAction):
         params['ResourceType'] = self.RESOURCE_ALIAS[model.arn_type]
         params['TrafficType'] = self.data.get('TrafficType', 'ALL').upper()
         params['MaxAggregationInterval'] = self.data.get('MaxAggregationInterval', 600)
-        if (
-            self.data.get('LogDestinationType', 'cloud-watch-logs')
-            == 'cloud-watch-logs'
-        ):
+        if self.data.get('LogDestinationType', 'cloud-watch-logs') == 'cloud-watch-logs':
             self.process_log_group(self.data.get('LogGroupName'))
         try:
             results = client.create_flow_logs(**params)
@@ -2654,9 +2594,7 @@ class CreateFlowLogs(BaseAction):
                 )
         except ClientError as e:
             if e.response['Error']['Code'] == 'FlowLogAlreadyExists':
-                self.log.exception(
-                    'Exception: create flow-log: %s', e.response['Error']['Message']
-                )
+                self.log.exception('Exception: create flow-log: %s', e.response['Error']['Message'])
             else:
                 raise
 
@@ -2770,9 +2708,7 @@ class SubnetModifyAtrributes(BaseAction):
                 params[k] = {'Value': params[k]}
 
         for r in resources:
-            self.manager.retry(
-                client.modify_subnet_attribute, SubnetId=r['SubnetId'], **params
-            )
+            self.manager.retry(client.modify_subnet_attribute, SubnetId=r['SubnetId'], **params)
         return resources
 
 
@@ -2813,9 +2749,7 @@ class DeleteTrafficMirrorSession(BaseAction):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ec2')
         for r in resources:
-            client.delete_traffic_mirror_session(
-                TrafficMirrorSessionId=r['TrafficMirrorSessionId']
-            )
+            client.delete_traffic_mirror_session(TrafficMirrorSessionId=r['TrafficMirrorSessionId'])
 
 
 @resources.register('mirror-target')

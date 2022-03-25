@@ -16,9 +16,7 @@ class Credential(BaseTest):
     def test_session_factory(self):
         factory = SessionFactory("us-east-1")
         session = factory()
-        self.assertTrue(
-            session._session.user_agent().startswith("CloudCustodian/%s" % version)
-        )
+        self.assertTrue(session._session.user_agent().startswith("CloudCustodian/%s" % version))
 
     def test_regional_sts(self):
         factory = self.replay_flight_data('test_credential_sts_regional')
@@ -41,9 +39,7 @@ class Credential(BaseTest):
         )
 
         # attach the placebo flight recorder to the new session.
-        pill = placebo.attach(
-            session, os.path.join(self.placebo_dir, 'test_credential_sts')
-        )
+        pill = placebo.attach(session, os.path.join(self.placebo_dir, 'test_credential_sts'))
         if self.recording:
             pill.record()
         else:

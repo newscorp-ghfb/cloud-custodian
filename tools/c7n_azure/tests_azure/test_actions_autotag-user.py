@@ -23,8 +23,7 @@ class ActionsAutotagUserTest(BaseTest):
     first_event = EventData.from_dict(
         {
             "caller": "cloud_caller@custodian.com",
-            "id": vm_id
-            + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
+            "id": vm_id + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
             "operationName": {
                 "value": "Microsoft.Compute/virtualMachines/write",
                 "localizedValue": "Create or Update Virtual Machine",
@@ -59,18 +58,14 @@ class ActionsAutotagUserTest(BaseTest):
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
             self.load_policy(
-                tools.get_policy(
-                    [{'type': 'auto-tag-user', 'tag': 'CreatorEmail', 'days': 91}]
-                ),
+                tools.get_policy([{'type': 'auto-tag-user', 'tag': 'CreatorEmail', 'days': 91}]),
                 validate=True,
             )
 
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
             self.load_policy(
-                tools.get_policy(
-                    [{'type': 'auto-tag-user', 'tag': 'CreatorEmail', 'days': 0}]
-                ),
+                tools.get_policy([{'type': 'auto-tag-user', 'tag': 'CreatorEmail', 'days': 0}]),
                 validate=True,
             )
 
@@ -102,9 +97,7 @@ class ActionsAutotagUserTest(BaseTest):
 
     @patch.object(AutoTagBase, '_get_first_event', return_value=first_event)
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
-    def test_auto_tag_update_false_noop_for_existing_tag(
-        self, update_resource_tags, _2
-    ):
+    def test_auto_tag_update_false_noop_for_existing_tag(self, update_resource_tags, _2):
         """Adds CreatorEmail to a resource group"""
 
         action = self._get_action({'tag': 'CreatorEmail', 'days': 10, 'update': False})
@@ -208,9 +201,7 @@ class ActionsAutotagUserTest(BaseTest):
         self._test_event(event, 'Unknown')
 
     def test_auto_tag_user_event_grid_sp_event_missing_info(self):
-        event = self._get_event(
-            evidence={'principalType': 'ServicePrincipal'}, claims={}
-        )
+        event = self._get_event(evidence={'principalType': 'ServicePrincipal'}, claims={})
         self._test_event(event, 'Unknown')
 
     def _get_event(self, evidence, claims):
@@ -224,9 +215,7 @@ class ActionsAutotagUserTest(BaseTest):
         }
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
-    def _test_event(
-        self, event, expected_tag_value, update_resource_tags, default_claim='upn'
-    ):
+    def _test_event(self, event, expected_tag_value, update_resource_tags, default_claim='upn'):
         action = self._get_action(
             {'tag': 'CreatorEmail', 'update': True, 'default-claim': default_claim}
         )

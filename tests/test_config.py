@@ -102,9 +102,7 @@ class ConfigRuleTest(BaseTest):
                     'mode': {'role': 'arn:aws:iam', 'type': 'config-rule'},
                 }
             )
-        self.assertIn(
-            'AWS Config does not support resource-type:ebs-snapshot', str(ecm.exception)
-        )
+        self.assertIn('AWS Config does not support resource-type:ebs-snapshot', str(ecm.exception))
 
     def test_status(self):
         session_factory = self.replay_flight_data("test_config_rule_status")
@@ -112,9 +110,7 @@ class ConfigRuleTest(BaseTest):
             {
                 "name": "rule",
                 "resource": "config-rule",
-                "filters": [
-                    {"type": "status", "key": "FirstEvaluationStarted", "value": True}
-                ],
+                "filters": [{"type": "status", "key": "FirstEvaluationStarted", "value": True}],
             },
             session_factory=session_factory,
         )
@@ -144,7 +140,7 @@ class ConfigRuleTest(BaseTest):
         self.assertEqual(len(resources), 1)
         cr = resources.pop()
         client = session_factory().client("config")
-        rules = client.describe_config_rules(
-            ConfigRuleNames=[cr["ConfigRuleName"]]
-        ).get("ConfigRules", [])
+        rules = client.describe_config_rules(ConfigRuleNames=[cr["ConfigRuleName"]]).get(
+            "ConfigRules", []
+        )
         self.assertEqual(rules[0]["ConfigRuleState"], "DELETING")

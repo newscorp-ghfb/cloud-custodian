@@ -22,6 +22,4 @@ class ReportMetadataTests(BaseTest):
                 missing.add("%s~%s" % (k, v))
 
         if missing:
-            raise AssertionError(
-                "Missing report metadata on \n %s" % (' \n'.join(sorted(missing)))
-            )
+            raise AssertionError("Missing report metadata on \n %s" % (' \n'.join(sorted(missing))))

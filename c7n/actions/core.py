@@ -36,8 +36,7 @@ class ActionRegistry(PluginRegistry):
         action_class = self.get(action_type)
         if action_class is None:
             raise PolicyValidationError(
-                "Invalid action type %s, valid actions %s"
-                % (action_type, list(self.keys()))
+                "Invalid action type %s, valid actions %s" % (action_type, list(self.keys()))
             )
         # Construct a ResourceManager
         return action_class(data, manager)

@@ -24,9 +24,7 @@ except ImportError:
 class MailerAzureQueueProcessor:
     def __init__(self, config, logger, session=None, max_num_processes=16):
         if StorageUtilities is None:
-            raise Exception(
-                "Using Azure queue requires package c7n_azure to be installed."
-            )
+            raise Exception("Using Azure queue requires package c7n_azure to be installed.")
 
         self.max_num_processes = max_num_processes
         self.config = config
@@ -38,14 +36,10 @@ class MailerAzureQueueProcessor:
 
     def run(self, parallel=False):
         if parallel:
-            self.logger.info(
-                "Parallel processing with Azure Queue is not yet implemented."
-            )
+            self.logger.info("Parallel processing with Azure Queue is not yet implemented.")
 
         self.logger.info("Downloading messages from the Azure Storage queue.")
-        queue_settings = StorageUtilities.get_queue_client_by_uri(
-            self.receive_queue, self.session
-        )
+        queue_settings = StorageUtilities.get_queue_client_by_uri(self.receive_queue, self.session)
         queue_messages = StorageUtilities.get_queue_messages(
             *queue_settings, num_messages=self.batch_size
         )
@@ -59,17 +53,13 @@ class MailerAzureQueueProcessor:
                     or queue_message.dequeue_count > self.max_message_retry
                 ):
                     # If message handled successfully or max retry hit, delete
-                    StorageUtilities.delete_queue_message(
-                        *queue_settings, message=queue_message
-                    )
+                    StorageUtilities.delete_queue_message(*queue_settings, message=queue_message)
 
             queue_messages = StorageUtilities.get_queue_messages(
                 *queue_settings, num_messages=self.batch_size
             )
 
-        self.logger.info(
-            'No messages left on the azure storage queue, exiting c7n_mailer.'
-        )
+        self.logger.info('No messages left on the azure storage queue, exiting c7n_mailer.')
 
     def process_azure_queue_message(self, encoded_azure_queue_message):
         queue_message = json.loads(
@@ -94,9 +84,7 @@ class MailerAzureQueueProcessor:
         ):
             self._deliver_slack_message(queue_message)
 
-        if any(
-            e.startswith('datadog') for e in queue_message.get('action', ()).get('to')
-        ):
+        if any(e.startswith('datadog') for e in queue_message.get('action', ()).get('to')):
             self._deliver_datadog_message(queue_message)
 
         email_result = self._deliver_email(queue_message)
@@ -125,24 +113,18 @@ class MailerAzureQueueProcessor:
         from c7n_mailer.datadog_delivery import DataDogDelivery
 
         datadog_delivery = DataDogDelivery(self.config, self.session, self.logger)
-        datadog_message_packages = datadog_delivery.get_datadog_message_packages(
-            queue_message
-        )
+        datadog_message_packages = datadog_delivery.get_datadog_message_packages(queue_message)
 
         try:
             self.logger.info('Sending message to Datadog.')
-            datadog_delivery.deliver_datadog_messages(
-                datadog_message_packages, queue_message
-            )
+            datadog_delivery.deliver_datadog_messages(datadog_message_packages, queue_message)
         except Exception as error:
             self.logger.exception(error)
 
     def _deliver_email(self, queue_message):
         try:
             sendgrid_delivery = SendGridDelivery(self.config, self.session, self.logger)
-            email_messages = sendgrid_delivery.get_to_addrs_sendgrid_messages_map(
-                queue_message
-            )
+            email_messages = sendgrid_delivery.get_to_addrs_sendgrid_messages_map(queue_message)
 
             if 'smtp_server' in self.config:
                 smtp_delivery = SmtpDelivery(
@@ -150,9 +132,7 @@ class MailerAzureQueueProcessor:
                 )
                 for to_addrs, message in email_messages.items():
                     self.logger.info(
-                        'Sending message to SMTP server, {}.'.format(
-                            self.config['smtp_server']
-                        )
+                        'Sending message to SMTP server, {}.'.format(self.config['smtp_server'])
                     )
                     smtp_delivery.send_message(message=message, to_addrs=list(to_addrs))
             else:

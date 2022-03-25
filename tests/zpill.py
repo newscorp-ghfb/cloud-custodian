@@ -189,9 +189,7 @@ class ZippedPill(pill.Pill):
         response_file = self.get_next_file_path(service, operation)
         self._used.add(response_file)
         pill.LOG.debug("load_responses: %s", response_file)
-        response_data = json.loads(
-            self.archive.read(response_file), object_hook=pill.deserialize
-        )
+        response_data = json.loads(self.archive.read(response_file), object_hook=pill.deserialize)
         return (
             pill.FakeHttpResponse(response_data["status_code"]),
             response_data["data"],
@@ -263,24 +261,16 @@ class RedPill(pill.Pill):
         response_data = re.sub(r"\b\d{12}\b", ACCOUNT_ID, response_data)  # noqa
         response_data = json.loads(response_data, object_hook=deserialize)
 
-        super(RedPill, self).save_response(
-            service, operation, response_data, http_response
-        )
+        super(RedPill, self).save_response(service, operation, response_data, http_response)
 
 
 class PillTest(CustodianTestCore):
 
-    archive_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "placebo_data.zip"
-    )
+    archive_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "placebo_data.zip")
 
-    placebo_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data", "placebo"
-    )
+    placebo_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "placebo")
 
-    output_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data", "output"
-    )
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "output")
 
     recording = False
 

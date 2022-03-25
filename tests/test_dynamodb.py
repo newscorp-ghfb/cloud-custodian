@@ -91,9 +91,7 @@ class DynamodbTest(BaseTest):
         self.assertEqual(resources[0]["TableName"], "test-table-kms-filter")
 
     def test_continuous_backup_filter(self):
-        session_factory = self.replay_flight_data(
-            "test_dynamodb_continuous_backup_filter"
-        )
+        session_factory = self.replay_flight_data("test_dynamodb_continuous_backup_filter")
         p = self.load_policy(
             {
                 "name": "dynamodb-continuous_backup-filters",
@@ -119,9 +117,7 @@ class DynamodbTest(BaseTest):
         )
 
     def test_continuous_backup_action(self):
-        session_factory = self.replay_flight_data(
-            "test_dynamodb_continuous_backup_action"
-        )
+        session_factory = self.replay_flight_data("test_dynamodb_continuous_backup_action")
         client = session_factory().client("dynamodb")
         p = self.load_policy(
             {
@@ -187,9 +183,7 @@ class DynamodbTest(BaseTest):
             session_factory=mock_factory,
         )
         try:
-            p.resource_manager.actions[0].process(
-                [{'TableName': 'abc', 'TableStatus': 'ACTIVE'}]
-            )
+            p.resource_manager.actions[0].process([{'TableName': 'abc', 'TableStatus': 'ACTIVE'}])
         except client.exceptions.TableNotFoundException:
             self.fail('should not raise')
         mock_factory().client('dynamodb').update_continuous_backups.assert_called_once()
@@ -243,9 +237,7 @@ class DynamodbTest(BaseTest):
         arn = resources[0]["TableArn"]
         tags = client.list_tags_of_resource(ResourceArn=arn)
         tag_map = {t["Key"]: t["Value"] for t in tags["Tags"]}
-        self.assertEqual(
-            {"test_key": "test_value", "new_tag_key": "new_tag_value"}, tag_map
-        )
+        self.assertEqual({"test_key": "test_value", "new_tag_key": "new_tag_value"}, tag_map)
 
     def test_dynamodb_unmark(self):
         session_factory = self.replay_flight_data("test_dynamodb_unmark")
@@ -266,9 +258,7 @@ class DynamodbTest(BaseTest):
         self.assertFalse("test_key" in tags)
 
     def test_dynamodb_create_backup(self):
-        dt = datetime.datetime.now().replace(
-            year=2018, month=1, day=16, hour=19, minute=39
-        )
+        dt = datetime.datetime.now().replace(year=2018, month=1, day=16, hour=19, minute=39)
         suffix = dt.strftime("%Y-%m-%d-%H-%M")
 
         session_factory = self.replay_flight_data("test_dynamodb_create_backup")
@@ -294,14 +284,10 @@ class DynamodbTest(BaseTest):
         )
 
     def test_dynamodb_create_prefixed_backup(self):
-        dt = datetime.datetime.now().replace(
-            year=2018, month=1, day=22, hour=13, minute=42
-        )
+        dt = datetime.datetime.now().replace(year=2018, month=1, day=22, hour=13, minute=42)
         suffix = dt.strftime("%Y-%m-%d-%H-%M")
 
-        session_factory = self.replay_flight_data(
-            "test_dynamodb_create_prefixed_backup"
-        )
+        session_factory = self.replay_flight_data("test_dynamodb_create_prefixed_backup")
 
         p = self.load_policy(
             {
@@ -380,9 +366,7 @@ class DynamoDbAccelerator(BaseTest):
             {
                 "name": "dax-resources",
                 "resource": "dax",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -453,9 +437,7 @@ class DynamoDbAccelerator(BaseTest):
         client = session_factory(region="us-east-1").client("dax")
         tags = client.list_tags(ResourceName=resources[0]["ClusterArn"])["Tags"]
         self.assertEqual(tags[0]["Key"], "custodian_cleanup")
-        self.assertEqual(
-            tags[0]["Value"], "Resource does not meet policy: delete@2018/05/15"
-        )
+        self.assertEqual(tags[0]["Value"], "Resource does not meet policy: delete@2018/05/15")
 
     def test_delete(self):
         session_factory = self.replay_flight_data("test_dax_delete_cluster")
@@ -481,9 +463,7 @@ class DynamoDbAccelerator(BaseTest):
                 'name': 'dax-resources',
                 'resource': 'dax',
                 'filters': [{'ParameterGroup.ParameterGroupName': 'default.dax1.0'}],
-                'actions': [
-                    {'type': 'update-cluster', 'ParameterGroupName': 'testparamgroup'}
-                ],
+                'actions': [{'type': 'update-cluster', 'ParameterGroupName': 'testparamgroup'}],
             },
             session_factory=session_factory,
         )
@@ -492,9 +472,7 @@ class DynamoDbAccelerator(BaseTest):
         self.assertEqual(resources[0]['ClusterName'], 'c7n-dax')
         client = session_factory(region='us-east-1').client('dax')
         clusters = client.describe_clusters()['Clusters']
-        self.assertEqual(
-            clusters[0]['ParameterGroup']['ParameterGroupName'], 'testparamgroup'
-        )
+        self.assertEqual(clusters[0]['ParameterGroup']['ParameterGroupName'], 'testparamgroup')
 
     def test_modify_security_groups(self):
         session_factory = self.replay_flight_data('test_dax_update_security_groups')
@@ -502,9 +480,7 @@ class DynamoDbAccelerator(BaseTest):
             {
                 'name': 'dax-resources',
                 'resource': 'dax',
-                'filters': [
-                    {'type': 'security-group', 'key': 'GroupName', 'value': 'default'}
-                ],
+                'filters': [{'type': 'security-group', 'key': 'GroupName', 'value': 'default'}],
                 'actions': [
                     {
                         'type': 'modify-security-groups',
@@ -520,9 +496,7 @@ class DynamoDbAccelerator(BaseTest):
         self.assertEqual(resources[0]['ClusterName'], 'c7n-dax')
         client = session_factory(region='us-east-1').client('dax')
         sgs = client.describe_clusters()['Clusters'][0]['SecurityGroups']
-        self.assertDictEqual(
-            sgs[0], {"Status": "adding", "SecurityGroupIdentifier": "sg-72916c3b"}
-        )
+        self.assertDictEqual(sgs[0], {"Status": "adding", "SecurityGroupIdentifier": "sg-72916c3b"})
         self.assertDictEqual(
             sgs[1], {"Status": "removing", "SecurityGroupIdentifier": "sg-4b9ada34"}
         )
@@ -533,9 +507,7 @@ class DynamoDbAccelerator(BaseTest):
             {
                 "name": "dax-cluster",
                 "resource": "dax",
-                "filters": [
-                    {"type": "subnet", "key": "MapPublicIpOnLaunch", "value": False}
-                ],
+                "filters": [{"type": "subnet", "key": "MapPublicIpOnLaunch", "value": False}],
             },
             session_factory=session_factory,
         )

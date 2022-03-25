@@ -58,7 +58,5 @@ class TestSQSExec(BaseTest):
                     MessageAttributes=m["MessageAttributes"],
                 )
             w.gather()
-            results = [
-                json.loads(r.result()["Body"]) for r in list(as_completed(futures))
-            ]
+            results = [json.loads(r.result()["Body"]) for r in list(as_completed(futures))]
             self.assertEqual(list(sorted(results))[-1], [[9], 18])

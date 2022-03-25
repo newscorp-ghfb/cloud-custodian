@@ -214,9 +214,9 @@ class StreamingDistributionConfig(BaseDistributionConfig):
 
         for r in resources:
             try:
-                r[self.annotation_key] = client.get_streaming_distribution_config(
-                    Id=r['Id']
-                ).get('StreamingDistributionConfig')
+                r[self.annotation_key] = client.get_streaming_distribution_config(Id=r['Id']).get(
+                    'StreamingDistributionConfig'
+                )
             except (client.exceptions.NoSuchStreamingDistribution):
                 r[self.annotation_key] = {}
             except Exception as e:
@@ -287,9 +287,7 @@ class MismatchS3Origin(Filter):
                     bucket_match = self.s3_prefix.match(x['DomainName'])
                     if bucket_match:
                         target_bucket = self.s3_prefix.match(x['DomainName']).group()
-                elif 'CustomOriginConfig' in x and self.data.get(
-                    'check_custom_origins'
-                ):
+                elif 'CustomOriginConfig' in x and self.data.get('check_custom_origins'):
                     target_bucket = self.is_s3_domain(x)
 
                 if target_bucket is not None and target_bucket not in buckets:
@@ -319,9 +317,7 @@ class DistributionPostFinding(PostFinding):
                     'WebACLId': r.get('WebACLId'),
                     'LastModifiedTime': r['LastModifiedTime'],
                     'Status': r['Status'],
-                    'Logging': self.filter_empty(
-                        r['DistributionConfig'].get('Logging', {})
-                    ),
+                    'Logging': self.filter_empty(r['DistributionConfig'].get('Logging', {})),
                     'Origins': [
                         dict(
                             Id=o['Id'],
@@ -416,9 +412,7 @@ class DistributionDisableAction(BaseAction):
 
     def process_distribution(self, client, distribution):
         try:
-            res = client.get_distribution_config(
-                Id=distribution[self.manager.get_model().id]
-            )
+            res = client.get_distribution_config(Id=distribution[self.manager.get_model().id])
             res['DistributionConfig']['Enabled'] = False
             res = client.update_distribution(
                 Id=distribution[self.manager.get_model().id],
@@ -513,16 +507,12 @@ class DistributionSSLAction(BaseAction):
         'additionalProperties': False,
         'properties': {
             'type': {'enum': ['set-protocols']},
-            'OriginProtocolPolicy': {
-                'enum': ['http-only', 'match-viewer', 'https-only']
-            },
+            'OriginProtocolPolicy': {'enum': ['http-only', 'match-viewer', 'https-only']},
             'OriginSslProtocols': {
                 'type': 'array',
                 'items': {'enum': ['SSLv3', 'TLSv1', 'TLSv1.1', 'TLSv1.2']},
             },
-            'ViewerProtocolPolicy': {
-                'enum': ['allow-all', 'https-only', 'redirect-to-https']
-            },
+            'ViewerProtocolPolicy': {'enum': ['allow-all', 'https-only', 'redirect-to-https']},
         },
     }
 
@@ -540,9 +530,7 @@ class DistributionSSLAction(BaseAction):
 
     def process_distribution(self, client, distribution):
         try:
-            res = client.get_distribution_config(
-                Id=distribution[self.manager.get_model().id]
-            )
+            res = client.get_distribution_config(Id=distribution[self.manager.get_model().id])
             etag = res['ETag']
             dc = res['DistributionConfig']
 
@@ -562,9 +550,7 @@ class DistributionSSLAction(BaseAction):
                         item['CustomOriginConfig']['OriginProtocolPolicy'],
                     )
 
-                    item['CustomOriginConfig']['OriginSslProtocols'][
-                        'Items'
-                    ] = self.data.get(
+                    item['CustomOriginConfig']['OriginSslProtocols']['Items'] = self.data.get(
                         'OriginSslProtocols',
                         item['CustomOriginConfig']['OriginSslProtocols']['Items'],
                     )
@@ -588,9 +574,7 @@ class DistributionSSLAction(BaseAction):
 
 
 class BaseUpdateAction(BaseAction):
-    schema = type_schema(
-        'set-attributes', attributes={"type": "object"}, required=('attributes',)
-    )
+    schema = type_schema('set-attributes', attributes={"type": "object"}, required=('attributes',))
     schema_alias = False
 
     def validate(self, config_name, shape):
@@ -668,9 +652,7 @@ class DistributionUpdateAction(BaseUpdateAction):
 
     def process_distribution(self, client, distribution):
         try:
-            res = client.get_distribution_config(
-                Id=distribution[self.manager.get_model().id]
-            )
+            res = client.get_distribution_config(Id=distribution[self.manager.get_model().id])
             default_config = self.validation_config
             config = {**default_config, **res['DistributionConfig']}
             updatedConfig = {**config, **self.data['attributes']}

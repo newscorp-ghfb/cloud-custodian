@@ -72,9 +72,7 @@ def test_sqs_delete(test, sqs_delete):
 
 @terraform('sqs_set_encryption')
 def test_sqs_set_encryption(test, sqs_set_encryption):
-    session_factory = test.replay_flight_data(
-        "test_sqs_set_encryption", region='us-west-2'
-    )
+    session_factory = test.replay_flight_data("test_sqs_set_encryption", region='us-west-2')
 
     key_id = sqs_set_encryption["aws_kms_key.test_key.key_id"]
     queue_arn = sqs_set_encryption["aws_sqs_queue.test_sqs.arn"]
@@ -90,9 +88,7 @@ def test_sqs_set_encryption(test, sqs_set_encryption):
             "name": "sqs-set-encryption",
             "resource": "sqs",
             "filters": [{"QueueArn": queue_arn}],
-            "actions": [
-                {"type": "set-encryption", "key": alias_name.replace('alias/', '')}
-            ],
+            "actions": [{"type": "set-encryption", "key": alias_name.replace('alias/', '')}],
         },
         config={'region': 'us-west-2'},
         session_factory=session_factory,
@@ -101,18 +97,14 @@ def test_sqs_set_encryption(test, sqs_set_encryption):
 
     queue_url = resources[0]["QueueUrl"]
 
-    queue_attributes = client.get_queue_attributes(
-        QueueUrl=queue_url, AttributeNames=["All"]
-    )
+    queue_attributes = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=["All"])
     check_master_key = queue_attributes["Attributes"].get("KmsMasterKeyId", '')
     test.assertEqual(check_master_key, key_id)
 
 
 @terraform('sqs_remove_matched')
 def test_sqs_remove_matched(test, sqs_remove_matched):
-    session_factory = test.replay_flight_data(
-        "test_sqs_remove_matched", region="us-east-2"
-    )
+    session_factory = test.replay_flight_data("test_sqs_remove_matched", region="us-east-2")
     queue_arn = sqs_remove_matched['aws_sqs_queue.test_sqs.arn']
     client = session_factory().client("sqs")
 
@@ -135,9 +127,7 @@ def test_sqs_remove_matched(test, sqs_remove_matched):
     resources = p.run()
 
     queue_url = resources[0]["QueueUrl"]
-    queue_attributes = client.get_queue_attributes(
-        QueueUrl=queue_url, AttributeNames=["Policy"]
-    )
+    queue_attributes = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=["Policy"])
     data = json.loads(queue_attributes["Attributes"]["Policy"])
 
     test.assertEqual([s["Sid"] for s in data.get("Statement", ())], ["SpecificAllow"])
@@ -145,9 +135,7 @@ def test_sqs_remove_matched(test, sqs_remove_matched):
 
 def test_sqs_get_resources_augment(test):
     session_factory = test.replay_flight_data("test_sqs_get_augment")
-    p = test.load_policy(
-        {"name": "sqs", "resource": "sqs"}, session_factory=session_factory
-    )
+    p = test.load_policy({"name": "sqs", "resource": "sqs"}, session_factory=session_factory)
     resources = p.resource_manager.get_resources(
         ['https://sqs.us-east-1.amazonaws.com/644160558196/test-queue']
     )
@@ -212,9 +200,7 @@ class QueueTests(BaseTest):
                 "name": "sqs-rm-named",
                 "resource": "sqs",
                 "filters": [{"QueueUrl": queue_url}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=session_factory,
         )
@@ -239,25 +225,19 @@ class QueueTests(BaseTest):
                 "name": "sqs-rm-all",
                 "resource": "sqs",
                 "filters": [{"QueueUrl": queue_url}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["RemoveMe"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["RemoveMe"]}],
             },
             session_factory=factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("sqs")
-        d2 = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=["All"])[
-            "Attributes"
-        ]
+        d2 = client.get_queue_attributes(QueueUrl=queue_url, AttributeNames=["All"])["Attributes"]
         self.assertNotIn("Policy", d2)
 
     @functional
     def test_sqs_modify_policy_add_statements(self):
-        session_factory = self.replay_flight_data(
-            "test_sqs_modify_policy_add_statements"
-        )
+        session_factory = self.replay_flight_data("test_sqs_modify_policy_add_statements")
         client = session_factory().client("sqs")
         name = "test_sqs_modify_policy_add_statements"
         queue_url = client.create_queue(QueueName=name)["QueueUrl"]
@@ -331,9 +311,7 @@ class QueueTests(BaseTest):
 
     @functional
     def test_sqs_modify_policy_add_remove_statements(self):
-        session_factory = self.replay_flight_data(
-            "test_sqs_modify_policy_add_remove_statements"
-        )
+        session_factory = self.replay_flight_data("test_sqs_modify_policy_add_remove_statements")
         client = session_factory().client("sqs")
         name = "test_sqs_modify_policy_add_remove_statements"
         queue_url = client.create_queue(QueueName=name)["QueueUrl"]
@@ -485,9 +463,7 @@ class QueueTests(BaseTest):
         client = session_factory().client("sqs")
         name = "test-sqs-4"
         queue_url = client.create_queue(QueueName=name)["QueueUrl"]
-        client.tag_queue(
-            QueueUrl=queue_url, Tags={"remove-this-tag": "tag to be removed"}
-        )
+        client.tag_queue(QueueUrl=queue_url, Tags={"remove-this-tag": "tag to be removed"})
         self.addCleanup(client.delete_queue, QueueUrl=queue_url)
 
         if self.recording:
@@ -530,9 +506,7 @@ class QueueTests(BaseTest):
             {
                 "name": "sqs-marked-for-op",
                 "resource": "sqs",
-                "filters": [
-                    {"type": "marked-for-op", "tag": "tag-for-op", "op": "delete"}
-                ],
+                "filters": [{"type": "marked-for-op", "tag": "tag-for-op", "op": "delete"}],
             },
             session_factory=session_factory,
         )
@@ -570,9 +544,7 @@ class QueueTests(BaseTest):
 
     def test_sqs_get_resources(self):
         factory = self.replay_flight_data("test_sqs_get_resources")
-        p = self.load_policy(
-            {"name": "sqs-reduce", "resource": "sqs"}, session_factory=factory
-        )
+        p = self.load_policy({"name": "sqs-reduce", "resource": "sqs"}, session_factory=factory)
         url1 = "https://us-east-2.queue.amazonaws.com/644160558196/BrickHouse"
         url2 = "https://sqs.us-east-2.amazonaws.com/644160558196/BrickHouse"
         *_, enum_extra_args = p.resource_manager.resource_type.enum_spec
@@ -592,9 +564,7 @@ class QueueTests(BaseTest):
             },
             session_factory=session_factory,
         )
-        log_output = self.capture_logging(
-            "custodian.resources.sqs", level=logging.WARNING
-        )
+        log_output = self.capture_logging("custodian.resources.sqs", level=logging.WARNING)
 
         resources = p.run()
         assert len(resources) == 0
@@ -656,18 +626,14 @@ class QueueTests(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
             session_factory=factory,
             config={'region': 'us-west-2'},
         )
-        queues = p.resource_manager.get_resources(
-            ['test_sqs_modify_policy_add_remove_statements']
-        )
+        queues = p.resource_manager.get_resources(['test_sqs_modify_policy_add_remove_statements'])
         post_finding = p.resource_manager.actions[0]
         rfinding = post_finding.format_resource(queues[0])
 
@@ -697,9 +663,7 @@ class QueueTests(BaseTest):
                 'name': 'check-sqs',
                 'resource': 'aws.sqs',
                 'filters': [
-                    {
-                        'QueueUrl': 'https://queue.amazonaws.com/644160558196/public-test'
-                    },
+                    {'QueueUrl': 'https://queue.amazonaws.com/644160558196/public-test'},
                     {
                         'type': 'iam-analyzer',
                         'key': 'analyzedAt',
@@ -722,9 +686,7 @@ class QueueTests(BaseTest):
                 'name': 'check-sqs',
                 'resource': 'aws.sqs',
                 'filters': [
-                    {
-                        'QueueUrl': 'https://queue.amazonaws.com/644160558196/public-test'
-                    },
+                    {'QueueUrl': 'https://queue.amazonaws.com/644160558196/public-test'},
                     {'type': 'iam-analyzer'},
                 ],
             },

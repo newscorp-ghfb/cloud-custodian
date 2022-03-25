@@ -262,15 +262,11 @@ class SetSslListenerPolicy(BaseAction):
         # to make it unique within the
         # set of policies for this load balancer.
         policy_name = (
-            self.data.get('name')
-            + '-'
-            + str(int(datetime.now(tz=tzutc()).strftime("%s")) * 1000)
+            self.data.get('name') + '-' + str(int(datetime.now(tz=tzutc()).strftime("%s")) * 1000)
         )
         lb_name = elb['LoadBalancerName']
         attrs = self.data.get('attributes')
-        policy_attributes = [
-            {'AttributeName': attr, 'AttributeValue': 'true'} for attr in attrs
-        ]
+        policy_attributes = [{'AttributeName': attr, 'AttributeValue': 'true'} for attr in attrs]
 
         try:
             client.create_load_balancer_policy(
@@ -461,9 +457,7 @@ class Instance(ValueFilter):
         instances = []
         for r in resources:
             instances.extend([i['InstanceId'] for i in r['Instances']])
-        for i in self.manager.get_resource_manager('ec2').get_resources(
-            list(instances)
-        ):
+        for i in self.manager.get_resource_manager('ec2').get_resources(list(instances)):
             self.elb_instances[i['InstanceId']] = i
         return super(Instance, self).process(resources, event)
 
@@ -560,30 +554,23 @@ class SSLPolicyFilter(Filter):
             )
         if 'whitelist' not in self.data and 'blacklist' not in self.data:
             raise PolicyValidationError(
-                "must specify either policy blacklist or whitelist on %s"
-                % (self.manager.data,)
+                "must specify either policy blacklist or whitelist on %s" % (self.manager.data,)
             )
         if 'blacklist' in self.data and not isinstance(self.data['blacklist'], list):
-            raise PolicyValidationError(
-                "blacklist must be a list on %s" % (self.manager.data,)
-            )
+            raise PolicyValidationError("blacklist must be a list on %s" % (self.manager.data,))
 
         if 'matching' in self.data:
             # Sanity check that we can compile
             try:
                 re.compile(self.data['matching'])
             except re.error as e:
-                raise PolicyValidationError(
-                    "Invalid regex: %s %s" % (e, self.manager.data)
-                )
+                raise PolicyValidationError("Invalid regex: %s %s" % (e, self.manager.data))
 
         return self
 
     def process(self, balancers, event=None):
         balancers = [b for b in balancers if is_ssl(b)]
-        active_policy_attribute_tuples = self.create_elb_active_policy_attribute_tuples(
-            balancers
-        )
+        active_policy_attribute_tuples = self.create_elb_active_policy_attribute_tuples(balancers)
 
         whitelist = set(self.data.get('whitelist', []))
         blacklist = set(self.data.get('blacklist', []))
@@ -606,16 +593,12 @@ class SSLPolicyFilter(Filter):
         if blacklist:
             for elb, active_policies in active_policy_attribute_tuples:
                 if len(blacklist.intersection(active_policies)) > 0:
-                    elb["ProhibitedPolicies"] = list(
-                        blacklist.intersection(active_policies)
-                    )
+                    elb["ProhibitedPolicies"] = list(blacklist.intersection(active_policies))
                     invalid_elbs.append(elb)
         elif whitelist:
             for elb, active_policies in active_policy_attribute_tuples:
                 if len(set(active_policies).difference(whitelist)) > 0:
-                    elb["ProhibitedPolicies"] = list(
-                        set(active_policies).difference(whitelist)
-                    )
+                    elb["ProhibitedPolicies"] = list(set(active_policies).difference(whitelist))
                     invalid_elbs.append(elb)
         return invalid_elbs
 
@@ -659,15 +642,11 @@ class SSLPolicyFilter(Filter):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for elb_policy_set in chunks(elb_policy_tuples, 50):
-                futures.append(
-                    w.submit(self.process_elb_policy_set, client, elb_policy_set)
-                )
+                futures.append(w.submit(self.process_elb_policy_set, client, elb_policy_set))
 
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception processing elb policies \n %s" % (f.exception())
-                    )
+                    self.log.error("Exception processing elb policies \n %s" % (f.exception()))
                     continue
                 for elb_policies in f.result():
                     active_policy_attribute_tuples.append(elb_policies)
@@ -740,10 +719,7 @@ class HealthCheckProtocolMismatch(Filter):
         # check. There is only 1 health check, so if there are
         # multiple listeners, we only check if at least one of them
         # matches
-        protocols = [
-            listener['Listener']['InstanceProtocol']
-            for listener in listener_descriptions
-        ]
+        protocols = [listener['Listener']['InstanceProtocol'] for listener in listener_descriptions]
         return health_check_protocol in protocols
 
 
@@ -809,9 +785,7 @@ class IsLoggingFilter(Filter, ELBAttributeFilterBase):
     """
 
     permissions = ("elasticloadbalancing:DescribeLoadBalancerAttributes",)
-    schema = type_schema(
-        'is-logging', bucket={'type': 'string'}, prefix={'type': 'string'}
-    )
+    schema = type_schema('is-logging', bucket={'type': 'string'}, prefix={'type': 'string'})
 
     def process(self, resources, event=None):
         self.initialize(resources)
@@ -824,13 +798,11 @@ class IsLoggingFilter(Filter, ELBAttributeFilterBase):
             if elb['Attributes']['AccessLog']['Enabled']
             and (
                 not bucket_name
-                or bucket_name
-                == elb['Attributes']['AccessLog'].get('S3BucketName', None)
+                or bucket_name == elb['Attributes']['AccessLog'].get('S3BucketName', None)
             )
             and (
                 not bucket_prefix
-                or bucket_prefix
-                == elb['Attributes']['AccessLog'].get('S3BucketPrefix', None)
+                or bucket_prefix == elb['Attributes']['AccessLog'].get('S3BucketPrefix', None)
             )
         ]
 
@@ -860,9 +832,7 @@ class IsNotLoggingFilter(Filter, ELBAttributeFilterBase):
     """
 
     permissions = ("elasticloadbalancing:DescribeLoadBalancerAttributes",)
-    schema = type_schema(
-        'is-not-logging', bucket={'type': 'string'}, prefix={'type': 'string'}
-    )
+    schema = type_schema('is-not-logging', bucket={'type': 'string'}, prefix={'type': 'string'})
 
     def process(self, resources, event=None):
         self.initialize(resources)
@@ -875,13 +845,11 @@ class IsNotLoggingFilter(Filter, ELBAttributeFilterBase):
             if not elb['Attributes']['AccessLog']['Enabled']
             or (
                 bucket_name
-                and bucket_name
-                != elb['Attributes']['AccessLog'].get('S3BucketName', None)
+                and bucket_name != elb['Attributes']['AccessLog'].get('S3BucketName', None)
             )
             or (
                 bucket_prefix
-                and bucket_prefix
-                != elb['Attributes']['AccessLog'].get('S3BucketPrefix', None)
+                and bucket_prefix != elb['Attributes']['AccessLog'].get('S3BucketPrefix', None)
             )
         ]
 

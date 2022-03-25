@@ -20,9 +20,7 @@ class BatchTest(BaseTest):
             {
                 'name': 'test-azure-batch',
                 'resource': 'azure.batch',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cctest*'}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'glob', 'value': 'cctest*'}],
             }
         )
         resources = p.run()

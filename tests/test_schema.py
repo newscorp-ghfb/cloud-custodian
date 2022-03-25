@@ -32,9 +32,7 @@ class StructureParserTest(BaseTest):
         p = StructureParser()
         with self.assertRaises(PolicyValidationError) as ecm:
             p.validate([])
-        self.assertTrue(
-            str(ecm.exception).startswith('Policy file top level data structure')
-        )
+        self.assertTrue(str(ecm.exception).startswith('Policy file top level data structure'))
 
     def test_policies_missing(self):
         p = StructureParser()
@@ -46,9 +44,7 @@ class StructureParserTest(BaseTest):
         p = StructureParser()
         with self.assertRaises(PolicyValidationError) as ecm:
             p.validate({'policies': {}})
-        self.assertTrue(
-            str(ecm.exception).startswith("`policies` key should be an array/list")
-        )
+        self.assertTrue(str(ecm.exception).startswith("`policies` key should be an array/list"))
 
     def test_policy_missing_required(self):
         p = StructureParser()
@@ -59,52 +55,34 @@ class StructureParserTest(BaseTest):
     def test_policy_extra_key(self):
         p = StructureParser()
         with self.assertRaises(PolicyValidationError) as ecm:
-            p.validate(
-                {'policies': [{'name': 'foo', 'extra': 1, 'resource': 'aws.ec2'}]}
-            )
+            p.validate({'policies': [{'name': 'foo', 'extra': 1, 'resource': 'aws.ec2'}]})
         self.assertEqual(str(ecm.exception), "policy:foo has unknown keys: extra")
 
     def test_invalid_action(self):
         p = StructureParser()
         with self.assertRaises(PolicyValidationError) as ecm:
-            p.validate(
-                {'policies': [{'name': 'foo', 'resource': 'ec2', 'actions': {}}]}
-            )
+            p.validate({'policies': [{'name': 'foo', 'resource': 'ec2', 'actions': {}}]})
         self.assertTrue(
-            str(ecm.exception).startswith(
-                'policy:foo must use a list for actions found:dict'
-            )
+            str(ecm.exception).startswith('policy:foo must use a list for actions found:dict')
         )
 
         with self.assertRaises(PolicyValidationError) as ecm:
-            p.validate(
-                {'policies': [{'name': 'foo', 'resource': 'ec2', 'actions': [[]]}]}
-            )
+            p.validate({'policies': [{'name': 'foo', 'resource': 'ec2', 'actions': [[]]}]})
         self.assertTrue(
-            str(ecm.exception).startswith(
-                'policy:foo action must be a mapping/dict found:list'
-            )
+            str(ecm.exception).startswith('policy:foo action must be a mapping/dict found:list')
         )
 
     def test_invalid_filter(self):
         p = StructureParser()
         with self.assertRaises(PolicyValidationError) as ecm:
-            p.validate(
-                {'policies': [{'name': 'foo', 'resource': 'ec2', 'filters': {}}]}
-            )
+            p.validate({'policies': [{'name': 'foo', 'resource': 'ec2', 'filters': {}}]})
         self.assertTrue(
-            str(ecm.exception).startswith(
-                'policy:foo must use a list for filters found:dict'
-            )
+            str(ecm.exception).startswith('policy:foo must use a list for filters found:dict')
         )
         with self.assertRaises(PolicyValidationError) as ecm:
-            p.validate(
-                {'policies': [{'name': 'foo', 'resource': 'ec2', 'filters': [[]]}]}
-            )
+            p.validate({'policies': [{'name': 'foo', 'resource': 'ec2', 'filters': [[]]}]})
         self.assertTrue(
-            str(ecm.exception).startswith(
-                'policy:foo filter must be a mapping/dict found:list'
-            )
+            str(ecm.exception).startswith('policy:foo filter must be a mapping/dict found:list')
         )
 
     def test_policy_not_mapping(self):
@@ -112,17 +90,13 @@ class StructureParserTest(BaseTest):
         with self.assertRaises(PolicyValidationError) as ecm:
             p.validate({'policies': [[]]})
         self.assertTrue(
-            str(ecm.exception).startswith(
-                'policy must be a dictionary/mapping found:list'
-            )
+            str(ecm.exception).startswith('policy must be a dictionary/mapping found:list')
         )
 
     def test_get_resource_types(self):
         p = StructureParser()
         self.assertEqual(
-            p.get_resource_types(
-                {'policies': [{'resource': 'ec2'}, {'resource': 'gcp.instance'}]}
-            ),
+            p.get_resource_types({'policies': [{'resource': 'ec2'}, {'resource': 'gcp.instance'}]}),
             {'aws.ec2', 'gcp.instance'},
         )
 
@@ -154,9 +128,7 @@ class SchemaTest(BaseTest):
         empty_registry = PluginRegistry('stuff')
         self.patch(schema, 'clouds', empty_registry)
         policy_schema = generate()
-        self.assertEqual(
-            policy_schema['properties']['policies']['items'], {'type': 'object'}
-        )
+        self.assertEqual(policy_schema['properties']['policies']['items'], {'type': 'object'})
 
     def test_duplicate_policies(self):
         data = {
@@ -186,9 +158,7 @@ class SchemaTest(BaseTest):
         result = self.policy_loader.validator.validate(data)
         self.assertEqual(len(result), 2)
         err, policy = result
-        self.assertTrue(
-            "'asdf' is not of type 'boolean'" in str(err).replace("u'", "'")
-        )
+        self.assertTrue("'asdf' is not of type 'boolean'" in str(err).replace("u'", "'"))
         self.assertEqual(policy, 'policy-ec2')
 
     def test_semantic_error_common_filter_provider_prefixed(self):
@@ -215,9 +185,7 @@ class SchemaTest(BaseTest):
         errors = list(validator.iter_errors(data))
         self.assertEqual(len(errors), 1)
         error = specific_error(errors[0])
-        self.assertIn(
-            "[{'StorageType': 'StandardStorage'}] is not of type 'object'", str(error)
-        )
+        self.assertIn("[{'StorageType': 'StandardStorage'}] is not of type 'object'", str(error))
 
     def test_semantic_mode_error(self):
         data = {
@@ -233,9 +201,7 @@ class SchemaTest(BaseTest):
         errors = list(validator.iter_errors(data))
         self.assertEqual(len(errors), 1)
         error = specific_error(errors[0])
-        self.assertTrue(
-            len(errors[0].absolute_schema_path) < len(error.absolute_schema_path)
-        )
+        self.assertTrue(len(errors[0].absolute_schema_path) < len(error.absolute_schema_path))
         self.assertTrue("'scheduled' was unexpected" in str(error))
         self.assertTrue(len(str(error)) < 2000)
 
@@ -279,14 +245,10 @@ class SchemaTest(BaseTest):
         errors = list(validator.iter_errors(data))
         self.assertEqual(len(errors), 1)
         error = specific_error(errors[0])
-        self.assertTrue(
-            len(errors[0].absolute_schema_path) < len(error.absolute_schema_path)
-        )
+        self.assertTrue(len(errors[0].absolute_schema_path) < len(error.absolute_schema_path))
 
         self.assertTrue("'skipped_devices': []" in error.message)
-        self.assertTrue(
-            "u'type': u'ebs'" in error.message or "'type': 'ebs'" in error.message
-        )
+        self.assertTrue("u'type': u'ebs'" in error.message or "'type': 'ebs'" in error.message)
 
     @mock.patch("c7n.schema.specific_error")
     def test_handle_specific_error_fail(self, mock_specific_error):
@@ -301,9 +263,7 @@ class SchemaTest(BaseTest):
                 }
             ]
         }
-        mock_specific_error.side_effect = ValueError(
-            "The specific error crapped out hard"
-        )
+        mock_specific_error.side_effect = ValueError("The specific error crapped out hard")
         load_resources(('aws.ec2',))
         resp = validate(data)
         # if it is 2, then we know we got the exception from specific_error
@@ -377,16 +337,12 @@ class SchemaTest(BaseTest):
         errors = list(validator.iter_errors(data))
         self.assertEqual(len(errors), 1)
         error = specific_error(errors[0])
-        self.assertTrue(
-            len(errors[0].absolute_schema_path) < len(error.absolute_schema_path)
-        )
+        self.assertTrue(len(errors[0].absolute_schema_path) < len(error.absolute_schema_path))
         self.assertTrue("Additional properties are not allowed " in error.message)
         self.assertTrue("'skipped_devices' was unexpected" in error.message)
 
     def test_invalid_resource_type(self):
-        data = {
-            "policies": [{"name": "instance-policy", "resource": "ec3", "filters": []}]
-        }
+        data = {"policies": [{"name": "instance-policy", "resource": "ec3", "filters": []}]}
         self.assertRaises(PolicyValidationError, self.get_validator, data)
 
     def xtest_value_filter_short_form_invalid(self):
@@ -440,9 +396,7 @@ class SchemaTest(BaseTest):
                 {
                     'name': 'test',
                     'resource': 'ec2',
-                    'filters': [
-                        {'or': [{'type': 'imagex', 'key': 'tag:Foo', 'value': 'a'}]}
-                    ],
+                    'filters': [{'or': [{'type': 'imagex', 'key': 'tag:Foo', 'value': 'a'}]}],
                 }
             ]
         }
@@ -584,12 +538,8 @@ class SchemaTest(BaseTest):
         vocab = resource_vocabulary()
         self.assertEqual(ElementSchema.resolve(vocab, 'mode.periodic').type, 'periodic')
         self.assertEqual(ElementSchema.resolve(vocab, 'aws.ec2').type, 'ec2')
-        self.assertEqual(
-            ElementSchema.resolve(vocab, 'aws.ec2.actions.stop').type, 'stop'
-        )
-        self.assertRaises(
-            ValueError, ElementSchema.resolve, vocab, 'aws.ec2.actions.foo'
-        )
+        self.assertEqual(ElementSchema.resolve(vocab, 'aws.ec2.actions.stop').type, 'stop')
+        self.assertRaises(ValueError, ElementSchema.resolve, vocab, 'aws.ec2.actions.foo')
 
     def test_element_doc(self):
         class A:

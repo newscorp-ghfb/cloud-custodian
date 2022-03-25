@@ -60,9 +60,7 @@ class HealthEventFilter(Filter):
                 rid = e['entityValue']
                 if rid not in resource_map:
                     continue
-                resource_map[rid].setdefault('c7n:HealthEvent', []).append(
-                    event_map[e['eventArn']]
-                )
+                resource_map[rid].setdefault('c7n:HealthEvent', []).append(event_map[e['eventArn']])
                 found.add(rid)
             seen.update(event_map.keys())
         return [resource_map[resource_id] for resource_id in found]
@@ -76,9 +74,7 @@ class HealthEventFilter(Filter):
             'emr': 'ELASTICMAPREDUCE',
         }
         m = self.manager
-        service = phd_svc_name_map.get(
-            m.data['resource'], m.get_model().service.upper()
-        )
+        service = phd_svc_name_map.get(m.data['resource'], m.get_model().service.upper())
         f = {
             'services': [service],
             'regions': [self.manager.config.region, 'global'],
@@ -93,9 +89,7 @@ class HealthEventFilter(Filter):
         for event_set in chunks(health_events, 10):
             event_map = {e['arn']: e for e in event_set}
             event_arns = list(event_map.keys())
-            for d in client.describe_event_details(eventArns=event_arns).get(
-                'successfulSet', ()
-            ):
+            for d in client.describe_event_details(eventArns=event_arns).get('successfulSet', ()):
                 event_map[d['event']['arn']]['Description'] = d['eventDescription'][
                     'latestDescription'
                 ]
@@ -105,9 +99,7 @@ class HealthEventFilter(Filter):
                     itertools.chain(
                         *[
                             p['entities']
-                            for p in paginator.paginate(
-                                filter={'eventArns': event_arns}
-                            )
+                            for p in paginator.paginate(filter={'eventArns': event_arns})
                         ]
                     )
                 )

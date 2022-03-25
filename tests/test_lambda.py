@@ -72,9 +72,7 @@ class LambdaPermissionTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         policy = json.loads(client.get_policy(FunctionName=name).get("Policy"))
-        self.assertEqual(
-            [s["Sid"] for s in policy.get("Statement", ())], ["SharedInvoke"]
-        )
+        self.assertEqual([s["Sid"] for s in policy.get("Statement", ())], ["SharedInvoke"])
 
     @functional
     def test_lambda_permission_named(self):
@@ -95,9 +93,7 @@ class LambdaPermissionTest(BaseTest):
                 "name": "lambda-perms",
                 "resource": "lambda",
                 "filters": [{"FunctionName": name}],
-                "actions": [
-                    {"type": "remove-statements", "statement_ids": ["PublicInvoke"]}
-                ],
+                "actions": [{"type": "remove-statements", "statement_ids": ["PublicInvoke"]}],
             },
             session_factory=factory,
         )
@@ -143,9 +139,7 @@ class LambdaLayerTest(BaseTest):
         resources = p.run()
         client = factory().client('lambda')
         with self.assertRaises(client.exceptions.ResourceNotFoundException):
-            client.get_layer_version(
-                LayerName='test', VersionNumber=resources[0]['Version']
-            )
+            client.get_layer_version(LayerName='test', VersionNumber=resources[0]['Version'])
 
 
 class LambdaTest(BaseTest):
@@ -163,9 +157,9 @@ class LambdaTest(BaseTest):
         p.resource_manager.actions[0].process([{'FunctionName': 'custodian-ec2-check'}])
         versions = {
             v['Version']: v
-            for v in client.list_versions_by_function(
-                FunctionName='custodian-ec2-check'
-            ).get('Versions')
+            for v in client.list_versions_by_function(FunctionName='custodian-ec2-check').get(
+                'Versions'
+            )
         }
         aliases = client.list_aliases(FunctionName='custodian-ec2-check').get('Aliases')
         assert len(aliases) == 1
@@ -218,9 +212,7 @@ class LambdaTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['FunctionName'], 'omnissm-handle-registrations')
-        self.assertEqual(
-            resources[0]["Tags"], [{"Key": "lambda:createdBy", "Value": "SAM"}]
-        )
+        self.assertEqual(resources[0]["Tags"], [{"Key": "lambda:createdBy", "Value": "SAM"}])
         self.assertTrue("c7n:Policy" in resources[0])
 
     def test_post_finding(self):
@@ -232,9 +224,7 @@ class LambdaTest(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -386,9 +376,7 @@ class LambdaTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 2)
-        self.assertEqual(
-            {r["c7n:EventSources"][0] for r in resources}, {"iot.amazonaws.com"}
-        )
+        self.assertEqual({r["c7n:EventSources"][0] for r in resources}, {"iot.amazonaws.com"})
 
     def test_sg_filter(self):
         factory = self.replay_flight_data("test_aws_lambda_sg")
@@ -488,9 +476,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #    - removing a third SG, "sg_controllers" (sg-c573e6b3)
         #    - start with 3 SGs, end with 2, match function by regex
 
-        session_factory = self.replay_flight_data(
-            "test_lambda_remove_matched_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_lambda_remove_matched_security_groups")
 
         p = self.load_policy(
             {
@@ -531,9 +517,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         self.assertEqual(len(resources[0]["VpcConfig"]["SecurityGroupIds"]), 3)
         # check result is expected
         self.assertEqual(len(clean_resources[0]["VpcConfig"]["SecurityGroupIds"]), 2)
-        self.assertNotIn(
-            "sg-c573e6b3", clean_resources[0]["VpcConfig"]["SecurityGroupIds"]
-        )
+        self.assertNotIn("sg-c573e6b3", clean_resources[0]["VpcConfig"]["SecurityGroupIds"])
         # verify by name that the removed SG is not there
 
     def test_lambda_add_security_group(self):
@@ -575,9 +559,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         self.assertNotIn("sg-c573e6b3", resources[0]["VpcConfig"]["SecurityGroupIds"])
         # check SG was added
         self.assertEqual(len(clean_resources[0]["VpcConfig"]["SecurityGroupIds"]), 3)
-        self.assertIn(
-            "sg-c573e6b3", clean_resources[0]["VpcConfig"]["SecurityGroupIds"]
-        )
+        self.assertIn("sg-c573e6b3", clean_resources[0]["VpcConfig"]["SecurityGroupIds"])
 
     def test_nonvpc_function(self):
 
@@ -613,9 +595,7 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
             updatefunc.side_effect = ClientError(error_response, operation_name)
             with self.assertRaises(ClientError):
                 groups = ['sg-12121212', 'sg-34343434']
-                updatefunc(
-                    FunctionName='badname', VpcConfig={'SecurityGroupIds': groups}
-                )
+                updatefunc(FunctionName='badname', VpcConfig={'SecurityGroupIds': groups})
                 updatefunc.assert_called_once()
 
     def test_lambda_kms_alias(self):

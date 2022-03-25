@@ -89,9 +89,7 @@ def report(policies, start_date, options, output_fh, raw_output_fh=None):
         else:
             policy_records = fs_record_set(policy.ctx.log_dir, policy.name)
 
-        log.debug(
-            "Found %d records for region %s", len(policy_records), policy.options.region
-        )
+        log.debug("Found %d records for region %s", len(policy_records), policy.options.region)
 
         for record in policy_records:
             record['policy'] = policy.name
@@ -214,9 +212,7 @@ class Formatter:
             return []
 
         # Sort before unique to get the first/latest record
-        date_sort = (
-            'CustodianDate' in records[0] and 'CustodianDate' or self._date_field
-        )
+        date_sort = 'CustodianDate' in records[0] and 'CustodianDate' or self._date_field
         if date_sort:
             records.sort(key=lambda r: r[date_sort], reverse=reverse)
 
@@ -273,13 +269,9 @@ def record_set(session_factory, bucket, key_prefix, start_date, specify_hour=Fal
         for key_set in p:
             if 'Contents' not in key_set:
                 continue
-            keys = [
-                k for k in key_set['Contents'] if k['Key'].endswith('resources.json.gz')
-            ]
+            keys = [k for k in key_set['Contents'] if k['Key'].endswith('resources.json.gz')]
             key_count += len(keys)
-            futures = map(
-                lambda k: w.submit(get_records, bucket, k, session_factory), keys
-            )
+            futures = map(lambda k: w.submit(get_records, bucket, k, session_factory), keys)
 
             for f in as_completed(futures):
                 records.extend(f.result())

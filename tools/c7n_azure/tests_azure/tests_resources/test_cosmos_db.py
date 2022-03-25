@@ -27,9 +27,7 @@ def get_ext_ip():
 
 def get_portal_ips():
     # https://docs.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall?WT.mc_id=Portal-Microsoft_Azure_DocumentDB#connections-from-the-azure-portal
-    return set(
-        '104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26'.split(',')
-    )
+    return set('104.42.195.92,40.76.54.131,52.176.6.30,52.169.50.45,52.187.184.26'.split(','))
 
 
 def get_azuredc_ip():
@@ -234,9 +232,7 @@ class CosmosDBTest(BaseTest):
             {
                 'name': 'test-azure-cosmosdb',
                 'resource': 'azure.cosmosdb',
-                'filters': [
-                    {'type': 'firewall-rules', 'include': [get_ext_ip() + '/32']}
-                ],
+                'filters': [{'type': 'firewall-rules', 'include': [get_ext_ip() + '/32']}],
             },
             validate=True,
         )
@@ -264,9 +260,7 @@ class CosmosDBTest(BaseTest):
             {
                 'name': 'test-azure-cosmosdb',
                 'resource': 'azure.cosmosdb',
-                'filters': [
-                    {'type': 'firewall-bypass', 'mode': 'equal', 'list': ['Portal']}
-                ],
+                'filters': [{'type': 'firewall-bypass', 'mode': 'equal', 'list': ['Portal']}],
             }
         )
         resources = p.run()
@@ -299,9 +293,7 @@ class CosmosDBTest(BaseTest):
             {
                 'name': 'test-azure-cosmosdb',
                 'resource': 'azure.cosmosdb-collection',
-                'filters': [
-                    {'type': 'value', 'key': 'id', 'op': 'eq', 'value': 'cccontainer'}
-                ],
+                'filters': [{'type': 'value', 'key': 'id', 'op': 'eq', 'value': 'cccontainer'}],
                 'actions': [
                     {
                         'type': 'save-throughput-state',
@@ -319,18 +311,14 @@ class CosmosDBTest(BaseTest):
         # The tag can take longer than 60 seconds to commit
         self.sleep_in_live_mode(120)
 
-        client = local_session(Session).client(
-            'azure.mgmt.cosmosdb.CosmosDBManagementClient'
-        )
+        client = local_session(Session).client('azure.mgmt.cosmosdb.CosmosDBManagementClient')
         cosmos_account = client.database_accounts.get('test_cosmosdb', account_name)
         self.assertTrue('test-store-throughput' in cosmos_account.tags)
 
         tag_value = cosmos_account.tags['test-store-throughput']
         expected_throughput = collections[0]['c7n:offer']['content']['offerThroughput']
         expected_scaled_throughput = int(expected_throughput / THROUGHPUT_MULTIPLIER)
-        expected_tag_value = '{}:{}'.format(
-            collections[0]['_rid'], expected_scaled_throughput
-        )
+        expected_tag_value = '{}:{}'.format(collections[0]['_rid'], expected_scaled_throughput)
         self.assertEqual(expected_tag_value, tag_value)
 
 
@@ -695,21 +683,14 @@ class CosmosDBFirewallActionTest(BaseTest):
         self.assertEqual(expected, actual)
         self.assertEqual(
             {'id1', 'id2'},
-            {
-                r.id
-                for r in kwargs['create_update_parameters']['properties'][
-                    'virtualNetworkRules'
-                ]
-            },
+            {r.id for r in kwargs['create_update_parameters']['properties']['virtualNetworkRules']},
         )
 
 
 class CosmosDBThroughputActionsTest(BaseTest):
     def setUp(self, *args, **kwargs):
         super(CosmosDBThroughputActionsTest, self).setUp(*args, **kwargs)
-        self.client = local_session(Session).client(
-            'azure.mgmt.cosmosdb.CosmosDBManagementClient'
-        )
+        self.client = local_session(Session).client('azure.mgmt.cosmosdb.CosmosDBManagementClient')
         sub_id = local_session(Session).get_subscription_id()[-12:]
         account_name = "cctestcosmosdb%s" % sub_id
         key = CosmosDBChildResource.get_cosmos_key(
@@ -758,9 +739,7 @@ class CosmosDBThroughputActionsTest(BaseTest):
             {
                 'name': 'test-azure-cosmosdb',
                 'resource': 'azure.cosmosdb-collection',
-                'filters': [
-                    {'type': 'value', 'key': 'id', 'op': 'eq', 'value': 'cccontainer'}
-                ],
+                'filters': [{'type': 'value', 'key': 'id', 'op': 'eq', 'value': 'cccontainer'}],
                 'actions': [
                     {
                         'type': 'save-throughput-state',
@@ -782,9 +761,7 @@ class CosmosDBThroughputActionsTest(BaseTest):
 
         self.data_client.ReplaceOffer(collection_offer['_self'], collection_offer)
 
-        self._assert_offer_throughput_equals(
-            throughput_to_restore + 100, collections[0]['_self']
-        )
+        self._assert_offer_throughput_equals(throughput_to_restore + 100, collections[0]['_self'])
 
         p2 = self.load_policy(
             {
@@ -805,9 +782,7 @@ class CosmosDBThroughputActionsTest(BaseTest):
         collections = p2.run()
 
         self.assertEqual(len(collections), 1)
-        self._assert_offer_throughput_equals(
-            throughput_to_restore, collections[0]['_self']
-        )
+        self._assert_offer_throughput_equals(throughput_to_restore, collections[0]['_self'])
 
     def _assert_offer_throughput_equals(self, throughput, resource_self):
         self.sleep_in_live_mode()

@@ -77,9 +77,7 @@ class RDSParamGroupTest(BaseTest):
         # Ensure it exists
         ret = client.describe_db_parameter_groups(DBParameterGroupName=copy_name)
         self.assertEqual(len(ret["DBParameterGroups"]), 1)
-        self.addCleanup(
-            client.delete_db_parameter_group, DBParameterGroupName=copy_name
-        )
+        self.addCleanup(client.delete_db_parameter_group, DBParameterGroupName=copy_name)
 
     @functional
     def test_rdsparamgroup_modify(self):
@@ -148,9 +146,7 @@ class RDSClusterParamGroupTest(BaseTest):
         )
 
         # Ensure it exists
-        ret = client.describe_db_cluster_parameter_groups(
-            DBClusterParameterGroupName=name
-        )
+        ret = client.describe_db_cluster_parameter_groups(DBClusterParameterGroupName=name)
         self.assertEqual(len(ret["DBClusterParameterGroups"]), 1)
 
         # Delete it via custodian
@@ -168,9 +164,7 @@ class RDSClusterParamGroupTest(BaseTest):
 
         # Verify it is gone
         try:
-            client.describe_db_cluster_parameter_groups(
-                DBClusterParameterGroupName=name
-            )
+            client.describe_db_cluster_parameter_groups(DBClusterParameterGroupName=name)
         except ClientError:
             pass
         else:
@@ -194,9 +188,7 @@ class RDSClusterParamGroupTest(BaseTest):
             DBParameterGroupFamily="aurora5.6",
             Description="test",
         )
-        self.addCleanup(
-            client.delete_db_cluster_parameter_group, DBClusterParameterGroupName=name
-        )
+        self.addCleanup(client.delete_db_cluster_parameter_group, DBClusterParameterGroupName=name)
 
         # Copy it via custodian
         p = self.load_policy(
@@ -212,9 +204,7 @@ class RDSClusterParamGroupTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
         # Ensure it exists
-        ret = client.describe_db_cluster_parameter_groups(
-            DBClusterParameterGroupName=copy_name
-        )
+        ret = client.describe_db_cluster_parameter_groups(DBClusterParameterGroupName=copy_name)
         self.assertEqual(len(ret["DBClusterParameterGroups"]), 1)
         self.addCleanup(
             client.delete_db_cluster_parameter_group,
@@ -234,9 +224,7 @@ class RDSClusterParamGroupTest(BaseTest):
             DBParameterGroupFamily="aurora5.6",
             Description="test",
         )
-        self.addCleanup(
-            client.delete_db_cluster_parameter_group, DBClusterParameterGroupName=name
-        )
+        self.addCleanup(client.delete_db_cluster_parameter_group, DBClusterParameterGroupName=name)
 
         # Modify it via custodian
         p = self.load_policy(

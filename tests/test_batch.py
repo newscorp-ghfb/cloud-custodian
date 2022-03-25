@@ -60,7 +60,5 @@ class TestBatchDefinition(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['jobDefinitionName'], 'c7n_batch')
         client = session_factory(region='us-east-1').client('batch')
-        defs = client.describe_job_definitions(jobDefinitionName=def_name)[
-            'jobDefinitions'
-        ]
+        defs = client.describe_job_definitions(jobDefinitionName=def_name)['jobDefinitions']
         self.assertEqual(defs[0]['status'], 'INACTIVE')

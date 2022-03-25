@@ -190,28 +190,16 @@ def get_and_validate_mailer_config(args):
 def get_c7n_mailer_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', required=True, help='mailer.yml config file')
-    debug_help_msg = (
-        'sets c7n_mailer logger to debug, for maximum output (the default is INFO)'
-    )
+    debug_help_msg = 'sets c7n_mailer logger to debug, for maximum output (the default is INFO)'
     parser.add_argument('--debug', action='store_true', help=debug_help_msg)
-    max_num_processes_help_msg = (
-        'will run the mailer in parallel, integer of max processes allowed'
-    )
-    parser.add_argument(
-        '--max-num-processes', type=int, help=max_num_processes_help_msg
-    )
+    max_num_processes_help_msg = 'will run the mailer in parallel, integer of max processes allowed'
+    parser.add_argument('--max-num-processes', type=int, help=max_num_processes_help_msg)
     templates_folder_help_msg = 'message templates folder location'
     parser.add_argument('-t', '--templates', help=templates_folder_help_msg)
     group = parser.add_mutually_exclusive_group(required=True)
-    update_lambda_help_msg = (
-        'packages your c7n_mailer, uploads the zip to aws lambda as a function'
-    )
-    group.add_argument(
-        '--update-lambda', action='store_true', help=update_lambda_help_msg
-    )
-    run_help_msg = (
-        'run c7n-mailer locally, process sqs messages and send emails or sns messages'
-    )
+    update_lambda_help_msg = 'packages your c7n_mailer, uploads the zip to aws lambda as a function'
+    group.add_argument('--update-lambda', action='store_true', help=update_lambda_help_msg)
+    run_help_msg = 'run c7n-mailer locally, process sqs messages and send emails or sns messages'
     group.add_argument('--run', action='store_true', help=run_help_msg)
     return parser
 
@@ -239,9 +227,7 @@ def main():
     ]
     templates = args_dict.get('templates', None)
     if templates:
-        default_templates.append(
-            path.abspath(path.expanduser(path.expandvars(templates)))
-        )
+        default_templates.append(path.abspath(path.expanduser(path.expandvars(templates))))
 
     mailer_config['templates_folders'] = default_templates
 
@@ -252,17 +238,14 @@ def main():
             return
         if args_dict.get('max_num_processes'):
             print(
-                '\n** --max-num-processes is only supported '
-                'with --run, not --update-lambda **\n'
+                '\n** --max-num-processes is only supported ' 'with --run, not --update-lambda **\n'
             )
             return
 
         if provider == Providers.Azure:
             azure_deploy.provision(mailer_config)
         elif provider == Providers.AWS:
-            deploy.provision(
-                mailer_config, functools.partial(session_factory, mailer_config)
-            )
+            deploy.provision(mailer_config, functools.partial(session_factory, mailer_config))
 
     if args_dict.get('run'):
         max_num_processes = args_dict.get('max_num_processes')

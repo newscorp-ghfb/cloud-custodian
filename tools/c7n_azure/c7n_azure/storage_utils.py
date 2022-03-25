@@ -24,9 +24,7 @@ class OldBlobServiceClient(BlobServiceClient):
             download_stream = client.download_blob()
             f.write(download_stream.readall())
 
-    def create_blob_from_bytes(
-        self, container_name, blob_name, content, validate_content
-    ):
+    def create_blob_from_bytes(self, container_name, blob_name, content, validate_content):
         client = self.get_blob_client(container_name, blob_name)
         client.upload_blob(content, overwrite=True)
 
@@ -157,9 +155,7 @@ class StorageUtilities:
         return queue_service.put_message(queue_name, content)
 
     @staticmethod
-    def get_queue_messages(
-        queue_service, queue_name, num_messages=None, visibility_timeout=None
-    ):
+    def get_queue_messages(queue_service, queue_name, num_messages=None, visibility_timeout=None):
         # Default message visibility timeout is 30 seconds
         # so you are expected to delete message within 30 seconds
         # if you have successfully processed it
@@ -176,9 +172,7 @@ class StorageUtilities:
     def get_storage_primary_key(resource_group, name, session):
         storage_client = session.client('azure.mgmt.storage.StorageManagementClient')
         # TODO: Is this Expand required? Do we need to re-record some cassettes because of it?
-        storage_keys = storage_client.storage_accounts.list_keys(
-            resource_group, name, expand=None
-        )
+        storage_keys = storage_client.storage_accounts.list_keys(resource_group, name, expand=None)
         return storage_keys.keys[0].value
 
     @staticmethod
@@ -195,6 +189,4 @@ class StorageUtilities:
 
         Storage = namedtuple('Storage', 'container_name, account_url, file_prefix')
 
-        return Storage(
-            container_name=container_name, account_url=account_url, file_prefix=prefix
-        )
+        return Storage(container_name=container_name, account_url=account_url, file_prefix=prefix)

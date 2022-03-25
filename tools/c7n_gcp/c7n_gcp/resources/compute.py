@@ -199,9 +199,7 @@ class DetachDisks(MethodAction):
     def process_resource(self, client, resource):
         op_name = 'detachDisk'
 
-        project, zone, instance = self.path_param_re.match(
-            resource['selfLink']
-        ).groups()
+        project, zone, instance = self.path_param_re.match(resource['selfLink']).groups()
 
         base_params = {'project': project, 'zone': zone, 'instance': instance}
         for disk in resource.get('disks', []):
@@ -378,9 +376,7 @@ class DiskSnapshot(MethodAction):
     attr_filter = ('status', ('RUNNING', 'READY'))
 
     def get_resource_params(self, model, resource):
-        project, zone, resourceId = self.path_param_re.match(
-            resource['selfLink']
-        ).groups()
+        project, zone, resourceId = self.path_param_re.match(resource['selfLink']).groups()
         name_format = self.data.get('name_format', '{disk[name]}')
         name = name_format.format(disk=resource, now=datetime.now())
 
@@ -621,9 +617,7 @@ class AutoscalerSet(MethodAction):
     method_perm = 'update'
 
     def get_resource_params(self, model, resource):
-        project, zone, autoscaler = self.path_param_re.match(
-            resource['selfLink']
-        ).groups()
+        project, zone, autoscaler = self.path_param_re.match(resource['selfLink']).groups()
         body = {}
 
         if 'coolDownPeriodSec' in self.data:

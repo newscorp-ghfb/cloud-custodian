@@ -48,18 +48,12 @@ class ResourceManager:
         self.config = ctx.options
         self.data = data
         self._cache = cache.factory(self.ctx.options)
-        self.log = logging.getLogger(
-            'custodian.resources.%s' % (self.__class__.__name__.lower())
-        )
+        self.log = logging.getLogger('custodian.resources.%s' % (self.__class__.__name__.lower()))
 
         if self.filter_registry:
-            self.filters = self.filter_registry.parse(
-                self.data.get('filters', []), self
-            )
+            self.filters = self.filter_registry.parse(self.data.get('filters', []), self)
         if self.action_registry:
-            self.actions = self.action_registry.parse(
-                self.data.get('actions', []), self
-            )
+            self.actions = self.action_registry.parse(self.data.get('actions', []), self)
 
     def format_json(self, resources, fh):
         return dumps(resources, fh, indent=2)

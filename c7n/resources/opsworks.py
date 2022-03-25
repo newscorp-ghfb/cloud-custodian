@@ -72,9 +72,7 @@ class DeleteStack(BaseAction):
                 client.delete_app(AppId=app['AppId'])
             instances = client.describe_instances(StackId=stack_id)['Instances']
             orig_length = len(instances)
-            instances = self.filter_resources(
-                instances, 'Status', self.valid_origin_states
-            )
+            instances = self.filter_resources(instances, 'Status', self.valid_origin_states)
             if len(instances) != orig_length:
                 self.log.exception(
                     "All instances must be stopped before deletion. Stack Id: %s Name: %s."

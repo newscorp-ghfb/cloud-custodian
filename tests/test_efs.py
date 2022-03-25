@@ -138,17 +138,13 @@ class ElasticFileSystem(BaseTest):
         self.assertEqual(resources[0]["Name"], "c7n-test")
         self.assertEqual(resources[0]["FileSystemId"], "fs-fac23c7a")
         response = client.describe_lifecycle_configuration(FileSystemId="fs-fac23c7a")
-        self.assertEqual(
-            response.get('LifecyclePolicies'), [{'TransitionToIA': 'AFTER_7_DAYS'}]
-        )
+        self.assertEqual(response.get('LifecyclePolicies'), [{'TransitionToIA': 'AFTER_7_DAYS'}])
 
     def test_disable_lifecycle_policy(self):
         factory = self.replay_flight_data("test_disable_lifecycle_policy")
         client = factory().client("efs")
         res = client.describe_lifecycle_configuration(FileSystemId="fs-fac23c7a")
-        self.assertEqual(
-            res.get('LifecyclePolicies'), [{'TransitionToIA': 'AFTER_7_DAYS'}]
-        )
+        self.assertEqual(res.get('LifecyclePolicies'), [{'TransitionToIA': 'AFTER_7_DAYS'}])
         p = self.load_policy(
             {
                 "name": "efs-lifecycle-policy-disable",

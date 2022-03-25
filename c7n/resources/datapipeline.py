@@ -41,9 +41,7 @@ class DataPipeline(QueryResourceManager):
     def augment(self, resources):
         filter(
             None,
-            _datapipeline_info(
-                resources, self.session_factory, self.executor_factory, self.retry
-            ),
+            _datapipeline_info(resources, self.session_factory, self.executor_factory, self.retry),
         )
         return resources
 
@@ -57,9 +55,7 @@ def _datapipeline_info(pipes, session_factory, executor_factory, retry):
 
         while True:
             try:
-                results = retry(
-                    client.describe_pipelines, pipelineIds=list(pipe_map.keys())
-                )
+                results = retry(client.describe_pipelines, pipelineIds=list(pipe_map.keys()))
                 break
             except ClientError as e:
                 if e.response['Error']['Code'] != 'PipelineNotFound':
@@ -75,9 +71,7 @@ def _datapipeline_info(pipes, session_factory, executor_factory, retry):
         for pipe_desc in results['pipelineDescriptionList']:
             pipe = pipe_map[pipe_desc['pipelineId']]
             pipe['pipelineId'] = pipe_desc['pipelineId']
-            pipe['Tags'] = [
-                {'Key': t['key'], 'Value': t['value']} for t in pipe_desc['tags']
-            ]
+            pipe['Tags'] = [{'Key': t['key'], 'Value': t['value']} for t in pipe_desc['tags']]
             for field in pipe_desc['fields']:
                 key = field['key']
                 if not key.startswith('@'):

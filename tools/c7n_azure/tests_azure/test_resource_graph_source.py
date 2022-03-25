@@ -120,9 +120,7 @@ class ResourceGraphSource(BaseTest):
 
         # ARM returns the vm child extension resources that is not return with the resource graph
         self.assertTrue(
-            resource_cmp(
-                resources_arm, resources_resource_graph, ignore_properties=['resources']
-            )
+            resource_cmp(resources_arm, resources_resource_graph, ignore_properties=['resources'])
         )
 
 
@@ -141,8 +139,7 @@ def resource_cmp(res1, res2, ignore_properties=[]):
     if isinstance(res1, dict):
         for prop in res1:
             if prop not in ignore_properties and (
-                prop not in res2
-                or not resource_cmp(res1[prop], res2[prop], ignore_properties)
+                prop not in res2 or not resource_cmp(res1[prop], res2[prop], ignore_properties)
             ):
                 return False
 

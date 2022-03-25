@@ -41,9 +41,7 @@ class CostFilterTest(BaseTest):
                 {
                     'name': 'test-cost-filter',
                     'resource': 'azure.resourcegroup',
-                    'filters': [
-                        {'type': 'cost', 'timeframe': 7, 'op': 'eq', 'value': 1}
-                    ],
+                    'filters': [{'type': 'cost', 'timeframe': 7, 'op': 'eq', 'value': 1}],
                 },
                 validate=True,
             )
@@ -55,9 +53,7 @@ class CostFilterTest(BaseTest):
             self._get_resource('vm2', 20),
             self._get_resource('vm3', 3000),
         ]
-        f = self._get_filter(
-            {'timeframe': 'TheLastMonth', 'op': 'gt', 'value': 1000}, resources
-        )
+        f = self._get_filter({'timeframe': 'TheLastMonth', 'op': 'gt', 'value': 1000}, resources)
 
         result = f.process(resources, None)
 
@@ -85,9 +81,7 @@ class CostFilterTest(BaseTest):
             self._get_resource('vm1/child1', 300),
             self._get_resource('vm1/child2', 3000),
         ]
-        f = self._get_filter(
-            {'timeframe': 'WeekToDate', 'op': 'eq', 'value': 3300}, resources
-        )
+        f = self._get_filter({'timeframe': 'WeekToDate', 'op': 'eq', 'value': 3300}, resources)
 
         result = f.process(resources, None)
 
@@ -136,16 +130,12 @@ class CostFilterTest(BaseTest):
         manager.get_session.return_value.get_subscription_id.return_value = (
             self.session.get_subscription_id()
         )
-        manager.get_client.return_value.query.usage.return_value = self._get_costs(
-            resources
-        )
+        manager.get_client.return_value.query.usage.return_value = self._get_costs(resources)
         if 'Microsoft.Compute/virtualMachines' in resources[0]['id']:
             manager.resource_type.resource_type = 'Microsoft.Compute/virtualMachines'
         else:
             manager.type = 'resourcegroup'
-            manager.resource_type.resource_type = (
-                'Microsoft.Resources/subscriptions/resourceGroups'
-            )
+            manager.resource_type.resource_type = 'Microsoft.Resources/subscriptions/resourceGroups'
         return CostFilter(data=data, manager=manager)
 
     def _get_resource(self, name, cost):

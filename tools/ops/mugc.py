@@ -195,9 +195,7 @@ def setup_parser():
         dest='policy_filter',
         help="Only use named/matched policies",
     )
-    parser.add_argument(
-        "--assume", default=None, dest="assume_role", help="Role to assume"
-    )
+    parser.add_argument("--assume", default=None, dest="assume_role", help="Role to assume")
     parser.add_argument(
         "-v",
         dest="verbose",
@@ -215,9 +213,7 @@ def main():
     log_level = logging.INFO
     if options.verbose:
         log_level = logging.DEBUG
-    logging.basicConfig(
-        level=log_level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s"
-    )
+    logging.basicConfig(level=log_level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
     logging.getLogger('botocore').setLevel(logging.ERROR)
     logging.getLogger('urllib3').setLevel(logging.ERROR)
     logging.getLogger('c7n.cache').setLevel(logging.WARNING)
@@ -246,11 +242,7 @@ def main():
     # use cloud provider to initialize policies to get region expansion
     policies = AWS().initialize_policies(
         PolicyCollection(
-            [
-                p
-                for p in load_policies(options, policy_config)
-                if p.provider_name == 'aws'
-            ],
+            [p for p in load_policies(options, policy_config) if p.provider_name == 'aws'],
             policy_config,
         ),
         policy_config,

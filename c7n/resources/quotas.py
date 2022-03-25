@@ -159,18 +159,11 @@ class UsageFilter(MetricsFilter):
             if not metric:
                 continue
             stat = metric.get('MetricStatisticRecommendation', 'Maximum')
-            if (
-                stat not in self.metric_map
-                and self.percentile_regex.match(stat) is None
-            ):
+            if stat not in self.metric_map and self.percentile_regex.match(stat) is None:
                 continue
             if 'Period' in r:
                 period_unit = self.time_delta_map[r['Period']['PeriodUnit']]
-                period = int(
-                    timedelta(
-                        **{period_unit: r['Period']['PeriodValue']}
-                    ).total_seconds()
-                )
+                period = int(timedelta(**{period_unit: r['Period']['PeriodValue']}).total_seconds())
             else:
                 period = int(timedelta(1).total_seconds())
             res = client.get_metric_statistics(
@@ -271,9 +264,7 @@ class Increase(Action):
                 multiplier: 1.2
     """
 
-    schema = type_schema(
-        'request-increase', multiplier={'type': 'number', 'minimum': 1.0}
-    )
+    schema = type_schema('request-increase', multiplier={'type': 'number', 'minimum': 1.0})
     permissions = ('servicequotas:RequestServiceQuotaIncrease',)
 
     def process(self, resources):
@@ -292,17 +283,13 @@ class Increase(Action):
                 )
             except client.exceptions.QuotaExceededException as e:
                 error = e
-                self.log.error(
-                    'Requested:%s exceeds quota limit for %s' % (count, r['QuotaCode'])
-                )
+                self.log.error('Requested:%s exceeds quota limit for %s' % (count, r['QuotaCode']))
                 continue
             except (
                 client.exceptions.AccessDeniedException,
                 client.exceptions.DependencyAccessDeniedException,
             ):
-                raise PolicyExecutionError(
-                    'Access Denied to increase quota: %s' % r['QuotaCode']
-                )
+                raise PolicyExecutionError('Access Denied to increase quota: %s' % r['QuotaCode'])
             except (
                 client.exceptions.NoSuchResourceException,
                 client.exceptions.InvalidResourceStateException,

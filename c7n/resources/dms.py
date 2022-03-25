@@ -44,9 +44,7 @@ class InstanceDescribe(DescribeSource):
         for arn, r in zip(self.manager.get_arns(resources), resources):
             self.manager.log.info("arn %s" % arn)
             try:
-                r['Tags'] = client.list_tags_for_resource(ResourceArn=arn).get(
-                    'TagList', []
-                )
+                r['Tags'] = client.list_tags_for_resource(ResourceArn=arn).get('TagList', [])
             except client.exceptions.ResourceNotFoundFault:
                 continue
 
@@ -206,9 +204,7 @@ class InstanceTag(Tag):
         client = local_session(self.manager.session_factory).client('dms')
         for r in resources:
             try:
-                client.add_tags_to_resource(
-                    ResourceArn=r['ReplicationInstanceArn'], Tags=tags
-                )
+                client.add_tags_to_resource(ResourceArn=r['ReplicationInstanceArn'], Tags=tags)
             except client.exceptions.ResourceNotFoundFault:
                 continue
 
@@ -371,9 +367,7 @@ class ModifyDmsEndpoint(BaseAction):
         params.pop('type')
         for e in endpoints:
             params['EndpointArn'] = e['EndpointArn']
-            params['EndpointIdentifier'] = params.get(
-                'EndpointIdentifier', e['EndpointIdentifier']
-            )
+            params['EndpointIdentifier'] = params.get('EndpointIdentifier', e['EndpointIdentifier'])
             params['EngineName'] = params.get('EngineName', e['EngineName'])
             try:
                 client.modify_endpoint(**params)

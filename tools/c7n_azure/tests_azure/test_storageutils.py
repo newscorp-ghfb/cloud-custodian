@@ -23,11 +23,7 @@ class StorageUtilsTest(BaseTest):
     @arm_template('storage.json')
     def test_get_storage_client_by_uri(self):
         account = self.setup_account()
-        url = (
-            "https://"
-            + account.name
-            + ".blob.core.windows.net/testcontainer/extrafolder"
-        )
+        url = "https://" + account.name + ".blob.core.windows.net/testcontainer/extrafolder"
         (
             blob_service,
             container_name,
@@ -40,11 +36,7 @@ class StorageUtilsTest(BaseTest):
     @arm_template('storage.json')
     def test_get_storage_client_by_uri_extra_directories(self):
         account = self.setup_account()
-        url = (
-            "https://"
-            + account.name
-            + ".blob.core.windows.net/testcontainer/extrafolder/foo/bar"
-        )
+        url = "https://" + account.name + ".blob.core.windows.net/testcontainer/extrafolder/foo/bar"
         (
             blob_service,
             container_name,
@@ -58,9 +50,7 @@ class StorageUtilsTest(BaseTest):
     def test_get_queue_client_by_uri(self):
         account = self.setup_account()
         url = "https://" + account.name + ".queue.core.windows.net/testcc"
-        queue_service, queue_name = StorageUtilities.get_queue_client_by_uri(
-            url, self.session
-        )
+        queue_service, queue_name = StorageUtilities.get_queue_client_by_uri(url, self.session)
         self.assertIsNotNone(queue_service)
         self.assertEqual(queue_name, "testcc")
 
@@ -117,9 +107,7 @@ class StorageUtilsTest(BaseTest):
             primary_key = StorageUtilities.get_storage_primary_key(
                 'mock_rg_group', 'mock_account', self.session
             )
-            list_keys_mock.assert_called_with(
-                'mock_rg_group', 'mock_account', expand=None
-            )
+            list_keys_mock.assert_called_with('mock_rg_group', 'mock_account', expand=None)
             self.assertEqual(primary_key, data.keys[0].value)
 
     def _get_storage_client_string(self):
@@ -137,9 +125,7 @@ class StorageUtilsTest(BaseTest):
             blob_service,
             container_name,
             key_prefix,
-        ) = StorageUtilities.get_blob_client_by_uri(
-            url, Session(cloud_endpoints=AZURE_CHINA_CLOUD)
-        )
+        ) = StorageUtilities.get_blob_client_by_uri(url, Session(cloud_endpoints=AZURE_CHINA_CLOUD))
         self.assertIsNotNone(blob_service)
         self.assertEqual(container_name, "testcontainer")
         self.assertEqual(key_prefix, "extrafolder")

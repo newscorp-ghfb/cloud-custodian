@@ -22,9 +22,7 @@ class BucketTest(BaseTest):
         project_id = 'cloud-custodian'
         bucket_name = "staging.cloud-custodian.appspot.com"
         factory = self.replay_flight_data('bucket-get-resource', project_id)
-        p = self.load_policy(
-            {'name': 'bucket', 'resource': 'gcp.bucket'}, session_factory=factory
-        )
+        p = self.load_policy({'name': 'bucket', 'resource': 'gcp.bucket'}, session_factory=factory)
         bucket = p.resource_manager.get_resource(
             {
                 "bucket_name": bucket_name,
@@ -64,9 +62,7 @@ class BucketTest(BaseTest):
         self.assertEqual(bucket['id'], bucket_name)
         self.assertEqual(bucket['storageClass'], "REGIONAL")
         self.assertEqual(bucket['location'], "US-EAST1")
-        self.assertJmes(
-            'iamConfiguration.uniformBucketLevelAccess.enabled', bucket, True
-        )
+        self.assertJmes('iamConfiguration.uniformBucketLevelAccess.enabled', bucket, True)
 
     def test_bucket_iam_policy_filter(self):
         factory = self.replay_flight_data('bucket-iam-policy')

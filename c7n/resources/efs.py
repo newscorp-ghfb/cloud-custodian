@@ -123,9 +123,7 @@ class Delete(Action):
         for r in resources:
             if not r['NumberOfMountTargets']:
                 continue
-            for t in client.describe_mount_targets(FileSystemId=r['FileSystemId'])[
-                'MountTargets'
-            ]:
+            for t in client.describe_mount_targets(FileSystemId=r['FileSystemId'])['MountTargets']:
                 client.delete_mount_target(MountTargetId=t['MountTargetId'])
 
 
@@ -161,13 +159,11 @@ class ConfigureLifecycle(BaseAction):
     def validate(self):
         if self.data.get('state') == 'enable' and 'rules' not in self.data:
             raise PolicyValidationError(
-                'rules are required to enable lifecycle configuration %s'
-                % (self.manager.data)
+                'rules are required to enable lifecycle configuration %s' % (self.manager.data)
             )
         if self.data.get('state') == 'disable' and 'rules' in self.data:
             raise PolicyValidationError(
-                'rules not required to disable lifecycle configuration %s'
-                % (self.manager.data)
+                'rules not required to disable lifecycle configuration %s' % (self.manager.data)
             )
         if self.data.get('rules'):
             attrs = {}
@@ -220,12 +216,8 @@ class LifecyclePolicy(Filter):
         if self.data.get('value'):
             config = {'TransitionToIA': self.data.get('value')}
             if self.data.get('state') == 'present':
-                return [
-                    r for r in resources if config in r.get('c7n:LifecyclePolicies')
-                ]
-            return [
-                r for r in resources if config not in r.get('c7n:LifecyclePolicies')
-            ]
+                return [r for r in resources if config in r.get('c7n:LifecyclePolicies')]
+            return [r for r in resources if config not in r.get('c7n:LifecyclePolicies')]
         else:
             if self.data.get('state') == 'present':
                 return [r for r in resources if r.get('c7n:LifecyclePolicies')]
@@ -235,9 +227,9 @@ class LifecyclePolicy(Filter):
         client = local_session(self.manager.session_factory).client('efs')
         for r in resources:
             try:
-                lfc = client.describe_lifecycle_configuration(
-                    FileSystemId=r['FileSystemId']
-                ).get('LifecyclePolicies')
+                lfc = client.describe_lifecycle_configuration(FileSystemId=r['FileSystemId']).get(
+                    'LifecyclePolicies'
+                )
                 r['c7n:LifecyclePolicies'] = lfc
             except client.exceptions.FileSystemNotFound:
                 continue
@@ -282,9 +274,7 @@ class CheckSecureTransport(Filter):
         if self.policy_annotation in resource:
             return resource[self.policy_annotation]
         try:
-            result = client.describe_file_system_policy(
-                FileSystemId=resource['FileSystemId']
-            )
+            result = client.describe_file_system_policy(FileSystemId=resource['FileSystemId'])
         except client.exceptions.PolicyNotFound:
             return None
         resource[self.policy_annotation] = json.loads(result['Policy'])

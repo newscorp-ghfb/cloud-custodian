@@ -46,9 +46,7 @@ class LoadBalancingAddressDelete(MethodAction):
     attr_filter = ('status', ('RESERVED',))
 
     def get_resource_params(self, model, resource):
-        project = local_session(
-            self.manager.source.query.session_factory
-        ).get_default_project()
+        project = local_session(self.manager.source.query.session_factory).get_default_project()
         return {
             'project': project,
             'region': resource['region'].rsplit('/', 1)[-1],
@@ -192,9 +190,7 @@ class LoadBalancingSslPolicyDelete(MethodAction):
     method_spec = {'op': 'delete'}
 
     def get_resource_params(self, model, resource):
-        project = local_session(
-            self.manager.source.query.session_factory
-        ).get_default_project()
+        project = local_session(self.manager.source.query.session_factory).get_default_project()
         return {'project': project, 'sslPolicy': resource['name']}
 
 
@@ -257,9 +253,7 @@ class LoadBalancingTargetHttpsProxy(QueryResourceManager):
                 'get',
                 {
                     'project': resource_info['project_id'],
-                    'targetHttpsProxy': resource_info['resourceName'].rsplit('/', 1)[
-                        -1
-                    ],
+                    'targetHttpsProxy': resource_info['resourceName'].rsplit('/', 1)[-1],
                 },
             )
 
@@ -320,9 +314,7 @@ class LoadBalancingBackendBucketDelete(MethodAction):
     method_spec = {'op': 'delete'}
 
     def get_resource_params(self, model, resource):
-        project = local_session(
-            self.manager.source.query.session_factory
-        ).get_default_project()
+        project = local_session(self.manager.source.query.session_factory).get_default_project()
         return {'project': project, 'backendBucket': resource['name']}
 
 
@@ -353,9 +345,7 @@ class LoadBalancingHttpsHealthCheck(QueryResourceManager):
                 'get',
                 {
                     'project': resource_info['project_id'],
-                    'httpsHealthCheck': resource_info['resourceName'].rsplit('/', 1)[
-                        -1
-                    ],
+                    'httpsHealthCheck': resource_info['resourceName'].rsplit('/', 1)[-1],
                 },
             )
 

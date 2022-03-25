@@ -88,8 +88,7 @@ class AzureStorageOutput(DirectoryOutput):
                         )
                     else:
                         self.log.exception(
-                            "Error writing output. "
-                            "Confirm output storage URL is correct."
+                            "Error writing output. " "Confirm output storage URL is correct."
                         )
 
                 self.log.debug("%s uploaded" % blob_name)
@@ -117,13 +116,9 @@ class MetricsOutput(Metrics):
     def _initialize(self):
         if self.tc is not None:
             return
-        self.instrumentation_key = AppInsightsHelper.get_instrumentation_key(
-            self.config['url']
-        )
+        self.instrumentation_key = AppInsightsHelper.get_instrumentation_key(self.config['url'])
         self.tc = TelemetryClient(self.instrumentation_key)
-        self.subscription_id = local_session(
-            self.ctx.policy.session_factory
-        ).get_subscription_id()
+        self.subscription_id = local_session(self.ctx.policy.session_factory).get_subscription_id()
 
     def _format_metric(self, key, value, unit, dimensions):
         self._initialize()
@@ -146,16 +141,12 @@ class MetricsOutput(Metrics):
     def _put_metrics(self, ns, metrics):
         self._initialize()
         for m in metrics:
-            self.tc.track_metric(
-                name=m['Name'], value=m['Value'], properties=m['Dimensions']
-            )
+            self.tc.track_metric(name=m['Name'], value=m['Value'], properties=m['Dimensions'])
         self.tc.flush()
 
 
 class AppInsightsLogHandler(LoggingHandler):
-    def __init__(
-        self, instrumentation_key, policy_name, subscription_id, execution_id, res_type
-    ):
+    def __init__(self, instrumentation_key, policy_name, subscription_id, execution_id, res_type):
         super(AppInsightsLogHandler, self).__init__(instrumentation_key)
         self.policy_name = policy_name
         self.subscription_id = subscription_id
@@ -182,9 +173,7 @@ class AppInsightsLogHandler(LoggingHandler):
             self.client.track_exception(*record.exc_info, properties=properties)
             return
 
-        self.client.track_trace(
-            record.msg, properties=properties, severity=record.levelname
-        )
+        self.client.track_trace(record.msg, properties=properties, severity=record.levelname)
 
 
 @log_outputs.register('azure')
@@ -193,12 +182,8 @@ class AppInsightsLogOutput(LogOutput):
     log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 
     def get_handler(self):
-        self.instrumentation_key = AppInsightsHelper.get_instrumentation_key(
-            self.config['url']
-        )
-        self.subscription_id = local_session(
-            self.ctx.policy.session_factory
-        ).get_subscription_id()
+        self.instrumentation_key = AppInsightsHelper.get_instrumentation_key(self.config['url'])
+        self.subscription_id = local_session(self.ctx.policy.session_factory).get_subscription_id()
         return AppInsightsLogHandler(
             self.instrumentation_key,
             self.ctx.policy.name,

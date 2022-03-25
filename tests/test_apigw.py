@@ -76,19 +76,13 @@ class TestRestApi(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        updated = (
-            session_factory()
-            .client('apigateway')
-            .get_rest_api(restApiId=resources[0]['id'])
-        )
+        updated = session_factory().client('apigateway').get_rest_api(restApiId=resources[0]['id'])
         self.assertEqual(updated['description'], 'for replacement')
 
     def test_rest_api_tag_untag_mark(self):
         session_factory = self.replay_flight_data('test_rest_api_tag_untag_mark')
         client = session_factory().client("apigateway")
-        tags = client.get_tags(
-            resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27'
-        )
+        tags = client.get_tags(resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27')
         self.assertEqual(tags.get('tags', {}), {'target-tag': 'pratyush'})
         self.maxDiff = None
         p = self.load_policy(
@@ -111,9 +105,7 @@ class TestRestApi(BaseTest):
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
-        tags = client.get_tags(
-            resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27'
-        )
+        tags = client.get_tags(resourceArn='arn:aws:apigateway:us-east-1::/restapis/dj7uijzv27')
         self.assertEqual(
             tags.get('tags', {}),
             {
@@ -221,9 +213,7 @@ class TestRestResource(BaseTest):
             {
                 "name": "rest-integration-delete",
                 "resource": "rest-resource",
-                "filters": [
-                    {"type": "rest-integration", "key": "type", "value": "AWS"}
-                ],
+                "filters": [{"type": "rest-integration", "key": "type", "value": "AWS"}],
                 "actions": [{"type": "delete-integration"}],
             },
             session_factory=session_factory,
@@ -398,9 +388,7 @@ class TestRestStage(BaseTest):
             {
                 "name": "rest-stage-delete",
                 "resource": "rest-stage",
-                "filters": [
-                    {"type": "value", "key": "stageName", "value": "delete-test"}
-                ],
+                "filters": [{"type": "value", "key": "stageName", "value": "delete-test"}],
                 "actions": [{"type": "delete"}],
             },
             session_factory=session_factory,

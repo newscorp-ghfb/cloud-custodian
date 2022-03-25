@@ -163,9 +163,7 @@ class WorkspacesTest(BaseTest):
         self.assertEqual(call['Images'], [])
 
     def test_workspaces_image_delete_associated_error(self):
-        session_factory = self.replay_flight_data(
-            'test_workspaces_image_delete_associated_error'
-        )
+        session_factory = self.replay_flight_data('test_workspaces_image_delete_associated_error')
         p = self.load_policy(
             {
                 'name': 'workspaces-image-del',
@@ -223,9 +221,7 @@ class WorkspacesTest(BaseTest):
                 'actions': [
                     {
                         'type': 'modify-client-properties',
-                        'attributes': {
-                            'ClientProperties': {'ReconnectEnabled': 'DISABLED'}
-                        },
+                        'attributes': {'ClientProperties': {'ReconnectEnabled': 'DISABLED'}},
                     }
                 ],
             },

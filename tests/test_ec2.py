@@ -25,9 +25,7 @@ class TestEc2NetworkLocation(BaseTest):
         resp = client.describe_instances()
 
         self.assertTrue(len(resp['Reservations'][0]['Instances']), 1)
-        self.assertTrue(
-            len(resp['Reservations'][0]['Instances'][0]['State']['Name']), 'terminated'
-        )
+        self.assertTrue(len(resp['Reservations'][0]['Instances'][0]['State']['Name']), 'terminated')
 
         policy = self.load_policy(
             {
@@ -88,9 +86,7 @@ class TestInstanceAttrFilter(BaseTest):
             session_factory=session_factory,
         )
         resources = policy.run()
-        self.assertEqual(
-            resources[0]["c7n:attribute-rootDeviceName"], {"Value": "/dev/sda1"}
-        )
+        self.assertEqual(resources[0]["c7n:attribute-rootDeviceName"], {"Value": "/dev/sda1"})
 
 
 class TestSetMetadata(BaseTest):
@@ -193,9 +189,7 @@ class TestPropagateSpotTags(BaseTest):
 
 class TestDisableApiTermination(BaseTest):
     def test_term_prot_enabled(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_termination-protected_filter"
-        )
+        session_factory = self.replay_flight_data("test_ec2_termination-protected_filter")
         policy = self.load_policy(
             {
                 "name": "ec2-termination-enabled",
@@ -209,9 +203,7 @@ class TestDisableApiTermination(BaseTest):
         self.assertEqual(resources[0]["InstanceId"], "i-092f500eaad726b71")
 
     def test_term_prot_not_enabled(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_termination-protected_filter"
-        )
+        session_factory = self.replay_flight_data("test_ec2_termination-protected_filter")
         policy = self.load_policy(
             {
                 "name": "ec2-termination-NOT-enabled",
@@ -228,9 +220,7 @@ class TestDisableApiTermination(BaseTest):
         )
 
     def test_policy_permissions(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_termination-protected_filter"
-        )
+        session_factory = self.replay_flight_data("test_ec2_termination-protected_filter")
         policy = self.load_policy(
             {
                 "name": "ec2-termination-enabled",
@@ -351,9 +341,9 @@ class TestTagTrim(BaseTest):
         ec2 = session_factory().client("ec2")
         start_tags = {
             t["Key"]: t["Value"]
-            for t in ec2.describe_tags(
-                Filters=[{"Name": "resource-id", "Values": ["i-fdb01920"]}]
-            )["Tags"]
+            for t in ec2.describe_tags(Filters=[{"Name": "resource-id", "Values": ["i-fdb01920"]}])[
+                "Tags"
+            ]
         }
         policy = self.load_policy(
             {
@@ -381,9 +371,9 @@ class TestTagTrim(BaseTest):
         self.assertEqual(len(resources), 1)
         end_tags = {
             t["Key"]: t["Value"]
-            for t in ec2.describe_tags(
-                Filters=[{"Name": "resource-id", "Values": ["i-fdb01920"]}]
-            )["Tags"]
+            for t in ec2.describe_tags(Filters=[{"Name": "resource-id", "Values": ["i-fdb01920"]}])[
+                "Tags"
+            ]
         }
 
         self.assertEqual(len(start_tags) - 1, len(end_tags))
@@ -490,16 +480,12 @@ class TestResizeInstance(BaseTest):
         self.assertEqual(cur_running, running)
         instance_types = [i["InstanceType"] for i in instances]
         instance_types.sort()
-        self.assertEqual(
-            instance_types, list(sorted(["m4.large", "m4.2xlarge", "m4.2xlarge"]))
-        )
+        self.assertEqual(instance_types, list(sorted(["m4.large", "m4.2xlarge", "m4.2xlarge"])))
 
 
 class TestStateTransitionAgeFilter(BaseTest):
     def test_ec2_state_transition_age(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_state_transition_age_filter"
-        )
+        session_factory = self.replay_flight_data("test_ec2_state_transition_age_filter")
         policy = self.load_policy(
             {
                 "name": "ec2-state-transition-age",
@@ -534,9 +520,7 @@ class TestStateTransitionAgeFilter(BaseTest):
 
         # Won't match regex
         self.assertIsNone(
-            instance.get_resource_date(
-                {"StateTransitionReason": "Server.InternalError"}
-            )
+            instance.get_resource_date({"StateTransitionReason": "Server.InternalError"})
         )
 
         # Test for success
@@ -622,9 +606,7 @@ class TestTag(BaseTest):
         policy = {
             "name": "ec2-tag-error",
             "resource": "ec2",
-            "actions": [
-                {"type": "tag", "key": "Testing", "tag": "foo", "value": "TestingError"}
-            ],
+            "actions": [{"type": "tag", "key": "Testing", "tag": "foo", "value": "TestingError"}],
         }
         self.assertRaises(PolicyValidationError, self.load_policy, policy)
 
@@ -677,9 +659,7 @@ class TestTag(BaseTest):
                 "name": "ec2-test-normalize-tag-lower",
                 "resource": "ec2",
                 "filters": [{"tag:Testing-lower": "not-null"}],
-                "actions": [
-                    {"type": "normalize-tag", "key": "Testing-lower", "action": "lower"}
-                ],
+                "actions": [{"type": "normalize-tag", "key": "Testing-lower", "action": "lower"}],
             },
             session_factory=session_factory,
         )
@@ -691,9 +671,7 @@ class TestTag(BaseTest):
                 "name": "ec2-test-normalize-tag-upper",
                 "resource": "ec2",
                 "filters": [{"tag:Testing-upper": "not-null"}],
-                "actions": [
-                    {"type": "normalize-tag", "key": "Testing-upper", "action": "upper"}
-                ],
+                "actions": [{"type": "normalize-tag", "key": "Testing-upper", "action": "upper"}],
             },
             session_factory=session_factory,
         )
@@ -705,9 +683,7 @@ class TestTag(BaseTest):
                 "name": "ec2-test-normalize-tag-title",
                 "resource": "ec2",
                 "filters": [{"tag:Testing-title": "not-null"}],
-                "actions": [
-                    {"type": "normalize-tag", "key": "Testing-title", "action": "title"}
-                ],
+                "actions": [{"type": "normalize-tag", "key": "Testing-title", "action": "title"}],
             },
             session_factory=session_factory,
         )
@@ -751,9 +727,7 @@ class TestTag(BaseTest):
             {
                 "name": "ec2-rename-tag",
                 "resource": "ec2",
-                "actions": [
-                    {"type": "rename-tag", "old_key": "Testing", "new_key": "Testing1"}
-                ],
+                "actions": [{"type": "rename-tag", "old_key": "Testing", "new_key": "Testing1"}],
             },
             session_factory=session_factory,
         )
@@ -778,9 +752,9 @@ class TestTag(BaseTest):
         session_factory = self.replay_flight_data("test_ec2_mark_zero")
         session = session_factory(region="us-east-1")
         ec2 = session.client("ec2")
-        resource = ec2.describe_instances(InstanceIds=["i-04d3e0630bd342566"])[
-            "Reservations"
-        ][0]["Instances"][0]
+        resource = ec2.describe_instances(InstanceIds=["i-04d3e0630bd342566"])["Reservations"][0][
+            "Instances"
+        ][0]
         tags = [t["Value"] for t in resource["Tags"] if t["Key"] == "maid_status"]
         self.assertEqual(len(tags), 0)
 
@@ -797,21 +771,19 @@ class TestTag(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["InstanceId"], "i-04d3e0630bd342566")
 
-        resource = ec2.describe_instances(InstanceIds=["i-04d3e0630bd342566"])[
-            "Reservations"
-        ][0]["Instances"][0]
+        resource = ec2.describe_instances(InstanceIds=["i-04d3e0630bd342566"])["Reservations"][0][
+            "Instances"
+        ][0]
         tags = [t["Value"] for t in resource["Tags"] if t["Key"] == "maid_status"]
-        result = datetime.datetime.strptime(
-            tags[0].strip().split("@", 1)[-1], "%Y/%m/%d"
-        ).replace(tzinfo=localtz)
+        result = datetime.datetime.strptime(tags[0].strip().split("@", 1)[-1], "%Y/%m/%d").replace(
+            tzinfo=localtz
+        )
         self.assertEqual(result.date(), dt.date())
 
     def test_ec2_mark_hours(self):
         localtz = tz.gettz("America/New_York")
         dt = datetime.datetime.now(localtz)
-        dt = dt.replace(
-            year=2018, month=2, day=20, hour=18, minute=00, second=0, microsecond=0
-        )
+        dt = dt.replace(year=2018, month=2, day=20, hour=18, minute=00, second=0, microsecond=0)
         session_factory = self.replay_flight_data("test_ec2_mark_hours")
         session = session_factory(region="us-east-1")
         ec2 = session.client("ec2")
@@ -838,9 +810,9 @@ class TestTag(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
 
-        resource = ec2.describe_instances(InstanceIds=[resources[0]["InstanceId"]])[
-            "Reservations"
-        ][0]["Instances"][0]
+        resource = ec2.describe_instances(InstanceIds=[resources[0]["InstanceId"]])["Reservations"][
+            0
+        ]["Instances"][0]
         tags = [t["Value"] for t in resource["Tags"] if t["Key"] == "hourly-mark"]
         result = datetime.datetime.strptime(
             tags[0].strip().split("@", 1)[-1], "%Y/%m/%d %H%M %Z"
@@ -907,14 +879,10 @@ class TestStop(BaseTest):
         )
 
         stopped = [
-            i
-            for i in instances
-            if i["StateReason"]["Code"] == "Client.UserInitiatedShutdown"
+            i for i in instances if i["StateReason"]["Code"] == "Client.UserInitiatedShutdown"
         ]
         hibernated = [
-            i
-            for i in instances
-            if i["StateReason"]["Code"] == "Client.UserInitiatedHibernate"
+            i for i in instances if i["StateReason"]["Code"] == "Client.UserInitiatedHibernate"
         ]
 
         self.assertEqual(len(stopped), 1)
@@ -1068,9 +1036,7 @@ class TestOr(BaseTest):
             {
                 "name": "ec2-test-snapshot",
                 "resource": "ec2",
-                "filters": [
-                    {"or": [{"tag:Name": "CompileLambda"}, {"tag:Name": "Spinnaker"}]}
-                ],
+                "filters": [{"or": [{"tag:Name": "CompileLambda"}, {"tag:Name": "Spinnaker"}]}],
             },
             session_factory=session_factory,
         )
@@ -1152,9 +1118,9 @@ class TestSnapshot(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client('ec2')
-        snaps = client.describe_snapshots(
-            SnapshotIds=resources[0]['c7n:snapshots']
-        ).get('Snapshots')
+        snaps = client.describe_snapshots(SnapshotIds=resources[0]['c7n:snapshots']).get(
+            'Snapshots'
+        )
         rtags = {t['Key']: t['Value'] for t in resources[0]['Tags']}
         for s in snaps:
             self.assertEqual(rtags, {t['Key']: t['Value'] for t in s['Tags']})
@@ -1174,9 +1140,9 @@ class TestSnapshot(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client('ec2')
-        snaps = client.describe_snapshots(
-            SnapshotIds=resources[0]['c7n:snapshots']
-        ).get('Snapshots')
+        snaps = client.describe_snapshots(SnapshotIds=resources[0]['c7n:snapshots']).get(
+            'Snapshots'
+        )
         rtags = {t['Key']: t['Value'] for t in resources[0]['Tags']}
         rtags.pop('App')
         rtags['custodian_snapshot'] = ''
@@ -1204,9 +1170,9 @@ class TestSnapshot(BaseTest):
         self.assertEqual(len(resources), 1)
 
         client = session_factory().client('ec2')
-        snaps = client.describe_snapshots(
-            SnapshotIds=resources[0]['c7n:snapshots']
-        ).get('Snapshots')
+        snaps = client.describe_snapshots(SnapshotIds=resources[0]['c7n:snapshots']).get(
+            'Snapshots'
+        )
         rtags = {t['Key']: t['Value'] for t in resources[0]['Tags']}
         rtags.pop('App')
         rtags['test-tag'] = 'custodian'
@@ -1222,9 +1188,7 @@ class TestSetInstanceProfile(BaseTest):
                 'name': 'ec2-set-profile-missing',
                 'resource': 'ec2',
                 'filters': [{'IamInstanceProfile': 'absent'}],
-                'actions': [
-                    {'type': 'set-instance-profile', 'name': 'aws-opsworks-ec2-role'}
-                ],
+                'actions': [{'type': 'set-instance-profile', 'name': 'aws-opsworks-ec2-role'}],
             },
             session_factory=factory,
         )
@@ -1262,9 +1226,7 @@ class TestSetInstanceProfile(BaseTest):
                 'name': 'ec2-set-profile-extant',
                 'resource': 'ec2',
                 'filters': [{'tag:Name': 'role-test'}],
-                'actions': [
-                    {'type': 'set-instance-profile', 'name': 'ecsInstanceRole'}
-                ],
+                'actions': [{'type': 'set-instance-profile', 'name': 'ecsInstanceRole'}],
             },
             session_factory=factory,
         )
@@ -1273,8 +1235,7 @@ class TestSetInstanceProfile(BaseTest):
         # 3 instances covering no role, target role, different role.
         self.assertEqual(len(resources), 3)
         previous_associations = {
-            i['InstanceId']: i.get('IamInstanceProfile', {}).get('Arn')
-            for i in resources
+            i['InstanceId']: i.get('IamInstanceProfile', {}).get('Arn') for i in resources
         }
         self.assertEqual(
             previous_associations,
@@ -1308,9 +1269,7 @@ class TestSetInstanceProfile(BaseTest):
         )
 
     def test_ec2_set_instance_profile_disassocation(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_set_instance_profile_disassociation"
-        )
+        session_factory = self.replay_flight_data("test_ec2_set_instance_profile_disassociation")
         policy = self.load_policy(
             {
                 "name": "ec2-test-set-instance-profile-disassociation",
@@ -1332,9 +1291,7 @@ class TestSetInstanceProfile(BaseTest):
         self.assertGreaterEqual(len(resources), 1)
         ec2 = session_factory().client("ec2")
         associations = ec2.describe_iam_instance_profile_associations(
-            Filters=[
-                {"Name": "instance-id", "Values": [r["InstanceId"] for r in resources]}
-            ]
+            Filters=[{"Name": "instance-id", "Values": [r["InstanceId"] for r in resources]}]
         )
 
         for a in associations["IamInstanceProfileAssociations"]:
@@ -1345,13 +1302,9 @@ class TestEC2QueryFilter(unittest.TestCase):
     def test_parse(self):
         self.assertEqual(QueryFilter.parse([]), [])
         x = QueryFilter.parse([{"instance-state-name": "running"}])
-        self.assertEqual(
-            x[0].query(), {"Name": "instance-state-name", "Values": ["running"]}
-        )
+        self.assertEqual(x[0].query(), {"Name": "instance-state-name", "Values": ["running"]})
 
-        self.assertTrue(
-            isinstance(QueryFilter.parse([{"tag:ASV": "REALTIMEMSG"}])[0], QueryFilter)
-        )
+        self.assertTrue(isinstance(QueryFilter.parse([{"tag:ASV": "REALTIMEMSG"}])[0], QueryFilter))
 
         self.assertRaises(PolicyValidationError, QueryFilter.parse, [{"tag:ASV": None}])
 
@@ -1371,9 +1324,7 @@ class TestTerminate(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        instances = utils.query_instances(
-            session_factory(), InstanceIds=["i-017cf4e2a33b853fe"]
-        )
+        instances = utils.query_instances(session_factory(), InstanceIds=["i-017cf4e2a33b853fe"])
         self.assertEqual(instances[0]["State"]["Name"], "shutting-down")
 
 
@@ -1558,9 +1509,7 @@ class TestModifySecurityGroupsActionSchema(BaseTest):
             "resource": "ec2",
             "actions": [{"type": "modify-security-groups", "remove": "matched"}],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, data=policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, data=policy, validate=True)
 
     def test_invalid_remove_params(self):
         # string invalid
@@ -1569,9 +1518,7 @@ class TestModifySecurityGroupsActionSchema(BaseTest):
             "resource": "ec2",
             "actions": [{"type": "modify-security-groups", "remove": "none"}],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, data=policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, data=policy, validate=True)
 
         # list - one valid, one invalid
         policy = {
@@ -1584,9 +1531,7 @@ class TestModifySecurityGroupsActionSchema(BaseTest):
                 }
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     def test_valid_add_params(self):
         # string invalid
@@ -1609,9 +1554,7 @@ class TestModifySecurityGroupsActionSchema(BaseTest):
             "resource": "ec2",
             "actions": [{"type": "modify-security-groups", "isolation-group": "none"}],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, data=policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, data=policy, validate=True)
 
         # list - one valid, one invalid
         policy = {
@@ -1624,9 +1567,7 @@ class TestModifySecurityGroupsActionSchema(BaseTest):
                 }
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, data=policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, data=policy, validate=True)
 
 
 class TestModifySecurityGroupAction(BaseTest):
@@ -1691,9 +1632,9 @@ class TestModifySecurityGroupAction(BaseTest):
         session_factory = self.replay_flight_data("test_ec2_modify_groups_action")
         client = session_factory().client("ec2")
 
-        default_sg_id = client.describe_security_groups(GroupNames=["default"])[
-            "SecurityGroups"
-        ][0]["GroupId"]
+        default_sg_id = client.describe_security_groups(GroupNames=["default"])["SecurityGroups"][
+            0
+        ]["GroupId"]
 
         # Catch on anything that uses the *PROD-ONLY* security groups but isn't in a prod role
         policy = self.load_policy(
@@ -1745,9 +1686,7 @@ class TestModifySecurityGroupAction(BaseTest):
         before_action_resources = policy.run()
         after_action_resources = policy.run()
         self.assertEqual(len(before_action_resources), 1)
-        self.assertEqual(
-            before_action_resources[0]["InstanceId"], "i-0dd3919bc5bac1ea8"
-        )
+        self.assertEqual(before_action_resources[0]["InstanceId"], "i-0dd3919bc5bac1ea8")
         self.assertEqual(len(after_action_resources), 0)
 
     def test_invalid_modify_groups_schema(self):
@@ -1757,9 +1696,7 @@ class TestModifySecurityGroupAction(BaseTest):
             "filters": [],
             "actions": [{"type": "modify-security-groups", "change": "matched"}],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)
 
     def test_ec2_add_security_groups(self):
         # Test conditions:
@@ -1793,9 +1730,7 @@ class TestModifySecurityGroupAction(BaseTest):
         self.assertEqual(len(second_resources[0]["NetworkInterfaces"][0]["Groups"]), 2)
 
     def test_add_remove_with_name(self):
-        session_factory = self.replay_flight_data(
-            "test_ec2_modify_groups_action_with_name"
-        )
+        session_factory = self.replay_flight_data("test_ec2_modify_groups_action_with_name")
         policy = self.load_policy(
             {
                 "name": "add-remove-sg-with-name",
@@ -1982,12 +1917,8 @@ class TestMonitoringInstance(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        instance = utils.query_instances(
-            factory(), InstanceIds=[resources[0]['InstanceId']]
-        )
-        self.assertIn(
-            instance[0]['Monitoring']['State'].lower(), ["enabled", "pending"]
-        )
+        instance = utils.query_instances(factory(), InstanceIds=[resources[0]['InstanceId']])
+        self.assertIn(instance[0]['Monitoring']['State'].lower(), ["enabled", "pending"])
 
     def test_unmonitor_instance(self):
         factory = self.replay_flight_data('test_ec2_unmonitor_instance')
@@ -2003,12 +1934,8 @@ class TestMonitoringInstance(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        instance = utils.query_instances(
-            factory(), InstanceIds=[resources[0]['InstanceId']]
-        )
-        self.assertIn(
-            instance[0]['Monitoring']['State'].lower(), ['disabled', 'disabling']
-        )
+        instance = utils.query_instances(factory(), InstanceIds=[resources[0]['InstanceId']])
+        self.assertIn(instance[0]['Monitoring']['State'].lower(), ['disabled', 'disabling'])
 
 
 class TestDedicatedHost(BaseTest):
@@ -2036,9 +1963,7 @@ class TestSpotFleetRequest(BaseTest):
         self.assertEqual(len(resources), 3)
 
     def test_spot_fleet_request_autoscaling_offhours(self):
-        session_factory = self.replay_flight_data(
-            "test_spot_fleet_request_autoscaling_offhours"
-        )
+        session_factory = self.replay_flight_data("test_spot_fleet_request_autoscaling_offhours")
 
         p = self.load_policy(
             {
@@ -2065,9 +1990,7 @@ class TestSpotFleetRequest(BaseTest):
         self.assertEqual(len(sfrs), 3)
 
     def test_spot_fleet_request_autoscaling_onhours(self):
-        session_factory = self.replay_flight_data(
-            "test_spot_fleet_request_autoscaling_onhours"
-        )
+        session_factory = self.replay_flight_data("test_spot_fleet_request_autoscaling_onhours")
 
         p = self.load_policy(
             {

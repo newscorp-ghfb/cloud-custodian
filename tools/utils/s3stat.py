@@ -17,8 +17,7 @@ def bucket_info(c, bucket):
             {'Name': 'BucketName', 'Value': bucket},
             {'Name': 'StorageType', 'Value': 'AllStorageTypes'},
         ],
-        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        - timedelta(1),
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(1),
         EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 24 * 24,
         Statistics=['Average'],
@@ -36,8 +35,7 @@ def bucket_info(c, bucket):
             {'Name': 'BucketName', 'Value': bucket},
             {'Name': 'StorageType', 'Value': 'StandardStorage'},
         ],
-        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        - timedelta(10),
+        StartTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(10),
         EndTime=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0),
         Period=60 * 24 * 24,
         Statistics=['Average'],
@@ -66,9 +64,7 @@ def main():
     for b in buckets:
         index += 1
         try:
-            bucket_region = s3.get_bucket_location(Bucket=b['Name'])[
-                'LocationConstraint'
-            ]
+            bucket_region = s3.get_bucket_location(Bucket=b['Name'])['LocationConstraint']
             if bucket_region is None:
                 bucket_region = "us-east-1"
             # special case per

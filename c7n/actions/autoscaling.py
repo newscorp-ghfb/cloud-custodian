@@ -55,9 +55,7 @@ class AutoscalingBase(BaseAction):
         **{
             'min-capacity': {'type': 'integer', 'minimum': 0},
             'max-capacity': {'type': 'integer', 'minimum': 0},
-            'desired': {
-                "anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]
-            },
+            'desired': {"anyOf": [{'enum': ["current"]}, {'type': 'integer', 'minimum': 0}]},
             'save-options-tag': {'type': 'string'},
             'restore-options-tag': {'type': 'string'},
             'suspend-scaling': {'type': 'boolean'},
@@ -117,13 +115,10 @@ class AutoscalingBase(BaseAction):
 
         if update_suspended_state:
             self.log.debug(
-                'Target %s updating suspended_state=%s'
-                % (resource_id, update_suspended_state)
+                'Target %s updating suspended_state=%s' % (resource_id, update_suspended_state)
             )
 
-            client = local_session(self.manager.session_factory).client(
-                'application-autoscaling'
-            )
+            client = local_session(self.manager.session_factory).client('application-autoscaling')
             client.register_scalable_target(
                 ServiceNamespace=self.service_namespace,
                 ResourceId=resource_id,
@@ -139,9 +134,7 @@ class AutoscalingBase(BaseAction):
         cur_desired = self.get_resource_desired(resource)
 
         if new_desired is not None and new_desired != cur_desired:
-            self.log.debug(
-                'Target %s updating desired=%d' % (target['ResourceId'], new_desired)
-            )
+            self.log.debug('Target %s updating desired=%d' % (target['ResourceId'], new_desired))
             self.set_resource_desired(resource, new_desired)
             updated = True
 
@@ -159,12 +152,8 @@ class AutoscalingBase(BaseAction):
 
         if capacity_changes:
             resource_id = target['ResourceId']
-            self.log.debug(
-                'Target %s updating min=%s, max=%s' % (resource_id, new_min, new_max)
-            )
-            client = local_session(self.manager.session_factory).client(
-                'application-autoscaling'
-            )
+            self.log.debug('Target %s updating min=%s, max=%s' % (resource_id, new_min, new_max))
+            client = local_session(self.manager.session_factory).client('application-autoscaling')
             client.register_scalable_target(
                 ServiceNamespace=self.service_namespace,
                 ResourceId=resource_id,
@@ -181,9 +170,7 @@ class AutoscalingBase(BaseAction):
             'Want to restore resource %s from tag %s'
             % (target['ResourceId'], self.data['restore-options-tag'])
         )
-        restore_options = self.get_resource_tag(
-            resource, self.data['restore-options-tag']
-        )
+        restore_options = self.get_resource_tag(resource, self.data['restore-options-tag'])
 
         new_min, new_max, new_desired = None, None, None
         if restore_options is not None:
@@ -196,9 +183,7 @@ class AutoscalingBase(BaseAction):
                 elif param == 'Desired':
                     new_desired = int(value)
 
-            return self.update_scaling_options(
-                resource, target, new_min, new_max, new_desired
-            )
+            return self.update_scaling_options(resource, target, new_min, new_max, new_desired)
 
         return False
 
@@ -206,9 +191,7 @@ class AutoscalingBase(BaseAction):
         new_min = self.data.get('min-capacity', None)
         new_max = self.data.get('max-capacity', None)
         new_desired = self.data.get('desired', None)
-        return self.update_scaling_options(
-            resource, target, new_min, new_max, new_desired
-        )
+        return self.update_scaling_options(resource, target, new_min, new_max, new_desired)
 
     def process_save_scaling_options_to_tag(self, resource, target):
         current_desired = self.get_resource_desired(resource)
@@ -227,9 +210,7 @@ class AutoscalingBase(BaseAction):
     def process(self, resources):
         resources_by_id = {self.get_resource_id(r): r for r in resources}
         resource_ids = list(resources_by_id.keys())
-        client = local_session(self.manager.session_factory).client(
-            'application-autoscaling'
-        )
+        client = local_session(self.manager.session_factory).client('application-autoscaling')
         paginator = client.get_paginator('describe_scalable_targets')
         response_iterator = paginator.paginate(
             ServiceNamespace=self.service_namespace,
@@ -256,9 +237,7 @@ class AutoscalingBase(BaseAction):
 
                 if 'restore-options-tag' in self.data:
                     # resize based on prior TAG values
-                    updated = self.process_restore_scaling_options_from_tag(
-                        resource, target
-                    )
+                    updated = self.process_restore_scaling_options_from_tag(resource, target)
                 else:
                     # resize based on params in policy
                     updated = self.process_update_scaling_options(resource, target)

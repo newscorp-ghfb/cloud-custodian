@@ -25,9 +25,7 @@ class NetworkInterfaceTest(BaseTest):
             {
                 'name': 'test-azure-network-interface',
                 'resource': 'azure.networkinterface',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestnic'}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestnic'}],
             }
         )
         resources = p.run()

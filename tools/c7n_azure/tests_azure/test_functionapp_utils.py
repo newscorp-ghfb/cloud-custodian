@@ -109,9 +109,7 @@ class FunctionAppUtilsTest(BaseTest):
         for test_case in test_cases:
             self.assertEqual(
                 test_case[1],
-                FunctionAppUtilities.get_function_name(
-                    policy_name=test_case[0], suffix='suffix'
-                ),
+                FunctionAppUtilities.get_function_name(policy_name=test_case[0], suffix='suffix'),
             )
 
     def test_validate_function_name_length_requirements(self):
@@ -143,9 +141,7 @@ class FunctionAppUtilsTest(BaseTest):
     @arm_template('functionapp-reqs.json')
     @patch('time.sleep')
     def test_publish_functions_package_consumption(self, _1):
-        function_app_name = (
-            'cloud-custodian-test-consumption%s' % self.subscription_id[-12:]
-        )
+        function_app_name = 'cloud-custodian-test-consumption%s' % self.subscription_id[-12:]
         parameters = FunctionAppUtilities.FunctionAppInfrastructureParameters(
             app_insights={
                 'id': '',
@@ -177,9 +173,7 @@ class FunctionAppUtilsTest(BaseTest):
 
         # verify app setting updated
         wc = self.session.client('azure.mgmt.web.WebSiteManagementClient')
-        app_settings = wc.web_apps.list_application_settings(
-            CONST_GROUP_NAME, function_app_name
-        )
+        app_settings = wc.web_apps.list_application_settings(CONST_GROUP_NAME, function_app_name)
         self.assertNotIn('WEBSITE_RUN_FROM_PACKAGE', app_settings.properties)
 
     @arm_template('functionapp-reqs.json')

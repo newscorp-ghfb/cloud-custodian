@@ -52,9 +52,7 @@ class AWSMailerTests(unittest.TestCase):
         parser = cli.get_c7n_mailer_parser()
         self.assertIs(parser.__class__, argparse.ArgumentParser)
         session = cli.session_factory(MAILER_CONFIG)
-        self.assertEqual(
-            [session.region_name, session.profile_name], ['us-east-1', 'default']
-        )
+        self.assertEqual([session.region_name, session.profile_name], ['us-east-1', 'default'])
 
 
 class DeployTests(unittest.TestCase):

@@ -21,9 +21,7 @@ CUSTOM_SUBSCRIPTION_ID = '00000000-5106-4743-99b0-c129bfa71a47'
 
 
 class SessionTest(BaseTest):
-    authorization_file = os.path.join(
-        os.path.dirname(__file__), 'data', 'test_auth_file.json'
-    )
+    authorization_file = os.path.join(os.path.dirname(__file__), 'data', 'test_auth_file.json')
     authorization_file_kv = os.path.join(
         os.path.dirname(__file__), 'data', 'test_auth_file_kv.json'
     )
@@ -134,9 +132,7 @@ class SessionTest(BaseTest):
         ):
             s = Session()
 
-            self.assertIsInstance(
-                s.get_credentials()._credential, ManagedIdentityCredential
-            )
+            self.assertIsInstance(s.get_credentials()._credential, ManagedIdentityCredential)
             self.assertEqual(s.get_subscription_id(), DEFAULT_SUBSCRIPTION_ID)
 
     def test_initialize_msi_auth_user(self):
@@ -151,9 +147,7 @@ class SessionTest(BaseTest):
         ):
             s = Session()
 
-            self.assertIsInstance(
-                s.get_credentials()._credential, ManagedIdentityCredential
-            )
+            self.assertIsInstance(s.get_credentials()._credential, ManagedIdentityCredential)
             #            self.assertEqual(
             #                s.get_credentials()._credential._credential._identity_config["client_id"],
             #                'client')
@@ -272,9 +266,7 @@ class SessionTest(BaseTest):
                 clear=True,
             ):
                 s = Session()
-                self.assertEqual(
-                    s.get_function_target_subscription_name(), DEFAULT_SUBSCRIPTION_ID
-                )
+                self.assertEqual(s.get_function_target_subscription_name(), DEFAULT_SUBSCRIPTION_ID)
                 self.assertEqual(
                     s.get_function_target_subscription_ids(), [DEFAULT_SUBSCRIPTION_ID]
                 )
@@ -291,12 +283,8 @@ class SessionTest(BaseTest):
                 clear=True,
             ):
                 s = Session()
-                self.assertEqual(
-                    s.get_function_target_subscription_name(), CUSTOM_SUBSCRIPTION_ID
-                )
-                self.assertEqual(
-                    s.get_function_target_subscription_ids(), [CUSTOM_SUBSCRIPTION_ID]
-                )
+                self.assertEqual(s.get_function_target_subscription_name(), CUSTOM_SUBSCRIPTION_ID)
+                self.assertEqual(s.get_function_target_subscription_ids(), [CUSTOM_SUBSCRIPTION_ID])
 
             with patch.dict(
                 os.environ,
@@ -323,16 +311,13 @@ class SessionTest(BaseTest):
         client = s.client('azure.mgmt.resource.ResourceManagementClient')
         resource = next(client.resources.list())
         self.assertTrue(
-            re.match('\\d{4}-\\d{2}-\\d{2}', s.resource_api_version(resource.id))
-            is not None
+            re.match('\\d{4}-\\d{2}-\\d{2}', s.resource_api_version(resource.id)) is not None
         )
 
     def test_get_session_for_resource(self):
         s = Session()
         resource_session = s.get_session_for_resource(constants.STORAGE_AUTH_ENDPOINT)
-        self.assertEqual(
-            resource_session.resource_endpoint, constants.STORAGE_AUTH_ENDPOINT
-        )
+        self.assertEqual(resource_session.resource_endpoint, constants.STORAGE_AUTH_ENDPOINT)
 
     # This test won't run with real credentials unless the
     # tenant is actually in Azure China cloud.
@@ -340,9 +325,7 @@ class SessionTest(BaseTest):
     def test_get_client_non_default_base_url(self):
         s = Session(cloud_endpoints=AZURE_CHINA_CLOUD)
         client = s.client('azure.mgmt.resource.ResourceManagementClient')
-        self.assertEqual(
-            AZURE_CHINA_CLOUD.endpoints.resource_manager, client._client._base_url
-        )
+        self.assertEqual(AZURE_CHINA_CLOUD.endpoints.resource_manager, client._client._base_url)
         self.assertEqual(
             AZURE_CHINA_CLOUD.endpoints.management + ".default",
             client._client._config.credential_scopes[0],
@@ -355,9 +338,7 @@ class SessionTest(BaseTest):
         """Verify we are setting the correct credential scope for us government"""
         s = Session(cloud_endpoints=AZURE_US_GOV_CLOUD)
         client = s.client('azure.mgmt.resource.ResourceManagementClient')
-        self.assertEqual(
-            AZURE_US_GOV_CLOUD.endpoints.resource_manager, client._client._base_url
-        )
+        self.assertEqual(AZURE_US_GOV_CLOUD.endpoints.resource_manager, client._client._base_url)
         self.assertEqual(
             AZURE_US_GOV_CLOUD.endpoints.management + ".default",
             client._client._config.credential_scopes[0],
@@ -405,9 +386,7 @@ class SessionTest(BaseTest):
         ):
             auth_params = Session().get_credentials().auth_params
             self.assertEqual(auth_params.get('tenant_id'), 'tenant')
-            self.assertEqual(
-                auth_params.get('subscription_id'), DEFAULT_SUBSCRIPTION_ID
-            )
+            self.assertEqual(auth_params.get('subscription_id'), DEFAULT_SUBSCRIPTION_ID)
             self.assertEqual(auth_params.get('keyvault_client_id'), 'kv_client')
             self.assertEqual(auth_params.get('keyvault_secret_id'), 'kv_secret')
             self.assertEqual(auth_params.get('client_id'), 'client')
@@ -415,9 +394,7 @@ class SessionTest(BaseTest):
 
     @patch('c7n_azure.session.get_keyvault_secret')
     @patch('c7n_azure.session.log.error')
-    def test_initialize_session_kv_authentication_error(
-        self, mock_log, mock_get_kv_secret
-    ):
+    def test_initialize_session_kv_authentication_error(self, mock_log, mock_get_kv_secret):
         with self.assertRaises(SystemExit):
             mock_get_kv_secret.side_effect = HTTPError()
 
@@ -435,8 +412,7 @@ class SessionTest(BaseTest):
                 s.get_subscription_id()
 
         mock_log.assert_called_once_with(
-            'Failed to retrieve SP credential from '
-            'Key Vault with client id: kv_client'
+            'Failed to retrieve SP credential from ' 'Key Vault with client id: kv_client'
         )
 
     def test_get_auth_endpoint(self):

@@ -81,9 +81,7 @@ class ConfigCompliance(Filter):
                 evaluations = page.get('EvaluationResults', ())
 
                 for e in evaluations:
-                    rident = e['EvaluationResultIdentifier'][
-                        'EvaluationResultQualifier'
-                    ]
+                    rident = e['EvaluationResultIdentifier']['EvaluationResultQualifier']
                     # for multi resource type rules, only look at
                     # results for the resource type currently being
                     # processed.

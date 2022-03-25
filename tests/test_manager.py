@@ -105,9 +105,7 @@ class TestEC2Manager(BaseTest):
 
     def test_get_resource_manager(self):
         p = self.load_policy({'resource': 'ec2', 'name': 'instances'})
-        self.assertEqual(
-            p.resource_manager.get_resource_manager('aws.lambda').type, 'lambda'
-        )
+        self.assertEqual(p.resource_manager.get_resource_manager('aws.lambda').type, 'lambda')
         self.assertEqual(p.resource_manager.source_type, 'describe')
 
     #        self.assertRaises(
@@ -116,9 +114,7 @@ class TestEC2Manager(BaseTest):
     #            'gcp.lambda')
 
     def test_source_propagate(self):
-        p = self.load_policy(
-            {'resource': 'ec2', 'source': 'config', 'name': 'instances'}
-        )
+        p = self.load_policy({'resource': 'ec2', 'source': 'config', 'name': 'instances'})
         manager = p.resource_manager.get_resource_manager('aws.security-group')
         self.assertEqual(manager.source_type, 'config')
 
@@ -148,17 +144,13 @@ class TestEC2Manager(BaseTest):
             }
         ).resource_manager
         self.assertEqual(
-            len(
-                ec2.filter_resources([instance(Tags=[{"Key": "ASV", "Value": "xyz"}])])
-            ),
+            len(ec2.filter_resources([instance(Tags=[{"Key": "ASV", "Value": "xyz"}])])),
             1,
         )
 
         self.assertEqual(
             len(
-                ec2.filter_resources(
-                    [instance(Tags=[{"Key": "CMDBEnvironment", "Value": "xyz"}])]
-                )
+                ec2.filter_resources([instance(Tags=[{"Key": "CMDBEnvironment", "Value": "xyz"}])])
             ),
             0,
         )
@@ -182,6 +174,4 @@ class TestEC2Manager(BaseTest):
 
         self.assertEqual(len(ec2.actions), 1)
         self.assertTrue(isinstance(ec2.actions[0], Tag))
-        self.assertEqual(
-            ec2.actions[0].data, {"value": "Missing proper tags", "type": "mark"}
-        )
+        self.assertEqual(ec2.actions[0].data, {"value": "Missing proper tags", "type": "mark"})

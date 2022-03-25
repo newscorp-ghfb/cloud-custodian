@@ -96,14 +96,10 @@ class Diff(Filter):
         return results
 
     def get_revisions(self, config, resource):
-        params = dict(
-            resourceType=self.model.config_type, resourceId=resource[self.model.id]
-        )
+        params = dict(resourceType=self.model.config_type, resourceId=resource[self.model.id])
         params.update(self.get_selector_params(resource))
         try:
-            revisions = config.get_resource_config_history(**params)[
-                'configurationItems'
-            ]
+            revisions = config.get_resource_config_history(**params)['configurationItems']
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotDiscoveredException':
                 return []

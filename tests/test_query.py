@@ -19,9 +19,7 @@ class ResourceQueryTest(BaseTest):
         # the describe log groups api, however we also want to override on any
         # sdk config files for unit tests, as well future proof on sdk retry
         # data file updates.
-        client = session_factory().client(
-            'logs', config=Config(retries={'max_attempts': 0})
-        )
+        client = session_factory().client('logs', config=Config(retries={'max_attempts': 0}))
 
         if self.recording:
             data = json.load(
@@ -33,9 +31,7 @@ class ResourceQueryTest(BaseTest):
                 )
             )
             data['data']['nextToken'] = 'moreplease+kthnxbye'
-            self.pill.save_response(
-                'logs', 'DescribeLogGroups', data['data'], http_response=200
-            )
+            self.pill.save_response('logs', 'DescribeLogGroups', data['data'], http_response=200)
 
             self.pill.save_response(
                 'logs',
@@ -79,9 +75,7 @@ class ResourceQueryTest(BaseTest):
 
     def test_query_filter(self):
         session_factory = self.replay_flight_data("test_query_filter")
-        p = self.load_policy(
-            {"name": "ec2", "resource": "ec2"}, session_factory=session_factory
-        )
+        p = self.load_policy({"name": "ec2", "resource": "ec2"}, session_factory=session_factory)
         q = ResourceQuery(p.session_factory)
         resources = q.filter(p.resource_manager)
         self.assertEqual(len(resources), 1)
@@ -89,9 +83,7 @@ class ResourceQueryTest(BaseTest):
 
     def test_query_get(self):
         session_factory = self.replay_flight_data("test_query_get")
-        p = self.load_policy(
-            {"name": "ec2", "resource": "ec2"}, session_factory=session_factory
-        )
+        p = self.load_policy({"name": "ec2", "resource": "ec2"}, session_factory=session_factory)
         q = ResourceQuery(p.session_factory)
         resources = q.get(p.resource_manager, ["i-9432cb49"])
         self.assertEqual(len(resources), 1)
@@ -122,15 +114,11 @@ class ConfigSourceTest(BaseTest):
         source = p.resource_manager.get_source('config')
 
         # if query passed in reflect it back
-        self.assertEqual(
-            source.get_query_params({'expr': 'select 1'}), {'expr': 'select 1'}
-        )
+        self.assertEqual(source.get_query_params({'expr': 'select 1'}), {'expr': 'select 1'})
 
         # if no query passed reflect back policy data
         p.data['query'] = [{'expr': 'select configuration'}]
-        self.assertEqual(
-            source.get_query_params(None), {'expr': 'select configuration'}
-        )
+        self.assertEqual(source.get_query_params(None), {'expr': 'select configuration'})
 
         p.data.pop('query')
 
@@ -163,9 +151,7 @@ class QueryResourceManagerTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
 
-        output = self.capture_logging(
-            name=p.resource_manager.log.name, level=logging.DEBUG
-        )
+        output = self.capture_logging(name=p.resource_manager.log.name, level=logging.DEBUG)
         p.run()
         self.assertTrue("Using cached internet-gateway: 3", output.getvalue())
 

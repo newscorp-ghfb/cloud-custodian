@@ -10,9 +10,7 @@ class Kinesis(BaseTest):
             {
                 "name": "kstream",
                 "resource": "kinesis",
-                "filters": [
-                    {"type": "value", "value_type": "size", "value": 3, "key": "Shards"}
-                ],
+                "filters": [{"type": "value", "value_type": "size", "value": 3, "key": "Shards"}],
             },
             session_factory=factory,
         )
@@ -128,8 +126,7 @@ class Kinesis(BaseTest):
             ]['Destinations'][0]
         )
         assert (
-            'KMSEncryptionConfig'
-            in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
+            'KMSEncryptionConfig' in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
         )  # noqa: E501
 
     def test_firehose_splunk_encrypt_s3_destination(self):
@@ -164,14 +161,11 @@ class Kinesis(BaseTest):
             ]['Destinations'][0]['SplunkDestinationDescription']
         )
         assert (
-            'KMSEncryptionConfig'
-            in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
+            'KMSEncryptionConfig' in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
         )
 
     def test_firehose_elasticsearch_encrypt_s3_destination(self):
-        factory = self.replay_flight_data(
-            "test_firehose_elasticsearch_encrypt_s3_destination"
-        )
+        factory = self.replay_flight_data("test_firehose_elasticsearch_encrypt_s3_destination")
         p = self.load_policy(
             {
                 "name": "khole",
@@ -202,14 +196,11 @@ class Kinesis(BaseTest):
             ]['Destinations'][0]['ElasticsearchDestinationDescription']
         )
         assert (
-            'KMSEncryptionConfig'
-            in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
+            'KMSEncryptionConfig' in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
         )
 
     def test_firehose_redshift_encrypt_s3_destination(self):
-        factory = self.replay_flight_data(
-            "test_firehose_redshift_encrypt_s3_destination"
-        )
+        factory = self.replay_flight_data("test_firehose_redshift_encrypt_s3_destination")
         p = self.load_policy(
             {
                 "name": "khole",
@@ -240,8 +231,7 @@ class Kinesis(BaseTest):
             ]['Destinations'][0]['RedshiftDestinationDescription']
         )
         assert (
-            'KMSEncryptionConfig'
-            in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
+            'KMSEncryptionConfig' in s['S3DestinationDescription']['EncryptionConfiguration'].keys()
         )
 
     def test_app_query(self):
@@ -294,9 +284,7 @@ class Kinesis(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         stream = (
-            factory()
-            .client("kinesisvideo")
-            .describe_stream(StreamName="test-video")["StreamInfo"]
+            factory().client("kinesisvideo").describe_stream(StreamName="test-video")["StreamInfo"]
         )
         self.assertEqual(stream["Status"], "DELETING")
 

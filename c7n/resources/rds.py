@@ -307,9 +307,7 @@ class AutoPatch(BaseAction):
                     window: Mon:23:00-Tue:01:00
     """
 
-    schema = type_schema(
-        'auto-patch', minor={'type': 'boolean'}, window={'type': 'string'}
-    )
+    schema = type_schema('auto-patch', minor={'type': 'boolean'}, window={'type': 'string'})
     permissions = ('rds:ModifyDBInstance',)
 
     def process(self, dbs):
@@ -320,9 +318,7 @@ class AutoPatch(BaseAction):
             params['PreferredMaintenanceWindow'] = self.data['window']
 
         for db in dbs:
-            client.modify_db_instance(
-                DBInstanceIdentifier=db['DBInstanceIdentifier'], **params
-            )
+            client.modify_db_instance(DBInstanceIdentifier=db['DBInstanceIdentifier'], **params)
 
 
 @filters.register('upgrade-available')
@@ -348,9 +344,7 @@ class UpgradeAvailable(Filter):
 
     """
 
-    schema = type_schema(
-        'upgrade-available', major={'type': 'boolean'}, value={'type': 'boolean'}
-    )
+    schema = type_schema('upgrade-available', major={'type': 'boolean'}, value={'type': 'boolean'})
     permissions = ('rds:DescribeDBEngineVersions',)
 
     def process(self, resources, event=None):
@@ -361,9 +355,7 @@ class UpgradeAvailable(Filter):
         results = []
 
         for r in resources:
-            target_upgrade = engine_upgrades.get(r['Engine'], {}).get(
-                r['EngineVersion']
-            )
+            target_upgrade = engine_upgrades.get(r['Engine'], {}).get(r['EngineVersion'])
             if target_upgrade is None:
                 if check_upgrade_extant is False:
                     results.append(r)
@@ -394,9 +386,7 @@ class UpgradeMinor(BaseAction):
 
     """
 
-    schema = type_schema(
-        'upgrade', major={'type': 'boolean'}, immediate={'type': 'boolean'}
-    )
+    schema = type_schema('upgrade', major={'type': 'boolean'}, immediate={'type': 'boolean'})
     permissions = ('rds:ModifyDBInstance',)
 
     def process(self, resources):
@@ -413,9 +403,7 @@ class UpgradeMinor(BaseAction):
                     )
                 target = engine_upgrades.get(r['Engine'], {}).get(r['EngineVersion'])
                 if target is None:
-                    log.debug(
-                        "implicit filter no upgrade on %s", r['DBInstanceIdentifier']
-                    )
+                    log.debug("implicit filter no upgrade on %s", r['DBInstanceIdentifier'])
                     continue
                 r['c7n-rds-engine-upgrade'] = target
             client.modify_db_instance(
@@ -431,9 +419,7 @@ class TagTrim(tags.TagTrim):
     permissions = ('rds:RemoveTagsFromResource',)
 
     def process_tag_removal(self, client, resource, candidates):
-        client.remove_tags_from_resource(
-            ResourceName=resource['DBInstanceArn'], TagKeys=candidates
-        )
+        client.remove_tags_from_resource(ResourceName=resource['DBInstanceArn'], TagKeys=candidates)
 
 
 START_STOP_ELIGIBLE_ENGINES = {
@@ -492,9 +478,7 @@ class Stop(BaseAction):
             try:
                 client.stop_db_instance(DBInstanceIdentifier=r['DBInstanceIdentifier'])
             except ClientError as e:
-                log.exception(
-                    "Error stopping db instance:%s err:%s", r['DBInstanceIdentifier'], e
-                )
+                log.exception("Error stopping db instance:%s err:%s", r['DBInstanceIdentifier'], e)
 
 
 @actions.register('start')
@@ -512,9 +496,7 @@ class Start(BaseAction):
             try:
                 client.start_db_instance(DBInstanceIdentifier=r['DBInstanceIdentifier'])
             except ClientError as e:
-                log.exception(
-                    "Error starting db instance:%s err:%s", r['DBInstanceIdentifier'], e
-                )
+                log.exception("Error starting db instance:%s err:%s", r['DBInstanceIdentifier'], e)
 
 
 @actions.register('delete')
@@ -596,9 +578,7 @@ class Delete(BaseAction):
         tags.append(
             {
                 'Key': 'VPCSecurityGroups',
-                'Value': ''.join(
-                    [g['VpcSecurityGroupId'] for g in instance['VpcSecurityGroups']]
-                ),
+                'Value': ''.join([g['VpcSecurityGroupId'] for g in instance['VpcSecurityGroups']]),
             }
         )
         tags.append(
@@ -651,9 +631,7 @@ class CopySnapshotTags(BaseAction):
                     enable: True
     """
 
-    deprecations = (
-        deprecated.action("use modify-db instead with `CopyTagsToSnapshot`"),
-    )
+    deprecations = (deprecated.action("use modify-db instead with `CopyTagsToSnapshot`"),)
 
     schema = type_schema('set-snapshot-copy-tags', enable={'type': 'boolean'})
     permissions = ('rds:ModifyDBInstance',)
@@ -664,9 +642,7 @@ class CopySnapshotTags(BaseAction):
             futures = {}
             client = local_session(self.manager.session_factory).client('rds')
             resources = [
-                r
-                for r in resources
-                if r['CopyTagsToSnapshot'] != self.data.get('enable', True)
+                r for r in resources if r['CopyTagsToSnapshot'] != self.data.get('enable', True)
             ]
             for r in resources:
                 futures[w.submit(self.set_snapshot_tags, client, r)] = r
@@ -723,9 +699,7 @@ class Snapshot(BaseAction):
                 futures.append(w.submit(self.process_rds_snapshot, db))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception creating rds snapshot  \n %s", f.exception()
-                    )
+                    self.log.error("Exception creating rds snapshot  \n %s", f.exception())
         return dbs
 
     def process_rds_snapshot(self, resource):
@@ -791,9 +765,7 @@ class ResizeInstance(BaseAction):
                     immediate: true
     """
 
-    schema = type_schema(
-        'resize', percent={'type': 'number'}, immediate={'type': 'boolean'}
-    )
+    schema = type_schema('resize', percent={'type': 'number'}, immediate={'type': 'boolean'})
 
     permissions = ('rds:ModifyDBInstance',)
 
@@ -853,9 +825,7 @@ class RetentionWindow(BaseAction):
                 futures.append(w.submit(self.process_snapshot_retention, db))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception setting rds retention  \n %s", f.exception()
-                    )
+                    self.log.error("Exception setting rds retention  \n %s", f.exception())
         return dbs
 
     def process_snapshot_retention(self, resource):
@@ -1036,9 +1006,7 @@ class LatestSnapshot(Filter):
         for db_identifier, snapshots in itertools.groupby(
             resources, operator.itemgetter('DBInstanceIdentifier')
         ):
-            results.append(
-                sorted(snapshots, key=operator.itemgetter('SnapshotCreateTime'))[-1]
-            )
+            results.append(sorted(snapshots, key=operator.itemgetter('SnapshotCreateTime'))[-1])
         return results
 
 
@@ -1129,9 +1097,7 @@ class RestoreInstance(BaseAction):
             for r in resources:
                 tags = {t['Key']: t['Value'] for t in r['Tags']}
                 if not set(tags).issuperset(self.restore_keys):
-                    self.log.warning(
-                        "snapshot:%s missing restore tags", r['DBSnapshotIdentifier']
-                    )
+                    self.log.warning("snapshot:%s missing restore tags", r['DBSnapshotIdentifier'])
                     continue
                 futures[w.submit(self.process_instance, client, r)] = r
             for f in as_completed(futures):
@@ -1181,9 +1147,7 @@ class RestoreInstance(BaseAction):
         post_modify['VpcSecurityGroupIds'] = tags['VPCSecurityGroups'].split(',')
 
         params['Tags'] = [
-            {'Key': k, 'Value': v}
-            for k, v in tags.items()
-            if k not in self.restore_keys
+            {'Key': k, 'Value': v} for k, v in tags.items() if k not in self.restore_keys
         ]
 
         params.update(self.data.get('restore_options', {}))
@@ -1207,9 +1171,7 @@ class CrossAccountAccess(CrossAccountAccessFilter):
                 futures.append(w.submit(self.process_resource_set, resource_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception checking cross account access\n %s" % (f.exception())
-                    )
+                    self.log.error("Exception checking cross account access\n %s" % (f.exception()))
                     continue
                 results.extend(f.result())
         return results
@@ -1323,9 +1285,7 @@ class SetPermissions(BaseAction):
                     )['DBSnapshotAttributesResult']['DBSnapshotAttributes']
                 }
                 snapshot[CrossAccountAccess.attributes_key] = attrs
-            remove_accounts = snapshot[CrossAccountAccess.attributes_key].get(
-                'restore', []
-            )
+            remove_accounts = snapshot[CrossAccountAccess.attributes_key].get('restore', [])
         elif remove_accounts == 'matched':
             remove_accounts = snapshot.get(CrossAccountAccess.annotation_key, [])
 
@@ -1392,9 +1352,7 @@ class RegionCopySnapshot(BaseAction):
 
     def process(self, resources):
         if self.data['target_region'] == self.manager.config.region:
-            self.log.warning(
-                "Source and destination region are the same, skipping copy"
-            )
+            self.log.warning("Source and destination region are the same, skipping copy")
             return
         for resource_set in chunks(resources, 20):
             self.process_resource_set(resource_set)
@@ -1403,9 +1361,7 @@ class RegionCopySnapshot(BaseAction):
         p = {}
         if key:
             p['KmsKeyId'] = key
-        p['TargetDBSnapshotIdentifier'] = snapshot['DBSnapshotIdentifier'].replace(
-            ':', '-'
-        )
+        p['TargetDBSnapshotIdentifier'] = snapshot['DBSnapshotIdentifier'].replace(':', '-')
         p['SourceRegion'] = self.manager.config.region
         p['SourceDBSnapshotIdentifier'] = snapshot['DBSnapshotArn']
 
@@ -1434,9 +1390,9 @@ class RegionCopySnapshot(BaseAction):
         snapshot['c7n:CopiedSnapshot'] = result['DBSnapshot']['DBSnapshotArn']
 
     def process_resource_set(self, resource_set):
-        target_client = self.manager.session_factory(
-            region=self.data['target_region']
-        ).client('rds')
+        target_client = self.manager.session_factory(region=self.data['target_region']).client(
+            'rds'
+        )
         target_key = self.data.get('target_key')
         tags = [{'Key': k, 'Value': v} for k, v in self.data.get('tags', {}).items()]
 
@@ -1481,9 +1437,7 @@ class RDSSnapshotDelete(BaseAction):
                 futures.append(w.submit(self.process_snapshot_set, snapshot_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting snapshot set \n %s", f.exception()
-                    )
+                    self.log.error("Exception deleting snapshot set \n %s", f.exception())
         return snapshots
 
     def process_snapshot_set(self, snapshots_set):
@@ -1556,9 +1510,7 @@ def _db_subnet_group_tags(subnet_groups, session_factory, executor_factory, retr
 
     def process_tags(g):
         try:
-            g['Tags'] = client.list_tags_for_resource(
-                ResourceName=g['DBSubnetGroupArn']
-            )['TagList']
+            g['Tags'] = client.list_tags_for_resource(ResourceName=g['DBSubnetGroupArn'])['TagList']
             return g
         except client.exceptions.DBSubnetGroupNotFoundFault:
             return None
@@ -1595,9 +1547,7 @@ class RDSSubnetGroupDeleteAction(BaseAction):
 
     def process_subnetgroup(self, subnet_group):
         client = local_session(self.manager.session_factory).client('rds')
-        client.delete_db_subnet_group(
-            DBSubnetGroupName=subnet_group['DBSubnetGroupName']
-        )
+        client.delete_db_subnet_group(DBSubnetGroupName=subnet_group['DBSubnetGroupName'])
 
 
 @RDSSubnetGroup.filter_registry.register('unused')
@@ -1627,9 +1577,7 @@ class UnusedRDSSubnetGroup(Filter):
             set(
                 jmespath.search(
                     '[].DBSubnetGroup.DBSubnetGroupName',
-                    self.manager.get_resource_manager('rds-cluster').resources(
-                        augment=False
-                    ),
+                    self.manager.get_resource_manager('rds-cluster').resources(augment=False),
                 )
             )
         )
@@ -1696,9 +1644,7 @@ class ParameterFilter(ValueFilter):
         client = local_session(self.manager.session_factory).client('rds')
         paginator = client.get_paginator('describe_db_parameters')
 
-        param_groups = {
-            db['DBParameterGroups'][0]['DBParameterGroupName'] for db in resources
-        }
+        param_groups = {db['DBParameterGroups'][0]['DBParameterGroupName'] for db in resources}
 
         for pg in param_groups:
             cache_key = {
@@ -1712,10 +1658,7 @@ class ParameterFilter(ValueFilter):
                 continue
             param_list = list(
                 itertools.chain(
-                    *[
-                        p['Parameters']
-                        for p in paginator.paginate(DBParameterGroupName=pg)
-                    ]
+                    *[p['Parameters'] for p in paginator.paginate(DBParameterGroupName=pg)]
                 )
             )
             paramcache[pg] = {
@@ -1729,9 +1672,7 @@ class ParameterFilter(ValueFilter):
             for pg in resource['DBParameterGroups']:
                 pg_values = paramcache[pg['DBParameterGroupName']]
                 if self.match(pg_values):
-                    resource.setdefault('c7n:MatchedDBParameter', []).append(
-                        self.data.get('key')
-                    )
+                    resource.setdefault('c7n:MatchedDBParameter', []).append(self.data.get('key'))
                     results.append(resource)
                     break
         return results
@@ -1842,9 +1783,7 @@ class ModifyDb(BaseAction):
 
     def validate(self):
         if self.data.get('update'):
-            update_dict = dict(
-                (i['property'], i['value']) for i in self.data.get('update')
-            )
+            update_dict = dict((i['property'], i['value']) for i in self.data.get('update'))
             if (
                 'MonitoringInterval' in update_dict
                 and update_dict['MonitoringInterval'] > 0

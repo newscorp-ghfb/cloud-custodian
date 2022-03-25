@@ -22,9 +22,7 @@ class UniversalTagTest(BaseTest):
                     'resource': 'step-machine',
                     'mode': {
                         'type': 'cloudtrail',
-                        'events': [
-                            {'ids': 'some', 'source': 'thing', 'event': 'wicked'}
-                        ],
+                        'events': [{'ids': 'some', 'source': 'thing', 'event': 'wicked'}],
                     },
                     'actions': [{'type': 'auto-tag-user', 'tag': 'creator'}],
                 }
@@ -33,9 +31,7 @@ class UniversalTagTest(BaseTest):
             self.fail('auto-tag policy failed to load %s' % e)
 
     def test_universal_augment_resource_missing_tags(self):
-        session_factory = self.replay_flight_data(
-            'test_tags_universal_augment_missing_tags'
-        )
+        session_factory = self.replay_flight_data('test_tags_universal_augment_missing_tags')
         cache_cluster_id = 'arn:aws:elasticache:us-east-1:644160558196:cluster:test'
         client = session_factory().client('elasticache')
         tags = client.list_tags_for_resource(ResourceName=cache_cluster_id)
@@ -65,9 +61,7 @@ class UniversalTagTest(BaseTest):
             {"FailedResourcesMap": {"arn:abc": {"ErrorCode": "ThrottlingException"}}},
             {"Result": 32},
         ]
-        self.assertEqual(
-            universal_retry(method, ["arn:abc", "arn:def"]), {"Result": 32}
-        )
+        self.assertEqual(universal_retry(method, ["arn:abc", "arn:def"]), {"Result": 32})
         sleep.assert_called_once()
         self.assertTrue(
             method.call_args_list
@@ -197,9 +191,7 @@ class CoalesceCopyUserTags(BaseTest):
 
 class CopyRelatedResourceTag(BaseTest):
     def test_copy_related_resource_tag_all(self):
-        session_factory = self.replay_flight_data(
-            "test_tags_copy_related_resource_tags_all"
-        )
+        session_factory = self.replay_flight_data("test_tags_copy_related_resource_tags_all")
         p = self.load_policy(
             {
                 "name": "copy-related-resource-tags-snapshots-volumes",
@@ -220,17 +212,13 @@ class CopyRelatedResourceTag(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client('ec2', 'us-east-1')
 
-        snap = client.describe_snapshots(SnapshotIds=[resources[0]['SnapshotId']])[
-            'Snapshots'
-        ]
+        snap = client.describe_snapshots(SnapshotIds=[resources[0]['SnapshotId']])['Snapshots']
         vol = client.describe_volumes(VolumeIds=[resources[0]['VolumeId']])['Volumes']
 
         self.assertEqual(snap[0]['Tags'], vol[0]['Tags'])
 
     def test_copy_related_resource_tag_partial(self):
-        session_factory = self.replay_flight_data(
-            "test_tags_copy_related_resource_tag_partial"
-        )
+        session_factory = self.replay_flight_data("test_tags_copy_related_resource_tag_partial")
         p = self.load_policy(
             {
                 "name": "copy-related-resource-tags-snapshots-volumes",
@@ -251,9 +239,7 @@ class CopyRelatedResourceTag(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client('ec2', 'us-east-1')
 
-        snap = client.describe_snapshots(SnapshotIds=[resources[0]['SnapshotId']])[
-            'Snapshots'
-        ]
+        snap = client.describe_snapshots(SnapshotIds=[resources[0]['SnapshotId']])['Snapshots']
         vol = client.describe_volumes(VolumeIds=[resources[0]['VolumeId']])['Volumes']
 
         vol_tags = {t['Key']: t['Value'] for t in vol[0]['Tags']}
@@ -268,9 +254,7 @@ class CopyRelatedResourceTag(BaseTest):
         self.assertFalse(snap_tags.get('tag2'))
 
     def test_copy_related_resource_tag_missing(self):
-        session_factory = self.replay_flight_data(
-            "test_tags_copy_related_resource_tag_missing"
-        )
+        session_factory = self.replay_flight_data("test_tags_copy_related_resource_tag_missing")
         p = self.load_policy(
             {
                 "name": "copy-related-resource-tags-snapshots-volumes",
@@ -328,9 +312,7 @@ class CopyRelatedResourceTag(BaseTest):
         # check the case where the related expression doesn't return
         # value.
         output = self.capture_logging('custodian.actions')
-        session_factory = self.replay_flight_data(
-            'test_copy_related_resource_tag_empty'
-        )
+        session_factory = self.replay_flight_data('test_copy_related_resource_tag_empty')
         client = session_factory().client('ec2')
         p = self.load_policy(
             {
@@ -351,9 +333,9 @@ class CopyRelatedResourceTag(BaseTest):
         p.run()
         if self.recording:
             time.sleep(3)
-        nics = client.describe_network_interfaces(
-            NetworkInterfaceIds=['eni-0e1324ba169ed7b2f']
-        )['NetworkInterfaces']
+        nics = client.describe_network_interfaces(NetworkInterfaceIds=['eni-0e1324ba169ed7b2f'])[
+            'NetworkInterfaces'
+        ]
         self.assertEqual(
             nics[0]['TagSet'],
             [{'Key': 'Env', 'Value': 'Dev'}, {'Key': 'Origin', 'Value': 'Home'}],
@@ -364,9 +346,7 @@ class CopyRelatedResourceTag(BaseTest):
         )
 
     def test_copy_related_resource_tag_multi_ref(self):
-        session_factory = self.replay_flight_data(
-            'test_copy_related_resource_tag_multi_ref'
-        )
+        session_factory = self.replay_flight_data('test_copy_related_resource_tag_multi_ref')
         client = session_factory().client('ec2')
 
         result = client.describe_volumes()['Volumes']

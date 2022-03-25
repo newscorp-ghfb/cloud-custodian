@@ -59,9 +59,7 @@ class CloudFront(BaseTest):
             {
                 "name": "requests-filter",
                 "resource": "distribution",
-                "filters": [
-                    {"type": "metrics", "name": "Requests", "value": 3, "op": "ge"}
-                ],
+                "filters": [{"type": "metrics", "name": "Requests", "value": 3, "op": "ge"}],
             },
             session_factory=factory,
         )
@@ -77,12 +75,8 @@ class CloudFront(BaseTest):
             {
                 "name": "distribution-set-ssl",
                 "resource": "distribution",
-                "filters": [
-                    {"type": "value", "key": k, "value": "allow-all", "op": "contains"}
-                ],
-                "actions": [
-                    {"type": "set-protocols", "ViewerProtocolPolicy": "https-only"}
-                ],
+                "filters": [{"type": "value", "key": k, "value": "allow-all", "op": "contains"}],
+                "actions": [{"type": "set-protocols", "ViewerProtocolPolicy": "https-only"}],
             },
             session_factory=factory,
         )
@@ -95,9 +89,7 @@ class CloudFront(BaseTest):
         client = local_session(factory).client("cloudfront")
         resp = client.list_distributions()
         self.assertEqual(
-            resp["DistributionList"]["Items"][0]["DefaultCacheBehavior"][
-                "ViewerProtocolPolicy"
-            ],
+            resp["DistributionList"]["Items"][0]["DefaultCacheBehavior"]["ViewerProtocolPolicy"],
             "https-only",
         )
 
@@ -110,9 +102,7 @@ class CloudFront(BaseTest):
             {
                 "name": "distribution-set-ssl",
                 "resource": "distribution",
-                "filters": [
-                    {"type": "value", "key": k, "value": "TLSv1", "op": "contains"}
-                ],
+                "filters": [{"type": "value", "key": k, "value": "TLSv1", "op": "contains"}],
                 "actions": [
                     {
                         "type": "set-protocols",
@@ -132,22 +122,22 @@ class CloudFront(BaseTest):
         client = local_session(factory).client("cloudfront")
         resp = client.list_distributions()
         self.assertEqual(
-            resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
-                "CustomOriginConfig"
-            ]["OriginProtocolPolicy"],
+            resp["DistributionList"]["Items"][0]["Origins"]["Items"][0]["CustomOriginConfig"][
+                "OriginProtocolPolicy"
+            ],
             "https-only",
         )
         self.assertTrue(
             "TLSv1.2"
-            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
-                "CustomOriginConfig"
-            ]["OriginSslProtocols"]["Items"]
+            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0]["CustomOriginConfig"][
+                "OriginSslProtocols"
+            ]["Items"]
         )
         self.assertFalse(
             "TLSv1"
-            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0][
-                "CustomOriginConfig"
-            ]["OriginSslProtocols"]["Items"]
+            in resp["DistributionList"]["Items"][0]["Origins"]["Items"][0]["CustomOriginConfig"][
+                "OriginSslProtocols"
+            ]["Items"]
         )
 
     def test_distribution_disable(self):
@@ -178,9 +168,7 @@ class CloudFront(BaseTest):
         self.assertEqual(resp["DistributionList"]["Items"][0]["Enabled"], False)
 
     def test_distribution_check_s3_origin_missing_bucket(self):
-        factory = self.replay_flight_data(
-            "test_distribution_check_s3_origin_missing_bucket"
-        )
+        factory = self.replay_flight_data("test_distribution_check_s3_origin_missing_bucket")
 
         p = self.load_policy(
             {
@@ -220,9 +208,7 @@ class CloudFront(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]['c7n:distribution-config']['Logging']['Enabled'], True
-        )
+        self.assertEqual(resources[0]['c7n:distribution-config']['Logging']['Enabled'], True)
 
     def test_distribution_check_logging_enabled_error(self):
         factory = self.replay_flight_data("test_distribution_check_logging_enabled")
@@ -261,9 +247,7 @@ class CloudFront(BaseTest):
         mock_factory().client('cloudfront').get_distribution_config.assert_called_once()
 
     def test_streaming_distribution_check_logging_enabled(self):
-        factory = self.replay_flight_data(
-            "test_streaming_distribution_check_logging_enabled"
-        )
+        factory = self.replay_flight_data("test_streaming_distribution_check_logging_enabled")
 
         p = self.load_policy(
             {
@@ -283,23 +267,17 @@ class CloudFront(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]['c7n:distribution-config']['Logging']['Enabled'], True
-        )
+        self.assertEqual(resources[0]['c7n:distribution-config']['Logging']['Enabled'], True)
 
     def test_streaming_distribution_check_logging_enabled_error(self):
-        factory = self.replay_flight_data(
-            "test_streaming_distribution_check_logging_enabled"
-        )
+        factory = self.replay_flight_data("test_streaming_distribution_check_logging_enabled")
 
         client = factory().client("cloudfront")
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().client(
             'cloudfront'
-        ).exceptions.NoSuchStreamingDistribution = (
-            client.exceptions.NoSuchStreamingDistribution
-        )
+        ).exceptions.NoSuchStreamingDistribution = client.exceptions.NoSuchStreamingDistribution
 
         mock_factory().client(
             'cloudfront'
@@ -326,9 +304,7 @@ class CloudFront(BaseTest):
             p.resource_manager.filters[0].process([{'Id': 'abc'}])
         except client.exceptions.NoSuchDistribution:
             self.fail('should not raise')
-        mock_factory().client(
-            'cloudfront'
-        ).get_streaming_distribution_config.assert_called_once()
+        mock_factory().client('cloudfront').get_streaming_distribution_config.assert_called_once()
 
     def test_distribution_tag(self):
         factory = self.replay_flight_data("test_distrbution_tag")
@@ -373,9 +349,7 @@ class CloudFront(BaseTest):
 
         client = local_session(factory).client("cloudfront")
         resp = client.list_streaming_distributions()
-        self.assertEqual(
-            resp["StreamingDistributionList"]["Items"][0]["Enabled"], False
-        )
+        self.assertEqual(resp["StreamingDistributionList"]["Items"][0]["Enabled"], False)
 
     def test_streaming_distribution_tag(self):
         factory = self.replay_flight_data("test_streaming_distrbution_tag")
@@ -466,9 +440,7 @@ class CloudFront(BaseTest):
         self.assertEqual(resp['DistributionConfig']['Logging']['Enabled'], True)
 
     def test_cloudfront_update_streaming_distribution(self):
-        factory = self.replay_flight_data(
-            "test_distribution_update_streaming_distribution"
-        )
+        factory = self.replay_flight_data("test_distribution_update_streaming_distribution")
         p = self.load_policy(
             {
                 "name": "cloudfront-tagging-us-east-1",
@@ -504,6 +476,4 @@ class CloudFront(BaseTest):
         client = local_session(factory).client("cloudfront")
         dist_id = resources[0]['Id']
         resp = client.get_streaming_distribution_config(Id=dist_id)
-        self.assertEqual(
-            resp['StreamingDistributionConfig']['Logging']['Enabled'], True
-        )
+        self.assertEqual(resp['StreamingDistributionConfig']['Logging']['Enabled'], True)

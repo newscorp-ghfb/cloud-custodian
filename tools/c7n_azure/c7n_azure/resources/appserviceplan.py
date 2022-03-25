@@ -138,9 +138,7 @@ class ResizePlan(AzureBaseAction):
     }
 
     def _prepare_processing(self):
-        self.client = (
-            self.manager.get_client()
-        )  # type azure.mgmt.web.WebSiteManagementClient
+        self.client = self.manager.get_client()  # type azure.mgmt.web.WebSiteManagementClient
 
     def _process_resource(self, resource):
         model = models.AppServicePlan(location=resource['location'])
@@ -170,13 +168,10 @@ class ResizePlan(AzureBaseAction):
             model.sku.capacity = Lookup.extract(self.data.get('count'), resource)
 
         try:
-            self.client.app_service_plans.update(
-                resource['resourceGroup'], resource['name'], model
-            )
+            self.client.app_service_plans.update(resource['resourceGroup'], resource['name'], model)
         except models.DefaultErrorResponseException as e:
             self.log.error(
-                "Failed to resize %s.  Inner exception: %s"
-                % (resource['name'], e.inner_exception)
+                "Failed to resize %s.  Inner exception: %s" % (resource['name'], e.inner_exception)
             )
 
     @staticmethod

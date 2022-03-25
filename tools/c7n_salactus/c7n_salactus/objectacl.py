@@ -45,9 +45,7 @@ class ObjectAclCheck:
         return {'key': key['Key'], 'grants': grants}
 
     def process_version(self, client, bucket_name, key):
-        acl = client.get_object_acl(
-            Bucket=bucket_name, Key=key['Key'], VersionId=key['VersionId']
-        )
+        acl = client.get_object_acl(Bucket=bucket_name, Key=key['Key'], VersionId=key['VersionId'])
         acl.pop('ResponseMetadata')
         grants = self.check_grants(acl)
 

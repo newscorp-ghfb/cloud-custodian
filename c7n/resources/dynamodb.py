@@ -34,9 +34,7 @@ class ConfigTable(query.ConfigSource):
 
 class DescribeTable(query.DescribeSource):
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeTable, self).augment(resources)
-        )
+        return universal_augment(self.manager, super(DescribeTable, self).augment(resources))
 
 
 @resources.register('dynamodb-table')
@@ -133,9 +131,7 @@ class TableContinuousBackupAction(BaseAction):
     """
 
     valid_status = ('ACTIVE',)
-    schema = type_schema(
-        'set-continuous-backup', state={'type': 'boolean', 'default': True}
-    )
+    schema = type_schema('set-continuous-backup', state={'type': 'boolean', 'default': True})
     permissions = ('dynamodb:UpdateContinuousBackups',)
 
     def process(self, resources):
@@ -193,9 +189,7 @@ class DeleteTable(BaseAction):
                 futures.append(w.submit(self.delete_table, client, table_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting dynamodb table set \n %s" % (f.exception())
-                    )
+                    self.log.error("Exception deleting dynamodb table set \n %s" % (f.exception()))
 
 
 @Table.action_registry.register('set-stream')
@@ -253,9 +247,7 @@ class SetStream(BaseAction):
         for f in as_completed(futures):
             t = futures[f]
             if f.exception():
-                self.log.error(
-                    "Exception updating dynamodb table set \n %s" % (f.exception())
-                )
+                self.log.error("Exception updating dynamodb table set \n %s" % (f.exception()))
                 continue
 
             if self.data.get('stream_view_type') is not None:
@@ -314,9 +306,7 @@ class CreateBackup(BaseAction):
             for f in as_completed(futures):
                 t = futures[f]
                 if f.exception():
-                    self.manager.log.warning(
-                        "Could not complete DynamoDB backup table:%s", t
-                    )
+                    self.manager.log.warning("Could not complete DynamoDB backup table:%s", t)
                 arn = f.result()['BackupDetails']['BackupArn']
                 t['c7n:BackupArn'] = arn
 
@@ -374,9 +364,7 @@ class DeleteBackup(BaseAction):
                 c.delete_backup(BackupArn=t['BackupArn'])
             except ClientError as e:
                 if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                    self.log.warning(
-                        "Could not complete DynamoDB backup deletion for table:%s", t
-                    )
+                    self.log.warning("Could not complete DynamoDB backup deletion for table:%s", t)
                     continue
                 raise
 
@@ -528,9 +516,7 @@ class DaxRemoveTagging(RemoveTag):
                 client.exceptions.TagNotFoundFault,
                 client.exceptions.InvalidClusterStateFault,
             ) as e:
-                self.log.warning(
-                    'Exception removing tags on %s: \n%s', r['ClusterName'], e
-                )
+                self.log.warning('Exception removing tags on %s: \n%s', r['ClusterName'], e)
 
 
 @DynamoDbAccelerator.action_registry.register('mark-for-op')
@@ -633,9 +619,7 @@ class DaxUpdateCluster(BaseAction):
                 client.exceptions.ClusterNotFoundFault,
                 client.exceptions.InvalidClusterStateFault,
             ) as e:
-                self.log.warning(
-                    'Exception updating dax cluster %s: \n%s', r['ClusterName'], e
-                )
+                self.log.warning('Exception updating dax cluster %s: \n%s', r['ClusterName'], e)
 
 
 @DynamoDbAccelerator.action_registry.register('modify-security-groups')
@@ -648,9 +632,7 @@ class DaxModifySecurityGroup(ModifyVpcSecurityGroupsAction):
         groups = super(DaxModifySecurityGroup, self).get_groups(resources)
 
         for idx, r in enumerate(resources):
-            client.update_cluster(
-                ClusterName=r['ClusterName'], SecurityGroupIds=groups[idx]
-            )
+            client.update_cluster(ClusterName=r['ClusterName'], SecurityGroupIds=groups[idx])
 
 
 @DynamoDbAccelerator.filter_registry.register('subnet')
@@ -676,10 +658,7 @@ class DaxSubnetFilter(SubnetFilter):
         group_ids = set()
         for r in resources:
             group_ids.update(
-                [
-                    s['SubnetIdentifier']
-                    for s in self.groups[r['SubnetGroup']]['Subnets']
-                ]
+                [s['SubnetIdentifier'] for s in self.groups[r['SubnetGroup']]['Subnets']]
             )
         return group_ids
 

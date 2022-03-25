@@ -33,9 +33,7 @@ class TestAMI(BaseTest):
                 'name': 'ami-check',
                 'resource': 'aws.ami',
                 'filters': ['cross-account'],
-                'actions': [
-                    {'type': 'remove-launch-permissions', 'accounts': 'matched'}
-                ],
+                'actions': [{'type': 'remove-launch-permissions', 'accounts': 'matched'}],
             },
             session_factory=factory,
         )
@@ -95,9 +93,7 @@ class TestAMI(BaseTest):
 
         self.patch(DescribeSource, 'get_resources', base_get_resources)
 
-        p = self.load_policy(
-            {'name': 'bad-ami', 'resource': 'ami'}, session_factory=factory
-        )
+        p = self.load_policy({'name': 'bad-ami', 'resource': 'ami'}, session_factory=factory)
         resources = p.resource_manager.get_resources([ami_id, good_ami_id])
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['ImageId'], good_ami_id)

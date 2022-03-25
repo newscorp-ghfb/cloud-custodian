@@ -160,12 +160,8 @@ class NetworkSecurityGroupFilter(Filter):
         # Calculate ports from the settings:
         #   If ports not specified -- assuming the entire range
         #   If except_ports not specifed -- nothing
-        ports_set = PortsRangeHelper.get_ports_set_from_string(
-            self.data.get(PORTS, '0-65535')
-        )
-        except_set = PortsRangeHelper.get_ports_set_from_string(
-            self.data.get(EXCEPT_PORTS, '')
-        )
+        ports_set = PortsRangeHelper.get_ports_set_from_string(self.data.get(PORTS, '0-65535'))
+        except_set = PortsRangeHelper.get_ports_set_from_string(self.data.get(EXCEPT_PORTS, ''))
         self.ports = ports_set.difference(except_set)
         self.source_address = self.data.get(SOURCE, None)
         self.destination_address = self.data.get(DESTINATION, None)
@@ -248,9 +244,7 @@ class NetworkSecurityGroupPortsAction(BaseAction):
         IsAllowed = StringUtils.equal(self.access_action, ALLOW_OPERATION)
 
         # Find ports with different access level from NSG and this action
-        diff_ports = sorted(
-            [p for p in self.action_ports if nsg_ports.get(p, False) != IsAllowed]
-        )
+        diff_ports = sorted([p for p in self.action_ports if nsg_ports.get(p, False) != IsAllowed])
 
         return PortsRangeHelper.get_ports_strings_from_list(diff_ports)
 
@@ -260,12 +254,8 @@ class NetworkSecurityGroupPortsAction(BaseAction):
         direction = self.data[DIRECTION]
         prefix = self.data.get(PREFIX, 'c7n-policy-')
         # Build a list of ports described in the action.
-        ports = PortsRangeHelper.get_ports_set_from_string(
-            self.data.get(PORTS, '0-65535')
-        )
-        except_ports = PortsRangeHelper.get_ports_set_from_string(
-            self.data.get(EXCEPT_PORTS, '')
-        )
+        ports = PortsRangeHelper.get_ports_set_from_string(self.data.get(PORTS, '0-65535'))
+        except_ports = PortsRangeHelper.get_ports_set_from_string(self.data.get(EXCEPT_PORTS, ''))
         self.action_ports = ports.difference(except_ports)
 
         for nsg in network_security_groups:
@@ -286,14 +276,8 @@ class NetworkSecurityGroupPortsAction(BaseAction):
 
             rules = nsg['properties']['securityRules']
             rules = sorted(rules, key=lambda k: k['properties']['priority'])
-            rules = [
-                r
-                for r in rules
-                if StringUtils.equal(r['properties']['direction'], direction)
-            ]
-            lowest_priority = (
-                rules[0]['properties']['priority'] if len(rules) > 0 else 4096
-            )
+            rules = [r for r in rules if StringUtils.equal(r['properties']['direction'], direction)]
+            lowest_priority = rules[0]['properties']['priority'] if len(rules) > 0 else 4096
 
             # Create new top-priority rule to allow/block ports from the action.
             rule_name = prefix + str(uuid.uuid1())

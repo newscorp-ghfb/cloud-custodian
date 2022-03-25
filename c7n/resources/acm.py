@@ -9,9 +9,7 @@ from c7n.utils import type_schema, local_session
 
 class DescribeCertificate(DescribeSource):
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeCertificate, self).augment(resources)
-        )
+        return universal_augment(self.manager, super(DescribeCertificate, self).augment(resources))
 
 
 @resources.register('acm-certificate')
@@ -83,9 +81,7 @@ class CertificateDeleteAction(BaseAction):
 
     def process_cert(self, client, cert):
         try:
-            self.manager.retry(
-                client.delete_certificate, CertificateArn=cert['CertificateArn']
-            )
+            self.manager.retry(client.delete_certificate, CertificateArn=cert['CertificateArn'])
         except client.exceptions.ResourceNotFoundException:
             pass
         except client.exceptions.ResourceInUseException as e:

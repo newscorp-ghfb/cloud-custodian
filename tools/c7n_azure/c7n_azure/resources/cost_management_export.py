@@ -76,12 +76,8 @@ class CostManagementExportFilterLastExecution(Filter):
 
     def process(self, resources, event=None):
         self.client = self.manager.get_client()
-        self.scope = 'subscriptions/{0}'.format(
-            self.manager.get_session().get_subscription_id()
-        )
-        self.min_date = datetime.datetime.now() - datetime.timedelta(
-            days=self.data['age']
-        )
+        self.scope = 'subscriptions/{0}'.format(self.manager.get_session().get_subscription_id())
+        self.min_date = datetime.datetime.now() - datetime.timedelta(days=self.data['age'])
 
         result, _ = ThreadHelper.execute_in_parallel(
             resources=resources,
@@ -107,13 +103,9 @@ class CostManagementExportFilterLastExecution(Filter):
                 result.append(r)
                 continue
 
-            last_execution = max(
-                history.value, key=lambda execution: execution.submitted_time
-            )
+            last_execution = max(history.value, key=lambda execution: execution.submitted_time)
             if last_execution.submitted_time.date() <= self.min_date.date():
-                r[get_annotation_prefix('last-execution')] = last_execution.serialize(
-                    True
-                )
+                r[get_annotation_prefix('last-execution')] = last_execution.serialize(True)
                 result.append(r)
 
         return result
@@ -150,9 +142,7 @@ class CostManagementExportActionExecute(AzureBaseAction):
 
     def _prepare_processing(self):
         self.client = self.manager.get_client()
-        self.scope = 'subscriptions/{0}'.format(
-            self.manager.get_session().get_subscription_id()
-        )
+        self.scope = 'subscriptions/{0}'.format(self.manager.get_session().get_subscription_id())
 
     def _process_resource(self, resource):
         self.client.exports.execute(self.scope, resource['name'])

@@ -49,12 +49,8 @@ class PubSubSubscriptionTest(BaseTest):
     def test_pubsub_subscription_get(self):
         project_id = 'cloud-custodian'
         subscription_name = 'custodian'
-        resource_name = 'projects/{}/subscriptions/{}'.format(
-            project_id, subscription_name
-        )
-        session_factory = self.replay_flight_data(
-            'pubsub-subscription-get', project_id=project_id
-        )
+        resource_name = 'projects/{}/subscriptions/{}'.format(project_id, subscription_name)
+        session_factory = self.replay_flight_data('pubsub-subscription-get', project_id=project_id)
 
         policy = self.load_policy(
             {
@@ -78,9 +74,7 @@ class PubSubSnapshotTest(BaseTest):
     def test_pubsub_snapshot_query(self):
         project_id = 'cloud-custodian'
         pubsub_snapshot_name = 'projects/cloud-custodian/snapshots/custodian'
-        session_factory = self.replay_flight_data(
-            'pubsub-snapshot-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('pubsub-snapshot-query', project_id=project_id)
 
         policy = self.load_policy(
             {'name': 'gcp-pubsub-snapshot-dryrun', 'resource': 'gcp.pubsub-snapshot'},

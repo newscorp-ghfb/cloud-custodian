@@ -61,9 +61,7 @@ class S3OutputTest(TestUtils):
 
     def test_blob_output(self):
         blob_output = self.get_s3_output(klass=BlobOutput)
-        self.assertRaises(
-            NotImplementedError, blob_output.upload_file, 'xyz', '/prefix/xyz'
-        )
+        self.assertRaises(NotImplementedError, blob_output.upload_file, 'xyz', '/prefix/xyz')
 
     def test_output_path(self):
         with mock_datetime_now(date_parse('2020/06/10 13:00'), datetime):
@@ -72,9 +70,7 @@ class S3OutputTest(TestUtils):
                 output.get_output_path('s3://prefix/'), 's3://prefix/xyz/2020/06/10/13'
             )
             self.assertEqual(
-                output.get_output_path(
-                    's3://prefix/{region}/{account_id}/{policy_name}/{now:%Y}/'
-                ),
+                output.get_output_path('s3://prefix/{region}/{account_id}/{policy_name}/{now:%Y}/'),
                 's3://prefix/us-east-1/112233445566/xyz/2020',
             )
 

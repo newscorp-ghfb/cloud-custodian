@@ -33,8 +33,7 @@ except Exception:
 
 RESOURCE_ID = (
     "/subscriptions/%s/resourceGroups/"
-    "rgtest/providers/Microsoft.Compute/virtualMachines/nametest"
-    % DEFAULT_SUBSCRIPTION_ID
+    "rgtest/providers/Microsoft.Compute/virtualMachines/nametest" % DEFAULT_SUBSCRIPTION_ID
 )
 
 
@@ -59,29 +58,19 @@ class UtilsTest(BaseTest):
         super(UtilsTest, self).setUp()
 
     def test_get_subscription_id(self):
-        self.assertEqual(
-            ResourceIdParser.get_subscription_id(RESOURCE_ID), DEFAULT_SUBSCRIPTION_ID
-        )
+        self.assertEqual(ResourceIdParser.get_subscription_id(RESOURCE_ID), DEFAULT_SUBSCRIPTION_ID)
 
     def test_get_namespace(self):
-        self.assertEqual(
-            ResourceIdParser.get_namespace(RESOURCE_ID), "Microsoft.Compute"
-        )
-        self.assertEqual(
-            ResourceIdParser.get_namespace(RESOURCE_ID_CHILD), "Microsoft.Sql"
-        )
+        self.assertEqual(ResourceIdParser.get_namespace(RESOURCE_ID), "Microsoft.Compute")
+        self.assertEqual(ResourceIdParser.get_namespace(RESOURCE_ID_CHILD), "Microsoft.Sql")
 
     def test_get_resource_group(self):
         self.assertEqual(ResourceIdParser.get_resource_group(RESOURCE_ID), "rgtest")
 
     def test_get_resource_type(self):
 
-        self.assertEqual(
-            ResourceIdParser.get_resource_type(RESOURCE_ID), "virtualMachines"
-        )
-        self.assertEqual(
-            ResourceIdParser.get_resource_type(RESOURCE_ID_CHILD), "servers/databases"
-        )
+        self.assertEqual(ResourceIdParser.get_resource_type(RESOURCE_ID), "virtualMachines")
+        self.assertEqual(ResourceIdParser.get_resource_type(RESOURCE_ID_CHILD), "servers/databases")
 
     def test_get_full_type(self):
         self.assertEqual(
@@ -134,15 +123,11 @@ class UtilsTest(BaseTest):
         self.assertEqual(TagHelper.get_tag_value(resource, 'tag3', True), 'VALUE3')
 
     def test_get_ports(self):
-        self.assertEqual(
-            PortsRangeHelper.get_ports_set_from_string("5, 4-5, 9"), {4, 5, 9}
-        )
+        self.assertEqual(PortsRangeHelper.get_ports_set_from_string("5, 4-5, 9"), {4, 5, 9})
         rule = {'properties': {'destinationPortRange': '10-12'}}
         self.assertEqual(PortsRangeHelper.get_ports_set_from_rule(rule), {10, 11, 12})
         rule = {'properties': {'destinationPortRanges': ['80', '10-12']}}
-        self.assertEqual(
-            PortsRangeHelper.get_ports_set_from_rule(rule), {10, 11, 12, 80}
-        )
+        self.assertEqual(PortsRangeHelper.get_ports_set_from_rule(rule), {10, 11, 12, 80})
 
     def test_validate_ports_string(self):
         self.assertEqual(PortsRangeHelper.validate_ports_string('80'), True)
@@ -153,16 +138,12 @@ class UtilsTest(BaseTest):
         self.assertEqual(PortsRangeHelper.validate_ports_string('65537'), False)
         self.assertEqual(PortsRangeHelper.validate_ports_string('-1'), False)
         self.assertEqual(PortsRangeHelper.validate_ports_string('10-8'), False)
-        self.assertEqual(
-            PortsRangeHelper.validate_ports_string('80,30,25-65538'), False
-        )
+        self.assertEqual(PortsRangeHelper.validate_ports_string('80,30,25-65538'), False)
         self.assertEqual(PortsRangeHelper.validate_ports_string('65536-65537'), False)
 
     def test_get_ports_strings_from_list(self):
         self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([]), [])
-        self.assertEqual(
-            PortsRangeHelper.get_ports_strings_from_list([10, 11]), ['10-11']
-        )
+        self.assertEqual(PortsRangeHelper.get_ports_strings_from_list([10, 11]), ['10-11'])
         self.assertEqual(
             PortsRangeHelper.get_ports_strings_from_list([10, 12, 13, 14]),
             ['10', '12-14'],
@@ -258,18 +239,14 @@ class UtilsTest(BaseTest):
         source2 = 'amet sit dolor ipsum Lorem'
         self.assertEqual(StringUtils.naming_hash(source), '16aba539')
         self.assertEqual(StringUtils.naming_hash(source, 10), '16aba5393a')
-        self.assertNotEqual(
-            StringUtils.naming_hash(source), StringUtils.naming_hash(source2)
-        )
+        self.assertNotEqual(StringUtils.naming_hash(source), StringUtils.naming_hash(source2))
 
     @patch(
         'azure.mgmt.applicationinsights.v2015_05_01.operations.ComponentsOperations.get',
         return_value=type(str('result_data'), (), {'instrumentation_key': GUID}),
     )
     def test_app_insights_get_instrumentation_key(self, mock_handler_run):
-        self.assertEqual(
-            AppInsightsHelper.get_instrumentation_key('azure://' + GUID), GUID
-        )
+        self.assertEqual(AppInsightsHelper.get_instrumentation_key('azure://' + GUID), GUID)
         self.assertEqual(
             AppInsightsHelper.get_instrumentation_key('azure://resourceGroup/name'),
             GUID,
@@ -319,9 +296,7 @@ class UtilsTest(BaseTest):
 
     @patch('c7n_azure.utils.send_logger.debug')
     @patch('c7n_azure.utils.send_logger.warning')
-    def test_custodian_azure_send_override_429_missingheader(
-        self, logger_debug, logger_warning
-    ):
+    def test_custodian_azure_send_override_429_missingheader(self, logger_debug, logger_warning):
         mock = Mock()
         mock.send = types.MethodType(custodian_azure_send_override, mock)
 
@@ -336,20 +311,13 @@ class UtilsTest(BaseTest):
         self.assertEqual(logger_warning.call_count, 3)
 
     managed_group_return_value = [
-        _get_descendant_info(
-            type='managementGroups/subscriptions', name=DEFAULT_SUBSCRIPTION_ID
-        ),
+        _get_descendant_info(type='managementGroups/subscriptions', name=DEFAULT_SUBSCRIPTION_ID),
         _get_descendant_info(type='Microsoft.Management/managementGroups'),
-        _get_descendant_info(
-            type='Microsoft.Management/managementGroups/subscriptions', name=GUID
-        ),
+        _get_descendant_info(type='Microsoft.Management/managementGroups/subscriptions', name=GUID),
     ]
 
     @patch(
-        (
-            'azure.mgmt.managementgroups.operations'
-            '.ManagementGroupsOperations.get_descendants'
-        ),
+        ('azure.mgmt.managementgroups.operations' '.ManagementGroupsOperations.get_descendants'),
         return_value=managed_group_return_value,
     )
     def test_managed_group_helper(self, _1):
@@ -366,9 +334,7 @@ class UtilsTest(BaseTest):
 
             reload(sys.modules['c7n_azure.utils'])
 
-            result = get_keyvault_secret(
-                None, 'https://testkv.vault.net/secrets/testsecret/123412'
-            )
+            result = get_keyvault_secret(None, 'https://testkv.vault.net/secrets/testsecret/123412')
             self.assertEqual(mock.value, result)
 
     # Test relies on substitute data in Azure Common, not designed for live data
@@ -377,9 +343,7 @@ class UtilsTest(BaseTest):
         # Get with region
         result = get_service_tag_ip_space('ApiManagement', 'WestUS')
         self.assertEqual(3, len(result))
-        self.assertEqual(
-            {"13.64.39.16/32", "40.112.242.148/31", "40.112.243.240/28"}, set(result)
-        )
+        self.assertEqual({"13.64.39.16/32", "40.112.242.148/31", "40.112.243.240/28"}, set(result))
 
         # Get without region
         result = get_service_tag_ip_space('ApiManagement')

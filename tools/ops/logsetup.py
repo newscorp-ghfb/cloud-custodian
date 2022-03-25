@@ -54,9 +54,7 @@ def get_groups(session_factory, options):
         )
         groups = [g for g in groups if g['logGroupName'] in options.group]
 
-    log.info(
-        "Subscribing to groups: %s" % (" \n".join([g['logGroupName'] for g in groups]))
-    )
+    log.info("Subscribing to groups: %s" % (" \n".join([g['logGroupName'] for g in groups])))
     return groups
 
 

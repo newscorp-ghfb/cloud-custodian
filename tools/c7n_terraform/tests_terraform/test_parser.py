@@ -64,9 +64,7 @@ def test_variable_resolver(aws_s3_bucket):
 
 
 def test_variable_resolver_value_map():
-    variable_resolver = functools.partial(
-        VariableResolver, value_map={"mybucket": "mybucket3"}
-    )
+    variable_resolver = functools.partial(VariableResolver, value_map={"mybucket": "mybucket3"})
     visitor = build_visitor(data_dir / "aws-s3-bucket", resolver=variable_resolver)
 
     blocks = list(visitor.iter_blocks(tf_kind="resource"))
@@ -117,7 +115,4 @@ def test_tf_json_parsing():
     tf_data = Parser().parse_module(path / "tf")
     tfjson_data = Parser().parse_module(path / "tfjson")
 
-    assert (
-        tf_data[path / "tf" / "main.tf"]
-        == tfjson_data[path / "tfjson" / "main.tf.json"]
-    )
+    assert tf_data[path / "tf" / "main.tf"] == tfjson_data[path / "tfjson" / "main.tf.json"]

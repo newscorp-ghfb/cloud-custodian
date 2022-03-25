@@ -13,9 +13,7 @@ from c7n_azure.function import main as functionMain
 from mock import patch
 
 
-@unittest.skipIf(
-    sys.version_info < (3, 6), "Functions is not supported in this version"
-)
+@unittest.skipIf(sys.version_info < (3, 6), "Functions is not supported in this version")
 class FunctionTest(BaseTest):
 
     body = (

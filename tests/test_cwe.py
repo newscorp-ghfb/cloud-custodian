@@ -64,9 +64,7 @@ class CloudWatchEventTest(BaseTest):
         )
         resources = policy.run()
         self.assertEqual(len(resources), 1)
-        targets = client.list_targets_by_rule(Rule=resources[0]["c7n:parent-id"]).get(
-            "Targets"
-        )
+        targets = client.list_targets_by_rule(Rule=resources[0]["c7n:parent-id"]).get("Targets")
         self.assertEqual(targets, [])
 
     def test_event_rule_force_delete(self):
@@ -117,12 +115,8 @@ class CloudWatchEventTest(BaseTest):
         with self.assertRaises(lambda_client.exceptions.ClientError):
             lambda_client.get_function(FunctionName="test")
         with self.assertRaises(sns_client.exceptions.NotFoundException):
-            sns_client.get_topic_attributes(
-                TopicArn="arn:aws:sns:us-east-1:644160558196:foo"
-            )
-        res = sns_client.get_topic_attributes(
-            TopicArn="arn:aws:sns:us-east-1:644160558196:test2"
-        )
+            sns_client.get_topic_attributes(TopicArn="arn:aws:sns:us-east-1:644160558196:foo")
+        res = sns_client.get_topic_attributes(TopicArn="arn:aws:sns:us-east-1:644160558196:test2")
         self.assertTrue(res)
 
     def test_event_rule_invalid_targets_all(self):

@@ -221,9 +221,7 @@ def report(policy):
         filters.extend(f.get_deprecations())
     for a in rm.actions:
         actions.extend(a.get_deprecations())
-    return Report(
-        policy.name, policy_fields, conditions, mode, resource, filters, actions
-    )
+    return Report(policy.name, policy_fields, conditions, mode, resource, filters, actions)
 
 
 class Report:

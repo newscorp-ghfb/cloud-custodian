@@ -67,12 +67,9 @@ class Delete(Action):
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('kinesis')
-        not_active = [
-            r['StreamName'] for r in resources if r['StreamStatus'] != 'ACTIVE'
-        ]
+        not_active = [r['StreamName'] for r in resources if r['StreamStatus'] != 'ACTIVE']
         self.log.warning(
-            "The following streams cannot be deleted (wrong state): %s"
-            % (", ".join(not_active))
+            "The following streams cannot be deleted (wrong state): %s" % (", ".join(not_active))
         )
         for r in resources:
             if not r['StreamStatus'] == 'ACTIVE':
@@ -127,14 +124,11 @@ class FirehoseDelete(Action):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('firehose')
         creating = [
-            r['DeliveryStreamName']
-            for r in resources
-            if r['DeliveryStreamStatus'] == 'CREATING'
+            r['DeliveryStreamName'] for r in resources if r['DeliveryStreamStatus'] == 'CREATING'
         ]
         if creating:
             self.log.warning(
-                "These delivery streams can't be deleted (wrong state): %s"
-                % (", ".join(creating))
+                "These delivery streams can't be deleted (wrong state): %s" % (", ".join(creating))
             )
         for r in resources:
             if not r['DeliveryStreamStatus'] == 'ACTIVE':
@@ -305,9 +299,7 @@ class KinesisAnalyticsAppV2Delete(Action):
     permissions = ("kinesisanalytics:DeleteApplication",)
 
     def process(self, resources):
-        client = local_session(self.manager.session_factory).client(
-            'kinesisanalyticsv2'
-        )
+        client = local_session(self.manager.session_factory).client('kinesisanalyticsv2')
         for r in resources:
             client.delete_application(
                 ApplicationName=r['ApplicationName'],
@@ -319,8 +311,7 @@ class KinesisAnalyticsAppV2Delete(Action):
 class KinesisAnalyticsSubnetFilter(SubnetFilter):
 
     RelatedIdsExpression = (
-        'ApplicationConfigurationDescription.'
-        'VpcConfigurationDescriptions[].SubnetIds[]'
+        'ApplicationConfigurationDescription.' 'VpcConfigurationDescriptions[].SubnetIds[]'
     )
 
 

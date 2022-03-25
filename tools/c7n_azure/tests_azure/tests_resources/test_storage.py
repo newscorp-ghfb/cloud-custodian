@@ -546,12 +546,10 @@ class StorageTest(BaseTest):
 
         # assert read and write logging settings are disabled
         self.assertFalse(
-            blob_settings['analytics_logging'].read
-            and blob_settings['analytics_logging'].write
+            blob_settings['analytics_logging'].read and blob_settings['analytics_logging'].write
         )
         self.assertFalse(
-            queue_settings['analytics_logging'].read
-            and queue_settings['analytics_logging'].write
+            queue_settings['analytics_logging'].read and queue_settings['analytics_logging'].write
         )
         self.assertFalse(table_settings.logging.read and table_settings.logging.write)
 
@@ -621,9 +619,7 @@ class StorageTest(BaseTest):
             },
         }
         mock_session = MagicMock()
-        StorageSettingsUtilities.get_settings(
-            BLOB_TYPE, mock_storage_account, session=mock_session
-        )
+        StorageSettingsUtilities.get_settings(BLOB_TYPE, mock_storage_account, session=mock_session)
         mock_blob_properties_call.assert_called_once()
 
     @patch('azure.storage.file.FileService.get_file_service_properties')
@@ -647,17 +643,13 @@ class StorageTest(BaseTest):
             },
         }
         mock_session = MagicMock()
-        StorageSettingsUtilities.get_settings(
-            FILE_TYPE, mock_storage_account, session=mock_session
-        )
+        StorageSettingsUtilities.get_settings(FILE_TYPE, mock_storage_account, session=mock_session)
         mock_get_storage_key.assert_called_with(
             'mock_resource_group', 'mock_storage_account', mock_session
         )
         mock_file_properties_call.assert_called_once()
 
-    @patch(
-        'azure.cosmosdb.table.tableservice.TableService.get_table_service_properties'
-    )
+    @patch('azure.cosmosdb.table.tableservice.TableService.get_table_service_properties')
     @patch(
         'c7n_azure.storage_utils.StorageUtilities.get_storage_primary_key',
         return_value='mock_primary_key',
@@ -729,9 +721,7 @@ class StorageTest(BaseTest):
 
         mock_set_queue_properties.assert_called_once()
 
-    @patch(
-        'azure.cosmosdb.table.tableservice.TableService.set_table_service_properties'
-    )
+    @patch('azure.cosmosdb.table.tableservice.TableService.set_table_service_properties')
     @patch(
         'c7n_azure.storage_utils.StorageUtilities.get_storage_primary_key',
         return_value='mock_primary_key',
@@ -864,9 +854,7 @@ class StorageFirewallBypassFilterTest(BaseTest):
     @parameterized.expand(scenarios)
     def test_run(self, default_action, bypass, expected):
         resource = {
-            'properties': {
-                'networkAcls': {'defaultAction': default_action, 'bypass': bypass}
-            }
+            'properties': {'networkAcls': {'defaultAction': default_action, 'bypass': bypass}}
         }
         f = StorageFirewallBypassFilter({'mode': 'equal', 'list': []})
         self.assertEqual(expected, f._query_bypass(resource))

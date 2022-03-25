@@ -99,9 +99,7 @@ class SendCommand(Action):
                       - dpkg -i osquery_3.3.0_1.linux.amd64.deb
     """
 
-    schema = type_schema(
-        'send-command', command={'type': 'object'}, required=('command',)
-    )
+    schema = type_schema('send-command', command={'type': 'object'}, required=('command',))
 
     permissions = ('ssm:SendCommand',)
     shape = "SendCommandRequest"
@@ -121,9 +119,7 @@ class SendCommand(Action):
                 found = True
                 break
         if not found:
-            raise PolicyValidationError(
-                "send-command requires use of ssm filter on ec2 resources"
-            )
+            raise PolicyValidationError("send-command requires use of ssm filter on ec2 resources")
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ssm')
@@ -211,8 +207,7 @@ class OpsItem(QueryResourceManager):
         return self.resources(
             {
                 'OpsItemFilters': [
-                    {'Key': 'OpsItemId', 'Values': [i], 'Operator': 'Equal'}
-                    for i in ids
+                    {'Key': 'OpsItemId', 'Values': [i], 'Operator': 'Equal'} for i in ids
                 ]
             }
         )
@@ -232,9 +227,7 @@ class OpsItem(QueryResourceManager):
                 or q['Key'] not in self.QueryKeys
                 or q['Operator'] not in self.QueryOperators
             ):
-                raise PolicyValidationError(
-                    "invalid ops-item query %s" % self.data['query']
-                )
+                raise PolicyValidationError("invalid ops-item query %s" % self.data['query'])
             filters.append(q)
         return {'OpsItemFilters': filters}
 
@@ -368,13 +361,9 @@ class OpsItemFilter(Filter):
                 }
             )
         if self.data.get('title'):
-            q.append(
-                {'Key': 'Title', 'Operator': 'Contains', 'Values': [self.data['title']]}
-            )
+            q.append({'Key': 'Title', 'Operator': 'Contains', 'Values': [self.data['title']]})
         if self.data.get('source'):
-            q.append(
-                {'Key': 'Source', 'Operator': 'Equal', 'Values': [self.data['source']]}
-            )
+            q.append({'Key': 'Source', 'Operator': 'Equal', 'Values': [self.data['source']]})
         q.append(
             {
                 'Key': 'ResourceId',
@@ -461,9 +450,7 @@ class PostItem(Action):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('ssm')
         item_template = self.get_item_template()
-        resources = list(
-            sorted(resources, key=operator.itemgetter(self.manager.resource_type.id))
-        )
+        resources = list(sorted(resources, key=operator.itemgetter(self.manager.resource_type.id)))
         items = self.get_items(client, item_template)
         if items:
             # - Use a copy of the template as we'll be passing in status changes on updates.
@@ -497,9 +484,7 @@ class PostItem(Action):
             {
                 'Key': 'OperationalDataValue',
                 'Operator': 'Contains',
-                'Values': [
-                    item_template['OperationalData']['/custodian/dedup']['Value']
-                ],
+                'Values': [item_template['OperationalData']['/custodian/dedup']['Value']],
             },
             {
                 'Key': 'OperationalDataKey',
@@ -613,9 +598,7 @@ class PostItem(Action):
             Source="Cloud Custodian",
             Tags=[
                 {'Key': k, 'Value': v}
-                for k, v in self.data.get(
-                    'tags', self.manager.data.get('tags', {})
-                ).items()
+                for k, v in self.data.get('tags', self.manager.data.get('tags', {})).items()
             ],
             Notifications=[{'Arn': a} for a in self.data.get('topics', ())],
             OperationalData={
@@ -697,14 +680,11 @@ class SSMDocumentCrossAccount(CrossAccountAccessFilter):
         with self.executor_factory(max_workers=3) as w:
             futures = []
             for resource_set in chunks(resources, 10):
-                futures.append(
-                    w.submit(self.process_resource_set, client, resource_set)
-                )
+                futures.append(w.submit(self.process_resource_set, client, resource_set))
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Exception checking cross account access \n %s"
-                        % (f.exception())
+                        "Exception checking cross account access \n %s" % (f.exception())
                     )
                     continue
                 results.extend(f.result())

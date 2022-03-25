@@ -7,9 +7,7 @@ from gcp_common import BaseTest
 
 class InventoryTest(BaseTest):
     def test_instance_query(self):
-        factory = self.replay_flight_data(
-            'instance-asset-query', project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('instance-asset-query', project_id='cloud-custodian')
         inventory = self.load_policy(
             {'name': 'fetch', 'source': 'inventory', 'resource': 'gcp.instance'},
             session_factory=factory,

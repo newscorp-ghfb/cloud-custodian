@@ -105,17 +105,15 @@ class InvokeStepFunction(Action):
         for arn, r in resource_set:
             pinput['resource'] = r
             params['input'] = dumps(pinput)
-            r['c7n:execution-arn'] = self.manager.retry(
-                client.start_execution, **params
-            ).get('executionArn')
+            r['c7n:execution-arn'] = self.manager.retry(client.start_execution, **params).get(
+                'executionArn'
+            )
 
     def invoke_batch(self, client, params, pinput, resource_set):
         for batch_rset in chunks(resource_set, self.data.get('batch-size', 250)):
             pinput['resources'] = [rarn for rarn, _ in batch_rset]
             params['input'] = dumps(pinput)
-            exec_arn = self.manager.retry(client.start_execution, **params).get(
-                'executionArn'
-            )
+            exec_arn = self.manager.retry(client.start_execution, **params).get('executionArn')
             for _, r in resource_set:
                 r['c7n:execution-arn'] = exec_arn
 

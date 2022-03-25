@@ -15,9 +15,7 @@ class AzureEventsTest(BaseTest):
     def test_get_returns_event_dict(self):
         event_dic = AzureEvents.get('VmWrite')
         self.assertEqual(event_dic['event'], 'write')
-        self.assertEqual(
-            event_dic['resource_provider'], 'Microsoft.Compute/virtualMachines'
-        )
+        self.assertEqual(event_dic['resource_provider'], 'Microsoft.Compute/virtualMachines')
 
     def test_get_event_operations_one_string(self):
         event_string = 'VmWrite'
@@ -45,10 +43,7 @@ class AzureEventsTest(BaseTest):
         self.assertTrue('Microsoft.Compute/virtualMachines/write' in event_operations)
         self.assertTrue('Microsoft.Web/serverFarms/write' in event_operations)
 
-    @patch(
-        'azure.mgmt.eventgrid.operations.'
-        'EventSubscriptionsOperations.begin_create_or_update'
-    )
+    @patch('azure.mgmt.eventgrid.operations.' 'EventSubscriptionsOperations.begin_create_or_update')
     def test_create_azure_event_subscription(self, create_mock):
         sub_destination = StorageQueueEventSubscriptionDestination(
             resource_id="cctestid", queue_name="cctestevensub"

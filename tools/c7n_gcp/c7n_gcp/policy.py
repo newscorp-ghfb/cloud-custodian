@@ -32,9 +32,7 @@ class FunctionMode(ServerlessExecutionMode):
     def __init__(self, policy):
         self.policy = policy
         self.log = logging.getLogger('custodian.gcp.funcexec')
-        self.region = (
-            policy.options.regions[0] if len(policy.options.regions) else DEFAULT_REGION
-        )
+        self.region = policy.options.regions[0] if len(policy.options.regions) else DEFAULT_REGION
 
     def run(self):
         raise NotImplementedError("subclass responsibility")
@@ -135,26 +133,21 @@ class ApiAuditMode(FunctionMode):
             return
         # copy resource name, the api doesn't like resource ids, just names.
         if 'resourceName' in event['protoPayload']:
-            resource_info['labels']['resourceName'] = event['protoPayload'][
-                'resourceName'
-            ]
+            resource_info['labels']['resourceName'] = event['protoPayload']['resourceName']
 
         resource = self.policy.resource_manager.get_resource(resource_info['labels'])
         return [resource]
 
     def _get_function(self):
         events = [
-            mu.ApiSubscriber(
-                local_session(self.policy.session_factory), self.policy.data['mode']
-            )
+            mu.ApiSubscriber(local_session(self.policy.session_factory), self.policy.data['mode'])
         ]
         return mu.PolicyFunction(self.policy, events=events)
 
     def validate(self):
         if not self.policy.resource_manager.resource_type.get:
             raise PolicyValidationError(
-                "Resource:%s does not implement retrieval method"
-                % (self.policy.resource_type)
+                "Resource:%s does not implement retrieval method" % (self.policy.resource_type)
             )
 
     def run(self, event, context):
@@ -263,13 +256,11 @@ class SecurityCenterMode(FunctionMode):
     def validate(self):
         if not self.policy.resource_manager.resource_type.get:
             raise PolicyValidationError(
-                "Resource:%s does not implement retrieval method get"
-                % (self.policy.resource_type)
+                "Resource:%s does not implement retrieval method get" % (self.policy.resource_type)
             )
         if not self.policy.resource_manager.resource_type.scc_type:
             raise PolicyValidationError(
-                "Resource:%s is not supported by scc currently"
-                % (self.policy.resource_type)
+                "Resource:%s is not supported by scc currently" % (self.policy.resource_type)
             )
 
     def run(self, event, context):

@@ -23,9 +23,7 @@ class TestGlueConnections(BaseTest):
             {
                 "name": "glue-connection",
                 "resource": "glue-connection",
-                "filters": [
-                    {"type": "subnet", "key": "tag:Name", "value": "Default-48"}
-                ],
+                "filters": [{"type": "subnet", "key": "tag:Name", "value": "Default-48"}],
             },
             session_factory=session_factory,
         )
@@ -41,9 +39,7 @@ class TestGlueConnections(BaseTest):
             {
                 "name": "glue-connection",
                 "resource": "glue-connection",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -117,9 +113,7 @@ class TestGlueTag(BaseTest):
         session_factory = self.replay_flight_data("test_glue_tags")
         client = session_factory().client("glue")
 
-        tags = client.get_tags(
-            ResourceArn='arn:aws:glue:us-east-1:644160558196:devEndpoint/test'
-        )
+        tags = client.get_tags(ResourceArn='arn:aws:glue:us-east-1:644160558196:devEndpoint/test')
         self.assertEqual(tags.get('Tags'), {})
 
         policy = {
@@ -425,9 +419,7 @@ class TestGlueDatabases(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client("glue")
         databases = client.get_databases()
-        self.assertFalse(
-            "test" in [t.get("Name") for t in databases.get("DatabaseList", [])]
-        )
+        self.assertFalse("test" in [t.get("Name") for t in databases.get("DatabaseList", [])])
 
 
 class TestGlueClassifiers(BaseTest):
@@ -448,10 +440,7 @@ class TestGlueClassifiers(BaseTest):
         classifiers = client.get_classifiers()
         self.assertFalse(
             "test"
-            in [
-                t.get('CsvClassifier').get("Name")
-                for t in classifiers.get("Classifiers", [])
-            ]
+            in [t.get('CsvClassifier').get("Name") for t in classifiers.get("Classifiers", [])]
         )
 
 
@@ -471,16 +460,12 @@ class GlueMLTransform(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client("glue")
         ml_transforms = client.get_ml_transforms()
-        self.assertFalse(
-            "test" in [t.get("Name") for t in ml_transforms.get("Transforms", [])]
-        )
+        self.assertFalse("test" in [t.get("Name") for t in ml_transforms.get("Transforms", [])])
 
 
 class TestGlueSecurityConfiguration(BaseTest):
     def test_security_configurations_delete(self):
-        session_factory = self.replay_flight_data(
-            "test_glue_security_configuration_delete"
-        )
+        session_factory = self.replay_flight_data("test_glue_security_configuration_delete")
         p = self.load_policy(
             {
                 "name": "glue-security-configuration-delete",
@@ -496,16 +481,11 @@ class TestGlueSecurityConfiguration(BaseTest):
         security_configrations = client.get_security_configurations()
         self.assertFalse(
             "test"
-            in [
-                t.get("Name")
-                for t in security_configrations.get("SecurityConfigurations", [])
-            ]
+            in [t.get("Name") for t in security_configrations.get("SecurityConfigurations", [])]
         )
 
     def test_kms_alias(self):
-        factory = self.replay_flight_data(
-            "test_glue_security_configuration_kms_key_filter"
-        )
+        factory = self.replay_flight_data("test_glue_security_configuration_kms_key_filter")
         p = self.load_policy(
             {
                 "name": "glue-security-configuration-s3-kms-alias",
@@ -525,9 +505,7 @@ class TestGlueSecurityConfiguration(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            resources[0]['EncryptionConfiguration']['CloudWatchEncryption'][
-                'KmsKeyArn'
-            ],
+            resources[0]['EncryptionConfiguration']['CloudWatchEncryption']['KmsKeyArn'],
             'arn:aws:kms:us-east-1:0123456789012:key/358f7699-4ea5-455a-9c78-1c868301e5a8',
         )
 
@@ -550,9 +528,7 @@ class TestGlueTriggers(BaseTest):
             time.sleep(60)
         client = session_factory().client("glue")
         triggers = client.get_triggers()
-        self.assertFalse(
-            "test" in [t.get("Name") for t in triggers.get("Triggers", [])]
-        )
+        self.assertFalse("test" in [t.get("Name") for t in triggers.get("Triggers", [])])
 
 
 class TestGlueWorkflows(BaseTest):
@@ -571,9 +547,7 @@ class TestGlueWorkflows(BaseTest):
         self.assertEqual(len(resources), 1)
         client = session_factory().client("glue")
         workflows = client.list_workflows()
-        self.assertFalse(
-            "test" in [t.get("Name") for t in workflows.get("Workflows", [])]
-        )
+        self.assertFalse("test" in [t.get("Name") for t in workflows.get("Workflows", [])])
 
 
 class TestGlueDataCatalog(BaseTest):
@@ -692,9 +666,7 @@ class TestGlueDataCatalog(BaseTest):
         )
 
     def test_catalog_change_encryption_event(self):
-        session_factory = self.replay_flight_data(
-            "test_catalog_change_encryption_event"
-        )
+        session_factory = self.replay_flight_data("test_catalog_change_encryption_event")
         session = session_factory()
         client = session.client("glue")
         before_cat_setting = client.get_data_catalog_encryption_settings()
@@ -734,9 +706,7 @@ class TestGlueDataCatalog(BaseTest):
                 "actions": [
                     {
                         "type": "set-encryption",
-                        "attributes": {
-                            "EncryptionAtRest": {"CatalogEncryptionMode": "SSE-KMS"}
-                        },
+                        "attributes": {"EncryptionAtRest": {"CatalogEncryptionMode": "SSE-KMS"}},
                     }
                 ],
             },
@@ -776,9 +746,7 @@ class TestGlueDataCatalog(BaseTest):
                         }
                     ],
                 },
-                "filters": [
-                    {"type": "cross-account", "whitelist_orgids": ["o-4amkskbcf1"]}
-                ],
+                "filters": [{"type": "cross-account", "whitelist_orgids": ["o-4amkskbcf1"]}],
                 "actions": [{"type": "remove-statements", "statement_ids": "matched"}],
             },
             session_factory=session_factory,

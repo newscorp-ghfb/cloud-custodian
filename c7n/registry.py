@@ -100,11 +100,7 @@ class PluginRegistry:
             return factory
 
         return next(
-            (
-                v
-                for k, v in self._factories.items()
-                if v.type_aliases and name in v.type_aliases
-            ),
+            (v for k, v in self._factories.items() if v.type_aliases and name in v.type_aliases),
             None,
         )
 

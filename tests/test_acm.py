@@ -20,9 +20,7 @@ class CertificateTest(BaseTest):
             {
                 "name": "acm-certificate-delete",
                 "resource": "acm-certificate",
-                "filters": [
-                    {"type": "value", "key": "DomainName", "value": "foobar.com"}
-                ],
+                "filters": [{"type": "value", "key": "DomainName", "value": "foobar.com"}],
                 "actions": ["delete"],
             },
             session_factory=factory,
@@ -37,9 +35,7 @@ class CertificateTest(BaseTest):
             {
                 "name": "acm-certificate-delete",
                 "resource": "acm-certificate",
-                "filters": [
-                    {"type": "value", "key": "DomainName", "value": "foobar.com"}
-                ],
+                "filters": [{"type": "value", "key": "DomainName", "value": "foobar.com"}],
                 "actions": ["delete"],
             },
             session_factory=factory,
@@ -72,8 +68,6 @@ class CertificateTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = factory().client("acm")
-        tag = client.list_tags_for_certificate(
-            CertificateArn=resources[0]['CertificateArn']
-        )
+        tag = client.list_tags_for_certificate(CertificateArn=resources[0]['CertificateArn'])
         self.assertEqual(len(tag.get('Tags')), 1)
         self.assertEqual(tag.get('Tags')[0]['Key'], "custodian_cleanup")

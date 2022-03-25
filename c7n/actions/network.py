@@ -101,9 +101,7 @@ class ModifyVpcSecurityGroupsAction(Action):
             self.sg_expr = jmespath.compile(
                 self.manager.filter_registry.get('security-group').RelatedIdsExpression
             )
-        if 'all' in self._get_array('remove') and not self._get_array(
-            'isolation-group'
-        ):
+        if 'all' in self._get_array('remove') and not self._get_array('isolation-group'):
             raise PolicyValidationError(
                 self._format_error(
                     (
@@ -254,9 +252,7 @@ class ModifyVpcSecurityGroupsAction(Action):
 
         for idx, r in enumerate(resources):
             rgroups = self.sg_expr.search(r) or []
-            add_groups = self.resolve_group_names(
-                r, self._get_array('add'), resolved_groups
-            )
+            add_groups = self.resolve_group_names(r, self._get_array('add'), resolved_groups)
             remove_groups = self.resolve_remove_symbols(
                 r,
                 self.resolve_group_names(r, self._get_array('remove'), resolved_groups),

@@ -99,9 +99,7 @@ class SGDiffLibTest(BaseTest):
                     u"Ipv6Ranges": [],
                     u"PrefixListIds": [],
                     u"ToPort": 8485,
-                    u"UserIdGroupPairs": [
-                        {u"GroupId": u"sg-a38ed1de", u"UserId": u"644160558196"}
-                    ],
+                    u"UserIdGroupPairs": [{u"GroupId": u"sg-a38ed1de", u"UserId": u"644160558196"}],
                 },
             },
             {
@@ -223,9 +221,7 @@ class SGDiffLibTest(BaseTest):
         )
 
         self.maxDiff = None
-        self.assertEqual(
-            current_resource, resources[0]["c7n:previous-revision"]["resource"]
-        )
+        self.assertEqual(current_resource, resources[0]["c7n:previous-revision"]["resource"])
 
     def test_sg_diff_patch(self):
         factory = self.replay_flight_data("test_security_group_revisions_delta")

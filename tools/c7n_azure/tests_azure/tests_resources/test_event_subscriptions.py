@@ -14,9 +14,7 @@ class AzureEventSubscriptionsTest(BaseTest):
         super(AzureEventSubscriptionsTest, self).setUp()
         account = self.setup_account()
         queue_name = 'cctesteventsub'
-        StorageUtilities.create_queue_from_storage_account(
-            account, queue_name, self.session
-        )
+        StorageUtilities.create_queue_from_storage_account(account, queue_name, self.session)
         event_sub_destination = StorageQueueEventSubscriptionDestination(
             resource_id=account.id, queue_name=queue_name
         )

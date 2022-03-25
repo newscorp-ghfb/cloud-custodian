@@ -26,9 +26,9 @@ class ELBTagTest(BaseTest):
 
         resources = policy.run()
         self.assertEqual(len(resources), 1)
-        tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])[
-            "TagDescriptions"
-        ][0]["Tags"]
+        tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])["TagDescriptions"][0][
+            "Tags"
+        ]
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertTrue("xyz" in tag_map)
 
@@ -44,9 +44,9 @@ class ELBTagTest(BaseTest):
         )
         resources = policy.run()
         self.assertEqual(len(resources), 1)
-        tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])[
-            "TagDescriptions"
-        ][0]["Tags"]
+        tags = client.describe_tags(LoadBalancerNames=["CloudCustodian"])["TagDescriptions"][0][
+            "Tags"
+        ]
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertFalse("xyz" in tag_map)
 
@@ -90,9 +90,7 @@ class ELBTagTest(BaseTest):
         tags = (
             session_factory()
             .client("elb")
-            .describe_tags(LoadBalancerNames=["CloudCustodian"])["TagDescriptions"][0][
-                "Tags"
-            ]
+            .describe_tags(LoadBalancerNames=["CloudCustodian"])["TagDescriptions"][0]["Tags"]
         )
         tag_map = {t["Key"]: t["Value"] for t in tags}
         self.assertTrue("custodian_next" in tag_map)
@@ -101,9 +99,7 @@ class ELBTagTest(BaseTest):
             {
                 "name": "elb-mark-filter",
                 "resource": "elb",
-                "filters": [
-                    {"type": "marked-for-op", "tag": "custodian_next", "op": "delete"}
-                ],
+                "filters": [{"type": "marked-for-op", "tag": "custodian_next", "op": "delete"}],
             },
             config={"account_id": "644160558196"},
             session_factory=session_factory,
@@ -119,9 +115,7 @@ class ELBInstance(BaseTest):
             {
                 "name": "elb-instance",
                 "resource": "elb",
-                "filters": [
-                    {"type": "instance", "key": "ImageId", "value": "ami-40d28157"}
-                ],
+                "filters": [{"type": "instance", "key": "ImageId", "value": "ami-40d28157"}],
             },
             session_factory=session_factory,
         )
@@ -174,9 +168,7 @@ class SSLPolicyTest(BaseTest):
 
     def test_set_ssl_listener_policy_fail(self):
         session_factory = self.replay_flight_data("test_set_ssl_listener")
-        self.patch(
-            SetSslListenerPolicy, 'process_elb', lambda self, client, elb: elb.xyz
-        )
+        self.patch(SetSslListenerPolicy, 'process_elb', lambda self, client, elb: elb.xyz)
 
         policy = self.load_policy(
             {
@@ -229,18 +221,14 @@ class SSLPolicyTest(BaseTest):
         response_ciphers = client.describe_load_balancer_policies(
             LoadBalancerName="test-elb", PolicyNames=["testpolicy-1493768308000"]
         )
-        curr_pol = response_pol["LoadBalancerDescriptions"][0]["ListenerDescriptions"][
-            0
-        ]["PolicyNames"]
+        curr_pol = response_pol["LoadBalancerDescriptions"][0]["ListenerDescriptions"][0][
+            "PolicyNames"
+        ]
 
         curr_ciphers = []
-        for x in response_ciphers["PolicyDescriptions"][0][
-            "PolicyAttributeDescriptions"
-        ]:
+        for x in response_ciphers["PolicyDescriptions"][0]["PolicyAttributeDescriptions"]:
             curr_ciphers.append({str(k): str(v) for k, v in x.items()})
-        active_ciphers = [
-            x["AttributeName"] for x in curr_ciphers if x["AttributeValue"] == "true"
-        ]
+        active_ciphers = [x["AttributeName"] for x in curr_ciphers if x["AttributeValue"] == "true"]
         self.assertEqual(
             curr_pol,
             [
@@ -327,9 +315,9 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         #     attached to test ELB
         session_factory = self.replay_flight_data("test_elb_remove_security_groups")
         client = session_factory().client("ec2")
-        default_sg_id = client.describe_security_groups(GroupNames=["default"])[
-            "SecurityGroups"
-        ][0]["GroupId"]
+        default_sg_id = client.describe_security_groups(GroupNames=["default"])["SecurityGroups"][
+            0
+        ]["GroupId"]
         p = self.load_policy(
             {
                 "name": "elb-modify-security-groups-filter",
@@ -431,9 +419,9 @@ class TestModifyVpcSecurityGroupsAction(BaseTest):
         session_factory = self.replay_flight_data("test_elb_remove_all_security_groups")
         client = session_factory().client("ec2")
 
-        default_sg_id = client.describe_security_groups(GroupNames=["default"])[
-            "SecurityGroups"
-        ][0]["GroupId"]
+        default_sg_id = client.describe_security_groups(GroupNames=["default"])["SecurityGroups"][
+            0
+        ]["GroupId"]
 
         policy = self.load_policy(
             {
@@ -473,9 +461,7 @@ class TestElbLogging(BaseTest):
             {
                 "name": "test-enable-s3-logging",
                 "resource": "elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "elb1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "elb1"}],
                 "actions": [
                     {
                         "type": "enable-s3-logging",
@@ -493,18 +479,12 @@ class TestElbLogging(BaseTest):
         client = session_factory().client("elb")
         for elb in resources:
             elb_name = elb["LoadBalancerName"]
-            results = client.describe_load_balancer_attributes(
-                LoadBalancerName=elb_name
-            )
+            results = client.describe_load_balancer_attributes(LoadBalancerName=elb_name)
             elb["Attributes"] = results["LoadBalancerAttributes"]
 
         self.assertEqual(resources[0]["Attributes"]["AccessLog"]["EmitInterval"], 5)
-        self.assertEqual(
-            resources[0]["Attributes"]["AccessLog"]["S3BucketName"], "elbv2logtest"
-        )
-        self.assertEqual(
-            resources[0]["Attributes"]["AccessLog"]["S3BucketPrefix"], "elblogs"
-        )
+        self.assertEqual(resources[0]["Attributes"]["AccessLog"]["S3BucketName"], "elbv2logtest")
+        self.assertEqual(resources[0]["Attributes"]["AccessLog"]["S3BucketPrefix"], "elblogs")
         self.assertTrue(resources[0]["Attributes"]["AccessLog"]["Enabled"])
 
     def test_disable_s3_logging(self):
@@ -513,9 +493,7 @@ class TestElbLogging(BaseTest):
             {
                 "name": "test-disable-s3-logging",
                 "resource": "elb",
-                "filters": [
-                    {"type": "value", "key": "LoadBalancerName", "value": "elb1"}
-                ],
+                "filters": [{"type": "value", "key": "LoadBalancerName", "value": "elb1"}],
                 "actions": [{"type": "disable-s3-logging"}],
             },
             session_factory=session_factory,
@@ -526,9 +504,7 @@ class TestElbLogging(BaseTest):
         client = session_factory().client("elb")
         for elb in resources:
             elb_name = elb["LoadBalancerName"]
-            results = client.describe_load_balancer_attributes(
-                LoadBalancerName=elb_name
-            )
+            results = client.describe_load_balancer_attributes(LoadBalancerName=elb_name)
             elb["Attributes"] = results["LoadBalancerAttributes"]
 
         self.assertFalse(resources[0]["Attributes"]["AccessLog"]["Enabled"])
@@ -556,9 +532,7 @@ class TestElbIsLoggingFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertGreater(
-            len(resources), 0, "Test should find elbs logging " "to elbv2logtest"
-        )
+        self.assertGreater(len(resources), 0, "Test should find elbs logging " "to elbv2logtest")
 
 
 class TestElbIsNotLoggingFilter(BaseTest):
@@ -583,9 +557,7 @@ class TestElbIsNotLoggingFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertGreater(
-            len(resources), 0, "Should find elb not logging " "to otherbucket"
-        )
+        self.assertGreater(len(resources), 0, "Should find elb not logging " "to otherbucket")
 
 
 class TestElbAttributeFilter(BaseTest):
@@ -618,13 +590,9 @@ class TestElbAttributeFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 1, "Test should find one elb connection draining"
-        )
+        self.assertEqual(len(resources), 1, "Test should find one elb connection draining")
 
-        self.assertEqual(
-            resources[0]['Attributes']['ConnectionDraining']['Enabled'], True
-        )
+        self.assertEqual(resources[0]['Attributes']['ConnectionDraining']['Enabled'], True)
 
     def test_is_not_connection_draining(self):
         """replicate
@@ -655,9 +623,7 @@ class TestElbAttributeFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 0, "Test should find no elbs without connection draining "
-        )
+        self.assertEqual(len(resources), 0, "Test should find no elbs without connection draining ")
 
     def test_is_cross_zone_load_balancing(self):
         """replicate
@@ -688,13 +654,9 @@ class TestElbAttributeFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 1, "Test should find one elb cross zone load balancing"
-        )
+        self.assertEqual(len(resources), 1, "Test should find one elb cross zone load balancing")
 
-        self.assertEqual(
-            resources[0]['Attributes']['CrossZoneLoadBalancing']['Enabled'], True
-        )
+        self.assertEqual(resources[0]['Attributes']['CrossZoneLoadBalancing']['Enabled'], True)
 
     def test_is_not_cross_zone_load_balancing(self):
         """replicate
@@ -758,13 +720,9 @@ class TestElbAttributeFilter(BaseTest):
 
         resources = policy.run()
 
-        self.assertEqual(
-            len(resources), 1, "Test should find 1 elb with idle timeout > 30 seconds"
-        )
+        self.assertEqual(len(resources), 1, "Test should find 1 elb with idle timeout > 30 seconds")
 
-        self.assertGreater(
-            resources[0]['Attributes']['ConnectionSettings']['IdleTimeout'], 30
-        )
+        self.assertGreater(resources[0]['Attributes']['ConnectionSettings']['IdleTimeout'], 30)
 
     def test_idle_time_less_than_30(self):
         """replicate

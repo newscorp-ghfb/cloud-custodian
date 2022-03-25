@@ -74,8 +74,7 @@ class SQSExecutor(Executor):
                 or msg_id not in self.futures
             ):
                 raise RuntimeError(
-                    "Concurrent queue user from different "
-                    "process or previous results"
+                    "Concurrent queue user from different " "process or previous results"
                 )
             f = self.futures[msg_id]
             f.set_result(m)
@@ -121,9 +120,7 @@ class MessageIterator:
     next = __next__  # back-compat
 
     def ack(self, m):
-        self.client.delete_message(
-            QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle']
-        )
+        self.client.delete_message(QueueUrl=self.queue_url, ReceiptHandle=m['ReceiptHandle'])
 
 
 class SQSWorker:

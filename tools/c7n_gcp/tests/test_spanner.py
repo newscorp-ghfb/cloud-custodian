@@ -45,9 +45,7 @@ class SpannerInstanceTest(BaseTest):
         project_id = 'cloud-custodian'
         deleting_instance_name = 'spanner-instance-0'
         non_deleting_instance_name = 'spanner-instance-1'
-        session_factory = self.replay_flight_data(
-            'spanner-instance-delete', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('spanner-instance-delete', project_id=project_id)
         base_policy = {
             'name': 'spanner-instance-delete',
             'resource': 'gcp.spanner-instance',
@@ -79,9 +77,7 @@ class SpannerInstanceTest(BaseTest):
         patching_instance_name = 'spanner-instance-0'
         non_patching_instance_name = 'spanner-instance-1'
 
-        session_factory = self.replay_flight_data(
-            'spanner-instance-patch', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('spanner-instance-patch', project_id=project_id)
         base_policy = {
             'name': 'spanner-instance-patch',
             'resource': 'gcp.spanner-instance',
@@ -160,9 +156,7 @@ class SpannerInstanceTest(BaseTest):
         )
 
         client = policy.resource_manager.get_client()
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertEqual(
             actual_bindings['bindings'],
             [
@@ -178,9 +172,7 @@ class SpannerInstanceTest(BaseTest):
         if self.recording:
             time.sleep(1)
 
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertEqual(
             actual_bindings['bindings'],
             [
@@ -236,9 +228,7 @@ class SpannerInstanceTest(BaseTest):
         )
 
         client = policy.resource_manager.get_client()
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertEqual(
             actual_bindings['bindings'],
             [
@@ -261,9 +251,7 @@ class SpannerInstanceTest(BaseTest):
         if self.recording:
             time.sleep(1)
 
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertEqual(
             actual_bindings['bindings'],
             [
@@ -286,9 +274,7 @@ class SpannerDatabaseInstanceTest(BaseTest):
         )
 
         resources = policy.run()
-        self.assertEqual(
-            resources[0]['c7n:spanner-instance']['displayName'], 'custodian-spanner'
-        )
+        self.assertEqual(resources[0]['c7n:spanner-instance']['displayName'], 'custodian-spanner')
         self.assertEqual(resources[0]['c7n:spanner-instance']['state'], 'READY')
         self.assertEqual(resources[0]['c7n:spanner-instance']['nodeCount'], 1)
 
@@ -309,9 +295,7 @@ class SpannerDatabaseInstanceTest(BaseTest):
         instances = exec_mode.run(event, None)
 
         self.assertEqual(instances[0]['state'], 'READY')
-        self.assertEqual(
-            instances[0]['c7n:spanner-instance']['displayName'], 'custodian-spanner-1'
-        )
+        self.assertEqual(instances[0]['c7n:spanner-instance']['displayName'], 'custodian-spanner-1')
         self.assertEqual(
             instances[0]['c7n:spanner-instance']['name'],
             'projects/cloud-custodian/instances/custodian-spanner-1',
@@ -326,21 +310,15 @@ class SpannerDatabaseInstanceTest(BaseTest):
         policy = self.load_policy(
             dict(
                 base_policy,
-                filters=[
-                    {'type': 'value', 'key': 'name', 'op': 'contains', 'value': 'dev'}
-                ],
+                filters=[{'type': 'value', 'key': 'name', 'op': 'contains', 'value': 'dev'}],
                 actions=[{'type': 'delete'}],
             ),
             session_factory=session_factory,
         )
         resources = policy.run()
         self.assertEqual(2, len(resources))
-        self.assertEqual(
-            resources[0]['name'].rsplit('/', 1)[-1], 'custodian-database-dev-0'
-        )
-        self.assertEqual(
-            resources[1]['name'].rsplit('/', 1)[-1], 'custodian-database-dev-1'
-        )
+        self.assertEqual(resources[0]['name'].rsplit('/', 1)[-1], 'custodian-database-dev-0')
+        self.assertEqual(resources[1]['name'].rsplit('/', 1)[-1], 'custodian-database-dev-1')
 
         if self.recording:
             time.sleep(5)
@@ -348,12 +326,8 @@ class SpannerDatabaseInstanceTest(BaseTest):
         policy = self.load_policy(base_policy, session_factory=session_factory)
         resources = policy.run()
         self.assertEqual(2, len(resources))
-        self.assertEqual(
-            resources[0]['name'].rsplit('/', 1)[-1], 'custodian-database-prod'
-        )
-        self.assertEqual(
-            resources[1]['name'].rsplit('/', 1)[-1], 'custodian-database-qa'
-        )
+        self.assertEqual(resources[0]['name'].rsplit('/', 1)[-1], 'custodian-database-prod')
+        self.assertEqual(resources[1]['name'].rsplit('/', 1)[-1], 'custodian-database-qa')
 
     def test_spanner_database_instance_set_iam_policy(self):
         """
@@ -395,9 +369,7 @@ class SpannerDatabaseInstanceTest(BaseTest):
         )
 
         client = policy.resource_manager.get_client()
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertEqual(
             actual_bindings['bindings'],
             [
@@ -413,9 +385,7 @@ class SpannerDatabaseInstanceTest(BaseTest):
         if self.recording:
             time.sleep(1)
 
-        actual_bindings = client.execute_query(
-            'getIamPolicy', {'resource': resource_full_name}
-        )
+        actual_bindings = client.execute_query('getIamPolicy', {'resource': resource_full_name})
         self.assertFalse('bindings' in actual_bindings)
 
     def test_set_iam_policy_remove_bindings_star(self):
@@ -433,10 +403,6 @@ class SpannerDatabaseInstanceTest(BaseTest):
             {'role': 'roles/viewer', 'members': ['user:dkhanas@gmail.com']},
         ]
         bindings_to_remove = [{'role': 'roles/owner', 'members': '*'}]
-        expected_bindings = [
-            {'role': 'roles/viewer', 'members': ['user:dkhanas@gmail.com']}
-        ]
+        expected_bindings = [{'role': 'roles/viewer', 'members': ['user:dkhanas@gmail.com']}]
 
-        self.assertEqual(
-            test_method(existing_bindings, bindings_to_remove), expected_bindings
-        )
+        self.assertEqual(test_method(existing_bindings, bindings_to_remove), expected_bindings)

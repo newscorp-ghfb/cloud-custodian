@@ -129,9 +129,7 @@ class PythonPackageArchive:
                     # Likely a namespace package. Try to add *.pth files so
                     # submodules are importable under Python 2.7.
 
-                    sitedir = os.path.abspath(
-                        os.path.join(list(module.__path__)[0], os.pardir)
-                    )
+                    sitedir = os.path.abspath(os.path.join(list(module.__path__)[0], os.pardir))
                     for filename in os.listdir(sitedir):
                         s = filename.startswith
                         e = filename.endswith
@@ -145,9 +143,7 @@ class PythonPackageArchive:
                 if path.endswith('.pyc'):
                     _path = path[:-1]
                     if not os.path.isfile(_path):
-                        raise ValueError(
-                            'Could not find a *.py source file behind ' + path
-                        )
+                        raise ValueError('Could not find a *.py source file behind ' + path)
                     path = _path
 
                 if not path.endswith('.py'):
@@ -508,9 +504,7 @@ class LambdaManager:
     def _update_concurrency(self, existing, func):
         e_concurrency = None
         if existing:
-            e_concurrency = existing.get('Concurrency', {}).get(
-                'ReservedConcurrentExecutions'
-            )
+            e_concurrency = existing.get('Concurrency', {}).get('ReservedConcurrentExecutions')
         if e_concurrency == func.concurrency:
             return
         elif e_concurrency is not None and func.concurrency is None:
@@ -564,9 +558,7 @@ class LambdaManager:
         func_name = func_data['FunctionName']
         func_version = func_data['Version']
 
-        exists = resource_exists(
-            self.client.get_alias, FunctionName=func_name, Name=alias
-        )
+        exists = resource_exists(self.client.get_alias, FunctionName=func_name, Name=alias)
 
         if not exists:
             log.debug("Publishing custodian lambda alias %s", alias)
@@ -786,9 +778,7 @@ class LambdaFunction(AbstractLambdaFunction):
 
     @property
     def dead_letter_config(self):
-        return self.func_data.get(
-            'dead_letter_config', LAMBDA_EMPTY_VALUES['DeadLetterConfig']
-        )
+        return self.func_data.get('dead_letter_config', LAMBDA_EMPTY_VALUES['DeadLetterConfig'])
 
     @property
     def environment(self):
@@ -801,9 +791,7 @@ class LambdaFunction(AbstractLambdaFunction):
     @property
     def tracing_config(self):
         # Default
-        return self.func_data.get(
-            'tracing_config', LAMBDA_EMPTY_VALUES['TracingConfig']
-        )
+        return self.func_data.get('tracing_config', LAMBDA_EMPTY_VALUES['TracingConfig'])
 
     @property
     def tags(self):
@@ -877,9 +865,7 @@ class PolicyLambda(AbstractLambdaFunction):
 
     @property
     def environment(self):
-        return self.policy.data['mode'].get(
-            'environment', LAMBDA_EMPTY_VALUES['Environment']
-        )
+        return self.policy.data['mode'].get('environment', LAMBDA_EMPTY_VALUES['Environment'])
 
     @property
     def kms_key_arn(self):
@@ -913,9 +899,7 @@ class PolicyLambda(AbstractLambdaFunction):
         elif self.policy.data['mode']['type'] == 'hub-action':
             events.append(SecurityHubAction(self.policy, session_factory))
         else:
-            events.append(
-                CloudWatchEventSource(self.policy.data['mode'], session_factory)
-            )
+            events.append(CloudWatchEventSource(self.policy.data['mode'], session_factory))
         return events
 
     def get_archive(self):
@@ -1095,11 +1079,7 @@ class CloudWatchEventSource(AWSEventBase):
             payload['detail-type'] = ['GuardDuty Finding']
             if 'resource-filter' in self.data:
                 payload.update(
-                    {
-                        'detail': {
-                            'resource': {'resourceType': [self.data['resource-filter']]}
-                        }
-                    }
+                    {'detail': {'resource': {'resourceType': [self.data['resource-filter']]}}}
                 )
         elif event_type == "ec2-instance-state":
             payload['source'] = ['aws.ec2']
@@ -1141,9 +1121,7 @@ class CloudWatchEventSource(AWSEventBase):
         return json.dumps(payload)
 
     def add(self, func):
-        params = dict(
-            Name=func.event_name, Description=func.description, State='ENABLED'
-        )
+        params = dict(Name=func.event_name, Description=func.description, State='ENABLED')
 
         pattern = self.render_event_pattern()
         if pattern:
@@ -1218,17 +1196,11 @@ class CloudWatchEventSource(AWSEventBase):
         if self.get(func.event_name):
             log.info("Removing cwe targets and rule %s", func.event_name)
             try:
-                targets = self.client.list_targets_by_rule(Rule=func.event_name)[
-                    'Targets'
-                ]
+                targets = self.client.list_targets_by_rule(Rule=func.event_name)['Targets']
                 if targets:
-                    self.client.remove_targets(
-                        Rule=func.event_name, Ids=[t['Id'] for t in targets]
-                    )
+                    self.client.remove_targets(Rule=func.event_name, Ids=[t['Id'] for t in targets])
             except ClientError as e:
-                log.warning(
-                    "Could not remove targets for rule %s error: %s", func.name, e
-                )
+                log.warning("Could not remove targets for rule %s error: %s", func.name, e)
             self.client.delete_rule(Name=func.event_name)
             self.remove_permissions(func, remove_permission=not func_deleted)
             return True
@@ -1263,9 +1235,7 @@ class SecurityHubAction:
         client = local_session(self.session_factory).client('securityhub')
         subscriber = self.cwe.get(name)
         arn = self._get_arn()
-        actions = client.describe_action_targets(ActionTargetArns=[arn]).get(
-            'ActionTargets', ()
-        )
+        actions = client.describe_action_targets(ActionTargetArns=[arn]).get('ActionTargets', ())
         assert len(actions) in (0, 1), "Found duplicate action %s" % (actions,)
         action = actions and actions.pop() or None
         return {'event': subscriber, 'action': action}
@@ -1493,10 +1463,7 @@ class SQSSubscription:
             mapping = None
             if queue_arn in event_mappings:
                 mapping = event_mappings[queue_arn]
-                if (
-                    mapping['State'] == 'Enabled'
-                    or mapping['BatchSize'] != self.batch_size
-                ):
+                if mapping['State'] == 'Enabled' or mapping['BatchSize'] != self.batch_size:
                     continue
                 modified = True
             else:
@@ -1613,9 +1580,7 @@ class SNSSubscription:
                             response = sns_client.unsubscribe(
                                 SubscriptionArn=subscription['SubscriptionArn']
                             )
-                            log.debug(
-                                "Unsubscribed %s from %s" % (func.name, topic_name)
-                            )
+                            log.debug("Unsubscribed %s from %s" % (func.name, topic_name))
                         except sns_client.exceptions.NotFoundException:
                             pass
                         raise Done  # break out of both for loops
@@ -1642,9 +1607,7 @@ class BucketSNSNotification(SNSSubscription):
         if 'TopicConfigurations' not in notifies:
             notifies['TopicConfigurations'] = []
         all_topics = notifies['TopicConfigurations']
-        topic_arns = [
-            t['TopicArn'] for t in all_topics if 's3:ObjectCreated:*' in t['Events']
-        ]
+        topic_arns = [t['TopicArn'] for t in all_topics if 's3:ObjectCreated:*' in t['Events']]
         if not topic_arns:
             # No suitable existing topic. Create one.
             topic_arn = sns.create_topic(Name=bucket['Name'])['TopicArn']
@@ -1719,9 +1682,7 @@ class ConfigRule(AWSEventBase):
                 )
             params['Scope'] = {'ComplianceResourceTypes': [config_type]}
         else:
-            params['Scope']['ComplianceResourceTypes'] = self.data.get(
-                'resource-types', ()
-            )
+            params['Scope']['ComplianceResourceTypes'] = self.data.get('resource-types', ())
         if self.data.get('schedule'):
             params['Source']['SourceDetails'] = [
                 {'EventSource': 'aws.config', 'MessageType': 'ScheduledNotification'}

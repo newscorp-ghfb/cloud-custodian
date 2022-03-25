@@ -31,17 +31,15 @@ class CrossAccountAccessFilter(iamaccess.CrossAccountAccessFilter):
     permissions = ("secretsmanager:GetResourcePolicy",)
 
     def process(self, resources, event=None):
-        self.client = local_session(self.manager.session_factory).client(
-            'secretsmanager'
-        )
+        self.client = local_session(self.manager.session_factory).client('secretsmanager')
         return super(CrossAccountAccessFilter, self).process(resources)
 
     def get_resource_policy(self, r):
         if self.policy_annotation in r:
             return r[self.policy_annotation]
-        r[self.policy_annotation] = p = self.client.get_resource_policy(
-            SecretId=r['Name']
-        ).get('ResourcePolicy', None)
+        r[self.policy_annotation] = p = self.client.get_resource_policy(SecretId=r['Name']).get(
+            'ResourcePolicy', None
+        )
         return p
 
 

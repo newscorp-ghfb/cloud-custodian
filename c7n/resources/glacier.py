@@ -67,15 +67,13 @@ class GlacierCrossAccountAccessFilter(CrossAccountAccessFilter):
         def _augment(r):
             client = local_session(self.manager.session_factory).client('glacier')
             try:
-                r['Policy'] = client.get_vault_access_policy(vaultName=r['VaultName'])[
-                    'policy'
-                ]['Policy']
+                r['Policy'] = client.get_vault_access_policy(vaultName=r['VaultName'])['policy'][
+                    'Policy'
+                ]
                 return r
             except ClientError as e:
                 if e.response['Error']['Code'] == 'AccessDeniedException':
-                    self.log.warning(
-                        "Access denied getting policy glacier:%s", r['FunctionName']
-                    )
+                    self.log.warning("Access denied getting policy glacier:%s", r['FunctionName'])
 
         self.log.debug("fetching policy for %d glacier" % len(resources))
         with self.executor_factory(max_workers=3) as w:

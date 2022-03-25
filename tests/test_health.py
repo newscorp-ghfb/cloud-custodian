@@ -41,6 +41,5 @@ class HealthResource(BaseTest):
         for r in resources:
             self.assertTrue("Description" in r)
             self.assertTrue(
-                (r["eventTypeCategory"] == "accountNotification")
-                ^ ("AffectedEntities" in r)
+                (r["eventTypeCategory"] == "accountNotification") ^ ("AffectedEntities" in r)
             )

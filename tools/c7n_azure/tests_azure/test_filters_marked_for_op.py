@@ -27,9 +27,7 @@ class TagsTest(BaseTest):
     def _get_filter(self, data):
         return TagActionFilter(data=data, manager=Mock)
 
-    def _test_filter_scenario(
-        self, resources, expected_count, filter_definition={'op': 'stop'}
-    ):
+    def _test_filter_scenario(self, resources, expected_count, filter_definition={'op': 'stop'}):
         f = self._get_filter(filter_definition)
         result = f.process(resources)
         self.assertEqual(expected_count, len(result))
@@ -39,18 +37,14 @@ class TagsTest(BaseTest):
         date_future = (now() + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         resources = [
             tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date)}),
-            tools.get_resource(
-                {'custodian_status': 'TTL: stop@{0}'.format(date_future)}
-            ),
+            tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date_future)}),
         ]
 
         self._test_filter_scenario(resources, 1)
 
     def test_custom_tag_filter(self):
         date = now().strftime('%Y-%m-%d')
-        resources = [
-            tools.get_resource({'custom_status': 'TTL: stop@{0}'.format(date)})
-        ]
+        resources = [tools.get_resource({'custom_status': 'TTL: stop@{0}'.format(date)})]
 
         filter_definition = {'op': 'stop', 'tag': 'custom_status'}
 
@@ -66,25 +60,19 @@ class TagsTest(BaseTest):
 
     def test_different_op_returns_no_resource(self):
         date = now().strftime('%Y-%m-%d')
-        resources = [
-            tools.get_resource({'custodian_status': 'TTL: delete@{0}'.format(date)})
-        ]
+        resources = [tools.get_resource({'custodian_status': 'TTL: delete@{0}'.format(date)})]
 
         self._test_filter_scenario(resources, 0)
 
     def test_misformatted_date_string(self):
         date = "notadate"
-        resources = [
-            tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date)})
-        ]
+        resources = [tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date)})]
 
         self._test_filter_scenario(resources, 0)
 
     def test_timezone_in_datestring(self):
         tz = Time.get_tz('America/Santiago')
         date = (now(tz) - datetime.timedelta(hours=1)).strftime('%Y/%m/%d %H%M %Z')
-        resources = [
-            tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date)})
-        ]
+        resources = [tools.get_resource({'custodian_status': 'TTL: stop@{0}'.format(date)})]
 
         self._test_filter_scenario(resources, 1)

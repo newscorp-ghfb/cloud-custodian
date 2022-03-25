@@ -23,8 +23,7 @@ class ActionsAutotagDateTest(BaseTest):
     first_event = EventData.from_dict(
         {
             "caller": "cloud@custodian.com",
-            "id": vm_id
-            + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
+            "id": vm_id + "/events/37bf930a-fbb8-4c8c-9cc7-057cc1805c04/ticks/636923208048336028",
             "operationName": {
                 "value": "Microsoft.Compute/virtualMachines/write",
                 "localizedValue": "Create or Update Virtual Machine",
@@ -70,18 +69,14 @@ class ActionsAutotagDateTest(BaseTest):
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
             self.load_policy(
-                tools.get_policy(
-                    [{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 91}]
-                ),
+                tools.get_policy([{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 91}]),
                 validate=True,
             )
 
         with self.assertRaises(FilterValidationError):
             # Days should be in 1-90 range
             self.load_policy(
-                tools.get_policy(
-                    [{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 0}]
-                ),
+                tools.get_policy([{'type': 'auto-tag-date', 'tag': 'CreatedDate', 'days': 0}]),
                 validate=True,
             )
 
@@ -113,9 +108,7 @@ class ActionsAutotagDateTest(BaseTest):
 
     @patch.object(AutoTagBase, '_get_first_event', return_value=first_event)
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
-    def test_auto_tag_add_created_date_tag_custom_format(
-        self, update_resource_tags, _2
-    ):
+    def test_auto_tag_add_created_date_tag_custom_format(self, update_resource_tags, _2):
         """Adds CreatorEmail to a resource group."""
 
         action = self._get_action({'tag': 'CreatedDate', 'format': '%m/%d/%Y'})
@@ -132,9 +125,7 @@ class ActionsAutotagDateTest(BaseTest):
 
     @patch.object(AutoTagBase, '_get_first_event', return_value=first_event)
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
-    def test_auto_tag_update_false_noop_for_existing_tag(
-        self, update_resource_tags, _2
-    ):
+    def test_auto_tag_update_false_noop_for_existing_tag(self, update_resource_tags, _2):
         """Adds CreatorEmail to a resource group"""
 
         action = self._get_action({'tag': 'CreatedDate', 'days': 10, 'update': False})

@@ -12,9 +12,7 @@ class TagHelper:
 
     @staticmethod
     def update_resource_tags(tag_action, resource, tags):
-        client = tag_action.session.client(
-            'azure.mgmt.resource.ResourceManagementClient'
-        )
+        client = tag_action.session.client('azure.mgmt.resource.ResourceManagementClient')
 
         # resource group type
         if is_resource_group(resource):
@@ -53,9 +51,7 @@ class TagHelper:
 
         # only call the resource update if there are tags to delete tags
         if tags_exist:
-            resource_tags = {
-                key: tags[key] for key in tags if key not in tags_to_delete
-            }
+            resource_tags = {key: tags[key] for key in tags if key not in tags_to_delete}
             TagHelper.update_resource_tags(tag_action, resource, resource_tags)
             return list(tags_to_delete)
 

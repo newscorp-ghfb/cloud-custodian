@@ -40,11 +40,7 @@ class AppEngineApp(QueryResourceManager):
         def get(client, resource_info):
             return client.execute_query(
                 'get',
-                {
-                    'appsId': re.match(
-                        'apps/(.*)', resource_info['resourceName']
-                    ).group(1)
-                },
+                {'appsId': re.match('apps/(.*)', resource_info['resourceName']).group(1)},
             )
 
     def get_resource_query(self):
@@ -119,9 +115,9 @@ class AppEngineDomainMapping(ChildResourceManager):
 
     def _get_parent_resource_info(self, child_instance):
         return {
-            'resourceName': re.match(
-                '(apps/.*?)/domainMappings/.*', child_instance['name']
-            ).group(1)
+            'resourceName': re.match('(apps/.*?)/domainMappings/.*', child_instance['name']).group(
+                1
+            )
         }
 
     class resource_type(ChildTypeInfo):
@@ -144,9 +140,7 @@ class AppEngineDomainMapping(ChildResourceManager):
             apps_id, mapping_id = re.match(
                 'apps/(.*?)/domainMappings/(.*)', resource_info['resourceName']
             ).groups()
-            return client.execute_query(
-                'get', {'appsId': apps_id, 'domainMappingsId': mapping_id}
-            )
+            return client.execute_query('get', {'appsId': apps_id, 'domainMappingsId': mapping_id})
 
 
 @resources.register('app-engine-firewall-ingress-rule')
@@ -157,8 +151,7 @@ class AppEngineFirewallIngressRule(ChildResourceManager):
 
     def _get_parent_resource_info(self, child_instance):
         return {
-            'resourceName': 'apps/%s'
-            % local_session(self.session_factory).get_default_project()
+            'resourceName': 'apps/%s' % local_session(self.session_factory).get_default_project()
         }
 
     class resource_type(ChildTypeInfo):

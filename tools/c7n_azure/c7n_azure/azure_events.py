@@ -110,9 +110,7 @@ class AzureEvents:
         for e in events:
             if isinstance(e, str):
                 event = cls.get(e)
-                event_operations.append(
-                    '%s/%s' % (event['resource_provider'], event['event'])
-                )
+                event_operations.append('%s/%s' % (event['resource_provider'], event['event']))
 
             else:
                 event_operations.append('%s/%s' % (e['resourceProvider'], e['event']))

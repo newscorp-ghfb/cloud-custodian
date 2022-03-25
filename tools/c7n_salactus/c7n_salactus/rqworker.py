@@ -48,9 +48,7 @@ def encode_ext(obj):
         )
         data = msgpack.ExtType(PackDate_ExtType, msgpack.packb(components))
         return data
-    return msgpack.ExtType(
-        PackObj_ExtType, cPickle.dumps(obj, protocol=cPickle.HIGHEST_PROTOCOL)
-    )
+    return msgpack.ExtType(PackObj_ExtType, cPickle.dumps(obj, protocol=cPickle.HIGHEST_PROTOCOL))
 
 
 def dumps(o):

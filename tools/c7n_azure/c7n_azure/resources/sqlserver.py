@@ -117,9 +117,7 @@ class AzureADAdministratorsFilter(ValueFilter):
         if 'administrators' not in i['properties']:
             client = self.manager.get_client()
             administrators = list(
-                client.server_azure_ad_administrators.list_by_server(
-                    i['resourceGroup'], i['name']
-                )
+                client.server_azure_ad_administrators.list_by_server(i['resourceGroup'], i['name'])
             )
 
             # This matches the expanded schema, and despite the name
@@ -131,9 +129,7 @@ class AzureADAdministratorsFilter(ValueFilter):
             else:
                 i['properties']['administrators'] = {}
 
-        return super(AzureADAdministratorsFilter, self).__call__(
-            i['properties']['administrators']
-        )
+        return super(AzureADAdministratorsFilter, self).__call__(i['properties']['administrators'])
 
 
 @SqlServer.filter_registry.register('vulnerability-assessment')
@@ -165,9 +161,7 @@ class VulnerabilityAssessmentFilter(Filter):
         }
     )
 
-    log = logging.getLogger(
-        'custodian.azure.sqldatabase.vulnerability-assessment-filter'
-    )
+    log = logging.getLogger('custodian.azure.sqldatabase.vulnerability-assessment-filter')
 
     def __init__(self, data, manager=None):
         super(VulnerabilityAssessmentFilter, self).__init__(data, manager)
@@ -264,9 +258,7 @@ class SqlServerFirewallBypassFilter(FirewallBypassFilter):
         )
 
         for r in query:
-            if (
-                r.start_ip_address == '0.0.0.0' and r.end_ip_address == '0.0.0.0'
-            ):  # nosec
+            if r.start_ip_address == '0.0.0.0' and r.end_ip_address == '0.0.0.0':  # nosec
                 return ['AzureServices']
         return []
 
@@ -335,13 +327,9 @@ class SqlSetFirewallAction(SetFirewallAction):
     def _process_resource(self, resource):
         # Get existing rules
         old_ip_rules = list(
-            self.client.firewall_rules.list_by_server(
-                resource['resourceGroup'], resource['name']
-            )
+            self.client.firewall_rules.list_by_server(resource['resourceGroup'], resource['name'])
         )
-        old_ip_space = [
-            IPRange(r.start_ip_address, r.end_ip_address) for r in old_ip_rules
-        ]
+        old_ip_space = [IPRange(r.start_ip_address, r.end_ip_address) for r in old_ip_rules]
 
         # Build new rules
         new_ip_rules = self._build_ip_rules(old_ip_space, self.data.get('ip-rules', []))

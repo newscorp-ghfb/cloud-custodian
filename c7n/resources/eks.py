@@ -32,9 +32,7 @@ class NodeGroupDescribeSource(ChildDescribeSource):
                 clusterName=cluster_name, nodegroupName=nodegroup_name
             )['nodegroup']
             if 'tags' in nodegroup:
-                nodegroup['Tags'] = [
-                    {'Key': k, 'Value': v} for k, v in nodegroup['tags'].items()
-                ]
+                nodegroup['Tags'] = [{'Key': k, 'Value': v} for k, v in nodegroup['tags'].items()]
             results.append(nodegroup)
         return results
 
@@ -156,9 +154,7 @@ class EKSRemoveTag(tags.RemoveTag):
     def process_resource_set(self, client, resource_set, tags):
         for r in resource_set:
             try:
-                self.manager.retry(
-                    client.untag_resource, resourceArn=r['arn'], tagKeys=tags
-                )
+                self.manager.retry(client.untag_resource, resourceArn=r['arn'], tagKeys=tags)
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -278,6 +274,4 @@ class Delete(Action):
                 }
             },
         }
-        return create_waiter_with_client(
-            "FargateProfileDeleted", WaiterModel(config), client
-        )
+        return create_waiter_with_client("FargateProfileDeleted", WaiterModel(config), client)

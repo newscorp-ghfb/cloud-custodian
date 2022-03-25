@@ -37,9 +37,7 @@ def _default_options(p, exclude=[]):
     `exclude` is a list of options to exclude from the default set.
     e.g.: ['region', 'log-group']
     """
-    provider = p.add_argument_group(
-        "provider", "AWS account information, defaults per the aws cli"
-    )
+    provider = p.add_argument_group("provider", "AWS account information, defaults per the aws cli")
 
     if 'region' not in exclude:
         provider.add_argument(
@@ -51,12 +49,8 @@ def _default_options(p, exclude=[]):
             metavar='REGION',
             help="AWS Region to target.  Can be used multiple times",
         )
-    provider.add_argument(
-        "--profile", help="AWS Account Config File Profile to utilize"
-    )
-    provider.add_argument(
-        "--assume", default=None, dest="assume_role", help="Role to assume"
-    )
+    provider.add_argument("--profile", help="AWS Account Config File Profile to utilize")
+    provider.add_argument("--assume", default=None, dest="assume_role", help="Role to assume")
     provider.add_argument(
         "--external-id",
         default=None,
@@ -64,9 +58,7 @@ def _default_options(p, exclude=[]):
         help="External Id to provide when assuming a role",
     )
 
-    config = p.add_argument_group(
-        "config", "Policy config file(s) and policy selectors"
-    )
+    config = p.add_argument_group("config", "Policy config file(s) and policy selectors")
     # -c is deprecated.  Supported for legacy reasons
     config.add_argument("-c", "--config", help=argparse.SUPPRESS)
     config.add_argument("configs", nargs='*', help="Policy configuration file(s)")
@@ -98,9 +90,7 @@ def _default_options(p, exclude=[]):
         )
     else:
         output.add_argument("-q", "--quiet", action="count", help=argparse.SUPPRESS)
-    output.add_argument(
-        "--debug", default=False, help=argparse.SUPPRESS, action="store_true"
-    )
+    output.add_argument("--debug", default=False, help=argparse.SUPPRESS, action="store_true")
 
     if 'vars' not in exclude:
         # p.add_argument('--vars', default=None,
@@ -145,9 +135,7 @@ def _default_options(p, exclude=[]):
 def _report_options(p):
     """Add options specific to the report subcommand."""
     _default_options(p, exclude=['cache', 'log-group', 'quiet'])
-    p.add_argument(
-        '--days', type=float, default=1, help="Number of days of history to consider"
-    )
+    p.add_argument('--days', type=float, default=1, help="Number of days of history to consider")
     p.add_argument(
         '--raw',
         type=argparse.FileType('w'),
@@ -187,9 +175,7 @@ def _metrics_options(p):
     """Add options specific to metrics subcommand."""
     _default_options(p, exclude=['log-group', 'output-dir', 'cache', 'quiet'])
 
-    p.add_argument(
-        '--start', type=date_parse, help='Start date (requires --end, overrides --days)'
-    )
+    p.add_argument('--start', type=date_parse, help='Start date (requires --end, overrides --days)')
     p.add_argument('--end', type=date_parse, help='End date')
     p.add_argument(
         '--days',
@@ -358,21 +344,15 @@ def setup_parser():
     version.set_defaults(command='c7n.commands.version_cmd')
     version.add_argument('-v', '--verbose', action="count", help="Verbose logging")
     version.add_argument("-q", "--quiet", action="count", help=argparse.SUPPRESS)
-    version.add_argument(
-        "--debug", action="store_true", help="Print info for bug reports"
-    )
+    version.add_argument("--debug", action="store_true", help="Print info for bug reports")
 
     validate_desc = "Validate config files against the json schema"
-    validate = subs.add_parser(
-        'validate', description=validate_desc, help=validate_desc
-    )
+    validate = subs.add_parser('validate', description=validate_desc, help=validate_desc)
     validate.set_defaults(command="c7n.commands.validate", check_deprecations="yes")
     validate.add_argument("-c", "--config", help=argparse.SUPPRESS)
     validate.add_argument("configs", nargs='*', help="Policy Configuration File(s)")
     validate.add_argument("-v", "--verbose", action="count", help="Verbose Logging")
-    validate.add_argument(
-        "-q", "--quiet", action="count", help="Less logging (repeatable)"
-    )
+    validate.add_argument("-q", "--quiet", action="count", help="Less logging (repeatable)")
     validate.add_argument("--debug", default=False, help=argparse.SUPPRESS)
     deprecations = validate.add_mutually_exclusive_group(required=False)
     deprecations.add_argument(
@@ -409,9 +389,7 @@ def _setup_logger(options):
     else:
         log_level = logging.DEBUG
 
-    logging.basicConfig(
-        level=log_level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s"
-    )
+    logging.basicConfig(level=log_level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
 
     external_log_level = logging.ERROR
     if level <= 0:

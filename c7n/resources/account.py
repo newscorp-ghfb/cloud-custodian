@@ -196,9 +196,7 @@ class CloudTrailEnabled(Filter):
         if self.data.get('kms'):
             trails = [t for t in trails if t.get('KmsKeyId')]
         if self.data.get('kms-key'):
-            trails = [
-                t for t in trails if t.get('KmsKeyId', '') == self.data['kms-key']
-            ]
+            trails = [t for t in trails if t.get('KmsKeyId', '') == self.data['kms-key']]
         if self.data.get('file-digest'):
             trails = [t for t in trails if t.get('LogFileValidationEnabled')]
         if self.data.get('multi-region'):
@@ -330,14 +328,10 @@ class ConfigEnabled(Filter):
         resources[0]['c7n:config_channels'] = channels
         if self.data.get('global-resources'):
             recorders = [
-                r
-                for r in recorders
-                if r['recordingGroup'].get('includeGlobalResourceTypes')
+                r for r in recorders if r['recordingGroup'].get('includeGlobalResourceTypes')
             ]
         if self.data.get('all-resources'):
-            recorders = [
-                r for r in recorders if r['recordingGroup'].get('allSupported')
-            ]
+            recorders = [r for r in recorders if r['recordingGroup'].get('allSupported')]
         if self.data.get('running', True) and recorders:
             status = {
                 s['name']: s
@@ -455,9 +449,7 @@ class AccessAnalyzer(ValueFilter):
     def process(self, resources, event=None):
         account = resources[0]
         if not account.get(self.annotation_key):
-            client = local_session(self.manager.session_factory).client(
-                'accessanalyzer'
-            )
+            client = local_session(self.manager.session_factory).client('accessanalyzer')
             analyzers = self.manager.retry(client.list_analyzers)['analyzers']
         else:
             analyzers = account.get(self.annotation_key)
@@ -721,19 +713,17 @@ class ServiceLimit(Filter):
 
     @classmethod
     def get_check_result(cls, client, check_id):
-        checks = client.describe_trusted_advisor_check_result(
-            checkId=check_id, language='en'
-        )['result']
+        checks = client.describe_trusted_advisor_check_result(checkId=check_id, language='en')[
+            'result'
+        ]
 
         # Check status and if necessary refresh checks
         if checks['status'] == 'not_available':
             client.refresh_trusted_advisor_check(checkId=check_id)
             for _ in range(cls.poll_max_intervals):
                 time.sleep(cls.poll_interval)
-                refresh_response = (
-                    client.describe_trusted_advisor_check_refresh_statuses(
-                        checkIds=[check_id]
-                    )
+                refresh_response = client.describe_trusted_advisor_check_refresh_statuses(
+                    checkIds=[check_id]
                 )
                 if refresh_response['statuses'][0]['status'] == 'success':
                     checks = client.describe_trusted_advisor_check_result(
@@ -799,8 +789,7 @@ class ServiceLimit(Filter):
         results['flaggedResources'] = [
             r
             for r in results.get('flaggedResources', [])
-            if r['metadata'][0] == region
-            or (r['metadata'][0] == '-' and region == 'us-east-1')
+            if r['metadata'][0] == region or (r['metadata'][0] == '-' and region == 'us-east-1')
         ]
 
         # save all raw limit results to the account resource
@@ -823,16 +812,12 @@ class ServiceLimit(Filter):
             if threshold is None and resource['status'] == 'ok':
                 continue
             limit = dict(zip(self.check_limit, resource['metadata']))
-            if services and not self.match_patterns_to_value(
-                services, limit['service']
-            ):
+            if services and not self.match_patterns_to_value(services, limit['service']):
                 continue
             if limits and not self.match_patterns_to_value(limits, limit['check']):
                 continue
             limit['status'] = resource['status']
-            limit['percentage'] = (
-                float(limit['extant'] or 0) / float(limit['limit']) * 100
-            )
+            limit['percentage'] = float(limit['extant'] or 0) / float(limit['limit']) * 100
             if threshold and limit['percentage'] < threshold:
                 continue
             exceeded.append(limit)
@@ -886,9 +871,7 @@ class RequestLimitIncrease(BaseAction):
 
     permissions = ('support:CreateCase',)
 
-    default_subject = (
-        '[Account:{account}]Raise the following limit(s) of {service} in {region}'
-    )
+    default_subject = '[Account:{account}]Raise the following limit(s) of {service} in {region}'
     default_template = 'Please raise the below account limit(s); \n {limits}'
     default_severity = 'normal'
 
@@ -926,13 +909,17 @@ class RequestLimitIncrease(BaseAction):
             else:
                 increase_by = amount_increase
             increase_by = round(increase_by)
-            msg = '\nIncrease %s by %d in %s \n\t Current Limit: %s\n\t Current Usage: %s\n\t ' 'Set New Limit to: %d' % (
-                s['check'],
-                increase_by,
-                s['region'],
-                s['limit'],
-                s['extant'],
-                (current_limit + increase_by),
+            msg = (
+                '\nIncrease %s by %d in %s \n\t Current Limit: %s\n\t Current Usage: %s\n\t '
+                'Set New Limit to: %d'
+                % (
+                    s['check'],
+                    increase_by,
+                    s['region'],
+                    s['limit'],
+                    s['extant'],
+                    (current_limit + increase_by),
+                )
             )
             service_map.setdefault(s['service'], []).append(msg)
             region_map.setdefault(s['service'], s['region'])
@@ -966,9 +953,7 @@ def cloudtrail_policy(original, bucket_name, account_id, bucket_region):
             'Action': 's3:GetBucketAcl',
             'Effect': 'Allow',
             'Principal': {'Service': 'cloudtrail.amazonaws.com'},
-            'Resource': generate_arn(
-                service='s3', resource=bucket_name, region=bucket_region
-            ),
+            'Resource': generate_arn(service='s3', resource=bucket_name, region=bucket_region),
             'Sid': 'AWSCloudTrailAclCheck20150319',
         },
         {
@@ -978,9 +963,7 @@ def cloudtrail_policy(original, bucket_name, account_id, bucket_region):
             },
             'Effect': 'Allow',
             'Principal': {'Service': 'cloudtrail.amazonaws.com'},
-            'Resource': generate_arn(
-                service='s3', resource=bucket_name, region=bucket_region
-            ),
+            'Resource': generate_arn(service='s3', resource=bucket_name, region=bucket_region),
             'Sid': 'AWSCloudTrailWrite20150319',
         },
     ]
@@ -1071,8 +1054,7 @@ class EnableTrail(BaseAction):
             )
         except ClientError as ce:
             if not (
-                'Error' in ce.response
-                and ce.response['Error']['Code'] == 'BucketAlreadyOwnedByYou'
+                'Error' in ce.response and ce.response['Error']['Code'] == 'BucketAlreadyOwnedByYou'
             ):
                 raise ce
 
@@ -1229,8 +1211,7 @@ class EnableDataEvents(BaseAction):
         if self.data['data-trail'].get('create'):
             if 's3-bucket' not in self.data['data-trail']:
                 raise PolicyValidationError(
-                    "If creating data trails, an s3-bucket is required on %s"
-                    % (self.manager.data)
+                    "If creating data trails, an s3-bucket is required on %s" % (self.manager.data)
                 )
         return self
 
@@ -1277,18 +1258,14 @@ class EnableDataEvents(BaseAction):
 
         added = False
         tconfig = self.data['data-trail']
-        trails = client.describe_trails(trailNameList=[tconfig['name']]).get(
-            'trailList', ()
-        )
+        trails = client.describe_trails(trailNameList=[tconfig['name']]).get('trailList', ())
         if not trails:
             trail = self.add_data_trail(client, tconfig)
             added = True
         else:
             trail = trails[0]
 
-        events = client.get_event_selectors(TrailName=trail['Name']).get(
-            'EventSelectors', []
-        )
+        events = client.get_event_selectors(TrailName=trail['Name']).get('EventSelectors', [])
 
         for e in events:
             found = False
@@ -1318,9 +1295,7 @@ class EnableDataEvents(BaseAction):
             {
                 'IncludeManagementEvents': False,
                 'ReadWriteType': tconfig.get('type', 'All'),
-                'DataResources': [
-                    {'Type': 'AWS::S3::Object', 'Values': ['arn:aws:s3:::']}
-                ],
+                'DataResources': [{'Type': 'AWS::S3::Object', 'Values': ['arn:aws:s3:::']}],
             }
         )
         client.put_event_selectors(TrailName=trail['Name'], EventSelectors=events)
@@ -1501,9 +1476,7 @@ class EbsEncryption(Filter):
     def process(self, resources, event=None):
         state = self.data.get('state', False)
         client = local_session(self.manager.session_factory).client('ec2')
-        account_state = client.get_ebs_encryption_by_default().get(
-            'EbsEncryptionByDefault'
-        )
+        account_state = client.get_ebs_encryption_by_default().get('EbsEncryptionByDefault')
         if account_state != state:
             return []
         if state and 'key' in self.data:
@@ -1546,9 +1519,7 @@ class SetEbsEncryption(BaseAction):
         'ec2:DisableEbsEncryptionByDefault',
     )
 
-    schema = type_schema(
-        'set-ebs-encryption', state={'type': 'boolean'}, key={'type': 'string'}
-    )
+    schema = type_schema('set-ebs-encryption', state={'type': 'boolean'}, key={'type': 'string'})
 
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('ec2')
@@ -1661,9 +1632,9 @@ class SetS3PublicBlock(BaseAction):
                 base = r[S3PublicBlock.annotation_key]
             else:
                 try:
-                    base = client.get_public_access_block(
-                        AccountId=r['account_id']
-                    ).get('PublicAccessBlockConfiguration')
+                    base = client.get_public_access_block(AccountId=r['account_id']).get(
+                        'PublicAccessBlockConfiguration'
+                    )
                 except client.exceptions.NoSuchPublicAccessBlockConfiguration:
                     base = {}
 
@@ -1735,14 +1706,10 @@ class GlueCatalogEncryptionEnabled(MultiAttrFilter):
                 'DataCatalogEncryptionSettings'
             )
         resource[self.annotation] = encryption_setting.get('EncryptionAtRest')
-        resource[self.annotation].update(
-            encryption_setting.get('ConnectionPasswordEncryption')
-        )
+        resource[self.annotation].update(encryption_setting.get('ConnectionPasswordEncryption'))
         key_attrs = ('SseAwsKmsKeyId', 'AwsKmsKeyId')
         for encrypt_attr in key_attrs:
-            if encrypt_attr not in self.data or not self.data[encrypt_attr].startswith(
-                'alias'
-            ):
+            if encrypt_attr not in self.data or not self.data[encrypt_attr].startswith('alias'):
                 continue
             key = resource[self.annotation].get(encrypt_attr)
             vfd = {'c7n:AliasName': self.data[encrypt_attr]}
@@ -1811,9 +1778,7 @@ class EMRBlockPublicAccessConfiguration(ValueFilter):
                 r[self.annotation_key] = {}
 
     def __call__(self, r):
-        return super(EMRBlockPublicAccessConfiguration, self).__call__(
-            r[self.annotation_key]
-        )
+        return super(EMRBlockPublicAccessConfiguration, self).__call__(r[self.annotation_key])
 
 
 @actions.register('set-emr-block-public-access')
@@ -1889,9 +1854,7 @@ class PutAccountBlockPublicAccessConfiguration(BaseAction):
         if config == updatedConfig:
             return
 
-        client.put_block_public_access_configuration(
-            BlockPublicAccessConfiguration=updatedConfig
-        )
+        client.put_block_public_access_configuration(BlockPublicAccessConfiguration=updatedConfig)
 
 
 @filters.register('securityhub')

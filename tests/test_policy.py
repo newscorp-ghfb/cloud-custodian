@@ -57,9 +57,7 @@ class PolicyMetaLint(BaseTest):
         load_available()
 
     def test_policy_missing_provider_session(self):
-        self.assertRaises(
-            RuntimeError, policy.get_session_factory, 'nosuchthing', Bag()
-        )
+        self.assertRaises(RuntimeError, policy.get_session_factory, 'nosuchthing', Bag())
 
     def test_policy_detail_spec_permissions(self):
         policy = self.load_policy(
@@ -80,18 +78,13 @@ class PolicyMetaLint(BaseTest):
         # check the repr absent a config type and cfn type but with an arn type
         assert policy.resource_manager.resource_type.config_type is None
         assert policy.resource_manager.resource_type.cfn_type is None
-        assert (
-            str(policy.resource_manager.resource_type) == '<TypeInfo AWS::Ssm::Opsitem>'
-        )
+        assert str(policy.resource_manager.resource_type) == '<TypeInfo AWS::Ssm::Opsitem>'
 
     def test_resource_type_repr(self):
         policy = self.load_policy({'name': 'airflow', 'resource': 'aws.airflow'})
         # check the repr absent a config type but with a cfn type
         assert policy.resource_manager.resource_type.config_type is None
-        assert (
-            str(policy.resource_manager.resource_type)
-            == '<TypeInfo AWS::MWAA::Environment>'
-        )
+        assert str(policy.resource_manager.resource_type) == '<TypeInfo AWS::MWAA::Environment>'
 
     def test_schema_plugin_name_mismatch(self):
         # todo iterate over all clouds not just aws resources
@@ -130,8 +123,7 @@ class PolicyMetaLint(BaseTest):
 
         if missing:
             self.fail(
-                "%s resource has universal augment masking resource augment"
-                % (', '.join(missing))
+                "%s resource has universal augment masking resource augment" % (', '.join(missing))
             )
 
     def test_resource_universal_taggable_arn_type(self):
@@ -139,16 +131,11 @@ class PolicyMetaLint(BaseTest):
         for k, v in manager.resources.items():
             if not getattr(v, 'augment', None):
                 continue
-            if (
-                v.augment.__name__ == "universal_augment"
-                and v.resource_type.arn_type is None
-            ):
+            if v.augment.__name__ == "universal_augment" and v.resource_type.arn_type is None:
                 missing.append(k)
 
         if missing:
-            self.fail(
-                "%s universal taggable resource missing arn_type" % (', '.join(missing))
-            )
+            self.fail("%s universal taggable resource missing arn_type" % (', '.join(missing)))
 
     def test_resource_shadow_source_augment(self):
         shadowed = []
@@ -171,10 +158,7 @@ class PolicyMetaLint(BaseTest):
                 shadowed.append(k)
 
         if shadowed:
-            self.fail(
-                "%s have resource managers shadowing source augments"
-                % (", ".join(shadowed))
-            )
+            self.fail("%s have resource managers shadowing source augments" % (", ".join(shadowed)))
 
         if bad:
             self.fail("%s have config types but no config source" % (", ".join(bad)))
@@ -219,9 +203,7 @@ class PolicyMetaLint(BaseTest):
             if not v.resource_type.filter_type:
                 missing_fspec.append(k)
         if missing_fspec:
-            self.fail(
-                'aws resources missing filter specs: %s' % (', '.join(missing_fspec))
-            )
+            self.fail('aws resources missing filter specs: %s' % (', '.join(missing_fspec)))
 
     def test_ec2_id_prefix(self):
         missing_prefix = []
@@ -231,9 +213,7 @@ class PolicyMetaLint(BaseTest):
             if v.resource_type.id_prefix is None:
                 missing_prefix.append(k)
         if missing_prefix:
-            self.fail(
-                'ec2 resources missing id prefix %s' % (', '.join(missing_prefix))
-            )
+            self.fail('ec2 resources missing id prefix %s' % (', '.join(missing_prefix)))
 
     def test_cfn_resource_validity(self):
         # for resources which are annotated with cfn_type ensure that it is
@@ -441,14 +421,10 @@ class PolicyMetaLint(BaseTest):
                     if fname in ('and', 'or', 'not'):
                         continue
                     if visitor(f):
-                        names.append(
-                            "%s.%s.filters.%s" % (cloud_name, resource_name, fname)
-                        )
+                        names.append("%s.%s.filters.%s" % (cloud_name, resource_name, fname))
                 for aname, a in resource.action_registry.items():
                     if visitor(a):
-                        names.append(
-                            '%s.%s.actions.%s' % (cloud_name, resource_name, aname)
-                        )
+                        names.append('%s.%s.actions.%s' % (cloud_name, resource_name, aname))
         return names
 
     def test_filter_action_additional(self):
@@ -460,8 +436,7 @@ class PolicyMetaLint(BaseTest):
         names = self._visit_filters_and_actions(visitor)
         if names:
             self.fail(
-                "missing additionalProperties: False on actions/filters\n %s"
-                % (" \n".join(names))
+                "missing additionalProperties: False on actions/filters\n %s" % (" \n".join(names))
             )
 
     def test_filter_action_type(self):
@@ -528,8 +503,7 @@ class PolicyMetaLint(BaseTest):
         missing = set(missing).difference(whitelist_missing)
         if missing:
             self.fail(
-                "%d resources %s are missing arn type info"
-                % (len(missing), ", ".join(missing))
+                "%d resources %s are missing arn type info" % (len(missing), ", ".join(missing))
             )
         explicit = set(explicit).difference(whitelist_explicit)
         if explicit:
@@ -605,8 +579,7 @@ class PolicyMetaLint(BaseTest):
 
         if missing:
             self.fail(
-                "Missing permissions %d on \n\t%s"
-                % (len(missing), "\n\t".join(sorted(missing)))
+                "Missing permissions %d on \n\t%s" % (len(missing), "\n\t".join(sorted(missing)))
             )
 
     def test_deprecation_dates(self):
@@ -617,9 +590,7 @@ class PolicyMetaLint(BaseTest):
                 if when is not None:
                     name = f"{source.__module__}.{source.__name__}"
                     if not isinstance(when, str):
-                        issues.add(
-                            f"{name}: \"{dep}\", removed_after attribute must be a string"
-                        )
+                        issues.add(f"{name}: \"{dep}\", removed_after attribute must be a string")
                         continue
                     try:
                         datetime.strptime(when, "%Y-%m-%d")
@@ -643,10 +614,7 @@ class PolicyMetaLint(BaseTest):
         for name, mode in execution.items():
             issues = issues.union(check_deprecations(mode))
         if issues:
-            self.fail(
-                "Deprecation validation issues with \n\t%s"
-                % "\n\t".join(sorted(issues))
-            )
+            self.fail("Deprecation validation issues with \n\t%s" % "\n\t".join(sorted(issues)))
 
 
 class PolicyMeta(BaseTest):
@@ -769,9 +737,7 @@ class TestPolicyCollection(BaseTest):
 
         collection = AWS().initialize_policies(
             original,
-            Config.empty(
-                regions=["eu-west-1", "eu-west-2"], output_dir="/test/output/"
-            ),
+            Config.empty(regions=["eu-west-1", "eu-west-2"], output_dir="/test/output/"),
         )
         iam = [p for p in collection if p.resource_type == "iam-user"]
         self.assertEqual(len(iam), 1)
@@ -864,9 +830,7 @@ class TestPolicy(BaseTest):
             "S3 - Cross-Account -[custodian {{ account }} - {{ region }}]",
         )
         self.assertEqual(p.data['mode']['role'], 'arn:aws:iam::12312311:role/FooBar')
-        self.assertEqual(
-            p.data['mode']['member-role'], 'arn:aws:iam::{account_id}:role/BarFoo'
-        )
+        self.assertEqual(p.data['mode']['member-role'], 'arn:aws:iam::{account_id}:role/BarFoo')
         self.assertEqual(p.resource_manager.actions[0].data['value'], ivalue)
 
     def test_child_resource_trail_validation(self):
@@ -896,9 +860,7 @@ class TestPolicy(BaseTest):
                     "name": "foo",
                     "resource": "s3",
                     "filters": [{"tag:custodian_tagging": "not-null"}],
-                    "actions": [
-                        {"type": "untag", "tags": {"custodian_cleanup": "yes"}}
-                    ],
+                    "actions": [{"type": "untag", "tags": {"custodian_cleanup": "yes"}}],
                 }
             ]
         }
@@ -924,9 +886,7 @@ class TestPolicy(BaseTest):
         policy.validate()
         self.assertEqual(policy.tags, ["abc"])
         self.assertFalse(policy.is_lambda)
-        self.assertTrue(
-            repr(policy).startswith("<Policy resource:ec2 name:ec2-utilization")
-        )
+        self.assertTrue(repr(policy).startswith("<Policy resource:ec2 name:ec2-utilization"))
 
     def test_policy_name_and_resource_type_filtering(self):
 
@@ -1079,9 +1039,7 @@ class TestPolicy(BaseTest):
         self.assertTrue(resources)
 
     def test_policy_resource_limits_with_filter(self):
-        session_factory = self.replay_flight_data(
-            "test_policy_resource_count_with_filter"
-        )
+        session_factory = self.replay_flight_data("test_policy_resource_count_with_filter")
         p = self.load_policy(
             {
                 "name": "asg-with-image-age-resource-count",
@@ -1181,9 +1139,7 @@ class PolicyConditionsTest(BaseTest):
             {
                 'name': 'profx',
                 'resource': 'aws.ec2',
-                'conditions': [
-                    {'type': 'value', 'key': 'account.name', 'value': 'deputy'}
-                ],
+                'conditions': [{'type': 'value', 'key': 'account.name', 'value': 'deputy'}],
             }
         )
         p.conditions.env_vars['account'] = {'name': 'deputy'}
@@ -1205,25 +1161,19 @@ class PolicyConditionsTest(BaseTest):
                 ],
             }
         )
-        self.assertTrue(
-            p.conditions.evaluate({'detail': {'userIdentity': {'userName': 'deputy'}}})
-        )
+        self.assertTrue(p.conditions.evaluate({'detail': {'userIdentity': {'userName': 'deputy'}}}))
 
         # event filters pass if we don't have an event.
         self.assertTrue(p.is_runnable())
         self.assertFalse(p.is_runnable({}))
-        self.assertFalse(
-            p.is_runnable({'detail': {'userIdentity': {'userName': 'mike'}}})
-        )
+        self.assertFalse(p.is_runnable({'detail': {'userIdentity': {'userName': 'mike'}}}))
 
     def test_boolean_or_blocks(self):
         p = self.load_policy(
             {
                 'name': 'magenta',
                 'resource': 'aws.codebuild',
-                'conditions': [
-                    {'or': [{'region': 'us-east-1'}, {'region': 'us-west-2'}]}
-                ],
+                'conditions': [{'or': [{'region': 'us-east-1'}, {'region': 'us-west-2'}]}],
             }
         )
         self.assertTrue(p.is_runnable())
@@ -1233,9 +1183,7 @@ class PolicyConditionsTest(BaseTest):
             {
                 'name': 'magenta',
                 'resource': 'aws.codebuild',
-                'conditions': [
-                    {'and': [{'region': 'us-east-1'}, {'region': 'us-west-2'}]}
-                ],
+                'conditions': [{'and': [{'region': 'us-east-1'}, {'region': 'us-west-2'}]}],
             }
         )
         self.assertFalse(p.is_runnable())
@@ -1285,9 +1233,7 @@ class PolicyExecutionModeTest(BaseTest):
         self.assertRaises(NotImplementedError, policy.PolicyExecutionMode({}).run)
 
     def test_get_logs_unimplemented(self):
-        self.assertRaises(
-            NotImplementedError, policy.PolicyExecutionMode({}).get_logs, 1, 2
-        )
+        self.assertRaises(NotImplementedError, policy.PolicyExecutionMode({}).get_logs, 1, 2)
 
 
 class LambdaModeTest(BaseTest):
@@ -1479,9 +1425,7 @@ class PhdModeTest(BaseTest):
             self.load_policy,
             {'name': 'xyz', 'resource': 'ec2', 'mode': {'type': 'phd'}},
         )
-        self.load_policy(
-            {'name': 'abc', 'resource': 'account', 'mode': {'type': 'phd'}}
-        )
+        self.load_policy({'name': 'abc', 'resource': 'account', 'mode': {'type': 'phd'}})
 
 
 class ConfigModeTest(BaseTest):

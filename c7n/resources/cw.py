@@ -180,9 +180,7 @@ class ValidEventRuleTargetFilter(ChildResourceFilter):
     RelatedIdsExpression = 'Name'
     AnnotationKey = "EventRuleTargets"
 
-    schema = type_schema(
-        'invalid-targets', **{'all': {'type': 'boolean', 'default': False}}
-    )
+    schema = type_schema('invalid-targets', **{'all': {'type': 'boolean', 'default': False}})
 
     permissions = ('events:ListTargetsByRule',)
 
@@ -288,13 +286,9 @@ class EventRuleDelete(BaseAction):
                         'set force to true to remove targets' % r['Name']
                     )
                     raise
-                child_manager = self.manager.get_resource_manager(
-                    'aws.event-rule-target'
-                )
+                child_manager = self.manager.get_resource_manager('aws.event-rule-target')
                 if not children:
-                    children = EventRuleTargetFilter({}, child_manager).get_related(
-                        resources
-                    )
+                    children = EventRuleTargetFilter({}, child_manager).get_related(resources)
                 targets = list(set([t['Id'] for t in children.get(r['Name'])]))
                 client.remove_targets(Rule=r['Name'], Ids=targets)
                 client.delete_rule(Name=r['Name'])
@@ -523,17 +517,13 @@ class LogMetricAlarmFilter(ValueFilter):
             # metric name - this lookup table makes that smoother
             alarms_by_metric = defaultdict(list)
             for alarm in alarms:
-                alarms_by_metric[(alarm['Namespace'], alarm['MetricName'])].append(
-                    alarm
-                )
+                alarms_by_metric[(alarm['Namespace'], alarm['MetricName'])].append(alarm)
 
             for r in resources:
                 r[self.annotation_key] = list(
                     itertools.chain(
                         *(
-                            alarms_by_metric.get(
-                                (t['metricNamespace'], t['metricName']), []
-                            )
+                            alarms_by_metric.get((t['metricNamespace'], t['metricName']), [])
                             for t in r.get('metricTransformations', ())
                         )
                     )
@@ -610,9 +600,7 @@ class Delete(BaseAction):
         client = local_session(self.manager.session_factory).client('logs')
         for r in resources:
             try:
-                self.manager.retry(
-                    client.delete_log_group, logGroupName=r['logGroupName']
-                )
+                self.manager.retry(client.delete_log_group, logGroupName=r['logGroupName'])
             except client.exceptions.ResourceNotFoundException:
                 continue
 
@@ -638,9 +626,7 @@ class LastWriteDays(Filter):
 
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('logs')
-        self.date_threshold = parse_date(datetime.utcnow()) - timedelta(
-            days=self.data['days']
-        )
+        self.date_threshold = parse_date(datetime.utcnow()) - timedelta(days=self.data['days'])
         return [r for r in resources if self.check_group(client, r)]
 
     def check_group(self, client, group):
@@ -683,14 +669,10 @@ class LogCrossAccountFilter(CrossAccountAccessFilter):
         with self.executor_factory(max_workers=1) as w:
             futures = []
             for rset in chunks(resources, 50):
-                futures.append(
-                    w.submit(self.process_resource_set, client, accounts, rset)
-                )
+                futures.append(w.submit(self.process_resource_set, client, accounts, rset))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Error checking log groups cross-account %s", f.exception()
-                    )
+                    self.log.error("Error checking log groups cross-account %s", f.exception())
                     continue
                 results.extend(f.result())
         return results
@@ -746,9 +728,7 @@ class LogSubscriptionFilter(ValueFilter):
                 continue
             for f in filters:
                 r.setdefault(self.annotation_key, []).append(f)
-            if (len(self.data) == 1) or any(
-                (self.match(sub) for sub in r[self.annotation_key])
-            ):
+            if (len(self.data) == 1) or any((self.match(sub) for sub in r[self.annotation_key])):
                 results.append(r)
         return results
 
@@ -787,8 +767,7 @@ class EncryptLogGroup(BaseAction):
     """
 
     schema = type_schema(
-        'set-encryption',
-        **{'kms-key': {'type': 'string'}, 'state': {'type': 'boolean'}}
+        'set-encryption', **{'kms-key': {'type': 'string'}, 'state': {'type': 'boolean'}}
     )
     permissions = ('logs:AssociateKmsKey', 'logs:DisassociateKmsKey', 'kms:DescribeKey')
 
@@ -828,9 +807,7 @@ class EncryptLogGroup(BaseAction):
         for r in resources:
             try:
                 if state:
-                    client.associate_kms_key(
-                        logGroupName=r['logGroupName'], kmsKeyId=key
-                    )
+                    client.associate_kms_key(logGroupName=r['logGroupName'], kmsKeyId=key)
                 else:
                     client.disassociate_kms_key(logGroupName=r['logGroupName'])
             except client.exceptions.ResourceNotFoundException:

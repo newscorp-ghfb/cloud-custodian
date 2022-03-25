@@ -191,10 +191,7 @@ class ComputePermissions(CheckPermissions):
                 ),
             )
         }
-        return [
-            profile_role_map.get(r.get('IamInstanceProfile', {}).get('Arn'))
-            for r in resources
-        ]
+        return [profile_role_map.get(r.get('IamInstanceProfile', {}).get('Arn')) for r in resources]
 
 
 @filters.register('state-age')
@@ -338,9 +335,7 @@ class DisableApiTermination(Filter):
 
     def process(self, resources, event=None):
         client = utils.local_session(self.manager.session_factory).client('ec2')
-        return [
-            r for r in resources if self.is_termination_protection_enabled(client, r)
-        ]
+        return [r for r in resources if self.is_termination_protection_enabled(client, r)]
 
     def is_termination_protection_enabled(self, client, inst):
         attr_val = self.manager.retry(
@@ -357,17 +352,12 @@ class InstanceImageBase:
         self.image_map = self.get_local_image_mapping(image_ids)
 
     def get_base_image_mapping(self):
-        return {
-            i['ImageId']: i
-            for i in self.manager.get_resource_manager('ami').resources()
-        }
+        return {i['ImageId']: i for i in self.manager.get_resource_manager('ami').resources()}
 
     def get_instance_image(self, instance):
         image = instance.get('c7n:instance-image', None)
         if not image:
-            image = instance['c7n:instance-image'] = self.image_map.get(
-                instance['ImageId'], None
-            )
+            image = instance['c7n:instance-image'] = self.image_map.get(instance['ImageId'], None)
         return image
 
     def get_local_image_mapping(self, image_ids):
@@ -375,9 +365,7 @@ class InstanceImageBase:
         resources = {i: base_image_map[i] for i in image_ids if i in base_image_map}
         missing = list(set(image_ids) - set(resources.keys()))
         if missing:
-            loaded = self.manager.get_resource_manager('ami').get_resources(
-                missing, False
-            )
+            loaded = self.manager.get_resource_manager('ami').get_resources(missing, False)
             resources.update({image['ImageId']: image for image in loaded})
         return resources
 
@@ -442,8 +430,7 @@ class InstanceImage(ValueFilter, InstanceImageBase):
         # Finally, if we have no image...
         if not image:
             self.log.warning(
-                "Could not locate image for instance:%s ami:%s"
-                % (i['InstanceId'], i["ImageId"])
+                "Could not locate image for instance:%s ami:%s" % (i['InstanceId'], i["ImageId"])
             )
             # Match instead on empty skeleton?
             return False
@@ -525,9 +512,7 @@ class EC2NetworkLocation(net_filters.NetworkLocation):
     valid_origin_states = ('pending', 'running', 'shutting-down', 'stopping', 'stopped')
 
     def process(self, resources, event=None):
-        resources = self.filter_resources(
-            resources, 'State.Name', self.valid_origin_states
-        )
+        resources = self.filter_resources(resources, 'State.Name', self.valid_origin_states)
         if not resources:
             return []
         return super(EC2NetworkLocation, self).process(resources)
@@ -586,9 +571,7 @@ class InstanceOnHour(OnHour):
               - start
     """
 
-    schema = type_schema(
-        'onhour', rinherit=OnHour.schema, **{'state-filter': {'type': 'boolean'}}
-    )
+    schema = type_schema('onhour', rinherit=OnHour.schema, **{'state-filter': {'type': 'boolean'}})
     schema_alias = False
 
     valid_origin_states = ('stopped',)
@@ -680,9 +663,7 @@ class InstanceAgeFilter(AgeFilter):
     def get_resource_date(self, i):
         # LaunchTime is basically how long has the instance
         # been on, use the oldest ebs vol attach time
-        ebs_vols = [
-            block['Ebs'] for block in i['BlockDeviceMappings'] if 'Ebs' in block
-        ]
+        ebs_vols = [block['Ebs'] for block in i['BlockDeviceMappings'] if 'Ebs' in block]
         if not ebs_vols:
             # Fall back to using age attribute (ephemeral instances)
             return super(InstanceAgeFilter, self).get_resource_date(i)
@@ -747,15 +728,11 @@ class UserData(ValueFilter):
         with self.executor_factory(max_workers=3) as w:
             futures = {}
             for instance_set in utils.chunks(resources, self.batch_size):
-                futures[
-                    w.submit(self.process_instance_set, client, instance_set)
-                ] = instance_set
+                futures[w.submit(self.process_instance_set, client, instance_set)] = instance_set
 
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Error processing userdata on instance set %s", f.exception()
-                    )
+                    self.log.error("Error processing userdata on instance set %s", f.exception())
                 results.extend(f.result())
         return results
 
@@ -773,9 +750,7 @@ class UserData(ValueFilter):
                 if 'Value' not in result['UserData']:
                     r[self.annotation] = None
                 else:
-                    r[self.annotation] = deserialize_user_data(
-                        result['UserData']['Value']
-                    )
+                    r[self.annotation] = deserialize_user_data(result['UserData']['Value'])
             if self.match(r):
                 results.append(r)
         return results
@@ -811,9 +786,7 @@ class SingletonFilter(Filter):
 
     valid_origin_states = ('running', 'stopped', 'pending', 'stopping')
 
-    in_asg = ValueFilter(
-        {'key': 'tag:aws:autoscaling:groupName', 'value': 'not-null'}
-    ).validate()
+    in_asg = ValueFilter({'key': 'tag:aws:autoscaling:groupName', 'value': 'not-null'}).validate()
 
     def process(self, instances, event=None):
         return super(SingletonFilter, self).process(
@@ -875,9 +848,7 @@ class SsmStatus(ValueFilter):
     def process(self, resources, event=None):
         client = utils.local_session(self.manager.session_factory).client('ssm')
         results = []
-        for resource_set in utils.chunks(
-            [r for r in resources if self.annotation not in r], 50
-        ):
+        for resource_set in utils.chunks([r for r in resources if self.annotation not in r], 50):
             self.process_resource_set(client, resource_set)
         for r in resources:
             if self.match(r[self.annotation]):
@@ -975,9 +946,7 @@ class SsmCompliance(Filter):
         ]
         severity = self.data.get('severity')
         if severity:
-            filters.append(
-                {'Key': 'OverallSeverity', 'Values': severity, 'Type': 'EQUAL'}
-            )
+            filters.append({'Key': 'OverallSeverity', 'Values': severity, 'Type': 'EQUAL'})
 
         resource_map = {}
         pager = client.get_paginator('list_resource_compliance_summaries')
@@ -1037,18 +1006,14 @@ class MonitorInstances(BaseAction):
 
     def enable_monitoring(self, client, resources):
         try:
-            client.monitor_instances(
-                InstanceIds=[inst['InstanceId'] for inst in resources]
-            )
+            client.monitor_instances(InstanceIds=[inst['InstanceId'] for inst in resources])
         except ClientError as e:
             if e.response['Error']['Code'] != 'InvalidInstanceId.NotFound':
                 raise
 
     def disable_monitoring(self, client, resources):
         try:
-            client.unmonitor_instances(
-                InstanceIds=[inst['InstanceId'] for inst in resources]
-            )
+            client.unmonitor_instances(InstanceIds=[inst['InstanceId'] for inst in resources])
         except ClientError as e:
             if e.response['Error']['Code'] != 'InvalidInstanceId.NotFound':
                 raise
@@ -1126,9 +1091,7 @@ class SetMetadataServerAccess(BaseAction):
         for k, v in params.items():
             allowed_values = list(self.AllowedValues[k])
             allowed_values.remove(v)
-            resources = self.filter_resources(
-                resources, 'MetadataOptions.%s' % k, allowed_values
-            )
+            resources = self.filter_resources(resources, 'MetadataOptions.%s' % k, allowed_values)
 
         if not resources:
             return
@@ -1234,9 +1197,7 @@ class Start(BaseAction):
                 for batch in utils.chunks(z_instances, self.batch_size):
                     fails = self.process_instance_set(client, batch, itype, izone)
                     if fails:
-                        failures["%s %s" % (itype, izone)] = [
-                            i['InstanceId'] for i in batch
-                        ]
+                        failures["%s %s" % (itype, izone)] = [i['InstanceId'] for i in batch]
 
         if failures:
             fail_count = sum(map(len, failures.values()))
@@ -1323,9 +1284,7 @@ class Resize(BaseAction):
         running_instances = self.filter_resources(resources, 'State.Name', ('running',))
 
         if self.data.get('restart') and running_instances:
-            Stop({'terminate-ephemeral': False}, self.manager).process(
-                running_instances
-            )
+            Stop({'terminate-ephemeral': False}, self.manager).process(running_instances)
             client = utils.local_session(self.manager.session_factory).client('ec2')
             waiter = client.get_waiter('instance_stopped')
             try:
@@ -1333,15 +1292,11 @@ class Resize(BaseAction):
             except ClientError as e:
                 self.log.exception("Exception stopping instances for resize:\n %s" % e)
 
-        for instance_set in utils.chunks(
-            itertools.chain(stopped_instances, running_instances), 20
-        ):
+        for instance_set in utils.chunks(itertools.chain(stopped_instances, running_instances), 20):
             self.process_resource_set(instance_set)
 
         if self.data.get('restart') and running_instances:
-            client.start_instances(
-                InstanceIds=[i['InstanceId'] for i in running_instances]
-            )
+            client.start_instances(InstanceIds=[i['InstanceId'] for i in running_instances])
         return list(itertools.chain(stopped_instances, running_instances))
 
     def process_resource_set(self, instance_set):
@@ -1398,8 +1353,7 @@ class Stop(BaseAction):
     valid_origin_states = ('running',)
 
     schema = type_schema(
-        'stop',
-        **{'terminate-ephemeral': {'type': 'boolean'}, 'hibernate': {'type': 'boolean'}}
+        'stop', **{'terminate-ephemeral': {'type': 'boolean'}, 'hibernate': {'type': 'boolean'}}
     )
 
     has_hibernate = jmespath.compile('[].HibernationOptions.Configured')
@@ -1430,18 +1384,14 @@ class Stop(BaseAction):
         return enabled, disabled
 
     def process(self, instances):
-        instances = self.filter_resources(
-            instances, 'State.Name', self.valid_origin_states
-        )
+        instances = self.filter_resources(instances, 'State.Name', self.valid_origin_states)
         if not len(instances):
             return
         client = utils.local_session(self.manager.session_factory).client('ec2')
         # Ephemeral instance can't be stopped.
         ephemeral, persistent = self.split_on_storage(instances)
         if self.data.get('terminate-ephemeral', False) and ephemeral:
-            self._run_instances_op(
-                client.terminate_instances, [i['InstanceId'] for i in ephemeral]
-            )
+            self._run_instances_op(client.terminate_instances, [i['InstanceId'] for i in ephemeral])
         if persistent:
             if self.data.get('hibernate', False):
                 enabled, persistent = self.split_on_hibernate(persistent)
@@ -1451,9 +1401,7 @@ class Stop(BaseAction):
                         [i['InstanceId'] for i in enabled],
                         Hibernate=True,
                     )
-            self._run_instances_op(
-                client.stop_instances, [i['InstanceId'] for i in persistent]
-            )
+            self._run_instances_op(client.stop_instances, [i['InstanceId'] for i in persistent])
         return instances
 
     def _run_instances_op(self, op, instance_ids, **kwargs):
@@ -1573,9 +1521,7 @@ class Terminate(BaseAction):
         return permissions
 
     def process(self, instances):
-        instances = self.filter_resources(
-            instances, 'State.Name', self.valid_origin_states
-        )
+        instances = self.filter_resources(instances, 'State.Name', self.valid_origin_states)
         if not len(instances):
             return
         client = utils.local_session(self.manager.session_factory).client('ec2')
@@ -1657,9 +1603,7 @@ class Snapshot(BaseAction):
 
     def validate(self):
         if self.data.get('copy-tags') and 'copy-volume-tags' in self.data:
-            raise PolicyValidationError(
-                "Can specify copy-tags or copy-volume-tags, not both"
-            )
+            raise PolicyValidationError("Can specify copy-tags or copy-volume-tags, not both")
 
     def process(self, resources):
         client = utils.local_session(self.manager.session_factory).client('ec2')
@@ -1731,9 +1675,7 @@ class EC2ModifyVpcSecurityGroups(ModifyVpcSecurityGroupsAction):
         for i in instances:
             for eni in i['NetworkInterfaces']:
                 if i.get('c7n:matched-security-groups'):
-                    eni['c7n:matched-security-groups'] = i[
-                        'c7n:matched-security-groups'
-                    ]
+                    eni['c7n:matched-security-groups'] = i['c7n:matched-security-groups']
                 if i.get('c7n:NetworkLocation'):
                     eni['c7n:NetworkLocation'] = i['c7n:NetworkLocation']
                 interfaces.append(eni)
@@ -1789,9 +1731,7 @@ class AutorecoverAlarm(BaseAction):
                 ActionsEnabled=True,
                 AlarmActions=[
                     'arn:{}:automate:{}:ec2:recover'.format(
-                        utils.REGION_PARTITION_MAP.get(
-                            self.manager.config.region, 'aws'
-                        ),
+                        utils.REGION_PARTITION_MAP.get(self.manager.config.region, 'aws'),
                         i['Placement']['AvailabilityZone'][:-1],
                     )
                 ],
@@ -1838,9 +1778,7 @@ class SetInstanceProfile(BaseAction):
     valid_origin_states = ('running', 'pending', 'stopped', 'stopping')
 
     def process(self, instances):
-        instances = self.filter_resources(
-            instances, 'State.Name', self.valid_origin_states
-        )
+        instances = self.filter_resources(instances, 'State.Name', self.valid_origin_states)
         if not len(instances):
             return
         client = utils.local_session(self.manager.session_factory).client('ec2')
@@ -1912,8 +1850,7 @@ class PropagateSpotTags(BaseAction):
     """
 
     schema = type_schema(
-        'propagate-spot-tags',
-        **{'only_tags': {'type': 'array', 'items': {'type': 'string'}}}
+        'propagate-spot-tags', **{'only_tags': {'type': 'array', 'items': {'type': 'string'}}}
     )
 
     permissions = (
@@ -1966,9 +1903,7 @@ class PropagateSpotTags(BaseAction):
         # indicated with 'only_tags' parameter.
         copy_keys = self.data.get('only_tags', [])
         request_tags = {
-            t['Key']: t['Value']
-            for t in request['Tags']
-            if not t['Key'].startswith('aws:')
+            t['Key']: t['Value'] for t in request['Tags'] if not t['Key'].startswith('aws:')
         }
         if copy_keys:
             for k in set(copy_keys).difference(request_tags):
@@ -2054,9 +1989,7 @@ class QueryFilter:
         self.value = list(self.data.values())[0]
 
         if self.key not in EC2_VALID_FILTERS and not self.key.startswith('tag:'):
-            raise PolicyValidationError(
-                "EC2 Query Filter invalid filter name %s" % (self.data)
-            )
+            raise PolicyValidationError("EC2 Query Filter invalid filter name %s" % (self.data))
 
         if self.value is None:
             raise PolicyValidationError(
@@ -2211,10 +2144,7 @@ class LaunchTemplate(query.QueryResourceManager):
             except ClientError as e:
                 if e.response['Error']['Code'] == "InvalidLaunchTemplateId.NotFound":
                     continue
-                if (
-                    e.response['Error']['Code']
-                    == "InvalidLaunchTemplateId.VersionNotFound"
-                ):
+                if e.response['Error']['Code'] == "InvalidLaunchTemplateId.VersionNotFound":
                     continue
                 raise
             if not tversions:
@@ -2232,14 +2162,12 @@ class LaunchTemplate(query.QueryResourceManager):
             if 'LaunchTemplate' in a:
                 t = a['LaunchTemplate']
             elif 'MixedInstancesPolicy' in a:
-                t = a['MixedInstancesPolicy']['LaunchTemplate'][
-                    'LaunchTemplateSpecification'
-                ]
+                t = a['MixedInstancesPolicy']['LaunchTemplate']['LaunchTemplateSpecification']
             if t is None:
                 continue
-            templates.setdefault(
-                (t['LaunchTemplateId'], t.get('Version', '$Default')), []
-            ).append(a['AutoScalingGroupName'])
+            templates.setdefault((t['LaunchTemplateId'], t.get('Version', '$Default')), []).append(
+                a['AutoScalingGroupName']
+            )
         return templates
 
 

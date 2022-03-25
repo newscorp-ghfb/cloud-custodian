@@ -27,8 +27,7 @@ NAME_TEMPLATE = "{name}"
 @click.option(
     '--name',
     default=NAME_TEMPLATE,
-    help="Name template for subscriptions in the config, defaults to %s"
-    % NAME_TEMPLATE,
+    help="Name template for subscriptions in the config, defaults to %s" % NAME_TEMPLATE,
 )
 def main(output, state, name):
     """

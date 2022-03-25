@@ -188,9 +188,7 @@ class QueryMeta(type):
             if m.service == 'ec2':
                 # Generic ec2 resource tag support
                 if getattr(m, 'taggable', True):
-                    register_ec2_tags(
-                        attrs['filter_registry'], attrs['action_registry']
-                    )
+                    register_ec2_tags(attrs['filter_registry'], attrs['action_registry'])
             if getattr(m, 'universal_taggable', False):
                 compatibility = isinstance(m.universal_taggable, bool) and True or False
                 register_universal_tags(
@@ -340,9 +338,7 @@ class ConfigSource:
 
     def load_resource(self, item):
         item_config = self._load_item_config(item)
-        resource = camelResource(
-            item_config, implicitDate=True, implicitTitle=self.titleCase
-        )
+        resource = camelResource(item_config, implicitDate=True, implicitTitle=self.titleCase)
         self._load_resource_tags(resource, item)
         return resource
 
@@ -358,9 +354,7 @@ class ConfigSource:
         if 'Tags' in resource:
             return
         elif item.get('tags'):
-            resource['Tags'] = [
-                {u'Key': k, u'Value': v} for k, v in item['tags'].items()
-            ]
+            resource['Tags'] = [{u'Key': k, u'Value': v} for k, v in item['tags'].items()]
         elif item['supplementaryConfiguration'].get('Tags'):
             stags = item['supplementaryConfiguration']['Tags']
             if isinstance(stags, str):
@@ -386,9 +380,7 @@ class ConfigSource:
 
         with self.manager.executor_factory(max_workers=2) as w:
             ridents = pages.build_full_result()
-            resource_ids = [
-                r['resourceId'] for r in ridents.get('resourceIdentifiers', ())
-            ]
+            resource_ids = [r['resourceId'] for r in ridents.get('resourceIdentifiers', ())]
             self.manager.log.debug(
                 "querying %d %s resources",
                 len(resource_ids),
@@ -401,8 +393,7 @@ class ConfigSource:
                 for f in as_completed(futures):
                     if f.exception():
                         self.manager.log.error(
-                            "Exception getting resources from config \n %s"
-                            % (f.exception())
+                            "Exception getting resources from config \n %s" % (f.exception())
                         )
                     results.extend(f.result())
         return results
@@ -639,9 +630,7 @@ class QueryResourceManager(ResourceManager, metaclass=QueryMeta):
             self._generate_arn = functools.partial(
                 generate_arn,
                 self.resource_type.arn_service or self.resource_type.service,
-                region=not self.resource_type.global_resource
-                and self.config.region
-                or "",
+                region=not self.resource_type.global_resource and self.config.region or "",
                 account_id=self.account_id,
                 resource_type=self.resource_type.arn_type,
                 separator=self.resource_type.arn_separator,
@@ -667,9 +656,7 @@ class MaxResourceLimit:
         self,
     ):
         if isinstance(self.p.max_resources, dict):
-            self.op = self.p.max_resources.get(
-                "op", MaxResourceLimit.C7N_MAXRES_OP
-            ).lower()
+            self.op = self.p.max_resources.get("op", MaxResourceLimit.C7N_MAXRES_OP).lower()
             self.percent = self.p.max_resources.get("percent")
             self.amount = self.p.max_resources.get("amount")
 

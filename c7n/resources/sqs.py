@@ -29,10 +29,7 @@ class DescribeQueue(DescribeSource):
                 )['Attributes']
                 queue['QueueUrl'] = r
             except ClientError as e:
-                if (
-                    e.response['Error']['Code']
-                    == 'AWS.SimpleQueueService.NonExistentQueue'
-                ):
+                if e.response['Error']['Code'] == 'AWS.SimpleQueueService.NonExistentQueue':
                     return
                 if e.response['Error']['Code'] == 'AccessDenied':
                     self.manager.log.warning("Denied access to sqs %s" % r)
@@ -41,9 +38,7 @@ class DescribeQueue(DescribeSource):
             return queue
 
         with self.manager.executor_factory(max_workers=2) as w:
-            return universal_augment(
-                self.manager, list(filter(None, w.map(_augment, resources)))
-            )
+            return universal_augment(self.manager, list(filter(None, w.map(_augment, resources))))
 
 
 class QueueConfigSource(ConfigSource):
@@ -90,9 +85,7 @@ class SQS(QueryResourceManager):
                 continue
             ids_normalized.append(i.rsplit('/', 1)[-1])
         resources = super(SQS, self).get_resources(ids_normalized, cache)
-        return [
-            r for r in resources if Arn.parse(r['QueueArn']).resource in ids_normalized
-        ]
+        return [r for r in resources if Arn.parse(r['QueueArn']).resource in ids_normalized]
 
 
 @SQS.filter_registry.register('metrics')
@@ -135,9 +128,7 @@ class SQSPostFinding(PostFinding):
         payload.update(
             self.filter_empty(
                 {
-                    'KmsDataKeyReusePeriodSeconds': r.get(
-                        'KmsDataKeyReusePeriodSeconds'
-                    ),
+                    'KmsDataKeyReusePeriodSeconds': r.get('KmsDataKeyReusePeriodSeconds'),
                     'KmsMasterKeyId': r.get('KmsMasterKeyId'),
                     'QueueName': r['QueueArn'].split(':')[-1],
                     'DeadLetterTargetArn': r.get('DeadLetterTargetArn'),
@@ -145,9 +136,7 @@ class SQSPostFinding(PostFinding):
             )
         )
         if 'KmsDataKeyReusePeriodSeconds' in payload:
-            payload['KmsDataKeyReusePeriodSeconds'] = int(
-                payload['KmsDataKeyReusePeriodSeconds']
-            )
+            payload['KmsDataKeyReusePeriodSeconds'] = int(payload['KmsDataKeyReusePeriodSeconds'])
         return envelope
 
 

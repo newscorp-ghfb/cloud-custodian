@@ -28,9 +28,7 @@ def get_trail_groups(session_factory, trails):
         client, trails = grouped.setdefault(region, (None, []))
         trails.append(t)
         if client is None:
-            client = local_session(session_factory).client(
-                'cloudtrail', region_name=region
-            )
+            client = local_session(session_factory).client('cloudtrail', region_name=region)
         grouped[region] = client, trails
     return grouped
 
@@ -66,25 +64,15 @@ class IsShadow(Filter):
 
     def process(self, resources, event=None):
         rcount = len(resources)
-        trails = [
-            t for t in resources if (self.is_shadow(t) == self.data.get('state', True))
-        ]
+        trails = [t for t in resources if (self.is_shadow(t) == self.data.get('state', True))]
         if len(trails) != rcount and self.embedded:
-            self.log.info(
-                "implicitly filtering shadow trails %d -> %d", rcount, len(trails)
-            )
+            self.log.info("implicitly filtering shadow trails %d -> %d", rcount, len(trails))
         return trails
 
     def is_shadow(self, t):
-        if (
-            t.get('IsOrganizationTrail')
-            and self.manager.config.account_id not in t['TrailARN']
-        ):
+        if t.get('IsOrganizationTrail') and self.manager.config.account_id not in t['TrailARN']:
             return True
-        if (
-            t.get('IsMultiRegionTrail')
-            and t['HomeRegion'] != self.manager.config.region
-        ):
+        if t.get('IsMultiRegionTrail') and t['HomeRegion'] != self.manager.config.region:
             return True
         return False
 
@@ -186,9 +174,7 @@ class UpdateTrail(Action):
                 EnableLogFileValidation: true
     """
 
-    schema = type_schema(
-        'update-trail', attributes={'type': 'object'}, required=('attributes',)
-    )
+    schema = type_schema('update-trail', attributes={'type': 'object'}, required=('attributes',))
     shape = 'UpdateTrailRequest'
     permissions = ('cloudtrail:UpdateTrail',)
 

@@ -67,9 +67,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
         # loop through the pages of results renaming
 
         if page.get('Contents') is None:
-            raise ArgumentError(
-                'Key {} does not exist in bucket {}'.format(old, bucket)
-            )
+            raise ArgumentError('Key {} does not exist in bucket {}'.format(old, bucket))
 
         # Loop through the old objects copying and deleting
         for obj in page.get('Contents'):
@@ -85,8 +83,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
             if new_key == old_key:
                 log.debug(
                     (
-                        'Old and new keys match and new SSEKMSKeyId '
-                        'Specified, re-encrypting {}'
+                        'Old and new keys match and new SSEKMSKeyId ' 'Specified, re-encrypting {}'
                     ).format(new_obj.key)
                 )
             else:
@@ -94,8 +91,7 @@ def s3_rename(output_dir, old, new, sse_kms_key_id):
                     new_obj.load()
                     if new_key != old_key:
                         log.info(
-                            'Skipping existing output in new '
-                            'location: {}'.format(new_obj.key)
+                            'Skipping existing output in new ' 'location: {}'.format(new_obj.key)
                         )
                         continue
                 except ClientError as e:
@@ -144,16 +140,12 @@ def main():
     options = parser.parse_args()
 
     level = options.verbose and logging.DEBUG or logging.INFO
-    logging.basicConfig(
-        level=level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s"
-    )
+    logging.basicConfig(level=level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
     logging.getLogger('botocore').setLevel(logging.ERROR)
 
     if options.output_dir.startswith('s3://'):
         try:
-            s3_rename(
-                options.output_dir, options.old, options.new, options.sse_kms_key_id
-            )
+            s3_rename(options.output_dir, options.old, options.new, options.sse_kms_key_id)
         except ArgumentError as e:
             print(e.message)
             sys.exit(2)

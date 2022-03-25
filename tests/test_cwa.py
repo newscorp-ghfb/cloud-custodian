@@ -31,9 +31,7 @@ class AlarmTest(BaseTest):
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            client.describe_alarms(AlarmNames=[alarm_name])["MetricAlarms"], []
-        )
+        self.assertEqual(client.describe_alarms(AlarmNames=[alarm_name])["MetricAlarms"], [])
 
     def test_filter_tags(self):
         factory = self.replay_flight_data("test_alarm_tags_filter")
@@ -70,6 +68,4 @@ class AlarmTest(BaseTest):
 
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertTrue(
-            {'Key': 'OwnerName', 'Value': 'SomeName'} in resources[0].get('Tags')
-        )
+        self.assertTrue({'Key': 'OwnerName', 'Value': 'SomeName'} in resources[0].get('Tags'))

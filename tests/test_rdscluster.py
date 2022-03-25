@@ -19,9 +19,7 @@ class RDSClusterTest(BaseTest):
 
     def test_net_location_invalid_subnet(self):
         self.remove_augments()
-        session_factory = self.replay_flight_data(
-            "test_rdscluster_location_invalid_sub"
-        )
+        session_factory = self.replay_flight_data("test_rdscluster_location_invalid_sub")
         p = self.load_policy(
             {
                 'name': 'rds',
@@ -41,8 +39,7 @@ class RDSClusterTest(BaseTest):
         self.assertEqual(len(resources), 0)
 
     @pytest.mark.skipif(
-        (sys.version_info.major, sys.version_info.minor) < (3, 7)
-        or sys.platform != 'linux',
+        (sys.version_info.major, sys.version_info.minor) < (3, 7) or sys.platform != 'linux',
         reason="needs py 3.8",
     )
     def test_rdscluster_config(self):
@@ -82,9 +79,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-sg",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=session_factory,
         )
@@ -99,9 +94,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-sub",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "subnet", "key": "MapPublicIpOnLaunch", "value": True}
-                ],
+                "filters": [{"type": "subnet", "key": "MapPublicIpOnLaunch", "value": True}],
             },
             session_factory=session_factory,
         )
@@ -126,9 +119,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-simple-filter",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}
-                ],
+                "filters": [{"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}],
             },
             session_factory=session_factory,
         )
@@ -136,9 +127,7 @@ class RDSClusterTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_rdscluster_kms_alias(self):
-        session_factory = self.replay_flight_data(
-            "test_rdscluster_kms_alias", region="us-east-2"
-        )
+        session_factory = self.replay_flight_data("test_rdscluster_kms_alias", region="us-east-2")
         p = self.load_policy(
             {
                 "name": "rds-cluster-aws-kms-key-filter",
@@ -167,9 +156,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-delete",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}
-                ],
+                "filters": [{"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}],
                 "actions": [{"type": "delete", "delete-instances": False}],
             },
             session_factory=session_factory,
@@ -179,16 +166,12 @@ class RDSClusterTest(BaseTest):
 
     def test_rdscluster_delete_with_instances(self):
         self.remove_augments()
-        session_factory = self.replay_flight_data(
-            "test_rdscluster_delete_with_instances"
-        )
+        session_factory = self.replay_flight_data("test_rdscluster_delete_with_instances")
         p = self.load_policy(
             {
                 "name": "rdscluster-delete",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}
-                ],
+                "filters": [{"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}],
                 "actions": [{"type": "delete", "delete-instances": True}],
             },
             session_factory=session_factory,
@@ -203,9 +186,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-delete",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}
-                ],
+                "filters": [{"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}],
                 "actions": [{"type": "retention", "days": 21}],
             },
             session_factory=session_factory,
@@ -220,9 +201,7 @@ class RDSClusterTest(BaseTest):
             {
                 "name": "rdscluster-snapshot",
                 "resource": "rds-cluster",
-                "filters": [
-                    {"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}
-                ],
+                "filters": [{"type": "value", "key": "DBClusterIdentifier", "value": "bbb"}],
                 "actions": [{"type": "snapshot"}],
             },
             session_factory=session_factory,
@@ -428,9 +407,7 @@ class RDSClusterTest(BaseTest):
         self.assertEqual(resources[0]['Status'], 'available')
 
         client = factory().client('rds')
-        cluster = client.describe_db_clusters(DBClusterIdentifier='mytest').get(
-            'DBClusters'
-        )[0]
+        cluster = client.describe_db_clusters(DBClusterIdentifier='mytest').get('DBClusters')[0]
         self.assertEqual(cluster['Status'], 'stopping')
 
     def test_start(self):
@@ -450,9 +427,7 @@ class RDSClusterTest(BaseTest):
         self.assertEqual(resources[0]['Status'], 'stopped')
 
         client = factory().client('rds')
-        cluster = client.describe_db_clusters(DBClusterIdentifier='mytest').get(
-            'DBClusters'
-        )[0]
+        cluster = client.describe_db_clusters(DBClusterIdentifier='mytest').get('DBClusters')[0]
         self.assertEqual(cluster['Status'], 'starting')
 
 
@@ -493,9 +468,7 @@ class RDSClusterSnapshotTest(BaseTest):
         self.assertEqual(len(resources), 2)
 
     def test_rdscluster_snapshot_get_resources(self):
-        session_factory = self.replay_flight_data(
-            'test_rds_cluster_snapshot_get_resources'
-        )
+        session_factory = self.replay_flight_data('test_rds_cluster_snapshot_get_resources')
         p = self.load_policy(
             {'name': 'rdscluster-get', 'resource': 'aws.rds-cluster-snapshot'},
             session_factory=session_factory,
@@ -515,9 +488,7 @@ class RDSClusterSnapshotTest(BaseTest):
         self.assertEqual({len(r['Tags']) for r in resources}, {1, 0})
 
     def test_rdscluster_snapshot_cross_account(self):
-        session_factory = self.replay_flight_data(
-            'test_rds_cluster_snapshot_cross_account'
-        )
+        session_factory = self.replay_flight_data('test_rds_cluster_snapshot_cross_account')
         p = self.load_policy(
             {
                 'name': 'rdscluster-snapshot-xaccount',
@@ -528,9 +499,7 @@ class RDSClusterSnapshotTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]['DBClusterSnapshotIdentifier'], 'test-cluster-final-snapshot'
-        )
+        self.assertEqual(resources[0]['DBClusterSnapshotIdentifier'], 'test-cluster-final-snapshot')
         self.assertEqual(resources[0]['c7n:CrossAccountViolations'], ['12345678910'])
 
     def test_rdscluster_snapshot_simple_filter(self):
@@ -539,9 +508,7 @@ class RDSClusterSnapshotTest(BaseTest):
             {
                 "name": "rdscluster-snapshot-simple-filter",
                 "resource": "rds-cluster-snapshot",
-                "filters": [
-                    {"type": "value", "key": "StorageEncrypted", "value": False}
-                ],
+                "filters": [{"type": "value", "key": "StorageEncrypted", "value": False}],
             },
             session_factory=session_factory,
         )
@@ -578,9 +545,7 @@ class RDSClusterSnapshotTest(BaseTest):
         attributes = client.describe_db_cluster_snapshot_attributes(
             DBClusterSnapshotIdentifier=snapshot_id
         )["DBClusterSnapshotAttributesResult"]["DBClusterSnapshotAttributes"]
-        attr_map = {
-            attr["AttributeName"]: attr["AttributeValues"] for attr in attributes
-        }
+        attr_map = {attr["AttributeName"]: attr["AttributeValues"] for attr in attributes}
         return set(attr_map.get("restore", []))
 
     def test_set_permissions(self):
@@ -597,9 +562,7 @@ class RDSClusterSnapshotTest(BaseTest):
                 "resource": "rds-cluster-snapshot",
                 "source": "config",
                 "query": [{"clause": f"resourceId = '{target_snapshot_id}'"}],
-                "actions": [
-                    {"type": "set-permissions", "add": [add], "remove": [remove, "all"]}
-                ],
+                "actions": [{"type": "set-permissions", "add": [add], "remove": [remove, "all"]}],
             },
             session_factory=session_factory,
             config={"region": "us-east-2"},

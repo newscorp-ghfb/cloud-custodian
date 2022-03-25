@@ -8,9 +8,7 @@ class AppEngineAppTest(BaseTest):
     def test_app_query(self):
         project_id = 'cloud-custodian'
         app_name = 'apps/{}'.format(project_id)
-        session_factory = self.replay_flight_data(
-            'app-engine-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('app-engine-query', project_id=project_id)
 
         policy = self.load_policy(
             {'name': 'gcp-app-engine-dryrun', 'resource': 'gcp.app-engine'},
@@ -23,9 +21,7 @@ class AppEngineAppTest(BaseTest):
     def test_app_get(self):
         project_id = 'cloud-custodian'
         app_name = 'apps/' + project_id
-        session_factory = self.replay_flight_data(
-            'app-engine-get', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('app-engine-get', project_id=project_id)
 
         policy = self.load_policy(
             {'name': 'gcp-app-engine-dryrun', 'resource': 'gcp.app-engine'},
@@ -41,9 +37,7 @@ class AppEngineCertificateTest(BaseTest):
         project_id = 'cloud-custodian'
         app_name = 'apps/{}'.format(project_id)
         certificate_id = '12277184'
-        certificate_name = '{}/authorizedCertificates/{}'.format(
-            app_name, certificate_id
-        )
+        certificate_name = '{}/authorizedCertificates/{}'.format(app_name, certificate_id)
         session_factory = self.replay_flight_data(
             'app-engine-certificate-query', project_id=project_id
         )
@@ -55,9 +49,7 @@ class AppEngineCertificateTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
         resources = policy.run()
         self.assertEqual(resources[0]['name'], certificate_name)
@@ -67,9 +59,7 @@ class AppEngineCertificateTest(BaseTest):
         project_id = 'cloud-custodian'
         app_name = 'apps/' + project_id
         certificate_id = '12277184'
-        certificate_name = '{}/authorizedCertificates/{}'.format(
-            app_name, certificate_id
-        )
+        certificate_name = '{}/authorizedCertificates/{}'.format(app_name, certificate_id)
         session_factory = self.replay_flight_data(
             'app-engine-certificate-get', project_id=project_id
         )
@@ -81,13 +71,9 @@ class AppEngineCertificateTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
-        resource = policy.resource_manager.get_resource(
-            {'resourceName': certificate_name}
-        )
+        resource = policy.resource_manager.get_resource({'resourceName': certificate_name})
         self.assertEqual(resource['name'], certificate_name)
         self.assertEqual(resource[parent_annotation_key]['name'], app_name)
 
@@ -98,9 +84,7 @@ class AppEngineDomainTest(BaseTest):
         app_name = 'apps/{}'.format(project_id)
         domain_id = 'gcp-li.ga'
         domain_name = '{}/authorizedDomains/{}'.format(app_name, domain_id)
-        session_factory = self.replay_flight_data(
-            'app-engine-domain-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('app-engine-domain-query', project_id=project_id)
 
         policy = self.load_policy(
             {
@@ -109,9 +93,7 @@ class AppEngineDomainTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
         resources = policy.run()
         self.assertEqual(resources[0]['name'], domain_name)
@@ -135,9 +117,7 @@ class AppEngineDomainMappingTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
         resources = policy.run()
         self.assertEqual(resources[0]['name'], domain_mapping_name)
@@ -159,13 +139,9 @@ class AppEngineDomainMappingTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
-        resource = policy.resource_manager.get_resource(
-            {'resourceName': domain_mapping_name}
-        )
+        resource = policy.resource_manager.get_resource({'resourceName': domain_mapping_name})
         self.assertEqual(resource['name'], domain_mapping_name)
         self.assertEqual(resource[parent_annotation_key]['name'], app_name)
 
@@ -186,9 +162,7 @@ class AppEngineFirewallIngressRuleTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
         resources = policy.run()
         self.assertEqual(resources[0]['priority'], rule_priority)
@@ -198,9 +172,7 @@ class AppEngineFirewallIngressRuleTest(BaseTest):
         project_id = 'cloud-custodian'
         app_name = 'apps/{}'.format(project_id)
         rule_priority = 2147483647
-        rule_priority_full = '{}/firewall/ingressRules/{}'.format(
-            app_name, rule_priority
-        )
+        rule_priority_full = '{}/firewall/ingressRules/{}'.format(app_name, rule_priority)
         session_factory = self.replay_flight_data(
             'app-engine-firewall-ingress-rule-get', project_id=project_id
         )
@@ -212,12 +184,8 @@ class AppEngineFirewallIngressRuleTest(BaseTest):
             },
             session_factory=session_factory,
         )
-        parent_annotation_key = (
-            policy.resource_manager.resource_type.get_parent_annotation_key()
-        )
+        parent_annotation_key = policy.resource_manager.resource_type.get_parent_annotation_key()
 
-        resource = policy.resource_manager.get_resource(
-            {'resourceName': rule_priority_full}
-        )
+        resource = policy.resource_manager.get_resource({'resourceName': rule_priority_full})
         self.assertEqual(resource['priority'], rule_priority)
         self.assertEqual(resource[parent_annotation_key]['name'], app_name)

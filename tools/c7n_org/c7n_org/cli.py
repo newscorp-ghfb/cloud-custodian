@@ -37,9 +37,7 @@ log = logging.getLogger('c7n_org')
 # Workaround OSX issue, note this exists for py2 but there
 # isn't anything we can do in that case.
 # https://bugs.python.org/issue33725
-if sys.platform == 'darwin' and (
-    sys.version_info.major > 3 and sys.version_info.minor > 4
-):
+if sys.platform == 'darwin' and (sys.version_info.major > 3 and sys.version_info.minor > 4):
     multiprocessing.set_start_method('spawn')
 
 
@@ -150,13 +148,9 @@ class LogFilter:
         return 0
 
 
-def init(
-    config, use, debug, verbose, accounts, tags, policies, resource=None, policy_tags=()
-):
+def init(config, use, debug, verbose, accounts, tags, policies, resource=None, policy_tags=()):
     level = verbose and logging.DEBUG or logging.INFO
-    logging.basicConfig(
-        level=level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s"
-    )
+    logging.basicConfig(level=level, format="%(asctime)s: %(name)s:%(levelname)s %(message)s")
 
     logging.getLogger().setLevel(level)
     logging.getLogger('botocore').setLevel(logging.ERROR)
@@ -258,9 +252,7 @@ def filter_accounts(accounts_config, tags, accounts, not_accounts=None):
     for a in accounts_config.get('accounts', ()):
         if not_accounts and a['name'] in not_accounts:
             continue
-        account_id = (
-            a.get('account_id') or a.get('project_id') or a.get('subscription_id') or ''
-        )
+        account_id = a.get('account_id') or a.get('project_id') or a.get('subscription_id') or ''
         if accounts and a['name'] not in accounts and account_id not in accounts:
             continue
         if tags:
@@ -377,9 +369,7 @@ def report_account(account, region, policies_config, output_path, cache_path, de
 )
 @click.option('--format', default='csv', type=click.Choice(['csv', 'json']))
 @click.option('--resource', default=None)
-@click.option(
-    '--cache-path', required=False, type=click.Path(), default="~/.cache/c7n-org"
-)
+@click.option('--cache-path', required=False, type=click.Path(), default="~/.cache/c7n-org")
 def report(
     config,
     output,
@@ -526,9 +516,7 @@ def run_account_script(account, region, output_dir, debug, script_args):
 
     with open(os.path.join(output_dir, 'stdout'), 'wb') as stdout:
         with open(os.path.join(output_dir, 'stderr'), 'wb') as stderr:
-            return subprocess.call(  # nosec
-                args=script_args, env=env, stdout=stdout, stderr=stderr
-            )
+            return subprocess.call(args=script_args, env=env, stdout=stdout, stderr=stderr)  # nosec
 
 
 @cli.command(name='run-script', context_settings=dict(ignore_unknown_options=True))
@@ -560,9 +548,10 @@ def run_script(config, output_dir, accounts, tags, region, echo, serial, script_
         futures = {}
         for a in accounts_config.get('accounts', ()):
             for r in resolve_regions(region or a.get('regions', ()), a):
-                futures[
-                    w.submit(run_account_script, a, r, output_dir, serial, script_args)
-                ] = (a, r)
+                futures[w.submit(run_account_script, a, r, output_dir, serial, script_args)] = (
+                    a,
+                    r,
+                )
         for f in as_completed(futures):
             a, r = futures[f]
             if f.exception():
@@ -645,9 +634,7 @@ def run_account(
     if '{' not in output_path:
         output_path = os.path.join(output_path, account['name'], region)
 
-    cache_path = os.path.join(
-        cache_path, "%s-%s.cache" % (account['account_id'], region)
-    )
+    cache_path = os.path.join(cache_path, "%s-%s.cache" % (account['account_id'], region))
 
     config = Config.empty(
         region=region,
@@ -670,9 +657,7 @@ def run_account(
             config['external_id'] = account.get('external_id')
         else:
             env_vars.update(
-                _get_env_creds(
-                    account, get_session(account, 'custodian', region), region
-                )
+                _get_env_creds(account, get_session(account, 'custodian', region), region)
             )
 
     elif account.get('profile'):

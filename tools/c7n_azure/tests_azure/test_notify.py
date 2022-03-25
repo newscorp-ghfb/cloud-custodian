@@ -82,9 +82,7 @@ class NotifyTest(BaseTest):
     @patch('c7n_azure.storage_utils.StorageUtilities.put_queue_message')
     @patch('c7n_azure.storage_utils.StorageUtilities.get_queue_client_by_uri')
     @patch('logging.Logger.error')
-    def test_access_error(
-        self, logger_mock, get_queue_client_by_uri, put_queue_message
-    ):
+    def test_access_error(self, logger_mock, get_queue_client_by_uri, put_queue_message):
         put_queue_message.side_effect = AzureHttpError('forbidden', 403)
         get_queue_client_by_uri.return_value = 'service', 'name'
 
@@ -99,9 +97,7 @@ class NotifyTest(BaseTest):
     @patch('c7n_azure.storage_utils.StorageUtilities.put_queue_message')
     @patch('c7n_azure.storage_utils.StorageUtilities.get_queue_client_by_uri')
     @patch('logging.Logger.error')
-    def test_error_putting_to_queue(
-        self, logger_mock, get_queue_client_by_uri, put_queue_message
-    ):
+    def test_error_putting_to_queue(self, logger_mock, get_queue_client_by_uri, put_queue_message):
         put_queue_message.side_effect = AzureHttpError('not found', 404)
         get_queue_client_by_uri.return_value = 'service', 'name'
 

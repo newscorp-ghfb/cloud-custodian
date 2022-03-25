@@ -60,18 +60,14 @@ def inventory_filter(ifilters, ischema, kr):
     return False
 
 
-def load_bucket_inventory(
-    client, inventory_bucket, inventory_prefix, versioned, ifilters
-):
+def load_bucket_inventory(client, inventory_bucket, inventory_prefix, versioned, ifilters):
     """Given an inventory location for a bucket, return an iterator over keys
 
     on the most recent delivered manifest.
     """
     now = datetime.datetime.now()
     key_prefix = "%s/%s" % (inventory_prefix, now.strftime('%Y-%m-'))
-    keys = client.list_objects(Bucket=inventory_bucket, Prefix=key_prefix).get(
-        'Contents', []
-    )
+    keys = client.list_objects(Bucket=inventory_bucket, Prefix=key_prefix).get('Contents', [])
     keys = [k['Key'] for k in keys if k['Key'].endswith('.json')]
     keys.sort()
     if not keys:
@@ -83,12 +79,7 @@ def load_bucket_inventory(
 
     # schema as column name to column index mapping
     schema = dict(
-        [
-            (k, i)
-            for i, k in enumerate(
-                [n.strip() for n in manifest_data['fileSchema'].split(',')]
-            )
-        ]
+        [(k, i) for i, k in enumerate([n.strip() for n in manifest_data['fileSchema'].split(',')])]
     )
 
     processor = functools.partial(

@@ -128,9 +128,7 @@ class DeleteDevEndpoint(BaseAction):
                 futures.append(w.submit(self.delete_dev_endpoint, client, endpoint_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting glue dev endpoint \n %s", f.exception()
-                    )
+                    self.log.error("Exception deleting glue dev endpoint \n %s", f.exception())
 
 
 @resources.register('glue-job')

@@ -36,8 +36,7 @@ class QueryResourceManagerTest(BaseTest):
         output = self.capture_logging('custodian.policy', level=logging.ERROR)
         self.assertRaises(ResourceLimitExceeded, p.run)
         self.assertTrue(
-            "policy:limits exceeded resource-limit:0.01% found:1 total:"
-            in output.getvalue()
+            "policy:limits exceeded resource-limit:0.01% found:1 total:" in output.getvalue()
         )
         self.assertEqual(p.ctx.metrics.buf[0]['MetricName'], 'ResourceLimitExceeded')
 
@@ -56,9 +55,7 @@ class QueryResourceManagerTest(BaseTest):
         p.ctx.metrics.flush = mock.MagicMock()
         output = self.capture_logging('custodian.policy', level=logging.ERROR)
         self.assertRaises(ResourceLimitExceeded, p.run)
-        self.assertTrue(
-            "policy:limits exceeded resource-limit:1 found:" in output.getvalue()
-        )
+        self.assertTrue("policy:limits exceeded resource-limit:1 found:" in output.getvalue())
         self.assertEqual(p.ctx.metrics.buf[0]['MetricName'], 'ResourceLimitExceeded')
 
     @patch('c7n_azure.query.log.error')

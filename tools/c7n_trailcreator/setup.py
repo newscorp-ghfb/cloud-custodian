@@ -33,9 +33,7 @@ install_requires = [
     'zipp (>=3.7.0,<4.0.0)',
 ]
 
-entry_points = {
-    'console_scripts': ['c7n-trailcreator = c7n_trailcreator.trailcreator:cli']
-}
+entry_points = {'console_scripts': ['c7n-trailcreator = c7n_trailcreator.trailcreator:cli']}
 
 setup_kwargs = {
     'name': 'c7n-trailcreator',

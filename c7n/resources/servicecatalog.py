@@ -172,9 +172,7 @@ class RemoveSharedAccounts(BaseAction):
         if accounts == 'matched':
             accounts = portfolio.get(CatalogPortfolioCrossAccount.annotation_key)
         for account in accounts:
-            client.delete_portfolio_share(
-                PortfolioId=portfolio['Id'], AccountId=account
-            )
+            client.delete_portfolio_share(PortfolioId=portfolio['Id'], AccountId=account)
 
     def process(self, portfolios):
         client = local_session(self.manager.session_factory).client('servicecatalog')

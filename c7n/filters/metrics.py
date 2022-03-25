@@ -138,9 +138,7 @@ class MetricsFilter(Filter):
         # Adjust the start time to gracefully handle CloudWatch's retention schedule, which rolls up
         # data points progressively (1 minute --> 5 minutes --> 1 hour) over time.
         self.start = (self.end - duration).replace(minute=0)
-        self.period = int(
-            self.data.get('period', (self.end - self.start).total_seconds())
-        )
+        self.period = int(self.data.get('period', (self.end - self.start).total_seconds()))
         self.statistics = self.data.get('statistics', 'Average')
         self.model = self.manager.get_model()
         self.op = OPERATORS[self.data.get('op', 'less-than')]

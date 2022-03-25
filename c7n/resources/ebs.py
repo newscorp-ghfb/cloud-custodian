@@ -159,9 +159,7 @@ class SnapshotTag(Tag):
     def process_resource_set(self, client, resource_set, tags):
         while resource_set:
             try:
-                return super(SnapshotTag, self).process_resource_set(
-                    client, resource_set, tags
-                )
+                return super(SnapshotTag, self).process_resource_set(client, resource_set, tags)
             except ClientError as e:
                 bad_snap = ErrorHandler.extract_bad_snapshot(e)
                 if bad_snap:
@@ -227,14 +225,11 @@ class SnapshotCrossAccountAccess(CrossAccountAccessFilter):
         with self.executor_factory(max_workers=3) as w:
             futures = []
             for resource_set in chunks(resources, 50):
-                futures.append(
-                    w.submit(self.process_resource_set, client, resource_set)
-                )
+                futures.append(w.submit(self.process_resource_set, client, resource_set))
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Exception checking cross account access \n %s"
-                        % (f.exception())
+                        "Exception checking cross account access \n %s" % (f.exception())
                     )
                     continue
                 results.extend(f.result())
@@ -291,9 +286,7 @@ class SnapshotUnusedFilter(Filter):
     def _pull_asg_snapshots(self):
         asgs = self.manager.get_resource_manager('asg').resources()
         snap_ids = set()
-        lcfgs = set(
-            a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a
-        )
+        lcfgs = set(a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a)
         lcfg_mgr = self.manager.get_resource_manager('launch-config')
 
         if lcfgs:
@@ -303,9 +296,7 @@ class SnapshotUnusedFilter(Filter):
                         snap_ids.add(b['Ebs']['SnapshotId'])
 
         tmpl_mgr = self.manager.get_resource_manager('launch-template-version')
-        for tversion in tmpl_mgr.get_resources(
-            list(tmpl_mgr.get_asg_templates(asgs).keys())
-        ):
+        for tversion in tmpl_mgr.get_resources(list(tmpl_mgr.get_asg_templates(asgs).keys())):
             for bd in tversion['LaunchTemplateData'].get('BlockDeviceMappings', ()):
                 if 'Ebs' in bd and 'SnapshotId' in bd['Ebs']:
                     snap_ids.add(bd['Ebs']['SnapshotId'])
@@ -437,22 +428,16 @@ class SnapshotDelete(BaseAction):
         pre = len(snapshots)
         snapshots = list(filter(None, _filter_ami_snapshots(self, snapshots)))
         post = len(snapshots)
-        log.info(
-            "Deleting %d snapshots, auto-filtered %d ami-snapshots", post, pre - post
-        )
+        log.info("Deleting %d snapshots, auto-filtered %d ami-snapshots", post, pre - post)
 
         client = local_session(self.manager.session_factory).client('ec2')
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for snapshot_set in chunks(reversed(snapshots), size=50):
-                futures.append(
-                    w.submit(self.process_snapshot_set, client, snapshot_set)
-                )
+                futures.append(w.submit(self.process_snapshot_set, client, snapshot_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting snapshot set \n %s" % (f.exception())
-                    )
+                    self.log.error("Exception deleting snapshot set \n %s" % (f.exception()))
         return snapshots
 
     def process_snapshot_set(self, client, snapshots_set):
@@ -510,8 +495,7 @@ class CopySnapshot(BaseAction):
             key = self.data.get('target_key')
             if not key:
                 raise PolicyValidationError(
-                    "Encrypted snapshot copy requires kms key on %s"
-                    % (self.manager.data,)
+                    "Encrypted snapshot copy requires kms key on %s" % (self.manager.data,)
                 )
         return self
 
@@ -520,9 +504,7 @@ class CopySnapshot(BaseAction):
             list(w.map(self.process_resource_set, chunks(resources, 20)))
 
     def process_resource_set(self, resource_set):
-        client = self.manager.session_factory(region=self.data['target_region']).client(
-            'ec2'
-        )
+        client = self.manager.session_factory(region=self.data['target_region']).client('ec2')
 
         cross_region = self.data['target_region'] != self.manager.config.region
 
@@ -547,9 +529,7 @@ class CopySnapshot(BaseAction):
                 continue
 
             copy_ids = [r['c7n:CopiedSnapshot'] for r in snapshot_set]
-            self.log.debug(
-                "Waiting on cross-region snapshot copy %s", ",".join(copy_ids)
-            )
+            self.log.debug("Waiting on cross-region snapshot copy %s", ",".join(copy_ids))
             waiter = client.get_waiter('snapshot_completed')
             waiter.config.delay = 60
             waiter.config.max_attempts = 60
@@ -630,9 +610,7 @@ class SetPermissions(BaseAction):
                 SnapshotId=snapshot['SnapshotId'], Attribute="createVolumePermission"
             )
         if remove_accounts == 'matched':
-            remove_accounts = snapshot.get(
-                'c7n:' + SnapshotCrossAccountAccess.annotation_key
-            )
+            remove_accounts = snapshot.get('c7n:' + SnapshotCrossAccountAccess.annotation_key)
 
         remove = []
         remove.extend([{'UserId': a} for a in remove_accounts if a != 'all'])
@@ -787,8 +765,7 @@ class AttachedInstanceFilter(ValueFilter):
         original_count = len(resources)
         resources = [r for r in resources if r.get('Attachments')]
         self.log.debug(
-            'Filtered from %d volumes to %d attached volumes'
-            % (original_count, len(resources))
+            'Filtered from %d volumes to %d attached volumes' % (original_count, len(resources))
         )
         self.instance_map = self.get_instance_mapping(resources)
         return list(filter(self, resources))
@@ -803,9 +780,7 @@ class AttachedInstanceFilter(ValueFilter):
     def get_instance_mapping(self, resources):
         instance_ids = [r['Attachments'][0]['InstanceId'] for r in resources]
         instances = self.manager.get_resource_manager('ec2').get_resources(instance_ids)
-        self.log.debug(
-            "Queried %d instances for %d volumes" % (len(instances), len(resources))
-        )
+        self.log.debug("Queried %d instances for %d volumes" % (len(instances), len(resources)))
         return {i['InstanceId']: i for i in instances}
 
 
@@ -895,9 +870,7 @@ class HealthFilter(HealthEventFilter):
         resource_map = {}
 
         paginator = client.get_paginator('describe_events')
-        events = list(
-            itertools.chain(*[p['events'] for p in paginator.paginate(filter=f)])
-        )
+        events = list(itertools.chain(*[p['events'] for p in paginator.paginate(filter=f)]))
         entities = self.process_event(client, events)
 
         event_map = {e['arn']: e for e in events}
@@ -906,9 +879,7 @@ class HealthFilter(HealthEventFilter):
             rid = e['entityValue']
             if not resource_map.get(rid):
                 resource_map[rid] = self.load_resource(config, rid)
-            resource_map[rid].setdefault('c7n:HealthEvent', []).append(
-                event_map[e['eventArn']]
-            )
+            resource_map[rid].setdefault('c7n:HealthEvent', []).append(event_map[e['eventArn']])
         return list(resource_map.values())
 
     def load_resource(self, config, rid):
@@ -951,9 +922,7 @@ class CopyInstanceTags(BaseAction):
                       - Name
     """
 
-    schema = type_schema(
-        'copy-instance-tags', tags={'type': 'array', 'items': {'type': 'string'}}
-    )
+    schema = type_schema('copy-instance-tags', tags={'type': 'array', 'items': {'type': 'string'}})
 
     def get_permissions(self):
         perms = self.manager.get_resource_manager('ec2').get_permissions()
@@ -973,17 +942,11 @@ class CopyInstanceTags(BaseAction):
         client = local_session(self.manager.session_factory).client('ec2')
         with self.executor_factory(max_workers=10) as w:
             futures = []
-            for instance_set in chunks(
-                sorted(self.instance_map.keys(), reverse=True), size=100
-            ):
-                futures.append(
-                    w.submit(self.process_instance_set, client, instance_set)
-                )
+            for instance_set in chunks(sorted(self.instance_map.keys(), reverse=True), size=100):
+                futures.append(w.submit(self.process_instance_set, client, instance_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception copying instance tags \n %s" % (f.exception())
-                    )
+                    self.log.error("Exception copying instance tags \n %s" % (f.exception()))
 
     def initialize(self, volumes):
         instance_vol_map = {}
@@ -1062,12 +1025,8 @@ class CopyInstanceTags(BaseAction):
         ):
             return copy_tags
 
-        copy_tags.append(
-            {'Key': 'LastAttachTime', 'Value': attachment['AttachTime'].isoformat()}
-        )
-        copy_tags.append(
-            {'Key': 'LastAttachInstance', 'Value': attachment['InstanceId']}
-        )
+        copy_tags.append({'Key': 'LastAttachTime', 'Value': attachment['AttachTime'].isoformat()})
+        copy_tags.append({'Key': 'LastAttachInstance', 'Value': attachment['InstanceId']})
         return copy_tags
 
 
@@ -1164,9 +1123,7 @@ class EncryptInstanceVolumes(BaseAction):
         with self.executor_factory(max_workers=3) as w:
             futures = {}
             for instance_id, vol_set in instance_vol_map.items():
-                futures[
-                    w.submit(self.process_volume, client, instance_id, vol_set)
-                ] = instance_id
+                futures[w.submit(self.process_volume, client, instance_id, vol_set)] = instance_id
 
             for f in as_completed(futures):
                 if f.exception():
@@ -1327,9 +1284,7 @@ class EncryptInstanceVolumes(BaseAction):
             except Exception:
                 return self._wait_on_resource(*args, **kw)
 
-    def _wait_on_resource(
-        self, client, snapshot_id=None, volume_id=None, instance_id=None
-    ):
+    def _wait_on_resource(self, client, snapshot_id=None, volume_id=None, instance_id=None):
         # boto client waiters poll every 15 seconds up to a max 600s (5m)
         if snapshot_id:
             if self.verbose:
@@ -1405,9 +1360,7 @@ class CreateSnapshot(BaseAction):
 
     def validate(self):
         if self.data.get('copy-tags') and 'copy-volume-tags' in self.data:
-            raise PolicyValidationError(
-                "Can specify copy-tags or copy-volume-tags, not both"
-            )
+            raise PolicyValidationError("Can specify copy-tags or copy-volume-tags, not both")
 
     def process(self, volumes):
         client = local_session(self.manager.session_factory).client('ec2')
@@ -1420,14 +1373,10 @@ class CreateSnapshot(BaseAction):
     def process_volume(self, client, volume, tags):
         description = self.data.get('description')
         if not description:
-            description = "Automated snapshot by c7n - %s" % (
-                self.manager.ctx.policy.name
-            )
+            description = "Automated snapshot by c7n - %s" % (self.manager.ctx.policy.name)
 
         try:
-            client.create_snapshot(
-                VolumeId=volume, Description=description, TagSpecifications=tags
-            )
+            client.create_snapshot(VolumeId=volume, Description=description, TagSpecifications=tags)
         except ClientError as e:
             if e.response['Error']['Code'] == 'InvalidVolume.NotFound':
                 return
@@ -1435,9 +1384,7 @@ class CreateSnapshot(BaseAction):
 
     def get_snapshot_tags(self, resource):
         user_tags = self.data.get('tags', {}) or {'custodian_snapshot': ''}
-        copy_tags = self.data.get('copy-tags', []) or self.data.get(
-            'copy-volume-tags', True
-        )
+        copy_tags = self.data.get('copy-tags', []) or self.data.get('copy-volume-tags', True)
         return coalesce_copy_user_tags(resource, copy_tags, user_tags)
 
 
@@ -1578,9 +1525,7 @@ class ModifyableVolume(Filter):
         for i in instances:
             if i['InstanceType'] in self.older_generation:
                 stats['instance-type'] += len(instance_map[i['InstanceId']])
-                filtered.extend(
-                    [v['VolumeId'] for v in instance_map.pop(i['InstanceId'])]
-                )
+                filtered.extend([v['VolumeId'] for v in instance_map.pop(i['InstanceId'])])
             else:
                 results.extend(instance_map.pop(i['InstanceId']))
 
@@ -1703,12 +1648,8 @@ class ModifyVolume(BaseAction):
 
     def validate(self):
         if 'modifyable' not in self.manager.data.get('filters', ()):
-            raise PolicyValidationError(
-                "modify action requires modifyable filter in policy"
-            )
-        if self.data.get('size-percent', 100) < 100 and not self.data.get(
-            'shrink', False
-        ):
+            raise PolicyValidationError("modify action requires modifyable filter in policy")
+        if self.data.get('size-percent', 100) < 100 and not self.data.get('shrink', False):
             raise PolicyValidationError(
                 (
                     "shrinking volumes requires os/fs support "

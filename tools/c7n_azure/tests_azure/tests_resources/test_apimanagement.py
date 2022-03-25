@@ -65,9 +65,5 @@ class ApiManagementTest(BaseTest):
 
         self.assertEqual(len(update_by_id.call_args_list), 1)
         self.assertEqual(len(update_by_id.call_args_list[0][0]), 3)
-        self.assertEqual(
-            update_by_id.call_args_list[0][0][2].serialize()['sku']['capacity'], 8
-        )
-        self.assertEqual(
-            update_by_id.call_args_list[0][0][2].serialize()['sku']['tier'], 'Premium'
-        )
+        self.assertEqual(update_by_id.call_args_list[0][0][2].serialize()['sku']['capacity'], 8)
+        self.assertEqual(update_by_id.call_args_list[0][0][2].serialize()['sku']['tier'], 'Premium')

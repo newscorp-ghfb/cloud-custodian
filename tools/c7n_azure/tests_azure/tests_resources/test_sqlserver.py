@@ -502,10 +502,7 @@ class SQLServerFirewallActionTest(BaseTest):
         'azure.mgmt.sql.operations._firewall_rules_operations.'
         'FirewallRulesOperations.create_or_update'
     )
-    @patch(
-        'azure.mgmt.sql.operations._firewall_rules_operations.'
-        'FirewallRulesOperations.delete'
-    )
+    @patch('azure.mgmt.sql.operations._firewall_rules_operations.' 'FirewallRulesOperations.delete')
     @cassette_name('firewall_action')
     @arm_template('sqlserver.json')
     def test_action_policy(
@@ -552,9 +549,7 @@ class SQLServerFirewallActionTest(BaseTest):
         self.assertEqual(IPSet(expected_add), added)
 
         # Removed IP's
-        self.assertEqual(
-            set(expected_remove), {args[2] for _, args, _ in delete.mock_calls}
-        )
+        self.assertEqual(set(expected_remove), {args[2] for _, args, _ in delete.mock_calls})
 
     @patch(
         'azure.mgmt.sql.operations._firewall_rules_operations.'

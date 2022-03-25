@@ -143,9 +143,7 @@ def test_asg_propagate_tag_action(test, aws_asg):
         t['Key']: t['Value']
         for t in jmespath.search(
             'Reservations[0].Instances[0].Tags',
-            client.describe_instances(
-                InstanceIds=[resources[0]['Instances'][0]['InstanceId']]
-            ),
+            client.describe_instances(InstanceIds=[resources[0]['Instances'][0]['InstanceId']]),
         )
     }
     assert 'Owner' in itags
@@ -159,9 +157,7 @@ def test_aws_asg_update(test, aws_asg_update):
         {
             "name": "asg-update",
             "resource": "aws.asg",
-            "filters": [
-                {"AutoScalingGroupName": aws_asg_update["aws_autoscaling_group.bar.id"]}
-            ],
+            "filters": [{"AutoScalingGroupName": aws_asg_update["aws_autoscaling_group.bar.id"]}],
             "actions": [
                 {
                     "type": "update",
@@ -244,9 +240,7 @@ class AutoScalingTest(BaseTest):
         self.assertEqual(resources[0]["Unencrypted"], ["Image", "LaunchConfig"])
 
     def test_asg_non_encrypted_filter_with_templates(self):
-        factory = self.replay_flight_data(
-            "test_asg_non_encrypted_filter_with_templates"
-        )
+        factory = self.replay_flight_data("test_asg_non_encrypted_filter_with_templates")
         p = self.load_policy(
             {
                 "name": "asg-encrypted-with-launch-templates",
@@ -370,9 +364,7 @@ class AutoScalingTest(BaseTest):
             {
                 "name": "asg-cfg-filter",
                 "resource": "asg",
-                "filters": [
-                    {"type": "launch-config", "key": "ImageId", "value": "ami-9abea4fb"}
-                ],
+                "filters": [{"type": "launch-config", "key": "ImageId", "value": "ami-9abea4fb"}],
             },
             session_factory=factory,
         )
@@ -397,9 +389,7 @@ class AutoScalingTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]['AutoScalingGroupName'], 'asg-test-scaling-policy'
-        )
+        self.assertEqual(resources[0]['AutoScalingGroupName'], 'asg-test-scaling-policy')
         self.assertTrue('c7n:matched-policies' in resources[0])
         self.assertTrue(
             resources[0]['c7n:matched-policies'][0]['PolicyName'],
@@ -451,9 +441,7 @@ class AutoScalingTest(BaseTest):
         result = client.describe_auto_scaling_groups()["AutoScalingGroups"].pop()
         ec2 = session.client("ec2")
         instance_id = result["Instances"][0]["InstanceId"]
-        ec2.create_tags(
-            Resources=[instance_id], Tags=[{"Key": "Home", "Value": "Earth"}]
-        )
+        ec2.create_tags(Resources=[instance_id], Tags=[{"Key": "Home", "Value": "Earth"}])
 
         # Run the policy
         resources = p.run()
@@ -462,9 +450,7 @@ class AutoScalingTest(BaseTest):
         result = client.describe_auto_scaling_groups(
             AutoScalingGroupNames=[resources[0]["AutoScalingGroupName"]]
         )["AutoScalingGroups"].pop()
-        tag_map = {
-            t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]
-        }
+        tag_map = {t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]}
         self.assertTrue("CustomerId" in tag_map)
         self.assertEqual(tag_map["CustomerId"][0], "GetSome")
         self.assertEqual(tag_map["CustomerId"][1], True)
@@ -490,9 +476,7 @@ class AutoScalingTest(BaseTest):
         result = client.describe_auto_scaling_groups(
             AutoScalingGroupNames=[resources[0]["AutoScalingGroupName"]]
         )["AutoScalingGroups"].pop()
-        tag_map = {
-            t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]
-        }
+        tag_map = {t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]}
         self.assertFalse("CustomerId" in tag_map)
 
     def test_asg_post_finding_format(self):
@@ -504,9 +488,7 @@ class AutoScalingTest(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -534,8 +516,7 @@ class AutoScalingTest(BaseTest):
                 'Tags': {
                     'Platform': 'ubuntu',
                     'custodian_action': (
-                        'AutoScaleGroup does not meet org tag policy: '
-                        'suspend@2016/05/21'
+                        'AutoScaleGroup does not meet org tag policy: ' 'suspend@2016/05/21'
                     ),
                 },
                 'Type': 'AwsAutoScalingAutoScalingGroup',
@@ -582,9 +563,7 @@ class AutoScalingTest(BaseTest):
         asg = session.client("autoscaling")
         localtz = tzutil.gettz("America/New_York")
         dt = datetime.now(localtz)
-        dt = dt.replace(
-            year=2018, month=2, day=20, hour=12, minute=42, second=0, microsecond=0
-        )
+        dt = dt.replace(year=2018, month=2, day=20, hour=12, minute=42, second=0, microsecond=0)
 
         policy = self.load_policy(
             {
@@ -603,9 +582,9 @@ class AutoScalingTest(BaseTest):
         )
         resource = describe_auto_scaling_groups["AutoScalingGroups"][0]
         tags = [t["Value"] for t in resource["Tags"] if t["Key"] == "maid_status"]
-        result = datetime.strptime(
-            tags[0].strip().split("@", 1)[-1], "%Y/%m/%d %H%M %Z"
-        ).replace(tzinfo=localtz)
+        result = datetime.strptime(tags[0].strip().split("@", 1)[-1], "%Y/%m/%d %H%M %Z").replace(
+            tzinfo=localtz
+        )
         self.assertEqual(result, dt)
 
     def test_asg_marked_for_op_hours(self):
@@ -629,9 +608,7 @@ class AutoScalingTest(BaseTest):
                 "name": "asg-rename-tag",
                 "resource": "asg",
                 "filters": [{"tag:Platform": "ubuntu"}],
-                "actions": [
-                    {"type": "rename-tag", "source": "Platform", "dest": "Linux"}
-                ],
+                "actions": [{"type": "rename-tag", "source": "Platform", "dest": "Linux"}],
             },
             session_factory=factory,
         )
@@ -657,9 +634,7 @@ class AutoScalingTest(BaseTest):
         result = client.describe_auto_scaling_groups(
             AutoScalingGroupNames=[resources[0]["AutoScalingGroupName"]]
         )["AutoScalingGroups"].pop()
-        tag_map = {
-            t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]
-        }
+        tag_map = {t["Key"]: (t["Value"], t["PropagateAtLaunch"]) for t in result["Tags"]}
         self.assertFalse("Platform" in tag_map)
         self.assertTrue("Linux" in tag_map)
 
@@ -764,9 +739,7 @@ class AutoScalingTest(BaseTest):
         tag_map = {t["Key"]: t["Value"] for t in result["Tags"]}
         # test that we saved state to a tag
         self.assertTrue("OffHoursPrevious" in tag_map)
-        self.assertEqual(
-            tag_map["OffHoursPrevious"], "DesiredCapacity=2;MinSize=2;MaxSize=2"
-        )
+        self.assertEqual(tag_map["OffHoursPrevious"], "DesiredCapacity=2;MinSize=2;MaxSize=2")
 
     def test_asg_resize_restore_from_tag(self):
         factory = self.replay_flight_data("test_asg_resize_restore_from_tag")
@@ -778,9 +751,7 @@ class AutoScalingTest(BaseTest):
                     {"tag:CustodianUnitTest": "not-null"},
                     {"tag:OffHoursPrevious": "not-null"},
                 ],
-                "actions": [
-                    {"type": "resize", "restore-options-tag": "OffHoursPrevious"}
-                ],
+                "actions": [{"type": "resize", "restore-options-tag": "OffHoursPrevious"}],
             },
             session_factory=factory,
         )
@@ -923,9 +894,7 @@ class AutoScalingTest(BaseTest):
             {
                 "name": "asg-sg",
                 "resource": "asg",
-                "filters": [
-                    {"type": "security-group", "key": "GroupName", "value": "default"}
-                ],
+                "filters": [{"type": "security-group", "key": "GroupName", "value": "default"}],
             },
             session_factory=factory,
         )
@@ -939,9 +908,7 @@ class AutoScalingTest(BaseTest):
             {
                 "name": "asg-propagated-tag-filter",
                 "resource": "asg",
-                "filters": [
-                    {"type": "progagated-tags", "keys": ["Tag01", "Tag02", "Tag03"]}
-                ],
+                "filters": [{"type": "progagated-tags", "keys": ["Tag01", "Tag02", "Tag03"]}],
             },
             session_factory=session,
         )
@@ -953,9 +920,7 @@ class AutoScalingTest(BaseTest):
             {
                 "name": "asg-propagated-tag-filter",
                 "resource": "asg",
-                "filters": [
-                    {"type": "propagated-tags", "keys": ["Tag01", "Tag02", "Tag03"]}
-                ],
+                "filters": [{"type": "propagated-tags", "keys": ["Tag01", "Tag02", "Tag03"]}],
             },
             session_factory=session,
         )

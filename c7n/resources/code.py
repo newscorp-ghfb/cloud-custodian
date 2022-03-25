@@ -39,9 +39,7 @@ class CodeRepository(QueryResourceManager):
         universal_taggable = object()
 
     def get_resources(self, ids, cache=True):
-        return universal_augment(
-            self, self.augment([{'repositoryName': i} for i in ids])
-        )
+        return universal_augment(self, self.augment([{'repositoryName': i} for i in ids]))
 
 
 @CodeRepository.action_registry.register('delete')
@@ -78,9 +76,7 @@ class DeleteRepository(BaseAction):
 
 class DescribeBuild(DescribeSource):
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeBuild, self).augment(resources)
-        )
+        return universal_augment(self.manager, super(DescribeBuild, self).augment(resources))
 
 
 class ConfigBuild(ConfigSource):
@@ -93,9 +89,7 @@ class ConfigBuild(ConfigSource):
         # AWS Config garbage mangle undo.
 
         if 'queuedtimeoutInMinutes' in item_config:
-            item_config['queuedTimeoutInMinutes'] = int(
-                item_config.pop('queuedtimeoutInMinutes')
-            )
+            item_config['queuedTimeoutInMinutes'] = int(item_config.pop('queuedtimeoutInMinutes'))
 
         artifacts = item_config.pop('artifacts')
         item_config['artifacts'] = artifacts.pop(0)
@@ -191,9 +185,7 @@ class BuildPostFinding(OtherResourcePostFinding):
                         {
                             'VpcId': jmespath.search('vpcConfig.vpcId', r),
                             'Subnets': jmespath.search('vpcConfig.subnets', r),
-                            'SecurityGroupIds': jmespath.search(
-                                'vpcConfig.securityGroupIds', r
-                            ),
+                            'SecurityGroupIds': jmespath.search('vpcConfig.securityGroupIds', r),
                         }
                     ),
                     'Source': self.filter_empty(
@@ -332,9 +324,7 @@ class DeleteApplication(BaseAction):
         client = local_session(self.manager.session_factory).client('codedeploy')
         for r in resources:
             try:
-                self.manager.retry(
-                    client.delete_application, applicationName=r['applicationName']
-                )
+                self.manager.retry(client.delete_application, applicationName=r['applicationName'])
             except (
                 client.exceptions.InvalidApplicationNameException,
                 client.exceptions.ApplicationDoesNotExistException,
@@ -390,12 +380,10 @@ class DescribeDeploymentGroup(query.ChildDescribeSource):
             ).get('deploymentGroupInfo')
             results.append(dg)
         for r in results:
-            rarn = self.manager.generate_arn(
-                r['applicationName'] + '/' + r['deploymentGroupName']
+            rarn = self.manager.generate_arn(r['applicationName'] + '/' + r['deploymentGroupName'])
+            r['Tags'] = self.manager.retry(client.list_tags_for_resource, ResourceArn=rarn).get(
+                'Tags'
             )
-            r['Tags'] = self.manager.retry(
-                client.list_tags_for_resource, ResourceArn=rarn
-            ).get('Tags')
         return results
 
 
@@ -418,9 +406,7 @@ class CodeDeployDeploymentGroup(ChildResourceManager):
     def get_arns(self, resources):
         arns = []
         for r in resources:
-            arns.append(
-                self.generate_arn(r['applicationName'] + '/' + r['deploymentGroupName'])
-            )
+            arns.append(self.generate_arn(r['applicationName'] + '/' + r['deploymentGroupName']))
         return arns
 
 

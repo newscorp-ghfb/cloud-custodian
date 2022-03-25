@@ -213,16 +213,14 @@ class TestSSM(BaseTest):
         if self.recording:
             time.sleep(1)
         self.assertEqual(
-            client.describe_parameters(
-                Filters=[{'Key': 'Name', 'Values': [resources[0]['Name']]}]
-            )['Parameters'],
+            client.describe_parameters(Filters=[{'Key': 'Name', 'Values': [resources[0]['Name']]}])[
+                'Parameters'
+            ],
             [],
         )
 
     def test_ssm_parameter_delete_non_existant(self):
-        session_factory = self.replay_flight_data(
-            "test_ssm_parameter_delete_non_existant"
-        )
+        session_factory = self.replay_flight_data("test_ssm_parameter_delete_non_existant")
         p = self.load_policy(
             {
                 'name': 'ssm-param-tags',
@@ -258,9 +256,7 @@ class TestSSM(BaseTest):
         session_factory = self.replay_flight_data("test_ssm_parameter_not_secure")
         client = session_factory().client("ssm")
 
-        client.put_parameter(
-            Name='test-name', Type='String', Overwrite=True, Value='test-value'
-        )
+        client.put_parameter(Name='test-name', Type='String', Overwrite=True, Value='test-value')
 
         client.put_parameter(
             Name='secure-test-name',
@@ -286,9 +282,7 @@ class TestSSM(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.addCleanup(
-            client.delete_parameters, Names=['test-name', 'secure-test-name']
-        )
+        self.addCleanup(client.delete_parameters, Names=['test-name', 'secure-test-name'])
 
     def test_ssm_activation_expired(self):
         session_factory = self.replay_flight_data("test_ssm_activation_expired")
@@ -363,9 +357,7 @@ class TestSSM(BaseTest):
             Name='Test-Document-1', PermissionType='Share'
         )
         self.assertEqual(len(permissions.get('AccountIds')), 2)
-        self.assertEqual(
-            permissions.get('AccountIds'), ['xxxxxxxxxxxx', 'yyyyyyyyyyyy']
-        )
+        self.assertEqual(permissions.get('AccountIds'), ['xxxxxxxxxxxx', 'yyyyyyyyyyyy'])
 
     def test_ssm_document_delete(self):
         session_factory = self.replay_flight_data("test_ssm_document_delete")
@@ -432,9 +424,7 @@ class TestSSM(BaseTest):
         )
         resource = p.run()
         self.assertEqual(len(resource), 1)
-        self.assertEqual(
-            resource[0]["S3Destination"]["BucketName"], "data-sync-destination-bucket"
-        )
+        self.assertEqual(resource[0]["S3Destination"]["BucketName"], "data-sync-destination-bucket")
 
     def test_data_sync_value_filter(self):
         session_factory = self.replay_flight_data("test_data_sync_value_filter")

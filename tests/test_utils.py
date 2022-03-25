@@ -164,9 +164,12 @@ class ProxyUrlTest(BaseTest):
 class UtilTest(BaseTest):
     def test_merge_dict_list(self):
 
-        assert utils.merge_dict_list(
-            [{'a': 1, 'x': 0}, {'b': 2, 'x': 0}, {'c': 3, 'x': 1}]
-        ) == {'a': 1, 'b': 2, 'c': 3, 'x': 1}
+        assert utils.merge_dict_list([{'a': 1, 'x': 0}, {'b': 2, 'x': 0}, {'c': 3, 'x': 1}]) == {
+            'a': 1,
+            'b': 2,
+            'c': 3,
+            'x': 1,
+        }
 
     def test_merge_dict(self):
         a = {
@@ -233,9 +236,7 @@ class UtilTest(BaseTest):
             {"Type": {"Part": "a"}},
             {"Type": {"Part": "b"}},
         ]
-        self.assertEqual(
-            list(utils.group_by(items, "Type.Part").keys()), [None, "a", "b"]
-        )
+        self.assertEqual(list(utils.group_by(items, "Type.Part").keys()), [None, "a", "b"])
 
     def write_temp_file(self, contents, suffix=".tmp"):
         """Write a temporary file and return the filename.
@@ -291,9 +292,7 @@ class UtilTest(BaseTest):
         self.assertIn({"$ref": "tested"}, res["allOf"])
 
     def test_generate_arn(self):
-        self.assertEqual(
-            utils.generate_arn("s3", "my_bucket"), "arn:aws:s3:::my_bucket"
-        )
+        self.assertEqual(utils.generate_arn("s3", "my_bucket"), "arn:aws:s3:::my_bucket")
 
         self.assertEqual(
             utils.generate_arn("s3", "my_bucket", region="us-gov-west-1"),
@@ -335,9 +334,7 @@ class UtilTest(BaseTest):
                     "ipv4Ranges": [{"cidrIp": "108.56.181.242/32"}],
                     "ipv6Ranges": [],
                     "prefixListIds": [],
-                    "userIdGroupPairs": [
-                        {"groupId": "sg-6c7fa917", "userId": "644160558196"}
-                    ],
+                    "userIdGroupPairs": [{"groupId": "sg-6c7fa917", "userId": "644160558196"}],
                 }
             ],
             "ipPermissionsEgress": [
@@ -366,9 +363,7 @@ class UtilTest(BaseTest):
                     u"Ipv4Ranges": [{u"CidrIp": u"108.56.181.242/32"}],
                     u"Ipv6Ranges": [],
                     u"PrefixListIds": [],
-                    u"UserIdGroupPairs": [
-                        {u"GroupId": u"sg-6c7fa917", u"UserId": u"644160558196"}
-                    ],
+                    u"UserIdGroupPairs": [{u"GroupId": u"sg-6c7fa917", u"UserId": u"644160558196"}],
                 }
             ],
         )
@@ -412,9 +407,7 @@ class UtilTest(BaseTest):
 
     def test_format_event(self):
         event = {"message": "This is a test", "timestamp": 1234567891011}
-        event_json = (
-            '{\n  "timestamp": 1234567891011, \n' '  "message": "This is a test"\n}'
-        )
+        event_json = '{\n  "timestamp": 1234567891011, \n' '  "message": "This is a test"\n}'
         self.assertEqual(json.loads(utils.format_event(event)), json.loads(event_json))
 
     def test_date_time_decoder(self):
@@ -422,9 +415,7 @@ class UtilTest(BaseTest):
         self.assertRaises(TypeError, dtdec.default, "test")
 
     def test_set_annotation(self):
-        self.assertRaises(
-            ValueError, utils.set_annotation, "not a dictionary", "key", "value"
-        )
+        self.assertRaises(ValueError, utils.set_annotation, "not a dictionary", "key", "value")
 
     def test_parse_s3(self):
         self.assertRaises(ValueError, utils.parse_s3, "bogus")
@@ -505,9 +496,7 @@ class UtilTest(BaseTest):
         self.assertEqual(utils.format_string_values({'k': '{1}'}), {'k': '{1}'})
 
         self.assertEqual(
-            utils.format_string_values(
-                {'k': '{limit}', 'b': '{account_id}'}, account_id=21
-            ),
+            utils.format_string_values({'k': '{limit}', 'b': '{account_id}'}, account_id=21),
             {'k': '{limit}', 'b': '21'},
         )
 

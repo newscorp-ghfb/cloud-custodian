@@ -32,9 +32,7 @@ class DescribeDomain(DescribeSource):
             )['DomainStatusList']
             for r in resources:
                 rarn = self.manager.generate_arn(r[model.id])
-                r['Tags'] = self.manager.retry(client.list_tags, ARN=rarn).get(
-                    'TagList', []
-                )
+                r['Tags'] = self.manager.retry(client.list_tags, ARN=rarn).get('TagList', [])
             return resources
 
         for resource_set in chunks(domains, 5):
@@ -216,29 +214,17 @@ class ElasticSearchPostFinding(PostFinding):
                     'ElasticsearchVersion': r['ElasticsearchVersion'],
                     'EncryptionAtRestOptions': self.filter_empty(
                         {
-                            'Enabled': jmespath.search(
-                                'EncryptionAtRestOptions.Enabled', r
-                            ),
-                            'KmsKeyId': jmespath.search(
-                                'EncryptionAtRestOptions.KmsKeyId', r
-                            ),
+                            'Enabled': jmespath.search('EncryptionAtRestOptions.Enabled', r),
+                            'KmsKeyId': jmespath.search('EncryptionAtRestOptions.KmsKeyId', r),
                         }
                     ),
                     'NodeToNodeEncryptionOptions': self.filter_empty(
-                        {
-                            'Enabled': jmespath.search(
-                                'NodeToNodeEncryptionOptions.Enabled', r
-                            )
-                        }
+                        {'Enabled': jmespath.search('NodeToNodeEncryptionOptions.Enabled', r)}
                     ),
                     'VPCOptions': self.filter_empty(
                         {
-                            'AvailabilityZones': jmespath.search(
-                                'VPCOptions.AvailabilityZones', r
-                            ),
-                            'SecurityGroupIds': jmespath.search(
-                                'VPCOptions.SecurityGroupIds', r
-                            ),
+                            'AvailabilityZones': jmespath.search('VPCOptions.AvailabilityZones', r),
+                            'SecurityGroupIds': jmespath.search('VPCOptions.SecurityGroupIds', r),
                             'SubnetIds': jmespath.search('VPCOptions.SubnetIds', r),
                             'VPCId': jmespath.search('VPCOptions.VPCId', r),
                         }

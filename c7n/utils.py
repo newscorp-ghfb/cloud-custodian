@@ -157,9 +157,7 @@ def parse_date(v, tz=None):
     return isinstance(v, datetime) and v or None
 
 
-def type_schema(
-    type_name, inherits=None, rinherit=None, aliases=None, required=None, **props
-):
+def type_schema(type_name, inherits=None, rinherit=None, aliases=None, required=None, **props):
     """jsonschema generation helper
 
     params:
@@ -301,10 +299,7 @@ def query_instances(session, client=None, **query):
     results = p.paginate(**query)
     return list(
         itertools.chain(
-            *[
-                r["Instances"]
-                for r in itertools.chain(*[pp['Reservations'] for pp in results])
-            ]
+            *[r["Instances"] for r in itertools.chain(*[pp['Reservations'] for pp in results])]
         )
     )
 
@@ -519,9 +514,7 @@ class IPv4Network(ipaddress.IPv4Network):
                     and b.broadcast_address >= a.broadcast_address
                 )
             except AttributeError:
-                raise TypeError(
-                    f"Unable to test subnet containment " f"between {a} and {b}"
-                )
+                raise TypeError(f"Unable to test subnet containment " f"between {a} and {b}")
 
         def supernet_of(self, other):
             """Return True if this network is a supernet of other."""
@@ -569,9 +562,7 @@ def set_value_from_jmespath(source, expression, value, is_first=True):
             # with an empty dictionary.
             source[current_key] = {}
 
-        return set_value_from_jmespath(
-            source[current_key], remainder, value, is_first=False
-        )
+        return set_value_from_jmespath(source[current_key], remainder, value, is_first=False)
 
     # If we're down to a single key, set it.
     source[current_key] = value
@@ -694,18 +685,14 @@ class QueryParser:
         filters = []
         if not isinstance(data, (tuple, list)):
             raise PolicyValidationError(
-                "%s Query invalid format, must be array of dicts %s"
-                % (cls.type_name, data)
+                "%s Query invalid format, must be array of dicts %s" % (cls.type_name, data)
             )
         for d in data:
             if not isinstance(d, dict):
-                raise PolicyValidationError(
-                    "%s Query Filter Invalid %s" % (cls.type_name, data)
-                )
+                raise PolicyValidationError("%s Query Filter Invalid %s" % (cls.type_name, data))
             if "Name" not in d or cls.value_key not in d:
                 raise PolicyValidationError(
-                    "%s Query Filter Invalid: Missing Key or Values in %s"
-                    % (cls.type_name, data)
+                    "%s Query Filter Invalid: Missing Key or Values in %s" % (cls.type_name, data)
                 )
 
             key = d['Name']

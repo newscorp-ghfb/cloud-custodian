@@ -117,9 +117,7 @@ class SecurityHub(LambdaMode):
 
     """
 
-    schema = type_schema(
-        'hub-finding', aliases=('hub-action',), rinherit=LambdaMode.schema
-    )
+    schema = type_schema('hub-finding', aliases=('hub-action',), rinherit=LambdaMode.schema)
 
     ActionFinding = 'Security Hub Findings - Custom Action'
     ActionInsight = 'Security Hub Insight Results'
@@ -158,9 +156,7 @@ class SecurityHub(LambdaMode):
                             )
                         )
                     else:
-                        log.warning(
-                            "security hub unknown id:%s rtype:%s", r['Id'], r['Type']
-                        )
+                        log.warning("security hub unknown id:%s rtype:%s", r['Id'], r['Type'])
                 else:
                     rids.add(r['Id'])
         return rids
@@ -208,9 +204,9 @@ class SecurityHub(LambdaMode):
         for rarn in resource_arns:
             resource_sets.setdefault((rarn.account_id, rarn.region), []).append(rarn)
         # Warn if not configured for member-role and have multiple accounts resources.
-        if not self.policy.data['mode'].get('member-role') and {
-            self.policy.options.account_id
-        } != {rarn.account_id for rarn in resource_arns}:
+        if not self.policy.data['mode'].get('member-role') and {self.policy.options.account_id} != {
+            rarn.account_id for rarn in resource_arns
+        }:
             msg = (
                 'hub-mode not configured for multi-account member-role '
                 'but multiple resource accounts found'
@@ -386,10 +382,7 @@ class PostFinding(Action):
 
     def validate(self):
         for finding_type in self.data["types"]:
-            if (
-                finding_type.count('/') > 2
-                or finding_type.split('/')[0] not in FindingTypes
-            ):
+            if finding_type.count('/') > 2 or finding_type.split('/')[0] not in FindingTypes:
                 raise PolicyValidationError(
                     "Finding types must be in the format 'namespace/category/classifier'."
                     " Found {}. Valid namespace values are: {}.".format(
@@ -445,14 +438,10 @@ class PostFinding(Action):
                         created_at = now
                         updated_at = now
                     else:
-                        finding_id, created_at = self.get_finding_tag(resource).split(
-                            ':', 1
-                        )
+                        finding_id, created_at = self.get_finding_tag(resource).split(':', 1)
                         updated_at = now
 
-                    finding = self.get_finding(
-                        [resource], finding_id, created_at, updated_at
-                    )
+                    finding = self.get_finding([resource], finding_id, created_at, updated_at)
                     findings.append(finding)
                     if key == self.NEW_FINDING:
                         stats['New'] += 1
@@ -464,9 +453,7 @@ class PostFinding(Action):
                             {
                                 'key': '{}:{}'.format(
                                     'c7n:FindingId',
-                                    self.data.get(
-                                        'title', self.manager.ctx.policy.name
-                                    ),
+                                    self.data.get('title', self.manager.ctx.policy.name),
                                 ),
                                 'value': '{}:{}'.format(finding['Id'], created_at),
                             },
@@ -474,9 +461,7 @@ class PostFinding(Action):
                         ).process([resource])
                     else:
                         stats['Update'] += 1
-            import_response = self.manager.retry(
-                client.batch_import_findings, Findings=findings
-            )
+            import_response = self.manager.retry(client.batch_import_findings, Findings=findings)
             if import_response['FailedCount'] > 0:
                 stats['Failed'] += import_response['FailedCount']
                 self.log.error("import_response=%s" % (import_response))
@@ -500,13 +485,11 @@ class PostFinding(Action):
             finding_id = '{}/{}/{}/{}'.format(  # nosec
                 self.manager.config.region,
                 self.manager.config.account_id,
+                hashlib.md5(json.dumps(policy.data).encode('utf8')).hexdigest(),  # nosemgrep
                 hashlib.md5(
-                    json.dumps(policy.data).encode('utf8')  # nosemgrep
-                ).hexdigest(),
-                hashlib.md5(
-                    json.dumps(
-                        list(sorted([r[model.id] for r in resources]))  # nosemgrep
-                    ).encode('utf8')
+                    json.dumps(list(sorted([r[model.id] for r in resources]))).encode(  # nosemgrep
+                        'utf8'
+                    )
                 ).hexdigest(),
             )
         finding = {

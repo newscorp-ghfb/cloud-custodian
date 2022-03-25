@@ -205,9 +205,7 @@ class PolicyChecker:
 
             cond['key'] = list(s['Condition'][s_cond_op].keys())[0]
             cond['values'] = s['Condition'][s_cond_op][cond['key']]
-            cond['values'] = (
-                isinstance(cond['values'], str) and (cond['values'],) or cond['values']
-            )
+            cond['values'] = isinstance(cond['values'], str) and (cond['values'],) or cond['values']
             cond['key'] = cond['key'].lower()
             s_cond.append(cond)
 
@@ -275,9 +273,7 @@ class CrossAccountAccessFilter(Filter):
 
     def process(self, resources, event=None):
         self.everyone_only = self.data.get('everyone_only', False)
-        self.conditions = set(
-            self.data.get('whitelist_conditions', ("aws:userid", "aws:username"))
-        )
+        self.conditions = set(self.data.get('whitelist_conditions', ("aws:userid", "aws:username")))
         self.actions = self.data.get('actions', ())
         self.accounts = self.get_accounts()
         self.vpcs = self.get_vpcs()

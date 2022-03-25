@@ -22,9 +22,7 @@ class KafkaTest(BaseTest):
             {
                 'name': 'kafka',
                 'resource': 'aws.kafka',
-                'filters': [
-                    {'type': 'subnet', 'key': 'tag:NetworkLocation', 'value': 'Public'}
-                ],
+                'filters': [{'type': 'subnet', 'key': 'tag:NetworkLocation', 'value': 'Public'}],
             },
             session_factory=factory,
         )
@@ -49,9 +47,9 @@ class KafkaTest(BaseTest):
         assert len(resources) == 1
         assert resources[0]['ClusterName'] == 'dev'
         client = factory().client('kafka')
-        assert client.list_tags_for_resource(ResourceArn=resources[0]['ClusterArn'])[
-            'Tags'
-        ] == {'App': 'Custodian'}
+        assert client.list_tags_for_resource(ResourceArn=resources[0]['ClusterArn'])['Tags'] == {
+            'App': 'Custodian'
+        }
 
     def test_set_monitoring(self):
         factory = self.replay_flight_data('test_kafka_set_monitoring')
@@ -112,9 +110,7 @@ class KafkaTest(BaseTest):
             time.sleep(5)
 
         client = factory().client('kafka')
-        cluster = client.describe_cluster(ClusterArn=resources[0]['ClusterArn']).get(
-            'ClusterInfo'
-        )
+        cluster = client.describe_cluster(ClusterArn=resources[0]['ClusterArn']).get('ClusterInfo')
         self.assertEqual(cluster['State'], 'DELETING')
 
     def test_kafka_cluster_kms_filter(self):

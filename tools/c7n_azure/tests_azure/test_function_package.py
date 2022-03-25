@@ -157,18 +157,10 @@ class FunctionPackageTest(BaseTest):
         packer._add_functions_required_files(p.data, 'c7n-azure==1.0', 'test-queue')
         files = packer.pkg._zip_file.filelist
 
-        self.assertTrue(
-            FunctionPackageTest._file_exists(files, 'test-azure-package/function.py')
-        )
-        self.assertTrue(
-            FunctionPackageTest._file_exists(files, 'test-azure-package/__init__.py')
-        )
-        self.assertTrue(
-            FunctionPackageTest._file_exists(files, 'test-azure-package/function.json')
-        )
-        self.assertTrue(
-            FunctionPackageTest._file_exists(files, 'test-azure-package/config.json')
-        )
+        self.assertTrue(FunctionPackageTest._file_exists(files, 'test-azure-package/function.py'))
+        self.assertTrue(FunctionPackageTest._file_exists(files, 'test-azure-package/__init__.py'))
+        self.assertTrue(FunctionPackageTest._file_exists(files, 'test-azure-package/function.json'))
+        self.assertTrue(FunctionPackageTest._file_exists(files, 'test-azure-package/config.json'))
         self.assertTrue(FunctionPackageTest._file_exists(files, 'host.json'))
         self.assertTrue(FunctionPackageTest._file_exists(files, 'requirements.txt'))
 
@@ -188,25 +180,17 @@ class FunctionPackageTest(BaseTest):
     def test_add_host_config(self):
         packer = FunctionPackage('test')
         packer.pkg = AzurePythonPackageArchive()
-        with patch(
-            'c7n_azure.function_package.AzurePythonPackageArchive.add_contents'
-        ) as mock:
+        with patch('c7n_azure.function_package.AzurePythonPackageArchive.add_contents') as mock:
             packer._add_host_config(FUNCTION_EVENT_TRIGGER_MODE)
             mock.assert_called_once()
             self.assertEqual(mock.call_args[1]['dest'], 'host.json')
-            self.assertTrue(
-                'extensionBundle' in json.loads(mock.call_args[1]['contents'])
-            )
+            self.assertTrue('extensionBundle' in json.loads(mock.call_args[1]['contents']))
 
-        with patch(
-            'c7n_azure.function_package.AzurePythonPackageArchive.add_contents'
-        ) as mock:
+        with patch('c7n_azure.function_package.AzurePythonPackageArchive.add_contents') as mock:
             packer._add_host_config(FUNCTION_TIME_TRIGGER_MODE)
             mock.assert_called_once()
             self.assertEqual(mock.call_args[1]['dest'], 'host.json')
-            self.assertFalse(
-                'extensionBundle' in json.loads(mock.call_args[1]['contents'])
-            )
+            self.assertFalse('extensionBundle' in json.loads(mock.call_args[1]['contents']))
 
     @patch('requests.post')
     def test_publish(self, post_mock):

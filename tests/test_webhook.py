@@ -56,9 +56,7 @@ class WebhookTest(BaseTest):
         policy = {
             "name": "webhook-batch",
             "resource": "ec2",
-            "actions": [
-                {"type": "webhook", "url": "http://foo.com", "method": "CREATE"}
-            ],
+            "actions": [{"type": "webhook", "url": "http://foo.com", "method": "CREATE"}],
         }
 
         with self.assertRaises(PolicyValidationError):
@@ -113,9 +111,7 @@ class WebhookTest(BaseTest):
         self.assertEqual("http://foo.com?foo=test_name", req['url'])
         self.assertEqual("POST", req['method'])
         self.assertEqual(b'[\n"test_name"\n]', req['body'])
-        self.assertEqual(
-            {"test": "header", "Content-Type": "application/json"}, req['headers']
-        )
+        self.assertEqual({"test": "header", "Content-Type": "application/json"}, req['headers'])
 
     @mock.patch('c7n.actions.webhook.urllib3.PoolManager.request')
     def test_process_date_serializer(self, request_mock):

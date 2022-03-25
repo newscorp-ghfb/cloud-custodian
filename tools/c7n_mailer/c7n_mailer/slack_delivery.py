@@ -35,8 +35,8 @@ class SlackDelivery:
         # Check for Slack targets in 'to' action and render appropriate template.
         for target in sqs_message.get('action', ()).get('to'):
             if target == 'slack://owners':
-                to_addrs_to_resources_map = (
-                    self.email_handler.get_email_to_addrs_to_resources_map(sqs_message)
+                to_addrs_to_resources_map = self.email_handler.get_email_to_addrs_to_resources_map(
+                    sqs_message
                 )
                 for to_addrs, resources in to_addrs_to_resources_map.items():
 
@@ -68,9 +68,7 @@ class SlackDelivery:
                     'slack_default',
                     self.config['templates_folders'],
                 )
-            elif target.startswith('slack://webhook/#') and self.config.get(
-                'slack_webhook'
-            ):
+            elif target.startswith('slack://webhook/#') and self.config.get('slack_webhook'):
                 webhook_target = self.config.get('slack_webhook')
                 slack_messages[webhook_target] = get_rendered_jinja(
                     target.split('slack://webhook/#', 1)[1],
@@ -82,12 +80,9 @@ class SlackDelivery:
                     self.config['templates_folders'],
                 )
                 self.logger.debug(
-                    "Generating message for webhook %s."
-                    % self.config.get('slack_webhook')
+                    "Generating message for webhook %s." % self.config.get('slack_webhook')
                 )
-            elif target.startswith('slack://') and is_email(
-                target.split('slack://', 1)[1]
-            ):
+            elif target.startswith('slack://') and is_email(target.split('slack://', 1)[1]):
                 resolved_addrs = self.retrieve_user_im([target.split('slack://', 1)[1]])
                 for address, slack_target in resolved_addrs.items():
                     slack_messages[address] = get_rendered_jinja(
@@ -113,11 +108,7 @@ class SlackDelivery:
             elif target.startswith('slack://tag/') and 'Tags' in resource:
                 tag_name = target.split('tag/', 1)[1]
                 result = next(
-                    (
-                        item
-                        for item in resource.get('Tags', [])
-                        if item["Key"] == tag_name
-                    ),
+                    (item for item in resource.get('Tags', []) if item["Key"] == tag_name),
                     None,
                 )
                 if not result:
@@ -179,10 +170,7 @@ class SlackDelivery:
             ).json()
 
             if not response["ok"]:
-                if (
-                    "headers" in response.keys()
-                    and "Retry-After" in response["headers"]
-                ):
+                if "headers" in response.keys() and "Retry-After" in response["headers"]:
                     self.logger.info(
                         "Slack API rate limiting. Waiting %d seconds",
                         int(response.headers['retry-after']),
@@ -192,9 +180,7 @@ class SlackDelivery:
                 elif response["error"] == "invalid_auth":
                     raise Exception("Invalid Slack token.")
                 elif response["error"] == "users_not_found":
-                    self.logger.info(
-                        "Slack user ID for email address %s not found.", address
-                    )
+                    self.logger.info("Slack user ID for email address %s not found.", address)
                     if self.caching:
                         self.caching.set(address, {})
                     continue
@@ -204,9 +190,7 @@ class SlackDelivery:
                 slack_user_id = response['user']['id']
                 if 'enterprise_user' in response['user'].keys():
                     slack_user_id = response['user']['enterprise_user']['id']
-                self.logger.debug(
-                    "Slack account %s found for user %s", slack_user_id, address
-                )
+                self.logger.debug("Slack account %s found for user %s", slack_user_id, address)
                 if self.caching:
                     self.logger.debug('Writing user: %s metadata to cache.', address)
                     self.caching.set(address, slack_user_id)

@@ -89,8 +89,6 @@ class ConfigurationFilter(ValueFilter):
         if 'c7n:configuration' not in i:
             client = self.manager.get_client().web_apps
             instance = client.get_configuration(i['resourceGroup'], i['name'])
-            i['c7n:configuration'] = instance.serialize(keep_readonly=True)[
-                'properties'
-            ]
+            i['c7n:configuration'] = instance.serialize(keep_readonly=True)['properties']
 
         return super(ConfigurationFilter, self).__call__(i['c7n:configuration'])

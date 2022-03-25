@@ -98,21 +98,15 @@ class OutputTest(BaseTest):
     def test_app_insights_logs(self):
         policy = Bag(name='test', resource_type='azure.vm', session_factory=Session)
         ctx = Bag(policy=policy, execution_id='00000000-0000-0000-0000-000000000000')
-        with log_outputs.select(
-            'azure://00000000-0000-0000-0000-000000000000', ctx
-        ) as log:
+        with log_outputs.select('azure://00000000-0000-0000-0000-000000000000', ctx) as log:
             self.assertTrue(isinstance(log, AppInsightsLogOutput))
             logging.getLogger('custodian.test').warning('test message')
 
     @patch('c7n_azure.output.MetricsOutput._put_metrics')
     def test_app_insights_metrics(self, put_mock):
-        policy = self.load_policy(
-            {'name': 'test-rg', 'resource': 'azure.resourcegroup'}
-        )
+        policy = self.load_policy({'name': 'test-rg', 'resource': 'azure.resourcegroup'})
         ctx = Bag(policy=policy, execution_id='00000000-0000-0000-0000-000000000000')
-        sink = metrics_outputs.select(
-            'azure://00000000-0000-0000-0000-000000000000', ctx
-        )
+        sink = metrics_outputs.select('azure://00000000-0000-0000-0000-000000000000', ctx)
         self.assertTrue(isinstance(sink, MetricsOutput))
         sink.put_metric('ResourceCount', 101, 'Count')
         sink.flush()
@@ -144,9 +138,7 @@ class OutputTest(BaseTest):
 
         output.blob_service = mock.MagicMock()
         output.blob_service.create_blob_from_path = mock.MagicMock()
-        output.blob_service.create_blob_from_path.side_effect = AzureHttpError(
-            'forbidden', 403
-        )
+        output.blob_service.create_blob_from_path.side_effect = AzureHttpError('forbidden', 403)
 
         # Generate fake output file
         with open(os.path.join(output.root_dir, "foo.txt"), "w") as fh:
@@ -167,9 +159,7 @@ class OutputTest(BaseTest):
 
         output.blob_service = mock.MagicMock()
         output.blob_service.create_blob_from_path = mock.MagicMock()
-        output.blob_service.create_blob_from_path.side_effect = AzureHttpError(
-            'not found', 404
-        )
+        output.blob_service.create_blob_from_path.side_effect = AzureHttpError('not found', 404)
 
         # Generate fake output file
         with open(os.path.join(output.root_dir, "foo.txt"), "w") as fh:

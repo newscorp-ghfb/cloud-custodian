@@ -22,9 +22,7 @@ class VMSSTest(BaseTest):
             {
                 'name': 'test-vm-scale-set',
                 'resource': 'azure.vmss',
-                'filters': [
-                    {'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestvmss'}
-                ],
+                'filters': [{'type': 'value', 'key': 'name', 'op': 'eq', 'value': 'cctestvmss'}],
             }
         )
         resources = p.run()

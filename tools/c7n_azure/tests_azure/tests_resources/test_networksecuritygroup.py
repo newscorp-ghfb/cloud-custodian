@@ -226,9 +226,7 @@ class NetworkSecurityGroupTest(BaseTest):
                         'value': 'c7n-nsg',
                     },
                 ],
-                'actions': [
-                    {'type': 'open', 'ports': '1000-1100', 'direction': 'Inbound'}
-                ],
+                'actions': [{'type': 'open', 'ports': '1000-1100', 'direction': 'Inbound'}],
             }
         )
 

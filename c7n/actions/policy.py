@@ -22,9 +22,7 @@ class RemovePolicyBase(BaseAction):
         statements = policy.get('Statement', [])
         resource_statements = resource.get(matched_key, ())
 
-        return remove_statements(
-            self.data['statement_ids'], statements, resource_statements
-        )
+        return remove_statements(self.data['statement_ids'], statements, resource_statements)
 
 
 def remove_statements(match_ids, statements, matched=()):

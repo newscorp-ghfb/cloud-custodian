@@ -8,13 +8,9 @@ from c7n.exceptions import PolicyValidationError
 
 class TestServiceCatalog(BaseTest):
     def test_portfolio_cross_account_remove_delete(self):
-        session_factory = self.replay_flight_data(
-            "test_portfolio_cross_account_remove_delete"
-        )
+        session_factory = self.replay_flight_data("test_portfolio_cross_account_remove_delete")
         client = session_factory().client("servicecatalog")
-        accounts = client.list_portfolio_access(PortfolioId='port-t24m4nifknphk').get(
-            'AccountIds'
-        )
+        accounts = client.list_portfolio_access(PortfolioId='port-t24m4nifknphk').get('AccountIds')
         self.assertEqual(len(accounts), 1)
         p = self.load_policy(
             {
@@ -35,8 +31,7 @@ class TestServiceCatalog(BaseTest):
             time.sleep(10)
         portfolios = client.list_portfolios()
         self.assertFalse(
-            'port-t24m4nifknphk'
-            in [p.get('Id') for p in portfolios.get('PortfolioDetails')]
+            'port-t24m4nifknphk' in [p.get('Id') for p in portfolios.get('PortfolioDetails')]
         )
 
     def test_remove_accounts_validation_error(self):
@@ -51,59 +46,41 @@ class TestServiceCatalog(BaseTest):
         )
 
     def test_portfolio_remove_share_accountid(self):
-        session_factory = self.replay_flight_data(
-            "test_portfolio_remove_share_accountid"
-        )
+        session_factory = self.replay_flight_data("test_portfolio_remove_share_accountid")
         client = session_factory().client("servicecatalog")
         self.assertTrue(
             '644160558196'
-            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get(
-                'AccountIds'
-            )
+            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get('AccountIds')
         )
         self.assertTrue(
             '644160558196'
-            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get(
-                'AccountIds'
-            )
+            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get('AccountIds')
         )
         p = self.load_policy(
             {
                 "name": "servicecatalog-portfolio-cross-account",
                 "resource": "catalog-portfolio",
                 "filters": [{"type": "cross-account"}],
-                "actions": [
-                    {"type": "remove-shared-accounts", "accounts": ["644160558196"]}
-                ],
+                "actions": [{"type": "remove-shared-accounts", "accounts": ["644160558196"]}],
             },
             session_factory=session_factory,
         )
         resources = p.run()
         self.assertEqual(len(resources), 2)
-        self.assertTrue(
-            r['Id'] in ['port-cpxttnlqoph32', 'port-srkytozjwbzpc'] for r in resources
-        )
+        self.assertTrue(r['Id'] in ['port-cpxttnlqoph32', 'port-srkytozjwbzpc'] for r in resources)
         self.assertFalse(
             '644160558196'
-            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get(
-                'AccountIds'
-            )
+            in client.list_portfolio_access(PortfolioId='port-srkytozjwbzpc').get('AccountIds')
         )
         self.assertTrue(
             '644160558196'
-            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get(
-                'AccountIds'
-            )
+            in client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get('AccountIds')
         )
 
     def test_portfolio_cross_account_whitelist(self):
-        session_factory = self.replay_flight_data(
-            "test_portfolio_cross_account_whitelist"
-        )
+        session_factory = self.replay_flight_data("test_portfolio_cross_account_whitelist")
         client = session_factory().client("servicecatalog")
-        accounts = client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get(
-            'AccountIds'
-        )
+        accounts = client.list_portfolio_access(PortfolioId='port-cpxttnlqoph32').get('AccountIds')
         self.assertEqual(len(accounts), 1)
         self.assertEqual(accounts, ['644160558196'])
         p = self.load_policy(

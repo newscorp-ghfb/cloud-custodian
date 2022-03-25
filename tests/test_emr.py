@@ -23,9 +23,7 @@ class TestEMR(BaseTest):
         session_factory = self.replay_flight_data("test_emr_query_ids")
 
         ctx = Bag(session_factory=session_factory, log_dir="", options=Config.empty())
-        query = {
-            "query": [{"tag:foo": "val1"}, {"tag:foo": "val2"}, {"tag:bar": "val3"}]
-        }
+        query = {"query": [{"tag:foo": "val1"}, {"tag:foo": "val2"}, {"tag:bar": "val3"}]}
         mgr = emr.EMRCluster(ctx, query)
         self.assertEqual(
             mgr.consolidate_query_filter(),
@@ -75,11 +73,7 @@ class TestEMR(BaseTest):
         resources = policy.run()
         self.assertEqual(len(resources), 1)
 
-        cluster = (
-            session_factory()
-            .client("emr")
-            .describe_cluster(ClusterId="j-1U3KBYP5TY79M")
-        )
+        cluster = session_factory().client("emr").describe_cluster(ClusterId="j-1U3KBYP5TY79M")
         cluster_tags = cluster["Cluster"]["Tags"]
         tags = {t["Key"]: t["Value"] for t in cluster_tags}
         self.assertEqual(tags["first_tag"], "first")
@@ -172,9 +166,7 @@ class TestEMRQueryFilter(unittest.TestCase):
     def test_parse(self):
         self.assertEqual(QueryFilter.parse([]), [])
         x = QueryFilter.parse([{"ClusterStates": "terminated"}])
-        self.assertEqual(
-            x[0].query(), {"Name": "ClusterStates", "Values": ["terminated"]}
-        )
+        self.assertEqual(x[0].query(), {"Name": "ClusterStates", "Values": ["terminated"]})
 
         # Test consolidation of multiple values for query
         self.assertEqual(QueryFilter.parse([]), [])
@@ -185,27 +177,19 @@ class TestEMRQueryFilter(unittest.TestCase):
                 {"ClusterStates": "waiting"},
             ]
         )
-        self.assertEqual(
-            x[0].query(), {"Name": "ClusterStates", "Values": ["terminated"]}
-        )
+        self.assertEqual(x[0].query(), {"Name": "ClusterStates", "Values": ["terminated"]})
         self.assertEqual(x[1].query(), {"Name": "ClusterStates", "Values": ["running"]})
         self.assertEqual(x[2].query(), {"Name": "ClusterStates", "Values": ["waiting"]})
 
         self.assertEqual(QueryFilter.parse([]), [])
         x = QueryFilter.parse([{"CreatedBefore": 1470968567.05}])
-        self.assertEqual(
-            x[0].query(), {"Name": "CreatedBefore", "Values": 1470968567.05}
-        )
+        self.assertEqual(x[0].query(), {"Name": "CreatedBefore", "Values": 1470968567.05})
 
         self.assertEqual(QueryFilter.parse([]), [])
         x = QueryFilter.parse([{"CreatedAfter": 1470974021.557}])
-        self.assertEqual(
-            x[0].query(), {"Name": "CreatedAfter", "Values": 1470974021.557}
-        )
+        self.assertEqual(x[0].query(), {"Name": "CreatedAfter", "Values": 1470974021.557})
 
-        self.assertTrue(
-            isinstance(QueryFilter.parse([{"tag:ASV": "REALTIMEMSG"}])[0], QueryFilter)
-        )
+        self.assertTrue(isinstance(QueryFilter.parse([{"tag:ASV": "REALTIMEMSG"}])[0], QueryFilter))
 
         self.assertRaises(PolicyValidationError, QueryFilter.parse, [{"tag:ASV": None}])
 
@@ -215,9 +199,7 @@ class TestEMRQueryFilter(unittest.TestCase):
             PolicyValidationError, QueryFilter.parse, [{"too": "many", "keys": "error"}]
         )
 
-        self.assertRaises(
-            PolicyValidationError, QueryFilter.parse, ["Not a dictionary"]
-        )
+        self.assertRaises(PolicyValidationError, QueryFilter.parse, ["Not a dictionary"])
 
 
 class TestTerminate(BaseTest):
@@ -261,9 +243,7 @@ class TestEMRSecurityConfiguration(BaseTest):
         )
 
     def test_emr_security_configuration_delete(self):
-        session_factory = self.replay_flight_data(
-            "test_emr_security_configuration_delete"
-        )
+        session_factory = self.replay_flight_data("test_emr_security_configuration_delete")
         p = self.load_policy(
             {
                 'name': 'emr',

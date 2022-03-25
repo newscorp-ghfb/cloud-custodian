@@ -27,9 +27,7 @@ class FunctionTest(BaseTest):
         if not events:
             assert factory
             events = [mu.HTTPEvent(factory)]
-        config = dict(
-            name="custodian-dev", labels=[], runtime='python37', events=events
-        )
+        config = dict(name="custodian-dev", labels=[], runtime='python37', events=events)
         config.update(kw)
         archive = mu.custodian_archive()
         archive.close()
@@ -129,9 +127,7 @@ class FunctionTest(BaseTest):
         project_id = 'cloud-custodian'
         region = 'us-central1'
 
-        sched_client = session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
-        )
+        sched_client = session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
         job_v1 = sched_client.execute_query(
             'get',
             {
@@ -180,29 +176,19 @@ class FunctionTest(BaseTest):
         project_id = 'cloud-custodian'
         region = 'us-central1'
 
-        func_client = session.client(
-            'cloudfunctions', 'v1', 'projects.locations.functions'
-        )
+        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
 
         # check function exists
         func_info = func_client.execute_command(
             'get',
-            {
-                'name': 'projects/{}/locations/{}/functions/instance-off'.format(
-                    project_id, region
-                )
-            },
+            {'name': 'projects/{}/locations/{}/functions/instance-off'.format(project_id, region)},
         )
         self.assertEqual(
-            "https://{}-{}.cloudfunctions.net/{}".format(
-                region, project_id, 'instance-off'
-            ),
+            "https://{}-{}.cloudfunctions.net/{}".format(region, project_id, 'instance-off'),
             func_info['httpsTrigger']['url'],
         )
 
-        sched_client = session.client(
-            'cloudscheduler', 'v1beta1', 'projects.locations.jobs'
-        )
+        sched_client = session.client('cloudscheduler', 'v1beta1', 'projects.locations.jobs')
         job = sched_client.execute_query(
             'get',
             {
@@ -258,9 +244,7 @@ class FunctionTest(BaseTest):
         session = factory()
         project_id = 'cloud-custodian'
         region = 'us-central1'
-        func_client = session.client(
-            'cloudfunctions', 'v1', 'projects.locations.functions'
-        )
+        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
         pubsub_client = session.client('pubsub', 'v1', 'projects.topics')
         sink_client = session.client('logging', 'v2', 'projects.sinks')
 
@@ -269,11 +253,7 @@ class FunctionTest(BaseTest):
         # check function exists
         func_info = func_client.execute_command(
             'get',
-            {
-                'name': 'projects/{}/locations/{}/functions/topic-created'.format(
-                    project_id, region
-                )
-            },
+            {'name': 'projects/{}/locations/{}/functions/topic-created'.format(project_id, region)},
         )
         self.assertEqual(
             func_info['eventTrigger']['eventType'],
@@ -287,11 +267,7 @@ class FunctionTest(BaseTest):
         # check sink exists
         sink = sink_client.execute_command(
             'get',
-            {
-                'sinkName': 'projects/{}/sinks/custodian-auto-audit-topic-created'.format(
-                    project_id
-                )
-            },
+            {'sinkName': 'projects/{}/sinks/custodian-auto-audit-topic-created'.format(project_id)},
         )
         self.assertEqual(
             sink['destination'],
@@ -347,9 +323,7 @@ class FunctionTest(BaseTest):
 
         session = factory()
         region = 'us-central1'
-        func_client = session.client(
-            'cloudfunctions', 'v1', 'projects.locations.functions'
-        )
+        func_client = session.client('cloudfunctions', 'v1', 'projects.locations.functions')
         pubsub_client = session.client('pubsub', 'v1', 'projects.topics')
         notification_client = session.client(
             'securitycenter', 'v1', 'organizations.notificationConfigs'
@@ -361,11 +335,7 @@ class FunctionTest(BaseTest):
         # check function exists
         func_info = func_client.execute_command(
             'get',
-            {
-                'name': 'projects/{}/locations/{}/functions/test-scc'.format(
-                    project_id, region
-                )
-            },
+            {'name': 'projects/{}/locations/{}/functions/test-scc'.format(project_id, region)},
         )
         self.assertEqual(
             func_info['eventTrigger']['eventType'],
@@ -378,9 +348,7 @@ class FunctionTest(BaseTest):
             org, "custodian-auto-scc-bucket"
         )
 
-        notification_config = notification_client.execute_command(
-            'get', {'name': config_name}
-        )
+        notification_config = notification_client.execute_command('get', {'name': config_name})
         self.assertEqual(notification_config['pubsubTopic'], pubsub_topic)
 
         # check topic exists
@@ -395,9 +363,7 @@ class FunctionTest(BaseTest):
 
     def test_scc_subscriber_run(self):
         project_id = "cloud-custodian"
-        factory = self.replay_flight_data(
-            'mu-scc-subscriber-run', project_id=project_id
-        )
+        factory = self.replay_flight_data('mu-scc-subscriber-run', project_id=project_id)
         p = self.load_policy(
             {
                 'name': 'test-scc-run',

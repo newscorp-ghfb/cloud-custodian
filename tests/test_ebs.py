@@ -136,9 +136,7 @@ class SnapshotErrorHandler(BaseTest):
         self.assertEqual(vol, "vol-notfound")
 
     def test_snapshot_copy_related_tags_missing_volumes(self):
-        factory = self.replay_flight_data(
-            "test_ebs_snapshot_copy_related_tags_missing_volumes"
-        )
+        factory = self.replay_flight_data("test_ebs_snapshot_copy_related_tags_missing_volumes")
         p = self.load_policy(
             {
                 "name": "copy-related-tags",
@@ -159,22 +157,16 @@ class SnapshotErrorHandler(BaseTest):
             resources = p.run()
         except ClientError:
             # it should filter missing volume and not throw an error
-            self.fail(
-                "This should have been handled in ErrorHandler.extract_bad_volume"
-            )
+            self.fail("This should have been handled in ErrorHandler.extract_bad_volume")
         self.assertEqual(len(resources), 1)
         try:
-            factory().client("ec2").describe_volumes(
-                VolumeIds=[resources[0]["VolumeId"]]
-            )
+            factory().client("ec2").describe_volumes(VolumeIds=[resources[0]["VolumeId"]])
         except ClientError as e:
             # this should not filter missing volume and will throw an error
             msg = e.response["Error"]["Message"]
             err = e.response["Error"]["Code"]
         self.assertEqual(err, "InvalidVolume.NotFound")
-        self.assertEqual(
-            msg, f"The volume '{resources[0]['VolumeId']}' does not exist."
-        )
+        self.assertEqual(msg, f"The volume '{resources[0]['VolumeId']}' does not exist.")
 
 
 class SnapshotAccessTest(BaseTest):
@@ -223,8 +215,7 @@ class SnapshotDetachTest(BaseTest):
         for resp in response['Volumes']:
             for attachment in resp['Attachments']:
                 self.assertTrue(
-                    attachment['State'] == "detached"
-                    or attachment['State'] == "detaching"
+                    attachment['State'] == "detached" or attachment['State'] == "detaching"
                 )
 
 
@@ -255,9 +246,7 @@ class SnapshotCopyTest(BaseTest):
         self.assertEqual(len(resources), 1)
         client = factory(region="us-east-1").client("ec2")
         tags = client.describe_tags(
-            Filters=[
-                {"Name": "resource-id", "Values": [resources[0]["c7n:CopiedSnapshot"]]}
-            ]
+            Filters=[{"Name": "resource-id", "Values": [resources[0]["c7n:CopiedSnapshot"]]}]
         )["Tags"]
         tags = {t["Key"]: t["Value"] for t in tags}
         self.assertEqual(tags["ASV"], "RoadKill")
@@ -420,9 +409,7 @@ class SnapshotSetPermissions(BaseTest):
         resources = p.run()
 
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            sorted(resources[0]['c7n:CrossAccountViolations']), ['665544332211']
-        )
+        self.assertEqual(sorted(resources[0]['c7n:CrossAccountViolations']), ['665544332211'])
 
         client = factory().client('ec2')
         perms = client.describe_snapshot_attribute(
@@ -438,9 +425,7 @@ class SnapshotVolumeFilter(BaseTest):
             {
                 "name": "ebs-snapshot-volume",
                 "resource": "aws.ebs-snapshot",
-                "filters": [
-                    {"type": "volume", "key": "AvailabilityZone", "value": "us-east-1a"}
-                ],
+                "filters": [{"type": "volume", "key": "AvailabilityZone", "value": "us-east-1a"}],
             },
             session_factory=factory,
         )
@@ -455,9 +440,7 @@ class AttachedInstanceTest(BaseTest):
             {
                 "name": "attached-instance-test",
                 "resource": "ebs",
-                "filters": [
-                    {"type": "instance", "key": "tag:Name", "value": "CompiledLambda"}
-                ],
+                "filters": [{"type": "instance", "key": "tag:Name", "value": "CompiledLambda"}],
             },
             session_factory=factory,
         )
@@ -528,9 +511,7 @@ class CopyInstanceTagsTest(BaseTest):
         results = (
             factory()
             .client("ec2")
-            .describe_tags(Filters=[{"Name": "resource-id", "Values": [volume_id]}])[
-                "Tags"
-            ]
+            .describe_tags(Filters=[{"Name": "resource-id", "Values": [volume_id]}])["Tags"]
         )
         tags = {t["Key"]: t["Value"] for t in results}
         self.assertEqual(tags, {})
@@ -549,9 +530,7 @@ class CopyInstanceTagsTest(BaseTest):
         results = (
             factory()
             .client("ec2")
-            .describe_tags(Filters=[{"Name": "resource-id", "Values": [volume_id]}])[
-                "Tags"
-            ]
+            .describe_tags(Filters=[{"Name": "resource-id", "Values": [volume_id]}])["Tags"]
         )
 
         tags = {t["Key"]: t["Value"] for t in results}
@@ -568,9 +547,7 @@ class VolumePostFindingTest(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -603,9 +580,7 @@ class VolumePostFindingTest(BaseTest):
                 'Type': 'AwsEc2Volume',
             },
         )
-        shape_validate(
-            rfinding['Details']['AwsEc2Volume'], 'AwsEc2VolumeDetails', 'securityhub'
-        )
+        shape_validate(rfinding['Details']['AwsEc2Volume'], 'AwsEc2VolumeDetails', 'securityhub')
 
 
 class VolumeSnapshotTest(BaseTest):
@@ -683,9 +658,7 @@ class VolumeSnapshotTest(BaseTest):
             )
         )
         for s in snapshot_data['Snapshots']:
-            self.assertEqual(
-                {'test-tag': 'custodian'}, {t['Key']: t['Value'] for t in s['Tags']}
-            )
+            self.assertEqual({'test-tag': 'custodian'}, {t['Key']: t['Value'] for t in s['Tags']})
 
     def test_volume_snapshot_description(self):
         factory = self.replay_flight_data("test_ebs_snapshot_description")
@@ -694,9 +667,7 @@ class VolumeSnapshotTest(BaseTest):
                 "name": "ebs-test-snapshot",
                 "resource": "ebs",
                 "filters": [{"VolumeId": "vol-0cc137cb158adbc32"}],
-                "actions": [
-                    {"type": "snapshot", "description": "snapshot description"}
-                ],
+                "actions": [{"type": "snapshot", "description": "snapshot description"}],
             },
             session_factory=factory,
         )
@@ -733,9 +704,7 @@ class VolumeSnapshotTest(BaseTest):
             )
         )
         for s in snapshot_data['Snapshots']:
-            self.assertEqual(
-                'Automated snapshot by c7n - ebs-test-snapshot', s['Description']
-            )
+            self.assertEqual('Automated snapshot by c7n - ebs-test-snapshot', s['Description'])
 
 
 class VolumeDeleteTest(BaseTest):
@@ -754,9 +723,7 @@ class VolumeDeleteTest(BaseTest):
         resources = policy.run()
 
         try:
-            factory().client("ec2").describe_volumes(
-                VolumeIds=[resources[0]["VolumeId"]]
-            )
+            factory().client("ec2").describe_volumes(VolumeIds=[resources[0]["VolumeId"]])
         except ClientError as e:
             self.assertEqual(e.response["Error"]["Code"], "InvalidVolume.NotFound")
         else:
@@ -804,15 +771,9 @@ class EncryptExtantVolumesTest(BaseTest):
                 self.assertTrue(v["Attachments"][0]["DeleteOnTermination"])
                 self.assertTrue(v["Encrypted"])
                 if "Tags" in v:
-                    self.assertNotIn(
-                        "maid-crypt-remediation", [i["Key"] for i in v["Tags"]]
-                    )
-                    self.assertNotIn(
-                        "maid-origin-volume", [i["Key"] for i in v["Tags"]]
-                    )
-                    self.assertNotIn(
-                        "maid-instance-device", [i["Key"] for i in v["Tags"]]
-                    )
+                    self.assertNotIn("maid-crypt-remediation", [i["Key"] for i in v["Tags"]])
+                    self.assertNotIn("maid-origin-volume", [i["Key"] for i in v["Tags"]])
+                    self.assertNotIn("maid-instance-device", [i["Key"] for i in v["Tags"]])
 
 
 class TestKmsAlias(BaseTest):
@@ -910,6 +871,5 @@ class HealthEventsFilterTest(BaseTest):
         self.assertEqual(len(resources), 1)
         for r in resources:
             self.assertTrue(
-                ("c7n:HealthEvent" in r)
-                and ("Description" in e for e in r["c7n:HealthEvent"])
+                ("c7n:HealthEvent" in r) and ("Description" in e for e in r["c7n:HealthEvent"])
             )

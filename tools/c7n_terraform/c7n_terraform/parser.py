@@ -148,9 +148,7 @@ class HclLocator:
             tokens = [t.replace('"', "") for t in line.split()]
             if key_set.issubset(tokens):
                 start_line = idx
-                end_line = self._get_end_line(
-                    start_line, cache_idx, self.line_cache[path]
-                )
+                end_line = self._get_end_line(start_line, cache_idx, self.line_cache[path])
                 break
 
         if not (start_line and end_line):
@@ -429,8 +427,7 @@ class Parser:
 
         for block in data:
             output[block] = [
-                {resource: larkify(instance)}
-                for resource, instance in data.get(block, {}).items()
+                {resource: larkify(instance)} for resource, instance in data.get(block, {}).items()
             ]
 
         return output
@@ -458,9 +455,7 @@ class Parser:
             for f in file_iter(pattern):
                 self.seen_dirs.add(f.parent)
                 try:
-                    file_parser = getattr(
-                        self, self._parser_map.get(pattern.replace("*", ""))
-                    )
+                    file_parser = getattr(self, self._parser_map.get(pattern.replace("*", "")))
                     self.tf_resources[f] = tf_data = file_parser(f)
                     modules.update(self._resolve_modules(f.parent, tf_data))
                 except Exception as e:

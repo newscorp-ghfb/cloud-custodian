@@ -32,9 +32,7 @@ class DeploymentUnitsTest(BaseTest):
         try:
             cls.session = local_session(Session)
             client = cls.session.client('azure.mgmt.resource.ResourceManagementClient')
-            client.resource_groups.create_or_update(
-                cls.rg_name, {'location': cls.rg_location}
-            )
+            client.resource_groups.create_or_update(cls.rg_name, {'location': cls.rg_location})
         except AzureError:
             pass
 
@@ -103,9 +101,7 @@ class DeploymentUnitsTest(BaseTest):
 
         plan = self._validate(unit, params)
         client = self.session.client('azure.mgmt.monitor.MonitorManagementClient')
-        rules = client.autoscale_settings.get(
-            self.rg_name, constants.FUNCTION_AUTOSCALE_NAME
-        )
+        rules = client.autoscale_settings.get(self.rg_name, constants.FUNCTION_AUTOSCALE_NAME)
 
         self.assertEqual(rules.target_resource_uri, plan.id)
 
@@ -118,9 +114,7 @@ class DeploymentUnitsTest(BaseTest):
         }
         storage_unit = StorageAccountUnit()
         storage_account_id = storage_unit.provision(sa_params).id
-        conn_string = FunctionAppUtilities.get_storage_account_connection_string(
-            storage_account_id
-        )
+        conn_string = FunctionAppUtilities.get_storage_account_connection_string(storage_account_id)
 
         # provision function app
         func_params = {
@@ -149,9 +143,7 @@ class DeploymentUnitsTest(BaseTest):
         }
         storage_unit = StorageAccountUnit()
         storage_account_id = storage_unit.provision(sa_params).id
-        conn_string = FunctionAppUtilities.get_storage_account_connection_string(
-            storage_account_id
-        )
+        conn_string = FunctionAppUtilities.get_storage_account_connection_string(storage_account_id)
 
         # provision app plan
         app_plan_params = {

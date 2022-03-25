@@ -55,9 +55,7 @@ class ActionsAutotagBaseTest(BaseTest):
     def test_get_first_element_resource_group(self):
         events = copy.copy(self.events)
         for e in events:
-            e.operation_name.value = (
-                'Microsoft.Resources/subscriptions/resourcegroups/write'
-            )
+            e.operation_name.value = 'Microsoft.Resources/subscriptions/resourcegroups/write'
 
         client_mock = Mock()
         client_mock.activity_logs.list.return_value = events

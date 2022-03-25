@@ -31,9 +31,7 @@ class ElasticSearch(BaseTest):
         self.assertEqual(resources[0]["DomainName"], "c7n-test")
         self.assertEqual(resources[0]["Tags"], [{u"Key": u"Env", u"Value": u"Dev"}])
         self.assertTrue(
-            resources[0]["Endpoint"].startswith(
-                "search-c7n-test-ug4l2nqtnwwrktaeagxsqso"
-            )
+            resources[0]["Endpoint"].startswith("search-c7n-test-ug4l2nqtnwwrktaeagxsqso")
         )
 
     def test_metrics_domain(self):
@@ -80,9 +78,7 @@ class ElasticSearch(BaseTest):
 
         client = factory().client("es")
 
-        state = client.describe_elasticsearch_domain(DomainName="c7n-test")[
-            "DomainStatus"
-        ]
+        state = client.describe_elasticsearch_domain(DomainName="c7n-test")["DomainStatus"]
         self.assertEqual(state["Deleted"], True)
 
     def test_post_finding_es(self):
@@ -94,9 +90,7 @@ class ElasticSearch(BaseTest):
                 'actions': [
                     {
                         'type': 'post-finding',
-                        'types': [
-                            'Software and Configuration Checks/OrgStandard/abc-123'
-                        ],
+                        'types': ['Software and Configuration Checks/OrgStandard/abc-123'],
                     }
                 ],
             },
@@ -229,9 +223,7 @@ class ElasticSearch(BaseTest):
         self.assertEqual(resources[0]["DomainName"], "c7n-test")
 
     def test_modify_security_groups(self):
-        session_factory = self.replay_flight_data(
-            "test_elasticsearch_modify_security_groups"
-        )
+        session_factory = self.replay_flight_data("test_elasticsearch_modify_security_groups")
         p = self.load_policy(
             {
                 "name": "modify-es-sg",
@@ -261,9 +253,9 @@ class ElasticSearch(BaseTest):
         )
 
         client = session_factory(region="us-east-1").client("es")
-        result = client.describe_elasticsearch_domains(
-            DomainNames=[resources[0]["DomainName"]]
-        )["DomainStatusList"]
+        result = client.describe_elasticsearch_domains(DomainNames=[resources[0]["DomainName"]])[
+            "DomainStatusList"
+        ]
         self.assertEqual(
             sorted(result[0]["VPCOptions"]["SecurityGroupIds"]),
             sorted(["sg-6c7fa917", "sg-9a5386e9"]),
@@ -289,9 +281,7 @@ class ElasticSearch(BaseTest):
         )
         resources = p.run()
         self.assertTrue(len(resources), 1)
-        aliases = kms.list_aliases(
-            KeyId=resources[0]['EncryptionAtRestOptions']['KmsKeyId']
-        )
+        aliases = kms.list_aliases(KeyId=resources[0]['EncryptionAtRestOptions']['KmsKeyId'])
         self.assertEqual(aliases['Aliases'][0]['AliasName'], 'alias/aws/es')
 
     def test_elasticsearch_cross_account(self):
@@ -358,14 +348,10 @@ class ElasticSearch(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        data = client.describe_elasticsearch_domain_config(
-            DomainName=resources[0]['DomainName']
-        )
+        data = client.describe_elasticsearch_domain_config(DomainName=resources[0]['DomainName'])
         access_policy = json.loads(data['DomainConfig']['AccessPolicies']['Options'])
         self.assertEqual(len(access_policy.get('Statement')), 1)
-        self.assertEqual(
-            [s['Sid'] for s in access_policy.get('Statement')], ["SpecificAllow"]
-        )
+        self.assertEqual([s['Sid'] for s in access_policy.get('Statement')], ["SpecificAllow"])
 
     def test_remove_statements_validation_error(self):
         self.assertRaises(
@@ -381,9 +367,7 @@ class ElasticSearch(BaseTest):
 
 class TestReservedInstances(BaseTest):
     def test_elasticsearch_reserved_node_query(self):
-        session_factory = self.replay_flight_data(
-            "test_elasticsearch_reserved_instances_query"
-        )
+        session_factory = self.replay_flight_data("test_elasticsearch_reserved_instances_query")
         p = self.load_policy(
             {
                 "name": "elasticsearch-reserved",

@@ -11,9 +11,7 @@ class TestStepFunction(BaseTest):
             {
                 'name': 'test-invoke-sfn-bulk',
                 'resource': 'step-machine',
-                'actions': [
-                    {'type': 'invoke-sfn', 'bulk': True, 'state-machine': 'Helloworld'}
-                ],
+                'actions': [{'type': 'invoke-sfn', 'bulk': True, 'state-machine': 'Helloworld'}],
             },
             session_factory=factory,
             config={'account_id': '644160558196'},
@@ -26,9 +24,7 @@ class TestStepFunction(BaseTest):
         self.assertTrue('c7n:execution-arn' in resources[0])
         client = factory().client('stepfunctions')
         self.assertEqual(
-            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])[
-                'status'
-            ],
+            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])['status'],
             'SUCCEEDED',
         )
 
@@ -51,9 +47,7 @@ class TestStepFunction(BaseTest):
         self.assertTrue('c7n:execution-arn' in resources[0])
         client = factory().client('stepfunctions')
         self.assertEqual(
-            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])[
-                'status'
-            ],
+            client.describe_execution(executionArn=resources[0]['c7n:execution-arn'])['status'],
             'SUCCEEDED',
         )
 
@@ -86,9 +80,7 @@ class TestStepFunction(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client('stepfunctions')
-        tags = client.list_tags_for_resource(
-            resourceArn=resources[0]['stateMachineArn']
-        )
+        tags = client.list_tags_for_resource(resourceArn=resources[0]['stateMachineArn'])
         self.assertTrue([t for t in tags['tags'] if t['key'] == 'test'])
 
     def test_sfn_untag_resource(self):
@@ -105,7 +97,5 @@ class TestStepFunction(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         client = session_factory().client('stepfunctions')
-        tags = client.list_tags_for_resource(
-            resourceArn=resources[0]['stateMachineArn']
-        )
+        tags = client.list_tags_for_resource(resourceArn=resources[0]['stateMachineArn'])
         self.assertTrue([t for t in tags['tags'] if t['key'] != 'test'])

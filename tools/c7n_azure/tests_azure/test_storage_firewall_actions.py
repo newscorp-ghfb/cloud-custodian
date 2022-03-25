@@ -14,23 +14,17 @@ rg_name = 'test_storage'
 class StorageTestFirewallActions(BaseTest):
     def setUp(self):
         super(StorageTestFirewallActions, self).setUp()
-        self.client = local_session(Session).client(
-            'azure.mgmt.storage.StorageManagementClient'
-        )
+        self.client = local_session(Session).client('azure.mgmt.storage.StorageManagementClient')
         self.backup_resources = self._get_resources()
         self.restore = []
 
     def tearDown(self):
         for restore in self.restore:
-            resource = next(
-                r for r in self.backup_resources if r.name.startswith(restore)
-            )
+            resource = next(r for r in self.backup_resources if r.name.startswith(restore))
             self.client.storage_accounts.update(
                 rg_name,
                 resource.name,
-                StorageAccountUpdateParameters(
-                    network_rule_set=resource.network_rule_set
-                ),
+                StorageAccountUpdateParameters(network_rule_set=resource.network_rule_set),
             )
         super(StorageTestFirewallActions, self).tearDown()
 
@@ -262,7 +256,5 @@ class StorageTestFirewallActions(BaseTest):
         return resources[0]
 
     def _assert_equal_resource_ids(self, id1, id2):
-        sub_id_regexp = (
-            r"/subscriptions/[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}"
-        )
+        sub_id_regexp = r"/subscriptions/[\da-zA-Z]{8}-([\da-zA-Z]{4}-){3}[\da-zA-Z]{12}"
         self.assertEqual(re.sub(sub_id_regexp, '', id1), re.sub(sub_id_regexp, '', id2))

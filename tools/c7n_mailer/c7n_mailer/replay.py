@@ -120,16 +120,12 @@ def setup_parser():
         help='If dump JSON of MESSAGE_FILE to this path; '
         'useful to base64-decode and gunzip a message',
     )
-    parser.add_argument(
-        'MESSAGE_FILE', type=str, help='Path to SQS message dump/content file'
-    )
+    parser.add_argument('MESSAGE_FILE', type=str, help='Path to SQS message dump/content file')
     return parser
 
 
 def session_factory(config):
-    return boto3.Session(
-        region_name=config['region'], profile_name=config.get('profile')
-    )
+    return boto3.Session(region_name=config['region'], profile_name=config.get('profile'))
 
 
 def main():
@@ -144,9 +140,7 @@ def main():
     ]
     templates = options.templates
     if templates:
-        default_templates.append(
-            os.path.abspath(os.path.expanduser(os.path.expandvars(templates)))
-        )
+        default_templates.append(os.path.abspath(os.path.expanduser(os.path.expandvars(templates))))
 
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=log_format)

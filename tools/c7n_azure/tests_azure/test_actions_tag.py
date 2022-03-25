@@ -18,9 +18,7 @@ class ActionsTagTest(BaseTest):
     def test_schema_validate(self):
         self.assertTrue(
             self.load_policy(
-                tools.get_policy(
-                    [{'type': 'tag', 'tag': 'test', 'value': 'test_value'}]
-                ),
+                tools.get_policy([{'type': 'tag', 'tag': 'test', 'value': 'test_value'}]),
                 validate=True,
             )
         )
@@ -71,21 +69,15 @@ class ActionsTagTest(BaseTest):
 
         with self.assertRaises(FilterValidationError):
             # Empty tags
-            self.load_policy(
-                tools.get_policy([{'type': 'tag', 'tags': {}}]), validate=True
-            )
+            self.load_policy(tools.get_policy([{'type': 'tag', 'tags': {}}]), validate=True)
 
         with self.assertRaises(FilterValidationError):
             # Missing value
-            self.load_policy(
-                tools.get_policy([{'type': 'tag', 'tag': 'myTag'}]), validate=True
-            )
+            self.load_policy(tools.get_policy([{'type': 'tag', 'tag': 'myTag'}]), validate=True)
 
         with self.assertRaises(FilterValidationError):
             # Missing tag
-            self.load_policy(
-                tools.get_policy([{'type': 'tag', 'value': 'myValue'}]), validate=True
-            )
+            self.load_policy(tools.get_policy([{'type': 'tag', 'value': 'myValue'}]), validate=True)
 
     @patch('c7n_azure.tags.TagHelper.update_resource_tags')
     def test_add_or_update_single_tag(self, update_resource_tags):
@@ -165,9 +157,7 @@ class ActionsTagTest(BaseTest):
         tag and adds a new tag
         """
 
-        action = self._get_action(
-            {'tags': {'tag1': 'value1', 'pre-existing-1': 'modified'}}
-        )
+        action = self._get_action({'tags': {'tag1': 'value1', 'pre-existing-1': 'modified'}})
         resource = tools.get_resource(self.existing_tags)
 
         action.process([resource])

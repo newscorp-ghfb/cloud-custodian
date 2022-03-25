@@ -228,9 +228,7 @@ class BackupFileSystem(BaseAction):
                 else:
                     client.create_backup(FileSystemId=r['FileSystemId'])
             except client.exceptions.BackupInProgress as e:
-                self.log.warning(
-                    'Unable to create backup for: %s - %s' % (r['FileSystemId'], e)
-                )
+                self.log.warning('Unable to create backup for: %s - %s' % (r['FileSystemId'], e))
 
 
 @FSx.action_registry.register('delete')

@@ -11,17 +11,11 @@ from pytest_terraform import terraform
 @terraform('eks_nodegroup_delete')
 def test_eks_nodegroup_delete(test, eks_nodegroup_delete):
     aws_region = 'eu-central-1'
-    session_factory = test.replay_flight_data(
-        'test_eks_nodegroup_delete', region=aws_region
-    )
+    session_factory = test.replay_flight_data('test_eks_nodegroup_delete', region=aws_region)
 
     client = session_factory().client('eks')
-    eks_cluster_name = eks_nodegroup_delete[
-        'aws_eks_node_group.deleted_example.cluster_name'
-    ]
-    eks_nodegroup_name = eks_nodegroup_delete[
-        'aws_eks_node_group.deleted_example.node_group_name'
-    ]
+    eks_cluster_name = eks_nodegroup_delete['aws_eks_node_group.deleted_example.cluster_name']
+    eks_nodegroup_name = eks_nodegroup_delete['aws_eks_node_group.deleted_example.node_group_name']
 
     p = test.load_policy(
         {
@@ -138,9 +132,7 @@ class EKS(BaseTest):
         client = factory().client("eks")
         nodegroupNames = client.list_nodegroups(clusterName=name)['nodegroups']
         self.assertEqual(len(nodegroupNames), 1)
-        fargateProfileNames = client.list_fargate_profiles(clusterName=name)[
-            'fargateProfileNames'
-        ]
+        fargateProfileNames = client.list_fargate_profiles(clusterName=name)['fargateProfileNames']
         self.assertEqual(len(fargateProfileNames), 1)
         p = self.load_policy(
             {
@@ -153,13 +145,11 @@ class EKS(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        nodegroupNames = client.list_nodegroups(clusterName=resources[0]['name'])[
-            'nodegroups'
-        ]
+        nodegroupNames = client.list_nodegroups(clusterName=resources[0]['name'])['nodegroups']
         self.assertEqual(len(nodegroupNames), 0)
-        fargateProfileNames = client.list_fargate_profiles(
-            clusterName=resources[0]['name']
-        )['fargateProfileNames']
+        fargateProfileNames = client.list_fargate_profiles(clusterName=resources[0]['name'])[
+            'fargateProfileNames'
+        ]
         self.assertEqual(len(fargateProfileNames), 0)
         cluster = client.describe_cluster(name=name).get('cluster')
         self.assertEqual(cluster['status'], 'DELETING')

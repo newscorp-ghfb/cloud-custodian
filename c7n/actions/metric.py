@@ -125,9 +125,7 @@ class PutMetric(BaseAction):
         values = []
         self.log.debug("searching for %s in %s", key_expression, resources)
         try:
-            values = jmespath.search(
-                "Resources[]." + key_expression, {'Resources': resources}
-            )
+            values = jmespath.search("Resources[]." + key_expression, {'Resources': resources})
             # I had to wrap resourses in a dict like this in order to not have jmespath expressions
             # start with [] in the yaml files.  It fails to parse otherwise.
         except TypeError as oops:

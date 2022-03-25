@@ -50,9 +50,7 @@ class AzureFunctionMode(ServerlessExecutionMode):
                         'type': 'object',
                         'additionalProperties': False,
                         'properties': {
-                            'type': {
-                                'enum': [AUTH_TYPE_MSI, AUTH_TYPE_UAI, AUTH_TYPE_EMBED]
-                            },
+                            'type': {'enum': [AUTH_TYPE_MSI, AUTH_TYPE_UAI, AUTH_TYPE_EMBED]},
                             'id': {'type': 'string'},
                         },
                     },
@@ -131,13 +129,10 @@ class AzureFunctionMode(ServerlessExecutionMode):
 
     def validate(self):
         super().validate()
-        identity = jmespath.search(
-            'mode."provision-options".identity', self.policy.data
-        )
+        identity = jmespath.search('mode."provision-options".identity', self.policy.data)
         if identity and identity['type'] == AUTH_TYPE_UAI and 'id' not in identity:
             raise PolicyValidationError(
-                "policy:%s user assigned identity requires specifying id"
-                % (self.policy.name)
+                "policy:%s user assigned identity requires specifying id" % (self.policy.name)
             )
         if not identity or identity['type'] == AUTH_TYPE_EMBED:
             self.log.error(
@@ -219,9 +214,9 @@ class AzureFunctionMode(ServerlessExecutionMode):
         return params
 
     def _get_identity(self, session):
-        identity = jmespath.search(
-            'mode."provision-options".identity', self.policy.data
-        ) or {'type': AUTH_TYPE_EMBED}
+        identity = jmespath.search('mode."provision-options".identity', self.policy.data) or {
+            'type': AUTH_TYPE_EMBED
+        }
         if identity['type'] != AUTH_TYPE_UAI:
             return identity
 
@@ -258,9 +253,7 @@ class AzureFunctionMode(ServerlessExecutionMode):
         if isinstance(settings, str):
             result['id'] = settings
             result['name'] = ResourceIdParser.get_resource_name(settings)
-            result['resource_group_name'] = ResourceIdParser.get_resource_group(
-                settings
-            )
+            result['resource_group_name'] = ResourceIdParser.get_resource_group(settings)
         else:
             # get nested keys
             for key in properties.keys():
@@ -281,17 +274,16 @@ class AzureFunctionMode(ServerlessExecutionMode):
     def provision(self):
         # Make sure we have auth data for function provisioning
         session = local_session(self.policy.session_factory)
-        if jmespath.search(
-            'mode."provision-options".identity.type', self.policy.data
-        ) in (AUTH_TYPE_EMBED, None):
+        if jmespath.search('mode."provision-options".identity.type', self.policy.data) in (
+            AUTH_TYPE_EMBED,
+            None,
+        ):
             session.get_functions_auth_string("")
 
         self.target_subscription_ids = session.get_function_target_subscription_ids()
 
         self.function_params = self.get_function_app_params()
-        self.function_app = FunctionAppUtilities.deploy_function_app(
-            self.function_params
-        )
+        self.function_app = FunctionAppUtilities.deploy_function_app(self.function_params)
 
     def get_logs(self, start, end):
         """Retrieve logs for the policy"""
@@ -306,9 +298,7 @@ class AzureFunctionMode(ServerlessExecutionMode):
         requirements = generate_requirements(
             'c7n-azure', ignore=['boto3', 'botocore', 'pywin32'], exclude='c7n'
         )
-        package = FunctionPackage(
-            self.policy_name, target_sub_ids=target_subscription_ids
-        )
+        package = FunctionPackage(self.policy_name, target_sub_ids=target_subscription_ids)
         package.build(
             self.policy.data,
             modules=['c7n', 'c7n-azure'],
@@ -317,9 +307,7 @@ class AzureFunctionMode(ServerlessExecutionMode):
         )
         package.close()
 
-        self.log.info(
-            "Function package built, size is %dKB" % (package.pkg.size / 1024)
-        )
+        self.log.info("Function package built, size is %dKB" % (package.pkg.size / 1024))
         return package
 
 
@@ -342,10 +330,8 @@ class AzureModeCommon:
             types = expected_type.split('/')
 
             types_regex = '/'.join([t + '/[^/]+' for t in types[1:]])
-            extract_regex = (
-                '/subscriptions/[^/]+/resourceGroups/[^/]+/providers/{0}/{1}'.format(
-                    types[0], types_regex
-                )
+            extract_regex = '/subscriptions/[^/]+/resourceGroups/[^/]+/providers/{0}/{1}'.format(
+                types[0], types_regex
             )
 
         return re.search(extract_regex, event['subject'], re.IGNORECASE).group()
@@ -395,9 +381,7 @@ class AzureModeCommon:
                 except (TypeError, OverflowError):
                     pass
 
-        policy.ctx.metrics.put_metric(
-            "ActionTime", time.time() - at, "Seconds", Scope="Policy"
-        )
+        policy.ctx.metrics.put_metric("ActionTime", time.time() - at, "Seconds", Scope="Policy")
         return resources
 
 
@@ -427,9 +411,7 @@ class AzurePeriodicMode(AzureFunctionMode, PullMode):
 
     def provision(self):
         super(AzurePeriodicMode, self).provision()
-        package = self.build_functions_package(
-            target_subscription_ids=self.target_subscription_ids
-        )
+        package = self.build_functions_package(target_subscription_ids=self.target_subscription_ids)
         FunctionAppUtilities.publish_functions_package(self.function_params, package)
 
     def run(self, event=None, lambda_context=None):
@@ -504,9 +486,7 @@ class AzureEventGridMode(AzureFunctionMode):
         session = local_session(self.policy.session_factory)
 
         # queue name is restricted to lowercase letters, numbers, and single hyphens
-        queue_name = re.sub(
-            r'(-{2,})+', '-', self.function_params.function_app['name'].lower()
-        )
+        queue_name = re.sub(r'(-{2,})+', '-', self.function_params.function_app['name'].lower())
         storage_account = self._create_storage_queue(queue_name, session)
         self._create_event_subscription(storage_account, queue_name, session)
         package = self.build_functions_package(queue_name=queue_name)
@@ -529,9 +509,7 @@ class AzureEventGridMode(AzureFunctionMode):
         )
 
         try:
-            StorageUtilities.create_queue_from_storage_account(
-                storage_account, queue_name, session
-            )
+            StorageUtilities.create_queue_from_storage_account(storage_account, queue_name, session)
             self.log.info("Storage queue creation succeeded")
             return storage_account
         except Exception:

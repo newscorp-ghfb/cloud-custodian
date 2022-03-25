@@ -124,9 +124,7 @@ class InstanceTest(BaseTest):
                 'name': 'ilabel',
                 'resource': 'gcp.instance',
                 'filters': [{'name': 'test-ingwar'}],
-                'actions': [
-                    {'type': 'set-labels', 'labels': {'test_label': 'test_value'}}
-                ],
+                'actions': [{'type': 'set-labels', 'labels': {'test_label': 'test_value'}}],
             },
             session_factory=factory,
         )
@@ -171,16 +169,12 @@ class InstanceTest(BaseTest):
             },
         )
         self.assertTrue(
-            result['items'][0]['labels']['custodian_status'].startswith(
-                "resource_policy-start"
-            )
+            result['items'][0]['labels']['custodian_status'].startswith("resource_policy-start")
         )
 
     def test_detach_disks_from_instance(self):
         project_id = 'cloud-custodian'
-        factory = self.replay_flight_data(
-            'instance-detach-disks', project_id=project_id
-        )
+        factory = self.replay_flight_data('instance-detach-disks', project_id=project_id)
         p = self.load_policy(
             {
                 'name': 'idetach',
@@ -207,9 +201,7 @@ class InstanceTest(BaseTest):
 
     def test_create_machine_instance_from_instance(self):
         project_id = 'custodian-tests'
-        factory = self.replay_flight_data(
-            'instance-create-machine-instance', project_id=project_id
-        )
+        factory = self.replay_flight_data('instance-create-machine-instance', project_id=project_id)
         p = self.load_policy(
             {
                 'name': 'icmachineinstance',
@@ -224,9 +216,7 @@ class InstanceTest(BaseTest):
 
     def test_filter_effective_firewall(self):
         project_id = 'cloud-custodian'
-        factory = self.replay_flight_data(
-            'instance-effective-firewall', project_id=project_id
-        )
+        factory = self.replay_flight_data('instance-effective-firewall', project_id=project_id)
         p = self.load_policy(
             {
                 'name': 'test-instance-effective-firewall',
@@ -250,9 +240,7 @@ class InstanceTest(BaseTest):
 class DiskTest(BaseTest):
     def test_disk_query(self):
         factory = self.replay_flight_data('disk-query', project_id='cloud-custodian')
-        p = self.load_policy(
-            {'name': 'all-disks', 'resource': 'gcp.disk'}, session_factory=factory
-        )
+        p = self.load_policy({'name': 'all-disks', 'resource': 'gcp.disk'}, session_factory=factory)
         resources = p.run()
         self.assertEqual(len(resources), 6)
 
@@ -321,9 +309,7 @@ class DiskTest(BaseTest):
                 'name': 'disk-label',
                 'resource': 'gcp.disk',
                 'filters': [{'name': 'test-ingwar'}],
-                'actions': [
-                    {'type': 'set-labels', 'labels': {'test_label': 'test_value'}}
-                ],
+                'actions': [{'type': 'set-labels', 'labels': {'test_label': 'test_value'}}],
             },
             session_factory=factory,
         )
@@ -345,9 +331,7 @@ class DiskTest(BaseTest):
 
 class SnapshotTest(BaseTest):
     def test_snapshot_query(self):
-        factory = self.replay_flight_data(
-            'snapshot-query', project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('snapshot-query', project_id='cloud-custodian')
         p = self.load_policy(
             {'name': 'all-disks', 'resource': 'gcp.snapshot'}, session_factory=factory
         )
@@ -355,9 +339,7 @@ class SnapshotTest(BaseTest):
         self.assertEqual(len(resources), 1)
 
     def test_snapshot_delete(self):
-        factory = self.replay_flight_data(
-            'snapshot-delete', project_id='cloud-custodian'
-        )
+        factory = self.replay_flight_data('snapshot-delete', project_id='cloud-custodian')
         p = self.load_policy(
             {
                 'name': 'all-disks',
@@ -399,9 +381,7 @@ class InstanceTemplateTest(BaseTest):
     def test_instance_template_query(self):
         project_id = 'cloud-custodian'
         resource_name = 'custodian-instance-template'
-        session_factory = self.replay_flight_data(
-            'instance-template-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('instance-template-query', project_id=project_id)
 
         policy = self.load_policy(
             {
@@ -442,9 +422,7 @@ class InstanceTemplateTest(BaseTest):
             project_id,
             resource_name,
         )
-        session_factory = self.replay_flight_data(
-            'instance-template-delete', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('instance-template-delete', project_id=project_id)
 
         policy = self.load_policy(
             {
@@ -470,9 +448,7 @@ class InstanceTemplateTest(BaseTest):
             self.fail('found deleted resource: %s' % result)
         except HttpError as e:
             self.assertTrue(
-                re.match(
-                    ".*The resource '%s' was not found.*" % resource_full_name, str(e)
-                )
+                re.match(".*The resource '%s' was not found.*" % resource_full_name, str(e))
             )
 
 
@@ -480,9 +456,7 @@ class AutoscalerTest(BaseTest):
     def test_autoscaler_query(self):
         project_id = 'cloud-custodian'
         resource_name = 'micro-instance-group-1-to-10'
-        session_factory = self.replay_flight_data(
-            'autoscaler-query', project_id=project_id
-        )
+        session_factory = self.replay_flight_data('autoscaler-query', project_id=project_id)
 
         policy = self.load_policy(
             {'name': 'gcp-autoscaler-dryrun', 'resource': 'gcp.autoscaler'},
@@ -557,8 +531,6 @@ class AutoscalerTest(BaseTest):
 
         self.assertEqual(result_policy['coolDownPeriodSec'], 30)
         self.assertEqual(result_policy['cpuUtilization']['utilizationTarget'], 0.7)
-        self.assertEqual(
-            result_policy['loadBalancingUtilization']['utilizationTarget'], 0.7
-        )
+        self.assertEqual(result_policy['loadBalancingUtilization']['utilizationTarget'], 0.7)
         self.assertEqual(result_policy['minNumReplicas'], 1)
         self.assertEqual(result_policy['maxNumReplicas'], 4)

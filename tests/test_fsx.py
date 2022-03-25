@@ -170,9 +170,7 @@ class TestFSx(BaseTest):
         self.assertEqual(expected_tag_map, final_tag_map)
 
     def test_fsx_create_backup_without_copy_tags(self):
-        session_factory = self.replay_flight_data(
-            'test_fsx_create_backup_without_copy_tags'
-        )
+        session_factory = self.replay_flight_data('test_fsx_create_backup_without_copy_tags')
         p = self.load_policy(
             {
                 'name': 'test-update-fsx-configuration',
@@ -206,16 +204,12 @@ class TestFSx(BaseTest):
         self.assertEqual(expected_tags, backups['Backups'][0]['Tags'])
 
     def test_fsx_delete_file_system_skip_snapshot(self):
-        session_factory = self.replay_flight_data(
-            'test_fsx_delete_file_system_skip_snapshot'
-        )
+        session_factory = self.replay_flight_data('test_fsx_delete_file_system_skip_snapshot')
         p = self.load_policy(
             {
                 'name': 'fsx-delete-file-system',
                 'resource': 'fsx',
-                'filters': [
-                    {'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}
-                ],
+                'filters': [{'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}],
                 'actions': [{'type': 'delete', 'skip-snapshot': True}],
             },
             session_factory=session_factory,
@@ -242,9 +236,7 @@ class TestFSx(BaseTest):
             {
                 'name': 'fsx-delete-file-system',
                 'resource': 'fsx',
-                'filters': [
-                    {'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}
-                ],
+                'filters': [{'type': 'value', 'key': 'Lifecycle', 'value': 'AVAILABLE'}],
                 'actions': [
                     {
                         'type': 'delete',
@@ -272,9 +264,7 @@ class TestFSx(BaseTest):
         self.assertEqual(len(backups), 1)
 
     def test_fsx_delete_file_system_with_error(self):
-        session_factory = self.replay_flight_data(
-            'test_fsx_delete_file_system_with_error'
-        )
+        session_factory = self.replay_flight_data('test_fsx_delete_file_system_with_error')
         p = self.load_policy(
             {
                 'name': 'fsx-delete-file-system',

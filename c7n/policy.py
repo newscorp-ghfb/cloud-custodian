@@ -75,9 +75,7 @@ class PolicyCollection:
         # session factory param introduction needs an audit and review
         # on tests.
         sf = session_factory if session_factory else cls.session_factory()
-        policies = [
-            Policy(p, options, session_factory=sf) for p in data.get('policies', ())
-        ]
+        policies = [Policy(p, options, session_factory=sf) for p in data.get('policies', ())]
         return cls(policies, options)
 
     def __add__(self, other):
@@ -116,9 +114,7 @@ class PolicyCollection:
                 results.append(policy)
 
         if not results:
-            self.log.warning(
-                ('Policy pattern "{}" ' 'did not match any policies.').format(pattern)
-            )
+            self.log.warning(('Policy pattern "{}" ' 'did not match any policies.').format(pattern))
 
         return results
 
@@ -148,9 +144,7 @@ class PolicyCollection:
 
         if not results:
             self.log.warning(
-                ('Resource type "{}" ' 'did not match any policies.').format(
-                    resource_type
-                )
+                ('Resource type "{}" ' 'did not match any policies.').format(resource_type)
             )
 
         return results
@@ -250,9 +244,7 @@ class PolicyExecutionMode:
     def get_deprecations(self):
         # The execution mode itself doesn't have a data dict, so we grab the
         # mode part from the policy data dict itself.
-        return deprecated.check_deprecations(
-            self, data=self.policy.data.get('mode', {})
-        )
+        return deprecated.check_deprecations(self, data=self.policy.data.get('mode', {}))
 
 
 class ServerlessExecutionMode(PolicyExecutionMode):
@@ -318,9 +310,7 @@ class PullMode(PolicyExecutionMode):
             self.policy.ctx.metrics.put_metric(
                 "ResourceCount", len(resources), "Count", Scope="Policy"
             )
-            self.policy.ctx.metrics.put_metric(
-                "ResourceTime", rt, "Seconds", Scope="Policy"
-            )
+            self.policy.ctx.metrics.put_metric("ResourceTime", rt, "Seconds", Scope="Policy")
             self.policy._write_file('resources.json', utils.dumps(resources, indent=2))
 
             if not resources:
@@ -498,9 +488,7 @@ class LambdaMode(ServerlessExecutionMode):
             )
 
             if 'debug' in event:
-                self.policy.log.info(
-                    "Invoking actions %s", self.policy.resource_manager.actions
-                )
+                self.policy.log.info("Invoking actions %s", self.policy.resource_manager.actions)
 
             self.policy._write_file('resources.json', utils.dumps(resources, indent=2))
 
@@ -546,9 +534,7 @@ class LambdaMode(ServerlessExecutionMode):
             except ClientError:
                 # For cli usage by normal users, don't assume the role just use
                 # it for the lambda
-                manager = mu.LambdaManager(
-                    lambda assume=False: self.policy.session_factory(assume)
-                )
+                manager = mu.LambdaManager(lambda assume=False: self.policy.session_factory(assume))
             return manager.publish(
                 self.policy_lambda(self.policy), role=self.policy.options.assume_role
             )
@@ -563,9 +549,7 @@ class PeriodicMode(LambdaMode, PullMode):
 
     POLICY_METRICS = ('ResourceCount', 'ResourceTime', 'ActionTime')
 
-    schema = utils.type_schema(
-        'periodic', schedule={'type': 'string'}, rinherit=LambdaMode.schema
-    )
+    schema = utils.type_schema('periodic', schedule={'type': 'string'}, rinherit=LambdaMode.schema)
 
     def run(self, event, lambda_context):
         return PullMode.run(self)
@@ -619,9 +603,7 @@ class PHDMode(LambdaMode):
                     itertools.chain(
                         *[
                             p['entities']
-                            for p in paginator.paginate(
-                                filter={'eventArns': event_arns}
-                            )
+                            for p in paginator.paginate(filter={'eventArns': event_arns})
                         ]
                     )
                 )
@@ -684,9 +666,7 @@ class CloudTrailMode(LambdaMode):
         assert events, "cloud trail mode requires specifiying events to subscribe"
         for e in events:
             if isinstance(e, str):
-                assert e in CloudWatchEvents.trail_events, (
-                    "event shortcut not defined: %s" % e
-                )
+                assert e in CloudWatchEvents.trail_events, "event shortcut not defined: %s" % e
             if isinstance(e, dict):
                 jmespath.compile(e['ids'])
         if isinstance(self.policy.resource_manager, query.ChildResourceManager):
@@ -794,9 +774,7 @@ class GuardDutyMode(LambdaMode):
         # For iam users annotate with the access key specified in the finding event
         if resources and self.policy.resource_type == 'iam-user':
             resources[0]['c7n:AccessKeys'] = {
-                'AccessKeyId': event['detail']['resource']['accessKeyDetails'][
-                    'accessKeyId'
-                ]
+                'AccessKeyId': event['detail']['resource']['accessKeyDetails']['accessKeyId']
             }
         return resources
 
@@ -863,8 +841,7 @@ class ConfigPollRuleMode(LambdaMode, PullMode):
             )
         if self.policy.data['mode'].get('pattern'):
             raise PolicyValidationError(
-                "policy:%s AWS Config does not support event pattern filtering"
-                % (self.policy.name)
+                "policy:%s AWS Config does not support event pattern filtering" % (self.policy.name)
             )
         if not self.policy.resource_manager.resource_type.cfn_type:
             raise PolicyValidationError(
@@ -906,8 +883,7 @@ class ConfigPollRuleMode(LambdaMode, PullMode):
                 ComplianceResourceId=r,
                 ComplianceType='NON_COMPLIANT',
                 OrderingTimestamp=cfg_event['notificationCreationTime'],
-                Annotation='The resource is not compliant with policy:%s.'
-                % (self.policy.name),
+                Annotation='The resource is not compliant with policy:%s.' % (self.policy.name),
             )
             for r in matched_resources
         ]
@@ -920,8 +896,7 @@ class ConfigPollRuleMode(LambdaMode, PullMode):
                 ComplianceResourceId=r,
                 ComplianceType='COMPLIANT',
                 OrderingTimestamp=cfg_event['notificationCreationTime'],
-                Annotation='The resource is compliant with policy:%s.'
-                % (self.policy.name),
+                Annotation='The resource is compliant with policy:%s.' % (self.policy.name),
             )
             for r in unmatched_resources
         ]
@@ -951,8 +926,7 @@ class ConfigRuleMode(LambdaMode):
             )
         if self.policy.data['mode'].get('pattern'):
             raise PolicyValidationError(
-                "policy:%s AWS Config does not support event pattern filtering"
-                % (self.policy.name)
+                "policy:%s AWS Config does not support event pattern filtering" % (self.policy.name)
             )
 
     def resolve_resources(self, event):
@@ -985,14 +959,12 @@ class ConfigRuleMode(LambdaMode):
             if (match and resources) or (not match and not resources):
                 evaluation = {
                     'compliance_type': 'COMPLIANT',
-                    'annotation': 'The resource is compliant with policy:%s.'
-                    % (self.policy.name),
+                    'annotation': 'The resource is compliant with policy:%s.' % (self.policy.name),
                 }
             else:
                 evaluation = {
                     'compliance_type': 'NON_COMPLIANT',
-                    'annotation': 'Resource is not compliant with policy:%s'
-                    % (self.policy.name),
+                    'annotation': 'Resource is not compliant with policy:%s' % (self.policy.name),
                 }
 
         client = utils.local_session(self.policy.session_factory).client('config')
@@ -1081,9 +1053,7 @@ class PolicyConditions:
         # note for no filters/conditions, this uses all([]) == true property.
         state = all([f.process([policy_vars], event) for f in self.filters])
         if not state:
-            self.policy.log.info(
-                'Skipping policy:%s due to execution conditions', self.policy.name
-            )
+            self.policy.log.info('Skipping policy:%s due to execution conditions', self.policy.name)
         return state
 
     def iter_filters(self, block_end=False):
@@ -1208,9 +1178,7 @@ class Policy:
         self.conditions.validate()
         m = self.get_execution_mode()
         if m is None:
-            raise PolicyValidationError(
-                "Invalid Execution mode in policy %s" % (self.data,)
-            )
+            raise PolicyValidationError("Invalid Execution mode in policy %s" % (self.data,))
         m.validate()
         self.validate_policy_start_stop()
         self.resource_manager.validate()
@@ -1235,9 +1203,7 @@ class Policy:
 
         partition = utils.get_partition(self.options.region)
         if 'mode' in self.data:
-            if 'role' in self.data['mode'] and not self.data['mode']['role'].startswith(
-                "arn:aws"
-            ):
+            if 'role' in self.data['mode'] and not self.data['mode']['role'].startswith("arn:aws"):
                 self.data['mode']['role'] = "arn:%s:iam::%s:role/%s" % (
                     partition,
                     self.options.account_id,
@@ -1377,8 +1343,7 @@ class Policy:
 
             # Type will be tzwin on windows, but tzwin is null on linux
             if not (
-                isinstance(p_tz, tzutil.tzfile)
-                or (tzutil.tzwin and isinstance(p_tz, tzutil.tzwin))
+                isinstance(p_tz, tzutil.tzfile) or (tzutil.tzwin and isinstance(p_tz, tzutil.tzwin))
             ):
                 raise PolicyValidationError(
                     "Policy: %s TZ not parsable: %s" % (policy_name, policy_tz)
@@ -1390,8 +1355,7 @@ class Policy:
                     parser.parse(i)
                 except Exception as e:
                     raise ValueError(
-                        "Policy: %s Date/Time not parsable: %s, %s"
-                        % (policy_name, i, e)
+                        "Policy: %s Date/Time not parsable: %s, %s" % (policy_name, i, e)
                     )
 
     def get_deprecations(self):

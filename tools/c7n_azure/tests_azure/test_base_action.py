@@ -11,9 +11,7 @@ from c7n.utils import local_session
 class AzureBaseActionTest(BaseTest):
     def test_return_success(self):
         action = SampleAction()
-        action.process(
-            [{'id': '1', 'message': 'foo'}, {'id': '2', 'message': 'foo'}], None
-        )
+        action.process([{'id': '1', 'message': 'foo'}, {'id': '2', 'message': 'foo'}], None)
 
         self.assertEqual(2, action.log.info.call_count)
 
@@ -100,9 +98,7 @@ class AzureBaseActionTest(BaseTest):
         action._log_modified_resource(
             {'name': 'rg1', 'type': 'resourcegroups', 'resourceGroup': 'r'}, None
         )
-        action._log_modified_resource(
-            {'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, None
-        )
+        action._log_modified_resource({'name': 'r1', 'type': 'none', 'resourceGroup': 'rg2'}, None)
 
         logger.assert_has_calls(
             [

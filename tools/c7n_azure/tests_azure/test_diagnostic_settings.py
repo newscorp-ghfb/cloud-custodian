@@ -151,6 +151,4 @@ class DiagnosticSettingsFilterTest(BaseTest):
                 }
             ],
         }
-        self.assertRaises(
-            PolicyValidationError, self.load_policy, policy, validate=True
-        )
+        self.assertRaises(PolicyValidationError, self.load_policy, policy, validate=True)

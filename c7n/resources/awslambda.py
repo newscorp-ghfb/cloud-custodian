@@ -32,9 +32,7 @@ ErrAccessDenied = "AccessDeniedException"
 
 class DescribeLambda(query.DescribeSource):
     def augment(self, resources):
-        return universal_augment(
-            self.manager, super(DescribeLambda, self).augment(resources)
-        )
+        return universal_augment(self.manager, super(DescribeLambda, self).augment(resources))
 
     def get_resources(self, ids):
         client = local_session(self.manager.session_factory).client('lambda')
@@ -47,9 +45,7 @@ class DescribeLambda(query.DescribeSource):
             config = func.pop('Configuration')
             config.update(func)
             if 'Tags' in config:
-                config['Tags'] = [
-                    {'Key': k, 'Value': v} for k, v in config['Tags'].items()
-                ]
+                config['Tags'] = [{'Key': k, 'Value': v} for k, v in config['Tags'].items()]
             resources.append(config)
         return resources
 
@@ -134,9 +130,7 @@ class ReservedConcurrency(ValueFilter):
                 r[self.annotation_key].pop('ResponseMetadata')
             except ClientError as e:
                 if e.response['Error']['Code'] == ErrAccessDenied:
-                    self.log.warning(
-                        "Access denied getting lambda:%s", r['FunctionName']
-                    )
+                    self.log.warning("Access denied getting lambda:%s", r['FunctionName'])
                 raise
             return r
 
@@ -148,9 +142,7 @@ class ReservedConcurrency(ValueFilter):
 def get_lambda_policies(client, executor_factory, resources, log):
     def _augment(r):
         try:
-            r['c7n:Policy'] = client.get_policy(FunctionName=r['FunctionName'])[
-                'Policy'
-            ]
+            r['c7n:Policy'] = client.get_policy(FunctionName=r['FunctionName'])['Policy']
         except client.exceptions.ResourceNotFoundException:
             return None
         except ClientError as e:
@@ -195,9 +187,7 @@ class LambdaEventSource(ValueFilter):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('lambda')
         self.log.debug("fetching policy for %d lambdas" % len(resources))
-        resources = get_lambda_policies(
-            client, self.executor_factory, resources, self.log
-        )
+        resources = get_lambda_policies(client, self.executor_factory, resources, self.log)
         self.data['key'] = self.annotation_key
         return super(LambdaEventSource, self).process(resources, event)
 
@@ -247,9 +237,7 @@ class LambdaCrossAccountAccessFilter(CrossAccountAccessFilter):
     def process(self, resources, event=None):
         client = local_session(self.manager.session_factory).client('lambda')
         self.log.debug("fetching policy for %d lambdas" % len(resources))
-        resources = get_lambda_policies(
-            client, self.executor_factory, resources, self.log
-        )
+        resources = get_lambda_policies(client, self.executor_factory, resources, self.log)
         return super(LambdaCrossAccountAccessFilter, self).process(resources, event)
 
 
@@ -379,9 +367,7 @@ class VersionTrim(Action):
 
         aliased_versions = set()
         for a in aliases:
-            aliased_versions.add(
-                "%s:%s" % (a['AliasArn'].rsplit(':', 1)[0], a['FunctionVersion'])
-            )
+            aliased_versions.add("%s:%s" % (a['AliasArn'].rsplit(':', 1)[0], a['FunctionVersion']))
         return aliased_versions
 
     def process_lambda(self, client, r):
@@ -421,9 +407,7 @@ class VersionTrim(Action):
                 if retain_latest and latest_sha and v['CodeSha256'] == latest_sha:
                     continue
                 matched += v['CodeSize']
-                self.manager.retry(
-                    client.delete_function, FunctionName=v['FunctionArn']
-                )
+                self.manager.retry(client.delete_function, FunctionName=v['FunctionArn'])
         return (matched, total)
 
 
@@ -492,9 +476,7 @@ class RemovePolicyStatement(RemovePolicyBase):
             return
 
         for f in found:
-            client.remove_permission(
-                FunctionName=resource['FunctionName'], StatementId=f['Sid']
-            )
+            client.remove_permission(FunctionName=resource['FunctionName'], StatementId=f['Sid'])
 
 
 @AWSLambda.action_registry.register('set-concurrency')
@@ -511,9 +493,7 @@ class SetConcurrency(Action):
         required=('value',),
         **{
             'expr': {'type': 'boolean'},
-            'value': {
-                'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}]
-            },
+            'value': {'oneOf': [{'type': 'string'}, {'type': 'integer'}, {'type': 'null'}]},
         }
     )
 
@@ -547,9 +527,7 @@ class SetConcurrency(Action):
                     )
                     continue
             if fvalue is None:
-                client.delete_function_concurrency(
-                    FunctionName=function['FunctionName']
-                )
+                client.delete_function_concurrency(FunctionName=function['FunctionName'])
             else:
                 client.put_function_concurrency(
                     FunctionName=function['FunctionName'],
@@ -657,11 +635,7 @@ class LambdaLayerVersion(query.QueryResourceManager):
         versions = []
         for layer_name in layer_names:
             pager = get_layer_version_paginator(client)
-            for v in (
-                pager.paginate(LayerName=layer_name)
-                .build_full_result()
-                .get('LayerVersions')
-            ):
+            for v in pager.paginate(LayerName=layer_name).build_full_result().get('LayerVersions'):
                 v['LayerName'] = layer_name
                 versions.append(v)
         return versions
@@ -743,9 +717,7 @@ class LayerRemovePermissions(RemovePolicyBase):
 
         p = json.loads(r['c7n:Policy'])
 
-        statements, found = self.process_policy(
-            p, r, CrossAccountAccessFilter.annotation_key
-        )
+        statements, found = self.process_policy(p, r, CrossAccountAccessFilter.annotation_key)
 
         if not found:
             return
@@ -787,8 +759,6 @@ class LayerPostFinding(PostFinding):
     def format_resource(self, r):
         envelope, payload = self.format_envelope(r)
         payload.update(
-            self.filter_empty(
-                select_keys(r, ['Version', 'CreatedDate', 'CompatibleRuntimes'])
-            )
+            self.filter_empty(select_keys(r, ['Version', 'CreatedDate', 'CompatibleRuntimes']))
         )
         return envelope

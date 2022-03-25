@@ -215,9 +215,7 @@ class SetRedshiftLogging(BaseAction):
 
             elif self.data.get('state') == 'disabled':
 
-                self.manager.retry(
-                    client.disable_logging, ClusterIdentifier=redshift_id
-                )
+                self.manager.retry(client.disable_logging, ClusterIdentifier=redshift_id)
 
 
 @Redshift.filter_registry.register('security-group')
@@ -238,10 +236,7 @@ class SubnetFilter(net_filters.SubnetFilter):
         group_ids = set()
         for r in resources:
             group_ids.update(
-                [
-                    s['SubnetIdentifier']
-                    for s in self.groups[r['ClusterSubnetGroupName']]['Subnets']
-                ]
+                [s['SubnetIdentifier'] for s in self.groups[r['ClusterSubnetGroupName']]['Subnets']]
             )
         return group_ids
 
@@ -281,19 +276,14 @@ class Parameter(ValueFilter):
         groups = {}
         for r in clusters:
             for pg in r['ClusterParameterGroups']:
-                groups.setdefault(pg['ParameterGroupName'], []).append(
-                    r['ClusterIdentifier']
-                )
+                groups.setdefault(pg['ParameterGroupName'], []).append(r['ClusterIdentifier'])
 
         def get_params(group_name):
             c = local_session(self.manager.session_factory).client('redshift')
             paginator = c.get_paginator('describe_cluster_parameters')
             param_group = list(
                 itertools.chain(
-                    *[
-                        p['Parameters']
-                        for p in paginator.paginate(ParameterGroupName=group_name)
-                    ]
+                    *[p['Parameters'] for p in paginator.paginate(ParameterGroupName=group_name)]
                 )
             )
             params = {}
@@ -357,9 +347,7 @@ class Delete(BaseAction):
                 futures.append(w.submit(self.process_db_set, db_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting redshift set \n %s", f.exception()
-                    )
+                    self.log.error("Exception deleting redshift set \n %s", f.exception())
 
     def process_db_set(self, db_set):
         skip = self.data.get('skip-snapshot', False)
@@ -416,9 +404,7 @@ class RetentionWindow(BaseAction):
                 futures.append(w.submit(self.process_snapshot_retention, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception setting Redshift retention  \n %s", f.exception()
-                    )
+                    self.log.error("Exception setting Redshift retention  \n %s", f.exception())
 
     def process_snapshot_retention(self, cluster):
         current_retention = int(cluster.get(self.date_attribute, 0))
@@ -467,17 +453,13 @@ class Snapshot(BaseAction):
                 futures.append(w.submit(self.process_cluster_snapshot, client, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception creating Redshift snapshot  \n %s", f.exception()
-                    )
+                    self.log.error("Exception creating Redshift snapshot  \n %s", f.exception())
         return clusters
 
     def process_cluster_snapshot(self, client, cluster):
         cluster_tags = cluster.get('Tags')
         client.create_cluster_snapshot(
-            SnapshotIdentifier=snapshot_identifier(
-                'Backup', cluster['ClusterIdentifier']
-            ),
+            SnapshotIdentifier=snapshot_identifier('Backup', cluster['ClusterIdentifier']),
             ClusterIdentifier=cluster['ClusterIdentifier'],
             Tags=cluster_tags,
         )
@@ -516,9 +498,7 @@ class EnhancedVpcRoutine(BaseAction):
                 futures.append(w.submit(self.process_vpc_routing, cluster))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception changing Redshift VPC routing  \n %s", f.exception()
-                    )
+                    self.log.error("Exception changing Redshift VPC routing  \n %s", f.exception())
         return clusters
 
     def process_vpc_routing(self, cluster):
@@ -597,9 +577,7 @@ class RedshiftSetAttributes(BaseAction):
                         AllowVersionUpgrade: true
     """
 
-    schema = type_schema(
-        'set-attributes', attributes={"type": "object"}, required=('attributes',)
-    )
+    schema = type_schema('set-attributes', attributes={"type": "object"}, required=('attributes',))
 
     permissions = ('redshift:ModifyCluster',)
     cluster_mapping = {
@@ -634,9 +612,7 @@ class RedshiftSetAttributes(BaseAction):
                 if (
                     k in self.cluster_mapping
                     and v != jmespath.search(self.cluster_mapping[k], cluster)
-                ) or v != cluster.get('PendingModifiedValues', {}).get(
-                    k, cluster.get(k)
-                ):
+                ) or v != cluster.get('PendingModifiedValues', {}).get(k, cluster.get(k)):
                     modify[k] = v
             if not modify:
                 return
@@ -823,9 +799,7 @@ class RedshiftSnapshot(QueryResourceManager):
     def get_arns(self, resources):
         arns = []
         for r in resources:
-            arns.append(
-                self.generate_arn(r['ClusterIdentifier'] + '/' + r[self.get_model().id])
-            )
+            arns.append(self.generate_arn(r['ClusterIdentifier'] + '/' + r[self.get_model().id]))
         return arns
 
 
@@ -909,9 +883,7 @@ class RedshiftSnapshotDelete(BaseAction):
                 futures.append(w.submit(self.process_snapshot_set, snapshot_set))
             for f in as_completed(futures):
                 if f.exception():
-                    self.log.error(
-                        "Exception deleting snapshot set \n %s", f.exception()
-                    )
+                    self.log.error("Exception deleting snapshot set \n %s", f.exception())
         return snapshots
 
     def process_snapshot_set(self, snapshots_set):
@@ -973,9 +945,7 @@ class RedshiftSnapshotRevokeAccess(BaseAction):
         with self.executor_factory(max_workers=2) as w:
             futures = {}
             for snapshot_set in chunks(snapshots, 25):
-                futures[
-                    w.submit(self.process_snapshot_set, client, snapshot_set)
-                ] = snapshot_set
+                futures[w.submit(self.process_snapshot_set, client, snapshot_set)] = snapshot_set
             for f in as_completed(futures):
                 if f.exception():
                     self.log.exception(

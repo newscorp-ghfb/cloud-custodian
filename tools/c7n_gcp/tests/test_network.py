@@ -9,9 +9,7 @@ from googleapiclient.errors import HttpError
 class FirewallTest(BaseTest):
     def test_firewall_get(self):
         factory = self.replay_flight_data('firewall-get', project_id='cloud-custodian')
-        p = self.load_policy(
-            {'name': 'fw', 'resource': 'gcp.firewall'}, session_factory=factory
-        )
+        p = self.load_policy({'name': 'fw', 'resource': 'gcp.firewall'}, session_factory=factory)
         fw = p.resource_manager.get_resource(
             {
                 'resourceName': 'projects/cloud-custodian/global/firewalls/allow-inbound-xyz',
@@ -29,9 +27,7 @@ class FirewallTest(BaseTest):
                 'name': 'fdelete',
                 'resource': 'gcp.firewall',
                 'filters': [{'name': 'test'}],
-                'actions': [
-                    {'type': 'modify', 'priority': 500, 'targetTags': ['newtag']}
-                ],
+                'actions': [{'type': 'modify', 'priority': 500, 'targetTags': ['newtag']}],
             },
             session_factory=factory,
         )
@@ -40,9 +36,7 @@ class FirewallTest(BaseTest):
         if self.recording:
             time.sleep(5)
         client = p.resource_manager.get_client()
-        result = client.execute_query(
-            'get', {'project': project_id, 'firewall': 'test'}
-        )
+        result = client.execute_query('get', {'project': project_id, 'firewall': 'test'})
         self.assertEqual(result["targetTags"][0], 'newtag')
         self.assertEqual(result["priority"], 500)
 
@@ -64,9 +58,7 @@ class FirewallTest(BaseTest):
             time.sleep(5)
         client = p.resource_manager.get_client()
         try:
-            result = client.execute_query(
-                'get', {'project': project_id, 'firewall': 'test'}
-            )
+            result = client.execute_query('get', {'project': project_id, 'firewall': 'test'})
             self.fail('found deleted firewall: %s' % result)
         except HttpError as e:
             self.assertTrue("was not found" in str(e))
@@ -74,12 +66,8 @@ class FirewallTest(BaseTest):
 
 class NetworkTest(BaseTest):
     def test_network_get(self):
-        factory = self.replay_flight_data(
-            'network-get-resource', project_id='cloud-custodian'
-        )
-        p = self.load_policy(
-            {'name': 'network', 'resource': 'gcp.vpc'}, session_factory=factory
-        )
+        factory = self.replay_flight_data('network-get-resource', project_id='cloud-custodian')
+        p = self.load_policy({'name': 'network', 'resource': 'gcp.vpc'}, session_factory=factory)
         network = p.resource_manager.get_resource(
             {
                 "resourceName": "//compute.googleapis.com/projects/cloud-custodian/"
@@ -92,12 +80,8 @@ class NetworkTest(BaseTest):
 
 class SubnetTest(BaseTest):
     def test_subnet_get(self):
-        factory = self.replay_flight_data(
-            'subnet-get-resource', project_id='cloud-custodian'
-        )
-        p = self.load_policy(
-            {'name': 'subnet', 'resource': 'gcp.subnet'}, session_factory=factory
-        )
+        factory = self.replay_flight_data('subnet-get-resource', project_id='cloud-custodian')
+        p = self.load_policy({'name': 'subnet', 'resource': 'gcp.subnet'}, session_factory=factory)
         subnet = p.resource_manager.get_resource(
             {
                 "resourceName": "//compute.googleapis.com/projects/cloud-custodian/"
@@ -140,9 +124,7 @@ class SubnetTest(BaseTest):
 
     def test_subnet_set_private_api(self):
         project_id = 'cloud-custodian'
-        factory = self.replay_flight_data(
-            'subnet-set-private-api', project_id=project_id
-        )
+        factory = self.replay_flight_data('subnet-set-private-api', project_id=project_id)
         p = self.load_policy(
             {
                 'name': 'one-subnet',

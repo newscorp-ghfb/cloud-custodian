@@ -105,13 +105,9 @@ class Deregister(BaseAction):
     def process(self, images):
         client = local_session(self.manager.session_factory).client('ec2')
         image_count = len(images)
-        images = [
-            i for i in images if self.manager.ctx.options.account_id == i['OwnerId']
-        ]
+        images = [i for i in images if self.manager.ctx.options.account_id == i['OwnerId']]
         if len(images) != image_count:
-            self.log.info(
-                "Implicitly filtered %d non owned images", image_count - len(images)
-            )
+            self.log.info("Implicitly filtered %d non owned images", image_count - len(images))
 
         for i in images:
             self.manager.retry(client.deregister_image, ImageId=i['ImageId'])
@@ -320,9 +316,7 @@ class ImageUnusedFilter(Filter):
     def _pull_asg_images(self):
         asgs = self.manager.get_resource_manager('asg').resources()
         image_ids = set()
-        lcfgs = set(
-            a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a
-        )
+        lcfgs = set(a['LaunchConfigurationName'] for a in asgs if 'LaunchConfigurationName' in a)
         lcfg_mgr = self.manager.get_resource_manager('launch-config')
 
         if lcfgs:
@@ -335,9 +329,7 @@ class ImageUnusedFilter(Filter):
             )
 
         tmpl_mgr = self.manager.get_resource_manager('launch-template-version')
-        for tversion in tmpl_mgr.get_resources(
-            list(tmpl_mgr.get_asg_templates(asgs).keys())
-        ):
+        for tversion in tmpl_mgr.get_resources(list(tmpl_mgr.get_asg_templates(asgs).keys())):
             image_ids.add(tversion['LaunchTemplateData'].get('ImageId'))
         return image_ids
 
@@ -389,14 +381,11 @@ class AmiCrossAccountFilter(CrossAccountAccessFilter):
         with self.executor_factory(max_workers=2) as w:
             futures = []
             for resource_set in chunks(resources, 20):
-                futures.append(
-                    w.submit(self.process_resource_set, client, accounts, resource_set)
-                )
+                futures.append(w.submit(self.process_resource_set, client, accounts, resource_set))
             for f in as_completed(futures):
                 if f.exception():
                     self.log.error(
-                        "Exception checking cross account access \n %s"
-                        % (f.exception())
+                        "Exception checking cross account access \n %s" % (f.exception())
                     )
                     continue
                 results.extend(f.result())

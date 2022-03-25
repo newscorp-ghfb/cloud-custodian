@@ -261,20 +261,16 @@ class KeyVaultTest(BaseTest):
                 "permissions": {"keys": ["Get"]},
             }
         ]
-        transformed_access_policies = (
-            KeyVaultUpdateAccessPolicyAction._transform_access_policies(
-                mock_access_policies
-            ).get("accessPolicies")[0]
-        )
+        transformed_access_policies = KeyVaultUpdateAccessPolicyAction._transform_access_policies(
+            mock_access_policies
+        ).get("accessPolicies")[0]
         self.assertTrue("objectId" in transformed_access_policies)
         self.assertTrue("tenantId" in transformed_access_policies)
         self.assertTrue("permissions" in transformed_access_policies)
 
     def _get_key_vault_client_string(self):
         client = (
-            local_session(Session)
-            .client('azure.mgmt.keyvault.KeyVaultManagementClient')
-            .vaults
+            local_session(Session).client('azure.mgmt.keyvault.KeyVaultManagementClient').vaults
         )
         return client.__module__ + '.' + client.__class__.__name__
 

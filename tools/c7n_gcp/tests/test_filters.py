@@ -30,9 +30,7 @@ class TestGCPMetricsFilter(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        metric_name = (
-            'compute.googleapis.com/instance/cpu/utilization.ALIGN_MEAN.REDUCE_NONE'
-        )
+        metric_name = 'compute.googleapis.com/instance/cpu/utilization.ALIGN_MEAN.REDUCE_NONE'
         metric = resources[0]['c7n.metrics'][metric_name]
         self.assertGreater(0.1, metric['points'][0]['value']['doubleValue'])
 
@@ -61,9 +59,7 @@ class TestGCPMetricsFilter(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        metric_name = (
-            'compute.googleapis.com/instance/cpu/utilization.ALIGN_MEAN.REDUCE_NONE'
-        )
+        metric_name = 'compute.googleapis.com/instance/cpu/utilization.ALIGN_MEAN.REDUCE_NONE'
         metric = resources[0]['c7n.metrics'][metric_name]
         self.assertGreater(0.1, metric['points'][0]['value']['doubleValue'])
 
@@ -94,9 +90,7 @@ class TestGCPMetricsFilter(BaseTest):
         self.assertEqual(len(resources), 0)
 
     def test_batch_resources(self):
-        policy = self.load_policy(
-            {"name": "test_batch_resources", "resource": "gcp.instance"}
-        )
+        policy = self.load_policy({"name": "test_batch_resources", "resource": "gcp.instance"})
 
         metric_filter = GCPMetricsFilter(
             {
@@ -116,13 +110,9 @@ class TestGCPMetricsFilter(BaseTest):
         self.assertEqual(len(batch), 2)
         self.assertLess(len(batch[0]), 11000)
         self.assertIn('resource.labels.zone = "us-east4-d"', batch[0])
-        self.assertIn(
-            'metric.type = "compute.googleapis.com/instance/cpu/utilization"', batch[0]
-        )
+        self.assertIn('metric.type = "compute.googleapis.com/instance/cpu/utilization"', batch[0])
         self.assertIn('resource.labels.zone = "us-east4-d"', batch[1])
-        self.assertIn(
-            'metric.type = "compute.googleapis.com/instance/cpu/utilization"', batch[1]
-        )
+        self.assertIn('metric.type = "compute.googleapis.com/instance/cpu/utilization"', batch[1])
 
 
 class TestSecurityComandCenterFindingsFilter(BaseTest):

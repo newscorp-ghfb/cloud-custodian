@@ -77,9 +77,7 @@ class FileCacheManager:
     def __init__(self, config):
         self.config = config
         self.cache_period = config.cache_period
-        self.cache_path = os.path.abspath(
-            os.path.expanduser(os.path.expandvars(config.cache))
-        )
+        self.cache_path = os.path.abspath(os.path.expanduser(os.path.expandvars(config.cache)))
         self.data = {}
 
     def get(self, key):
@@ -90,10 +88,7 @@ class FileCacheManager:
         if self.data:
             return True
         if os.path.isfile(self.cache_path):
-            if (
-                time.time() - os.stat(self.cache_path).st_mtime
-                > self.config.cache_period * 60
-            ):
+            if time.time() - os.stat(self.cache_path).st_mtime > self.config.cache_period * 60:
                 return False
             with open(self.cache_path, 'rb') as fh:
                 try:
@@ -116,9 +111,7 @@ class FileCacheManager:
                 try:
                     os.makedirs(directory)
                 except Exception as e:
-                    log.warning(
-                        "Could not create directory: %s err: %s" % (directory, e)
-                    )
+                    log.warning("Could not create directory: %s err: %s" % (directory, e))
 
     def size(self):
         return os.path.exists(self.cache_path) and os.path.getsize(self.cache_path) or 0

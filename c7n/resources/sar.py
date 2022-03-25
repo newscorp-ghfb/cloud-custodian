@@ -35,9 +35,7 @@ class Delete(Action):
     def process(self, resources):
         client = local_session(self.manager.session_factory).client('serverlessrepo')
         for r in resources:
-            self.manager.retry(
-                client.delete_application, ApplicationId=r['ApplicationId']
-            )
+            self.manager.retry(client.delete_application, ApplicationId=r['ApplicationId'])
 
 
 @ServerlessApp.filter_registry.register('cross-account')

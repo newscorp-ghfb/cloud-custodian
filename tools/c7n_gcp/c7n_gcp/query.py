@@ -55,9 +55,7 @@ class ResourceQuery:
                     results.extend(page_items)
             return results
         else:
-            return jmespath.search(
-                path, client.execute_query(enum_op, verb_arguments=params)
-            )
+            return jmespath.search(path, client.execute_query(enum_op, verb_arguments=params))
 
 
 @sources.register('describe-gcp')
@@ -112,9 +110,7 @@ class AssetInventory:
         resources = []
 
         results = list(search_client.execute_paged_query('searchAll', query))
-        for resource_set in chunks(
-            itertools.chain(*[rs['results'] for rs in results]), 100
-        ):
+        for resource_set in chunks(itertools.chain(*[rs['results'] for rs in results]), 100):
             rquery = {
                 'parent': query['scope'],
                 'contentType': 'RESOURCE',
@@ -283,11 +279,7 @@ class ChildResourceManager(QueryResourceManager):
 
     def get_parent_resource_query(self):
         parent_spec = self.resource_type.parent_spec
-        enabled = (
-            parent_spec['use_child_query']
-            if 'use_child_query' in parent_spec
-            else False
-        )
+        enabled = parent_spec['use_child_query'] if 'use_child_query' in parent_spec else False
         if enabled and 'query' in self.data:
             return self.data.get('query')
 

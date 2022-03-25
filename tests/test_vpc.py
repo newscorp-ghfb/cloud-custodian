@@ -18,9 +18,7 @@ def test_codebuild_unused(test, aws_code_build_vpc):
         session_factory=factory,
     )
     unused = p.resource_manager.filters[0]
-    test.patch(
-        unused, 'get_scanners', lambda: (('codebuild', unused.get_codebuild_sgs),)
-    )
+    test.patch(unused, 'get_scanners', lambda: (('codebuild', unused.get_codebuild_sgs),))
     resources = p.run()
     sg_names = [resource['GroupName'] for resource in resources]
     assert 'example2' in sg_names
@@ -107,9 +105,7 @@ class VpcTest(BaseTest):
                 'Type': 'AwsEc2Vpc',
             },
         )
-        shape_validate(
-            formatted['Details']['AwsEc2Vpc'], 'AwsEc2VpcDetails', 'securityhub'
-        )
+        shape_validate(formatted['Details']['AwsEc2Vpc'], 'AwsEc2VpcDetails', 'securityhub')
 
     def test_flow_logs_s3_destination(self):
         factory = self.replay_flight_data('test_vpc_flow_log_s3_dest')
@@ -223,9 +219,7 @@ class VpcTest(BaseTest):
             {
                 "name": "dns-hostnames-and-support-enabled",
                 "resource": "vpc",
-                "filters": [
-                    {"type": "vpc-attributes", "dnshostnames": True, "dnssupport": True}
-                ],
+                "filters": [{"type": "vpc-attributes", "dnshostnames": True, "dnssupport": True}],
             },
             session_factory=self.session_factory,
         )
@@ -285,9 +279,7 @@ class VpcTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertTrue(
-            "vpc-072f438c953672ace" in resources[0]["c7n:matched-vpc-endpoint"]
-        )
+        self.assertTrue("vpc-072f438c953672ace" in resources[0]["c7n:matched-vpc-endpoint"])
 
     def test_subnet_endpoint_filter(self):
         factory = self.replay_flight_data("test_subnet_endpoint_filter")
@@ -307,9 +299,7 @@ class VpcTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 2)
-        self.assertTrue(
-            "subnet-068dfbf3f275a6ae8" in resources[0]["c7n:matched-vpc-endpoint"]
-        )
+        self.assertTrue("subnet-068dfbf3f275a6ae8" in resources[0]["c7n:matched-vpc-endpoint"])
 
 
 class NetworkLocationTest(BaseTest):
@@ -319,9 +309,9 @@ class NetworkLocationTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")[
-            "Subnet"
-        ]["SubnetId"]
+        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")["Subnet"][
+            "SubnetId"
+        ]
         self.addCleanup(client.delete_subnet, SubnetId=web_sub_id)
 
         web_sg_id = client.create_security_group(
@@ -334,9 +324,9 @@ class NetworkLocationTest(BaseTest):
         )["GroupId"]
         self.addCleanup(client.delete_security_group, GroupId=sg_id)
 
-        nic = client.create_network_interface(
-            SubnetId=web_sub_id, Groups=[sg_id, web_sg_id]
-        )["NetworkInterface"]["NetworkInterfaceId"]
+        nic = client.create_network_interface(SubnetId=web_sub_id, Groups=[sg_id, web_sg_id])[
+            "NetworkInterface"
+        ]["NetworkInterfaceId"]
         self.addCleanup(client.delete_network_interface, NetworkInterfaceId=nic)
 
         client.create_tags(
@@ -385,9 +375,9 @@ class NetworkLocationTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")[
-            "Subnet"
-        ]["SubnetId"]
+        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")["Subnet"][
+            "SubnetId"
+        ]
         self.addCleanup(client.delete_subnet, SubnetId=web_sub_id)
 
         web_sg_id = client.create_security_group(
@@ -400,18 +390,16 @@ class NetworkLocationTest(BaseTest):
         )["GroupId"]
         self.addCleanup(client.delete_security_group, GroupId=db_sg_id)
 
-        nic = client.create_network_interface(
-            SubnetId=web_sub_id, Groups=[web_sg_id, db_sg_id]
-        )["NetworkInterface"]["NetworkInterfaceId"]
+        nic = client.create_network_interface(SubnetId=web_sub_id, Groups=[web_sg_id, db_sg_id])[
+            "NetworkInterface"
+        ]["NetworkInterfaceId"]
         self.addCleanup(client.delete_network_interface, NetworkInterfaceId=nic)
 
         client.create_tags(
             Resources=[web_sg_id, web_sub_id, nic],
             Tags=[{"Key": "Location", "Value": "web"}],
         )
-        client.create_tags(
-            Resources=[db_sg_id], Tags=[{"Key": "Location", "Value": "db"}]
-        )
+        client.create_tags(Resources=[db_sg_id], Tags=[{"Key": "Location", "Value": "db"}])
 
         p = self.load_policy(
             {
@@ -438,9 +426,9 @@ class NetworkLocationTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")[
-            "Subnet"
-        ]["SubnetId"]
+        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")["Subnet"][
+            "SubnetId"
+        ]
         self.addCleanup(client.delete_subnet, SubnetId=web_sub_id)
 
         web_sg_id = client.create_security_group(
@@ -453,18 +441,16 @@ class NetworkLocationTest(BaseTest):
         )["GroupId"]
         self.addCleanup(client.delete_security_group, GroupId=db_sg_id)
 
-        nic = client.create_network_interface(
-            SubnetId=web_sub_id, Groups=[web_sg_id, db_sg_id]
-        )["NetworkInterface"]["NetworkInterfaceId"]
+        nic = client.create_network_interface(SubnetId=web_sub_id, Groups=[web_sg_id, db_sg_id])[
+            "NetworkInterface"
+        ]["NetworkInterfaceId"]
         self.addCleanup(client.delete_network_interface, NetworkInterfaceId=nic)
 
         client.create_tags(
             Resources=[web_sg_id, web_sub_id, nic],
             Tags=[{"Key": "Location", "Value": "web"}],
         )
-        client.create_tags(
-            Resources=[db_sg_id], Tags=[{"Key": "Location", "Value": "db"}]
-        )
+        client.create_tags(Resources=[db_sg_id], Tags=[{"Key": "Location", "Value": "db"}])
 
         p = self.load_policy(
             {
@@ -507,9 +493,9 @@ class NetworkLocationTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")[
-            "Subnet"
-        ]["SubnetId"]
+        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")["Subnet"][
+            "SubnetId"
+        ]
         self.addCleanup(client.delete_subnet, SubnetId=web_sub_id)
 
         web_sg_id = client.create_security_group(
@@ -554,9 +540,7 @@ class NetworkLocationTest(BaseTest):
         )
 
     def test_network_compare_location_resource_missing(self):
-        self.factory = self.replay_flight_data(
-            "test_network_compare_location_resource_missing"
-        )
+        self.factory = self.replay_flight_data("test_network_compare_location_resource_missing")
         p = self.load_policy(
             {
                 "name": "compare",
@@ -595,9 +579,9 @@ class NetworkLocationTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")[
-            "Subnet"
-        ]["SubnetId"]
+        web_sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.9.0/24")["Subnet"][
+            "SubnetId"
+        ]
         self.addCleanup(client.delete_subnet, SubnetId=web_sub_id)
 
         web_sg_id = client.create_security_group(
@@ -653,9 +637,9 @@ class NetworkAclTest(BaseTest):
         client = factory().client("ec2")
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
-        acls = client.describe_network_acls(
-            Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
-        )["NetworkAcls"]
+        acls = client.describe_network_acls(Filters=[{"Name": "vpc-id", "Values": [vpc_id]}])[
+            "NetworkAcls"
+        ]
 
         client.delete_network_acl_entry(
             NetworkAclId=acls[0]["NetworkAclId"],
@@ -730,9 +714,7 @@ class NetworkInterfaceTest(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            [k for k in resources[0] if k.startswith("c7n")], ["c7n:MatchedFilters"]
-        )
+        self.assertEqual([k for k in resources[0] if k.startswith("c7n")], ["c7n:MatchedFilters"])
 
     def test_interface_delete(self):
         factory = self.replay_flight_data("test_network_interface_delete")
@@ -778,9 +760,7 @@ class NetworkInterfaceTest(BaseTest):
         vpc_id = client.create_vpc(CidrBlock="10.4.0.0/16")["Vpc"]["VpcId"]
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
 
-        sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.8.0/24")["Subnet"][
-            "SubnetId"
-        ]
+        sub_id = client.create_subnet(VpcId=vpc_id, CidrBlock="10.4.8.0/24")["Subnet"]["SubnetId"]
         self.addCleanup(client.delete_subnet, SubnetId=sub_id)
 
         sg_id = client.create_security_group(
@@ -793,9 +773,7 @@ class NetworkInterfaceTest(BaseTest):
         )["GroupId"]
         self.addCleanup(client.delete_security_group, GroupId=qsg_id)
 
-        net = client.create_network_interface(SubnetId=sub_id, Groups=[sg_id])[
-            "NetworkInterface"
-        ]
+        net = client.create_network_interface(SubnetId=sub_id, Groups=[sg_id])["NetworkInterface"]
         net_id = net["NetworkInterfaceId"]
         self.addCleanup(client.delete_network_interface, NetworkInterfaceId=net_id)
 
@@ -944,9 +922,7 @@ class NetworkAddrTest(BaseTest):
 
     def test_elasticip_alias(self):
         try:
-            self.load_policy(
-                {'name': 'eip', 'resource': 'aws.elastic-ip'}, validate=True
-            )
+            self.load_policy({'name': 'eip', 'resource': 'aws.elastic-ip'}, validate=True)
         except PolicyValidationError:
             raise
             self.fail("elastic ip alias failed")
@@ -959,9 +935,7 @@ class NetworkAddrTest(BaseTest):
 
         network_addrs = ec2.describe_addresses(AllocationIds=["eipalloc-2da7a824"])
         self.assertEqual(len(network_addrs["Addresses"]), 1)
-        self.assertEqual(
-            network_addrs["Addresses"][0]["AssociationId"], "eipassoc-e551ce3f"
-        )
+        self.assertEqual(network_addrs["Addresses"][0]["AssociationId"], "eipassoc-e551ce3f")
 
         self.assert_policy_released(factory, ec2, network_addrs["Addresses"][0], True)
 
@@ -973,9 +947,7 @@ class NetworkAddrTest(BaseTest):
 
         network_addrs = ec2.describe_addresses(AllocationIds=["eipalloc-ebaaa5e2"])
         self.assertEqual(len(network_addrs["Addresses"]), 1)
-        self.assertEqual(
-            network_addrs["Addresses"][0]["AssociationId"], "eipassoc-8a8d4647"
-        )
+        self.assertEqual(network_addrs["Addresses"][0]["AssociationId"], "eipassoc-8a8d4647")
 
         self.assert_policy_released(factory, ec2, network_addrs["Addresses"][0], True)
 
@@ -987,9 +959,7 @@ class NetworkAddrTest(BaseTest):
 
         network_addrs = ec2.describe_addresses(AllocationIds=["eipalloc-983b3391"])
         self.assertEqual(len(network_addrs["Addresses"]), 1)
-        self.assertEqual(
-            network_addrs["Addresses"][0]["AssociationId"], "eipassoc-eb20eb26"
-        )
+        self.assertEqual(network_addrs["Addresses"][0]["AssociationId"], "eipassoc-eb20eb26")
 
         self.assert_policy_release_failed(factory, ec2, network_addrs["Addresses"][0])
 
@@ -1107,9 +1077,7 @@ class SecurityGroupTest(BaseTest):
     def test_id_selector(self):
         p = self.load_policy({"name": "sg", "resource": "security-group"})
         self.assertEqual(
-            p.resource_manager.match_ids(
-                ["vpc-asdf", "i-asdf3e", "sg-1235a", "sg-4671"]
-            ),
+            p.resource_manager.match_ids(["vpc-asdf", "i-asdf3e", "sg-1235a", "sg-4671"]),
             ["sg-1235a", "sg-4671"],
         )
 
@@ -1127,9 +1095,7 @@ class SecurityGroupTest(BaseTest):
         client.accept_vpc_peering_connection(VpcPeeringConnectionId=peer_id)
         self.addCleanup(client.delete_vpc, VpcId=vpc_id)
         self.addCleanup(client.delete_vpc, VpcId=vpc2_id)
-        self.addCleanup(
-            client.delete_vpc_peering_connection, VpcPeeringConnectionId=peer_id
-        )
+        self.addCleanup(client.delete_vpc_peering_connection, VpcPeeringConnectionId=peer_id)
         sg_id = client.create_security_group(
             GroupName="web-tier", VpcId=vpc_id, Description="for apps"
         )["GroupId"]
@@ -1207,9 +1173,7 @@ class SecurityGroupTest(BaseTest):
             session_factory=factory,
         )
         unused = p.resource_manager.filters[0]
-        self.patch(
-            unused, 'get_scanners', lambda: (('ecs-cwe', unused.get_ecs_cwe_sgs),)
-        )
+        self.patch(unused, 'get_scanners', lambda: (('ecs-cwe', unused.get_ecs_cwe_sgs),))
         resources = p.run()
         assert resources == []
 
@@ -1311,9 +1275,9 @@ class SecurityGroupTest(BaseTest):
             ]
         )["SecurityGroups"][0]["GroupId"]
 
-        sg1_id = client.create_security_group(
-            GroupName="sg1", VpcId=vpc_id, Description="SG 1"
-        )["GroupId"]
+        sg1_id = client.create_security_group(GroupName="sg1", VpcId=vpc_id, Description="SG 1")[
+            "GroupId"
+        ]
         self.addCleanup(client.delete_security_group, GroupId=sg1_id)
         client.authorize_security_group_ingress(
             GroupId=sg1_id,
@@ -1344,9 +1308,9 @@ class SecurityGroupTest(BaseTest):
             CidrIp="10.2.0.0/16",
         )
 
-        sg2_id = client.create_security_group(
-            GroupName="sg2", VpcId=vpc_id, Description="SG 2"
-        )["GroupId"]
+        sg2_id = client.create_security_group(GroupName="sg2", VpcId=vpc_id, Description="SG 2")[
+            "GroupId"
+        ]
         self.addCleanup(client.delete_security_group, GroupId=sg2_id)
         client.authorize_security_group_egress(
             GroupId=sg2_id,
@@ -1523,9 +1487,7 @@ class SecurityGroupTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["GroupId"], sg_id)
-        group_info = client.describe_security_groups(GroupIds=[sg_id])[
-            "SecurityGroups"
-        ][0]
+        group_info = client.describe_security_groups(GroupIds=[sg_id])["SecurityGroups"][0]
         self.assertEqual(group_info.get("IpPermissions", []), [])
 
     def test_security_group_post_finding(self):
@@ -1829,9 +1791,7 @@ class SecurityGroupTest(BaseTest):
                 },
             ],
         )
-        group_info = client.describe_security_groups(GroupIds=[sg_id])[
-            "SecurityGroups"
-        ][0]
+        group_info = client.describe_security_groups(GroupIds=[sg_id])["SecurityGroups"][0]
         self.assertEqual(
             group_info.get("IpPermissions", []),
             [
@@ -1870,9 +1830,7 @@ class SecurityGroupTest(BaseTest):
             {
                 "name": "ingress-access",
                 "resource": "security-group",
-                "filters": [
-                    {"type": "ingress", "Cidr": {"value": "10.0.0.0/8"}, "Ports": [53]}
-                ],
+                "filters": [{"type": "ingress", "Cidr": {"value": "10.0.0.0/8"}, "Ports": [53]}],
             }
         )
         resources = [
@@ -1995,9 +1953,7 @@ class SecurityGroupTest(BaseTest):
                         "IpRanges": [],
                         "PrefixListIds": [],
                         "ToPort": 22,
-                        "UserIdGroupPairs": [
-                            {"UserId": "123456789012", "GroupId": "sg-abcd1234"}
-                        ],
+                        "UserIdGroupPairs": [{"UserId": "123456789012", "GroupId": "sg-abcd1234"}],
                     }
                 ],
                 "IpPermissionsEgress": [],
@@ -2080,9 +2036,7 @@ class SecurityGroupTest(BaseTest):
                         ],
                         "PrefixListIds": [],
                         "ToPort": 22,
-                        "UserIdGroupPairs": [
-                            {"UserId": "123456789012", "GroupId": "sg-abcd5678"}
-                        ],
+                        "UserIdGroupPairs": [{"UserId": "123456789012", "GroupId": "sg-abcd5678"}],
                     }
                 ],
                 "IpPermissionsEgress": [],
@@ -2177,9 +2131,7 @@ class SecurityGroupTest(BaseTest):
         self.assertEqual(len(manager.filter_resources(resources)), 1)
 
     def test_security_group_reference_ingress_filter(self):
-        factory = self.replay_flight_data(
-            "test_security_group_reference_ingress_filter"
-        )
+        factory = self.replay_flight_data("test_security_group_reference_ingress_filter")
         p = self.load_policy(
             {
                 "name": "security_group_reference_ingress_filter",
@@ -2247,9 +2199,7 @@ class SecurityGroupTest(BaseTest):
                     "IpProtocol": "-1",
                     "PrefixListIds": [],
                     "IpRanges": [],
-                    "UserIdGroupPairs": [
-                        {"UserId": "644160558196", "GroupId": "sg-b744bafc"}
-                    ],
+                    "UserIdGroupPairs": [{"UserId": "644160558196", "GroupId": "sg-b744bafc"}],
                     "Ipv6Ranges": [],
                 }
             ],
@@ -2644,9 +2594,7 @@ class EndpointTest(BaseTest):
             {
                 'name': 'vpc-endpoint-cross-account',
                 'resource': 'vpc-endpoint',
-                'filters': [
-                    {'type': 'cross-account', 'whitelist_orgids': ['o-4amkskbcf1']}
-                ],
+                'filters': [{'type': 'cross-account', 'whitelist_orgids': ['o-4amkskbcf1']}],
             },
             session_factory=session_factory,
         )
@@ -2731,9 +2679,7 @@ class EndpointTest(BaseTest):
                 {
                     'FromPort': 443,
                     'IpProtocol': 'tcp',
-                    'IpRanges': [
-                        {'CidrIp': '0.0.0.0/0', 'Description': 'SSL To The World'}
-                    ],
+                    'IpRanges': [{'CidrIp': '0.0.0.0/0', 'Description': 'SSL To The World'}],
                     'Ipv6Ranges': [],
                     'PrefixListIds': [],
                     'ToPort': 443,
@@ -2768,9 +2714,7 @@ class InternetGatewayTest(BaseTest):
 
         client = factory(region="us-east-1").client("ec2")
         internet_gateways = client.describe_internet_gateways(
-            Filters=[
-                {"Name": "resource-id", "Values": [resources[0]["InternetGatewayId"]]}
-            ]
+            Filters=[{"Name": "resource-id", "Values": [resources[0]["InternetGatewayId"]]}]
         )["InternetGateways"]
         self.assertFalse(internet_gateways)
 
@@ -2778,9 +2722,7 @@ class InternetGatewayTest(BaseTest):
         mock_factory = MagicMock()
         mock_factory.region = 'us-east-1'
         mock_factory().ClientError = BotoClientError
-        mock_factory().client(
-            'ec2'
-        ).delete_internet_gateway.side_effect = BotoClientError(
+        mock_factory().client('ec2').delete_internet_gateway.side_effect = BotoClientError(
             {'Error': {'Code': 'InvalidInternetGatewayId.NotFound'}},
             operation_name='delete_internet_gateway',
         )
@@ -3086,9 +3028,7 @@ class FlowLogsTest(BaseTest):
         self.assertFalse(logs)
 
     def test_vpc_set_flow_logs_maxaggrinterval(self):
-        session_factory = self.replay_flight_data(
-            "test_vpc_set_flow_logs_maxaggrinterval"
-        )
+        session_factory = self.replay_flight_data("test_vpc_set_flow_logs_maxaggrinterval")
         p = self.load_policy(
             {
                 "name": "c7n-vpc-flow-logs-maxinterval",
@@ -3253,15 +3193,11 @@ class TrafficMirror(BaseTest):
         )
         resources = p.run()
         self.assertEqual(len(resources), 1)
-        self.assertEqual(
-            resources[0]["TrafficMirrorSessionId"], "tms-084dc356a819e99ae"
-        )
+        self.assertEqual(resources[0]["TrafficMirrorSessionId"], "tms-084dc356a819e99ae")
         client = session_factory(region="us-east-1").client("ec2")
         if self.recording:
             time.sleep(5)
-        self.assertEqual(
-            client.describe_traffic_mirror_sessions().get('TrafficMirrorSessions'), []
-        )
+        self.assertEqual(client.describe_traffic_mirror_sessions().get('TrafficMirrorSessions'), [])
 
     def test_traffic_mirror_target(self):
         session_factory = self.replay_flight_data('test_traffic_mirror_target')

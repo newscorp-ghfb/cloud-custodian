@@ -97,9 +97,7 @@ class HttpRecorder(FlightRecorder):
             if not content:
                 content = '{}'
             recorded['body'] = json.loads(content)
-            fh.write(
-                sanitize_project_name(json.dumps(recorded, indent=2)).encode('utf8')
-            )
+            fh.write(sanitize_project_name(json.dumps(recorded, indent=2)).encode('utf8'))
 
         return response, content
 
@@ -128,9 +126,7 @@ class HttpReplay(FlightRecorder):
     ):
         if (method, uri) in self.static_responses:
             return (
-                Response(
-                    {'status': '200', 'content-type': 'application/json; charset=UTF-8'}
-                ),
+                Response({'status': '200', 'content-type': 'application/json; charset=UTF-8'}),
                 self.static_responses[(method, uri)],
             )
 

@@ -73,9 +73,7 @@ class PolicyCompliance(BaseTest):
     @patch("azure.mgmt.resource.policy.PolicyClient")
     def test_find_by_name_definition(self, client_mock, policy_mock):
         policy_mock.return_value.value = []
-        client_mock.policy_definitions.list.return_value = [
-            PolicyDefinition(display_name='TEST')
-        ]
+        client_mock.policy_definitions.list.return_value = [PolicyDefinition(display_name='TEST')]
 
         p = self.load_policy(
             {

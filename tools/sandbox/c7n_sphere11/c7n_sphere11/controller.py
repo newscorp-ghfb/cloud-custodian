@@ -31,9 +31,7 @@ class Controller:
         self.account_sessions = {}
         self.resource_managers = {}
 
-        self.db = LockDb(
-            boto3.Session(), config['db']['lock_table'], config['db'].get('endpoint')
-        )
+        self.db = LockDb(boto3.Session(), config['db']['lock_table'], config['db'].get('endpoint'))
 
     def get_session(self, account_id):
         """Get an active session in the target account."""
@@ -70,9 +68,7 @@ class Controller:
                 continue
             if resource_id.startswith(id_prefix):
                 return rmgr
-        raise UnknownResourceType(
-            "resource:%s not a supported resource type" % resource_id
-        )
+        raise UnknownResourceType("resource:%s not a supported resource type" % resource_id)
 
     def get_resource_parent_id(self, resource_id, resource):
         return resource['VpcId']
@@ -95,9 +91,7 @@ class Controller:
             )
         return delta
 
-    def get_account_security_group_delta(
-        self, session, region, rid, records, endpoint, role
-    ):
+    def get_account_security_group_delta(self, session, region, rid, records, endpoint, role):
         manager = self.get_resource_manager(
             session,
             region,
@@ -225,9 +219,7 @@ class Controller:
 
             for p in pending:
                 m = self.get_resource_class(p['ResourceId']).get_model()
-                n = datetime.datetime.utcfromtimestamp(p['LockDate']).replace(
-                    tzinfo=UTC
-                )
+                n = datetime.datetime.utcfromtimestamp(p['LockDate']).replace(tzinfo=UTC)
                 config_items = config.get_resource_config_history(
                     resourceId=p['ResourceId'],
                     earlierTime=n,
@@ -236,8 +228,7 @@ class Controller:
                 ).get('configurationItems', ())
 
                 log.info(
-                    "processing pending %s %s found:%d"
-                    % (p['ResourceId'], n, bool(config_items))
+                    "processing pending %s %s found:%d" % (p['ResourceId'], n, bool(config_items))
                 )
 
                 if not config_items:
@@ -256,9 +247,7 @@ class Controller:
 
                 self.db.save(p)
 
-                log.info(
-                    "locked pending %s %s delay:%d" % (p['ResourceId'], n, float(delay))
-                )
+                log.info("locked pending %s %s delay:%d" % (p['ResourceId'], n, float(delay)))
 
                 if topic:
                     sns.publish(TopicArn=topic, Message=json.dumps(p, cls=Encoder))

@@ -71,11 +71,7 @@ def render_periodic(p, policy_lambda, sam):
 def render_cwe(p, policy_lambda, sam):
     properties = render_function_properties(p, policy_lambda)
 
-    events = [
-        e
-        for e in policy_lambda.get_events(None)
-        if isinstance(e, mu.CloudWatchEventSource)
-    ]
+    events = [e for e in policy_lambda.get_events(None) if isinstance(e, mu.CloudWatchEventSource)]
     if not events:
         return
 
@@ -131,8 +127,7 @@ SAM_RENDER_FUNCS = {
 def dispatch_render(p, sam):
     if p.execution_mode not in SAM_RENDER_FUNCS:
         raise ValueError(
-            "Unsupported sam deploy mode (%s) on policy: %s"
-            % (p.execution_mode, p.name)
+            "Unsupported sam deploy mode (%s) on policy: %s" % (p.execution_mode, p.name)
         )
     render_func = SAM_RENDER_FUNCS[p.execution_mode]
     if render_func is None:
@@ -176,9 +171,7 @@ def main():
     parser = setup_parser()
     options = parser.parse_args()
     collection = (
-        PolicyLoader(Config.empty())
-        .load_file(options.config_file)
-        .filter(options.policy_filter)
+        PolicyLoader(Config.empty()).load_file(options.config_file).filter(options.policy_filter)
     )
 
     sam = {

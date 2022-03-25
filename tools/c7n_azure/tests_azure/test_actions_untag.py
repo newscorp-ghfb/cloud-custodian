@@ -16,9 +16,7 @@ class ActionsRemoveTagTest(BaseTest):
         return RemoveTag(data=data, manager=Mock())
 
     def test_schema_validate(self):
-        self.assertTrue(
-            self.load_policy(tools.get_policy([{'type': 'untag', 'tags': ['test']}]))
-        )
+        self.assertTrue(self.load_policy(tools.get_policy([{'type': 'untag', 'tags': ['test']}])))
 
         with self.assertRaises(FilterValidationError):
             # Must specify tags to remove

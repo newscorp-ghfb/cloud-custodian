@@ -18,9 +18,7 @@ class CloudBillingAccountTest(BaseTest):
         )
 
         billingaccount_resources = policy.run()
-        self.assertEqual(
-            billingaccount_resources[0]['name'], billingaccount_resource_name
-        )
+        self.assertEqual(billingaccount_resources[0]['name'], billingaccount_resource_name)
 
     def test_billingaccount_get(self):
         billingaccount_resource_name = 'billingAccounts/CU570D-1A4CU5-70D1A4'

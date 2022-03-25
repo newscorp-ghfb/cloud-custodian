@@ -52,17 +52,11 @@ def policy_command(f):
                 errors += 1
                 continue
             except yaml.YAMLError as e:
-                log.error(
-                    "yaml syntax error loading policy file ({}) error:\n {}".format(
-                        fp, e
-                    )
-                )
+                log.error("yaml syntax error loading policy file ({}) error:\n {}".format(fp, e))
                 errors += 1
                 continue
             except ValueError as e:
-                log.error(
-                    'problem loading policy file ({}) error: {}'.format(fp, str(e))
-                )
+                log.error('problem loading policy file ({}) error: {}'.format(fp, str(e)))
                 errors += 1
                 continue
             except PolicyValidationError as e:
@@ -72,9 +66,7 @@ def policy_command(f):
             if collection is None:
                 log.debug('Loaded file {}. Contained no policies.'.format(fp))
             else:
-                log.debug(
-                    'Loaded file {}. Contains {} policies'.format(fp, len(collection))
-                )
+                log.debug('Loaded file {}. Contains {} policies'.format(fp, len(collection)))
                 all_policies = all_policies + collection
 
         if errors > 0:
@@ -136,9 +128,7 @@ def _load_vars(options):
         try:
             vars = load_file(options.vars)
         except IOError as e:
-            log.error(
-                'Problem loading vars file "{}": {}'.format(options.vars, e.strerror)
-            )
+            log.error('Problem loading vars file "{}": {}'.format(options.vars, e.strerror))
             sys.exit(1)
 
     # TODO - provide builtin vars here (such as account)
@@ -152,16 +142,10 @@ def _print_no_policies_warning(options, policies):
 
         log.warning("Filters:")
         if options.policy_filters:
-            log.warning(
-                "    Policy name filter (-p): {}".format(
-                    ", ".join(options.policy_filters)
-                )
-            )
+            log.warning("    Policy name filter (-p): {}".format(", ".join(options.policy_filters)))
         if options.resource_types:
             log.warning(
-                "    Resource type filter (-t): {}".format(
-                    ", ".join(options.resource_types)
-                )
+                "    Resource type filter (-t): {}".format(", ".join(options.resource_types))
             )
 
         log.warning("Available policies:")
@@ -224,9 +208,7 @@ def validate(options):
         with open(config_file) as fh:
             if fmt in ('yml', 'yaml', 'json'):
                 # our loader is safe loader derived.
-                data = yaml.load(
-                    fh.read(), Loader=DuplicateKeyCheckLoader
-                )  # nosec nosemgrep
+                data = yaml.load(fh.read(), Loader=DuplicateKeyCheckLoader)  # nosec nosemgrep
             else:
                 log.error("The config file must end in .json, .yml or .yaml.")
                 raise ValueError("The config file must end in .json, .yml or .yaml.")
@@ -247,8 +229,7 @@ def validate(options):
         if len(dupes) >= 1:
             errors.append(
                 ValueError(
-                    "Only one policy with a given name allowed, duplicates: %s"
-                    % (", ".join(dupes))
+                    "Only one policy with a given name allowed, duplicates: %s" % (", ".join(dupes))
                 )
             )
         used_policy_names = used_policy_names.union(conf_policy_names)
@@ -274,9 +255,7 @@ def validate(options):
                             found_deprecations = True
                             log.warning(
                                 "deprecated usage found in policy\n"
-                                + report.format(
-                                    source_locator=source_locator, footnotes=footnotes
-                                )
+                                + report.format(source_locator=source_locator, footnotes=footnotes)
                             )
 
                 except Exception as e:
@@ -404,11 +383,7 @@ def schema_cmd(options):
         resource_list = {
             'resources': sorted(
                 itertools.chain(
-                    *[
-                        clouds[p].resource_map.keys()
-                        for p in PROVIDER_NAMES
-                        if p in clouds
-                    ]
+                    *[clouds[p].resource_map.keys() for p in PROVIDER_NAMES if p in clouds]
                 )
             )
         }
@@ -464,9 +439,7 @@ def schema_cmd(options):
     # Handle resource
     #
     resource = components[0]
-    resource_info = resource_mapping.get(
-        resource, resource_mapping['aliases'].get(resource)
-    )
+    resource_info = resource_mapping.get(resource, resource_mapping['aliases'].get(resource))
     if resource_info is None:
         log.error('{} is not a valid resource'.format(resource))
         sys.exit(1)
@@ -488,11 +461,7 @@ def schema_cmd(options):
     #
     category = components[1]
     if category not in ('actions', 'filters'):
-        log.error(
-            "Valid choices are 'actions' and 'filters'. You supplied '{}'".format(
-                category
-            )
-        )
+        log.error("Valid choices are 'actions' and 'filters'. You supplied '{}'".format(category))
         sys.exit(1)
 
     if len(components) == 2:
@@ -507,9 +476,7 @@ def schema_cmd(options):
     #
     item = components[2]
     if item not in resource_info[category]:
-        log.error(
-            '{} is not in the {} list for resource {}'.format(item, category, resource)
-        )
+        log.error('{} is not in the {} list for resource {}'.format(item, category, resource))
         sys.exit(1)
 
     if len(components) == 3:
@@ -544,9 +511,7 @@ def _print_cls_schema(cls):
         print(yaml_dump(component_schema))
     else:
         # Shouldn't ever hit this, so exclude from cover
-        print(
-            "No schema is available for this item.", file=sys.sterr
-        )  # pragma: no cover
+        print("No schema is available for this item.", file=sys.sterr)  # pragma: no cover
     print('')
     return
 

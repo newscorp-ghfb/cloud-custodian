@@ -31,17 +31,13 @@ class ResourceMetaTest(BaseTest):
         load_resources(('gcp.*',))
         missing = []
         invalid = []
-        iam_path = os.path.join(
-            os.path.dirname(__file__), 'data', 'iam-permissions.json'
-        )
+        iam_path = os.path.join(os.path.dirname(__file__), 'data', 'iam-permissions.json')
         with open(iam_path) as fh:
             valid_perms = set(json.load(fh).get('permissions'))
         cfg = Config.empty()
 
         for k, v in resources.items():
-            policy = Bag(
-                {'name': 'permcheck', 'resource': 'gcp.%s' % k, 'provider_name': 'gcp'}
-            )
+            policy = Bag({'name': 'permcheck', 'resource': 'gcp.%s' % k, 'provider_name': 'gcp'})
             ctx = self.get_context(config=cfg, policy=policy)
             mgr = v(ctx, policy)
             perms = mgr.get_permissions()
@@ -75,8 +71,7 @@ class ResourceMetaTest(BaseTest):
 
         if missing:
             self.fail(
-                'missing permissions %d on \n\t%s'
-                % (len(missing), '\n\t'.join(sorted(missing)))
+                'missing permissions %d on \n\t%s' % (len(missing), '\n\t'.join(sorted(missing)))
             )
 
         if invalid:
@@ -94,9 +89,7 @@ class ResourceMetaTest(BaseTest):
                 'actions': ['stop'],
             }
         )
-        self.assertEqual(
-            p.get_permissions(), {'compute.instances.list', 'compute.instances.stop'}
-        )
+        self.assertEqual(p.get_permissions(), {'compute.instances.list', 'compute.instances.stop'})
 
     def test_resource_id_meta(self):
         load_resources(('gcp.*',))
@@ -106,6 +99,4 @@ class ResourceMetaTest(BaseTest):
                 missing.append(name)
 
         if missing:
-            raise KeyError(
-                "Following resources are missing id metadata %s" % " ".join(missing)
-            )
+            raise KeyError("Following resources are missing id metadata %s" % " ".join(missing))

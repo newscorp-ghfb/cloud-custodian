@@ -50,9 +50,7 @@ class DescribeKey(DescribeSource):
             for rid in ids:
                 try:
                     results.append(
-                        self.manager.retry(client.describe_key, KeyId=rid)[
-                            'KeyMetadata'
-                        ]
+                        self.manager.retry(client.describe_key, KeyId=rid)['KeyMetadata']
                     )
                 except client.exceptions.NotFoundException:
                     continue
@@ -74,9 +72,7 @@ class DescribeKey(DescribeSource):
                     r.update(key_detail)
                 except ClientError as e:
                     if e.response['Error']['Code'] == 'AccessDeniedException':
-                        self.manager.log.warning(
-                            "Access denied when describing key:%s", key_id
-                        )
+                        self.manager.log.warning("Access denied when describing key:%s", key_id)
                         # If a describe fails, we still want the `Arn` key
                         # available since it is a core attribute
                         r['Arn'] = r['KeyArn']
@@ -93,9 +89,7 @@ class DescribeKey(DescribeSource):
 class ConfigKey(ConfigSource):
     def load_resource(self, item):
         resource = super().load_resource(item)
-        alias_names = self.manager.alias_map.get(
-            resource[self.manager.resource_type.id]
-        )
+        alias_names = self.manager.alias_map.get(resource[self.manager.resource_type.id])
         if alias_names:
             resource['AliasNames'] = alias_names
         return resource
@@ -171,9 +165,7 @@ class KeyRotationStatus(ValueFilter):
 
         with self.executor_factory(max_workers=2) as w:
             query_resources = [r for r in resources if 'KeyRotationEnabled' not in r]
-            self.log.debug(
-                "Querying %d kms-keys' rotation status" % len(query_resources)
-            )
+            self.log.debug("Querying %d kms-keys' rotation status" % len(query_resources))
             list(w.map(_key_rotation_status, query_resources))
 
         return [r for r in resources if self.match(r.get('KeyRotationEnabled', {}))]
@@ -203,9 +195,7 @@ class KMSCrossAccountAccessFilter(CrossAccountAccessFilter):
         def _augment(r):
             key_id = r.get('TargetKeyId', r.get('KeyId'))
             assert key_id, "Invalid key resources %s" % r
-            r['Policy'] = client.get_key_policy(KeyId=key_id, PolicyName='default')[
-                'Policy'
-            ]
+            r['Policy'] = client.get_key_policy(KeyId=key_id, PolicyName='default')['Policy']
             return r
 
         self.log.debug("fetching policy for %d kms keys" % len(resources))
@@ -277,9 +267,7 @@ class ResourceKmsKeyAlias(ValueFilter):
         matched = []
         for r in resources:
             if r.get('KmsKeyId'):
-                r['KeyAlias'] = key_aliases_dict.get(
-                    r.get('KmsKeyId').split("key/", 1)[-1]
-                )
+                r['KeyAlias'] = key_aliases_dict.get(r.get('KmsKeyId').split("key/", 1)[-1])
                 if self.match(r.get('KeyAlias')):
                     matched.append(r)
         return matched
@@ -321,9 +309,9 @@ class RemovePolicyStatement(RemovePolicyBase):
     def process_resource(self, client, resource, key_id):
         if 'Policy' not in resource:
             try:
-                resource['Policy'] = client.get_key_policy(
-                    KeyId=key_id, PolicyName='default'
-                )['Policy']
+                resource['Policy'] = client.get_key_policy(KeyId=key_id, PolicyName='default')[
+                    'Policy'
+                ]
             except ClientError as e:
                 if e.response['Error']['Code'] != "NotFoundException":
                     raise
