@@ -27,6 +27,7 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 1. c7n
 
    - c7n - enable --vars option to load vars file
+   - aws - reduce jitter of retry
 
 2. ami resource
    
@@ -36,22 +37,26 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
    - aws - divide into small batches when getting EBS resource
 
-4. policy
+4. notify action
+   
+   - aws - prepare iam-saml-provider for notify
+  
+5. policy
    
    - aws - introduce tag:custodian-policy as a version to avoid massive re-deployments
    - aws - support `metrics` keyword in policy to reduce the cost of custom metrics
 
-5. service quota resource
+6. service quota resource
 
    - service quota - bugfix TooManyRequestsException when calling the ListServices in us-east-1
    - service quota - bugfix usage-metric requests more than 1440 data points
 
-6. tag action
+7. tag action
 
    - aws - support marking missing resource when copy related tag
    - aws - ec2 - add property 'delete' to rename-tag to achieve copy-tag effect
 
-7. value filter
+8. value filter
 
    - filter value - support GCP labelisation when extracting content from value_from
    - normalise value_type apply to keys in value_from.expr
@@ -62,7 +67,7 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
    - enable variables in expr of value_from
    - aws - value filter value_from support default_value so that can load resources.json from other policies result
 
-8. webhook action
+9.  webhook action
 
    - webhook action supports os env variables
 
