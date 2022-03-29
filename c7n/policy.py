@@ -32,6 +32,8 @@ def load(options, path, format=None, validate=True, vars=None):
         raise IOError("Invalid path for config %r" % path)
 
     from c7n.schema import validate, StructureParser
+    # NOTE turns out that the vars don't work well in some cases, 
+    # e.g. {{}} in subject, {a_var_key} in expr
     data = utils.load_file(path, format=format, vars=vars)
 
     structure = StructureParser()
