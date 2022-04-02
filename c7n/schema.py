@@ -256,7 +256,7 @@ def generate(resource_types=()):
                 ]},
                 'max-resources-percent': {'type': 'number', 'minimum': 0, 'maximum': 100},
                 'comment': {'type': 'string'},
-                'comments': {'type': 'string'},
+                'title': {'type': 'string'},
                 'description': {'type': 'string'},
                 'tags': {'type': 'array', 'items': {'type': 'string'}},
                 'metadata': {'type': 'object'},
