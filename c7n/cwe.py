@@ -38,11 +38,11 @@ class CloudWatchEvents:
             'source': 'redshift.amazonaws.com'},
 
         'CreateLoadBalancer': {
-            'ids': 'requestParameters.name',
+            'ids': 'requestParameters.loadBalancerName',
             'source': 'elasticloadbalancing.amazonaws.com'},
 
         'CreateLoadBalancerPolicy': {
-            'ids': 'requestParameters.name',
+            'ids': 'requestParameters.loadBalancerName',
             'source': 'elasticloadbalancing.amazonaws.com'},
 
         'CreateDBInstance': {
@@ -54,7 +54,7 @@ class CloudWatchEvents:
             'source': 'ec2.amazonaws.com'},
 
         'SetLoadBalancerPoliciesOfListener': {
-            'ids': 'requestParameters.name',
+            'ids': 'requestParameters.loadBalancerName',
             'source': 'elasticloadbalancing.amazonaws.com'},
 
         'CreateElasticsearchDomain': {

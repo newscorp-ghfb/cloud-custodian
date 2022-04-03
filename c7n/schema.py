@@ -227,7 +227,7 @@ def generate(resource_types=()):
             'properties': {
                 'name': {
                     'type': 'string',
-                    'pattern': "^[A-z][A-z0-9]*(-[A-z0-9]+)*$"},
+                    'pattern': "^[A-z][A-z0-9]*(-*[A-z0-9]+)*$"},
                 'conditions': {
                     'type': 'array',
                     'items': {'anyOf': [
@@ -256,7 +256,7 @@ def generate(resource_types=()):
                 ]},
                 'max-resources-percent': {'type': 'number', 'minimum': 0, 'maximum': 100},
                 'comment': {'type': 'string'},
-                'comments': {'type': 'string'},
+                'title': {'type': 'string'},
                 'description': {'type': 'string'},
                 'tags': {'type': 'array', 'items': {'type': 'string'}},
                 'metadata': {'type': 'object'},

@@ -226,8 +226,6 @@ class Notify(BaseNotify):
                 r.pop('SAMLMetadataDocument')
             if 'IDPSSODescriptor' in r:
                 r.pop('IDPSSODescriptor')
-            if 'c7n:finding-filter' in r:
-                r.pop('c7n:finding-filter')
         return resources
 
     def send_data_message(self, message):
