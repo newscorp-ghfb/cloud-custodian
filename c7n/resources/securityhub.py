@@ -51,17 +51,63 @@ class SecurityHubFindingFilter(Filter):
                 'securityhub', region_name=self.data.get('region'))
         found = []
         params = dict(self.data.get('query', {}))
+        idOriginValue = None
         for r_arn, resource in zip(self.manager.get_arns(resources), resources):
-            params['ResourceId'] = [{"Value": r_arn, "Comparison": "EQUALS"}]
-            if resource.get("InstanceId"):
-                params['ResourceId'].append(
-                    {"Value": resource["InstanceId"], "Comparison": "EQUALS"})
-            retry = get_retry(('TooManyRequestsException'))
-            findings = retry(client.get_findings, Filters=params).get("Findings")
+            # NOTE auto fill in finding ID generated with current policy
+            if params.get("Id", [{}])[0].get("Value") == "built-in":
+                idOriginValue = "built-in"
+                finding_tag = self.get_finding_tag(resource)
+                if not finding_tag:
+                    continue
+                params["Id"][0]["Value"] = finding_tag.split(":")[0]
+            else:
+                params['ResourceId'] = [{"Value": r_arn, "Comparison": "EQUALS"}]
+                if resource.get("InstanceId"):
+                    params['ResourceId'].append(
+                        {"Value": resource["InstanceId"], "Comparison": "EQUALS"})
+            # NOTE extract get_findings method for patching in testing
+            findings = self.get_findings(client, params)
+            if idOriginValue:
+                params["Id"][0]["Value"] = idOriginValue
             if len(findings) > 0:
                 resource[self.annotation_key] = findings
                 found.append(resource)
         return found
+
+    def get_findings(self, client, params):
+        retry = get_retry(('TooManyRequestsException'))
+        return retry(client.get_findings, Filters=params).get("Findings", ())
+
+    def get_finding_tag(self, resource):
+        """ NOTE method copied from post-findings action """
+        policyName = self.manager.ctx.policy.name.split("--")[0]
+        finding_tag = None
+        tags = resource.get('Tags')
+        # NOTE generate the finding ID for those resources don't support tags,
+        # make it possible to find the related finding to update
+        if not tags:
+            model = self.manager.resource_type
+            # NOTE the below finding Id generate code is copied from post-finding,
+            # that has multi-resources though
+            finding_id = '{}/{}/{}/{}'.format(  # nosec
+                self.manager.config.region,
+                self.manager.config.account_id,
+                hashlib.md5(policyName.encode('utf8')).hexdigest(),
+                hashlib.md5(json.dumps([resource[model.id]]).encode('utf8')).hexdigest())
+            return finding_id
+
+        finding_key = '{}:{}'.format('c7n:FindingId', policyName)
+
+        # Support Tags as dictionary
+        if isinstance(tags, dict):
+            return tags.get(finding_key)
+
+        # Support Tags as list of {'Key': 'Value'}
+        for t in tags:
+            if t['Key'] == finding_key:
+                finding_tag = t['Value']
+                break
+        return finding_tag
 
     @classmethod
     def register_resources(klass, registry, resource_class):
@@ -232,6 +278,7 @@ class SecurityHub(LambdaMode):
                 [r.resource for r in resource_arns])
         else:
             resources = self.policy.resource_manager.get_resources([])
+            # TODO bugfix resource_arns not defined
             resources[0]['resource-arns'] = resource_arns
         return resources
 
@@ -376,7 +423,7 @@ class PostFinding(Action):
         tags = resource.get('Tags', [])
 
         finding_key = '{}:{}'.format('c7n:FindingId',
-            self.data.get('title', self.manager.ctx.policy.name))
+            self.data.get('title', self.manager.ctx.policy.name.split("--")[0]))
 
         # Support Tags as dictionary
         if isinstance(tags, dict):
@@ -422,6 +469,7 @@ class PostFinding(Action):
                             resource).split(':', 1)
                         updated_at = now
 
+                    self.log.debug(f"Existing finding_id {finding_id}")
                     finding = self.get_finding(
                         [resource], finding_id, created_at, updated_at)
                     findings.append(finding)
@@ -435,16 +483,15 @@ class PostFinding(Action):
                             'key': '{}:{}'.format(
                                 'c7n:FindingId',
                                 self.data.get(
-                                    'title', self.manager.ctx.policy.name)),
+                                    'title', self.manager.ctx.policy.name.split("--")[0])),
                             'value': '{}:{}'.format(
                                 finding['Id'], created_at)},
                             self.manager).process([resource])
                     else:
                         stats['Update'] += 1
-            import_response = self.manager.retry(
-                client.batch_import_findings, Findings=findings
-            )
-            if import_response['FailedCount'] > 0:
+            # NOTE extract import_findings method for patching in testing
+            import_response = self.import_findings(client, findings)
+            if import_response.get('FailedCount'):
                 stats['Failed'] += import_response['FailedCount']
                 self.log.error(
                     "import_response=%s" % (import_response))
@@ -455,6 +502,9 @@ class PostFinding(Action):
             stats['New'],
             stats['Update'],
             stats['Failed'])
+
+    def import_findings(self, client, findings):
+        return self.manager.retry(client.batch_import_findings, Findings=findings)
 
     def get_finding(self, resources, existing_finding_id, created_at, updated_at):
         policy = self.manager.ctx.policy
@@ -467,8 +517,8 @@ class PostFinding(Action):
             finding_id = '{}/{}/{}/{}'.format(  # nosec
                 self.manager.config.region,
                 self.manager.config.account_id,
-                hashlib.md5(json.dumps(  # nosemgrep
-                    policy.data).encode('utf8')).hexdigest(),
+                # NOTE use policy name instead of whole policy, make the finding more easy to find
+                hashlib.md5(policy.name.split("--")[0].encode('utf8')).hexdigest(),
                 hashlib.md5(json.dumps(list(sorted(  # nosemgrep
                     [r[model.id] for r in resources]))).encode(
                         'utf8')).hexdigest())
@@ -487,7 +537,8 @@ class PostFinding(Action):
                 "description", policy.data.get(
                     "description",
                     self.data.get('title', policy.name))).strip(),
-            "Title": self.data.get("title", policy.name),
+            # NOTE use policy title property to DRY and have better readability
+            "Title": self.data.get("title", policy.data.get("title", policy.name)),
             'Id': finding_id,
             "GeneratorId": policy.name,
             'CreatedAt': created_at,
