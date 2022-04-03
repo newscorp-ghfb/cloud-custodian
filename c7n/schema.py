@@ -227,7 +227,7 @@ def generate(resource_types=()):
             'properties': {
                 'name': {
                     'type': 'string',
-                    'pattern': "^[A-z][A-z0-9]*(-[A-z0-9]+)*$"},
+                    'pattern': "^[A-z][A-z0-9]*(-*[A-z0-9]+)*$"},
                 'conditions': {
                     'type': 'array',
                     'items': {'anyOf': [
