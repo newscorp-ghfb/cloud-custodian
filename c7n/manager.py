@@ -116,6 +116,12 @@ class ResourceManager:
                 self.log.debug(
                     "Filter #%d applied %d->%d filter: %s",
                     idx, rcount, len(resources), dumps(f.data, indent=None))
+
+        # NOTE annotate resource ID property
+        for r in resources:
+            if type(r) == dict and "c7n_resource_type_id" not in r:
+                r["c7n_resource_type_id"] = self.get_model().id
+
         self.log.debug("Filtered from %d to %d %s" % (
             original, len(resources), self.__class__.__name__.lower()))
         return resources
