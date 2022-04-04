@@ -15,7 +15,7 @@ from c7n.filters import Filter
 from c7n.exceptions import PolicyValidationError, PolicyExecutionError
 from c7n.policy import LambdaMode, execution
 from c7n.utils import (
-    local_session, type_schema,
+    local_session, type_schema, get_retry,
     chunks, dumps, filter_empty, get_partition
 )
 from c7n.version import version
@@ -75,7 +75,8 @@ class SecurityHubFindingFilter(Filter):
         return found
 
     def get_findings(self, client, params):
-        return client.get_findings(Filters=params).get("Findings", ())
+        retry = get_retry(('TooManyRequestsException'))
+        return retry(client.get_findings, Filters=params).get("Findings", ())
 
     def get_finding_tag(self, resource):
         """ NOTE method copied from post-findings action """
