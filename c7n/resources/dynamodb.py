@@ -44,7 +44,7 @@ class DescribeTable(query.DescribeSource):
             if not r.get("Tags"):
                 client = client or local_session(self.manager.session_factory).client('dynamodb')
                 r["Tags"] = client.list_tags_of_resource(ResourceArn=r["TableArn"])["Tags"]
-        
+
         return resources
 
 
@@ -167,7 +167,7 @@ class TableContinuousBackupAction(BaseAction):
 
 
 @Table.action_registry.register('update')
-class TableContinuousBackupAction(BaseAction):
+class UpdateTable(BaseAction):
     """Modifies the provisioned throughput settings, global secondary indexes, 
     or DynamoDB Streams settings for a given table.
 
