@@ -168,7 +168,7 @@ class TableContinuousBackupAction(BaseAction):
 
 @Table.action_registry.register('update')
 class UpdateTable(BaseAction):
-    """Modifies the provisioned throughput settings, global secondary indexes, 
+    """Modifies the provisioned throughput settings, global secondary indexes,
     or DynamoDB Streams settings for a given table.
 
     :example:
