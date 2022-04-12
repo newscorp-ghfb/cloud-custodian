@@ -21,6 +21,7 @@ METRIC_OPS = {
     'distinct_count': distinct_count,
     'sum': sum,
     'average': average,
+    'maximum': max
 }
 
 METRIC_UNITS = [
