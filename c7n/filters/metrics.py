@@ -216,15 +216,18 @@ class MetricsFilter(Filter):
                     'c7n:detail': 'Fill value for missing data'
                 })
 
+            from c7n.actions.metric import METRIC_OPS
+            metricOp = METRIC_OPS[self.statistics.lower()]
+            collectedMetrics = metricOp([m[self.statistics] for m in collected_metrics[key]])
+            
             if self.data.get('percent-attr'):
                 rvalue = r[self.data.get('percent-attr')]
                 if self.data.get('attr-multiplier'):
                     rvalue = rvalue * self.data['attr-multiplier']
-                percent = (collected_metrics[key][0][self.statistics] /
-                           rvalue * 100)
+                percent = (collectedMetrics / rvalue * 100)
                 if self.op(percent, self.value):
                     matched.append(r)
-            elif self.op(collected_metrics[key][0][self.statistics], self.value):
+            elif self.op(collectedMetrics, self.value):
                 matched.append(r)
         return matched
 
