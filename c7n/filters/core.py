@@ -634,7 +634,11 @@ class ValueFilter(BaseValueFilter):
                 values.data["expr"] = self._replace_var_placeholders(expr, default_value, i)
 
     def _replace_var_placeholders(self, expr, default_value, i):
-        var_key = expr[expr.find("{") + 1: expr.find("}")]
+        if "{{" in expr:
+            var_key = expr[expr.find("{{") + 2: expr.find("}}")]
+        else:
+            var_key = expr[expr.find("{") + 1: expr.find("}")]
+        
         var_value = self.get_resource_value(var_key, i, self.data.get('key_type'))
 
         if var_value is None:
@@ -647,7 +651,10 @@ class ValueFilter(BaseValueFilter):
         if self.data.get('value_type') == 'normalize':
             var_value = var_value.strip().lower()
 
-        expr_var = expr.replace("{" + var_key + "}", var_value)
+        if "{{" in expr:
+            expr_var = expr.replace("{{" + var_key + "}}", var_value)
+        else:
+            expr_var = expr.replace("{" + var_key + "}", var_value)
         if expr_var.find("{") != -1:
             # NOTE to support more than 1 var_key
             return self._replace_var_placeholders(expr_var, default_value, i)
