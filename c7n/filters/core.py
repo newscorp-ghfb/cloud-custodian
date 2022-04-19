@@ -98,7 +98,7 @@ OPERATORS = {
 
 
 VALUE_TYPES = [
-    'age', 'integer', 'expiration', 'normalize', 'size',
+    'age', 'integer', 'number', 'expiration', 'normalize', 'size',
     'cidr', 'cidr_size', 'swap', 'resource_count', 'expr',
     'unique_size', 'date', 'version']
 
@@ -680,6 +680,11 @@ class ValueFilter(BaseValueFilter):
                 value = int(str(value).strip())
             except ValueError:
                 value = 0
+        elif self.vtype == 'number':
+            try:
+                value = float(str(value).strip())
+            except ValueError:
+                value = 0.0
         elif self.vtype == 'size':
             try:
                 return sentinel, len(value)
