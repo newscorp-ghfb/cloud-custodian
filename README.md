@@ -90,10 +90,6 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 - c7n-org supports the argument not-accounts
 - c7n-org - fix NoCredentialsError when getting creds from instance profile too frequently
 
-### c7n_org
-
-- c7n-org supports the argument not-accounts
-
 ### c7n_gcp
 
 1. gcp.project

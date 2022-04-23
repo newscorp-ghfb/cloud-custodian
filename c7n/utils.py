@@ -804,6 +804,7 @@ def get_support_region(manager):
         support_region = "cn-north-1"
     return support_region
 
+
 def gcpLabelaise(value):
     if isinstance(value, str):
         return (

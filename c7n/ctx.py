@@ -42,6 +42,7 @@ class ExecutionContext:
         if metrics and not policy.data.get("metrics"):
             # print(f'Metrics are not configured in the policy {self.policy.data["name"]}')
             metrics = False
+
         self.metrics = metrics_outputs.select(metrics, self)
 
         # Tracer is wired into core filtering code / which is getting
