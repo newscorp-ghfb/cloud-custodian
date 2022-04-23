@@ -638,7 +638,7 @@ class ValueFilter(BaseValueFilter):
             var_key = expr[expr.find("{{") + 2: expr.find("}}")]
         else:
             var_key = expr[expr.find("{") + 1: expr.find("}")]
-        
+
         var_value = self.get_resource_value(var_key, i, self.data.get('key_type'))
 
         if var_value is None:
