@@ -219,7 +219,7 @@ class MetricsFilter(Filter):
             from c7n.actions.metric import METRIC_OPS
             metricOp = METRIC_OPS[self.statistics.lower()]
             collectedMetrics = metricOp([m[self.statistics] for m in collected_metrics[key]])
-            
+
             if self.data.get('percent-attr'):
                 rvalue = r[self.data.get('percent-attr')]
                 if self.data.get('attr-multiplier'):
