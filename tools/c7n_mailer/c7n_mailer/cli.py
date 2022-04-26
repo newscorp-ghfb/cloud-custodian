@@ -166,6 +166,7 @@ CONFIG_SCHEMA = {
 
         # ServiceNow email address for creating tickets
         'servicenow_address': {'type': 'string'},
+        'servicenow_dedicated_addresses': {'type': 'array'},
 
         # Mapping account / emails
         'account_emails': {'type': 'object'}

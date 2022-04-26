@@ -154,6 +154,13 @@ class MailerSqsQueueProcessor:
         # this section sends email to ServiceNow to create tickets
         if any(e == 'servicenow' for e in sqs_message.get('action', ()).get('to')):
             servicenow_address = self.config.get('servicenow_address')
+            dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
+            if dedicated_addresses:
+                account_id = sqs_message.get("account_id")
+                for da in dedicated_addresses:
+                    if account_id in da.get("accounts", []):
+                        servicenow_address = da.get("email", servicenow_address)
+
             if not servicenow_address:
                 self.logger.warning("servicenow_address not found in mailer config")
             else:
