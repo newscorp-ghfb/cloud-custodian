@@ -3,6 +3,7 @@
 """
 CloudWatch Metrics suppport for resources
 """
+import jmespath
 from concurrent.futures import as_completed
 from datetime import datetime, timedelta
 
@@ -79,7 +80,9 @@ class MetricsFilter(Filter):
                'Average', 'Sum', 'Maximum', 'Minimum', 'SampleCount']},
            'days': {'type': 'number'},
            'op': {'type': 'string', 'enum': list(OPERATORS.keys())},
-           'value': {'type': 'number'},
+           'value': {'oneOf': [{'type': 'string'}, {'type': 'number'}]},
+           'value_factor': {'type': 'number'},
+           'expr': {'type': 'boolean'},
            'period': {'type': 'number'},
            'attr-multiplier': {'type': 'number'},
            'percent-attr': {'type': 'string'},
@@ -138,6 +141,10 @@ class MetricsFilter(Filter):
         self.model = self.manager.get_model()
         self.op = OPERATORS[self.data.get('op', 'less-than')]
         self.value = self.data['value']
+        self.value_factor = self.data.get('value_factor', 1)
+        self.is_expr = self.data.get('expr', False)
+        if self.is_expr:
+            self.value = jmespath.compile(self.value)
 
         ns = self.data.get('namespace')
         if not ns:
@@ -220,14 +227,18 @@ class MetricsFilter(Filter):
             metricOp = METRIC_OPS[self.statistics.lower()]
             collectedMetrics = metricOp([m[self.statistics] for m in collected_metrics[key]])
 
+            val = self.value
+            if self.is_expr:
+                val = self.value.search(r)
+            val *= self.value_factor
             if self.data.get('percent-attr'):
                 rvalue = r[self.data.get('percent-attr')]
                 if self.data.get('attr-multiplier'):
                     rvalue = rvalue * self.data['attr-multiplier']
                 percent = (collectedMetrics / rvalue * 100)
-                if self.op(percent, self.value):
+                if self.op(percent, val):
                     matched.append(r)
-            elif self.op(collectedMetrics, self.value):
+            elif self.op(collectedMetrics, val):
                 matched.append(r)
         return matched
 
