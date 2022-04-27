@@ -155,17 +155,11 @@ class MailerSqsQueueProcessor:
         if any(e == 'servicenow' for e in sqs_message.get('action', ()).get('to')):
             servicenow_address = self.config.get('servicenow_address')
             dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
-            if dedicated_addresses:
-                account_id = sqs_message.get("account_id")
-                for da in dedicated_addresses:
-                    if account_id in da.get("accounts", []):
-                        servicenow_address = da.get("email", servicenow_address)
-
             if not servicenow_address:
                 self.logger.warning("servicenow_address not found in mailer config")
             else:
                 group_to_email_messages_map = email_delivery.get_group_email_messages_map(
-                    sqs_message, servicenow_address)
+                    sqs_message, servicenow_address, dedicated_addresses)
                 for mimetext_msg in group_to_email_messages_map.values():
                     email_delivery.send_c7n_email(sqs_message, [servicenow_address], mimetext_msg)
 
