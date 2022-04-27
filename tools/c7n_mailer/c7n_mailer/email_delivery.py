@@ -209,11 +209,19 @@ class EmailDelivery:
         # eg: { 'Jira': [resource1, resource2, etc] }
         return groupby_to_resources_map
 
-    def get_group_email_messages_map(self, sqs_message, servicenow_address):
+    def get_group_email_messages_map(self, sqs_message, servicenow_address, dedicated_addresses):
         groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
         groupby_to_mimetext_map = {}
         for groupby, resources in groupby_to_resources_map.items():
-            # print(f"{groupby}: {[r['PublicIp'] for r in resources]}")
+            # print(f"{groupby}: {[r[r['c7n_resource_type_id']] for r in resources]}")
+            if dedicated_addresses:
+                account_id = sqs_message.get("account_id")
+                for da in dedicated_addresses:
+                    if account_id in da.get("accounts", []):
+                        products = da.get("products")
+                        if not products or groupby in products:
+                            servicenow_address = da.get("email", servicenow_address)
+                            continue
             groupby_to_mimetext_map[groupby] = get_mimetext_message(
                 self.config,
                 self.logger,
@@ -232,6 +240,7 @@ class EmailDelivery:
                 smtp_delivery = SmtpDelivery(config=self.config,
                                              session=self.session,
                                              logger=self.logger)
+                # TODO should use the To in mimetext_msg rather than email_to_addrs
                 smtp_delivery.send_message(message=mimetext_msg, to_addrs=email_to_addrs)
             # TODO this looks like a bug, should be push up a level to sqs_queue_processor.py
             elif 'sendgrid_api_key' in self.config:
@@ -250,7 +259,7 @@ class EmailDelivery:
                 "Error policy:%s account:%s sending to:%s \n\n error: %s\n\n mailer.yml: %s" % (
                     sqs_message['policy'],
                     sqs_message.get('account', ''),
-                    email_to_addrs,
+                    mimetext_msg.get('To'),
                     error,
                     self.config
                 )
@@ -261,4 +270,4 @@ class EmailDelivery:
             sqs_message['policy']['resource'],
             mimetext_msg.get('resource_count', str(len(sqs_message['resources']))),
             mimetext_msg.get('email_template', sqs_message['action'].get('template', 'default')),
-            email_to_addrs))
+            mimetext_msg.get('To')))
