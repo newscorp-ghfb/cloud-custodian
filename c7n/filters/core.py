@@ -592,8 +592,11 @@ class ValueFilter(BaseValueFilter):
                 resource[self.k] = self.v
             return True
 
-        # value extract
-        r = self.get_resource_value(self.k, resource, self.data.get('key_type'))
+        # value extract, note that overrided get_resource_value() only takes 2 args
+        if "key_type" in self.data:
+            r = self.get_resource_value(self.k, resource, self.data.get('key_type'))
+        else:
+            r = self.get_resource_value(self.k, resource)
 
         if self.op in ('in', 'not-in') and r is None:
             r = ()
