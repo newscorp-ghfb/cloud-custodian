@@ -150,6 +150,14 @@ class DeleteElastiCacheCluster(BaseAction):
                 cluster['CacheClusterId'])
 
         for replication_group in replication_groups_to_delete:
+            # NOTE don't delete the group if it's not empty
+            rg = client.describe_replication_groups(
+                    ReplicationGroupId=replication_group
+                )["ReplicationGroups"][0]
+            if not all(cluster in clusters_to_delete for cluster in rg["MemberClusters"]):
+                self.log.info('ElastiCache replication group is not empty: %s', replication_group)
+                continue
+
             params = {'ReplicationGroupId': replication_group,
                       'RetainPrimaryCluster': False}
             if not skip:
