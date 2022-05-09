@@ -363,7 +363,7 @@ class CreateBackup(BaseAction):
                 t = futures[f]
                 if f.exception():
                     self.manager.log.warning(
-                        "Could not complete DynamoDB backup table:%s", t['TableName'])
+                        "Could not complete DynamoDB backup table:%s", t)
                 arn = f.result()['BackupDetails']['BackupArn']
                 t['c7n:BackupArn'] = arn
 
