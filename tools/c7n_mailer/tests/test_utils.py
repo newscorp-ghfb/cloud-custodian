@@ -42,7 +42,7 @@ def test_config_defaults():
         ses_region='us-east-1',
         memory=1024,
         timeout=300,
-        runtime='python3.7',
+        runtime='python3.9',
         contact_tags=[])
 
 
@@ -370,7 +370,7 @@ class OtherTests(unittest.TestCase):
                 'us-east-1',
                 config.get('region'),
                 1024,
-                'python3.7',
+                'python3.9',
                 300,
                 None,
                 None,
