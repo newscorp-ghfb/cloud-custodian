@@ -196,7 +196,7 @@ class EmailDelivery:
         return to_addrs_to_mimetext_map
 
     def get_groupby_to_resources_map(self, sqs_message):
-        jp_str = sqs_message['action'].get('servicenow_groupby')
+        jp_str = sqs_message['action'].get('resource_groupby')
         if not jp_str:
             return {'default': sqs_message['resources']}
 
