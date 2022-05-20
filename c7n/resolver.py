@@ -111,6 +111,7 @@ class ValuesFrom:
             'url': {'type': 'string'},
             'format': {'enum': ['csv', 'json', 'txt', 'csv2dict']},
             'default_value': {'type': 'string'},
+            'default_expr_var_value': {'type': 'string'},
             'expr': {'oneOf': [
                 {'type': 'integer'},
                 {'type': 'string'}]}
@@ -158,7 +159,8 @@ class ValuesFrom:
             if contents is not None:
                 return contents
 
-        contents = self._get_values()
+        # NOTE apply default value
+        contents = self._get_values() or self.data.get("default_value")
 
         # NOTE normalise the value for gcp label
         log.debug(self.data.get("expr"), contents)
