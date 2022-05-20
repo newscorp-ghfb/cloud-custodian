@@ -631,12 +631,12 @@ class ValueFilter(BaseValueFilter):
         # TODO to find an better way to enhance the filter, e.g. a new filter
         if "expr" in values.data:
             expr = values.data.get("expr")
-            default_value = values.data.get("default_value")
+            default_var_value = values.data.get("default_expr_var_value")
             if isinstance(expr, str) and expr.find("{") != -1:
                 values.data["origin_expr"] = expr
-                values.data["expr"] = self._replace_var_placeholders(expr, default_value, i)
+                values.data["expr"] = self._replace_var_placeholders(expr, default_var_value, i)
 
-    def _replace_var_placeholders(self, expr, default_value, i):
+    def _replace_var_placeholders(self, expr, default_var_value, i):
         if "{{" in expr:
             var_key = expr[expr.find("{{") + 2: expr.find("}}")]
         else:
@@ -646,8 +646,8 @@ class ValueFilter(BaseValueFilter):
 
         if var_value is None:
             # self.log.warning(f"ValueFrom filter: {expr} key {var_key} not found")
-            if default_value:
-                var_value = default_value
+            if default_var_value:
+                var_value = default_var_value
             else:
                 raise AttributeError(f"Value not found for key '{var_key}' in {expr}")
 
@@ -660,7 +660,7 @@ class ValueFilter(BaseValueFilter):
             expr_var = expr.replace("{" + var_key + "}", var_value)
         if expr_var.find("{") != -1:
             # NOTE to support more than 1 var_key
-            return self._replace_var_placeholders(expr_var, default_value, i)
+            return self._replace_var_placeholders(expr_var, default_var_value, i)
         else:
             return expr_var
 
