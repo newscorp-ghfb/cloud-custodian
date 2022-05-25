@@ -154,12 +154,13 @@ class MailerSqsQueueProcessor:
         # this section sends email to ServiceNow to create tickets
         if any(e == 'servicenow' for e in sqs_message.get('action', ()).get('to')):
             servicenow_address = self.config.get('servicenow_address')
+            dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
             it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
             if not servicenow_address:
                 self.logger.error("servicenow_address not found in mailer config")
             else:
                 group_to_email_messages_map = email_delivery.get_group_email_messages_map(
-                    sqs_message, servicenow_address, it_service_key)
+                    sqs_message, servicenow_address, dedicated_addresses, it_service_key)
                 for mimetext_msg in group_to_email_messages_map.values():
                     email_delivery.send_c7n_email(sqs_message, [servicenow_address], mimetext_msg)
 

@@ -209,13 +209,25 @@ class EmailDelivery:
         # eg: { 'Jira': [resource1, resource2, etc] }
         return groupby_to_resources_map
 
-    def get_group_email_messages_map(self, sqs_message, servicenow_address, it_service_key):
+    def get_group_email_messages_map(
+            self, sqs_message, servicenow_address, dedicated_addresses,it_service_key):
         groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
         groupby_to_mimetext_map = {}
         for prd, resources in groupby_to_resources_map.items():
             # print(f"{prd}: {[r[r['c7n_resource_type_id']] for r in resources]}")
+            # NOTE if having a dedicated address, use it regardless it_service
+            if dedicated_addresses:
+                account_id = sqs_message.get("account_id")
+                for da in dedicated_addresses:
+                    if account_id in da.get("accounts", []):
+                        products = da.get("products")
+                        if not products or prd in products:
+                            servicenow_address = da.get("email", servicenow_address)
+                            break
+            # NOTE only skip notify when prd is defined and it_service is undefined,
+            # This requires the template can deal with when it_service is undefined.
             it_service = resources[0].get(it_service_key)
-            if not it_service:
+            if not it_service and prd != "default":
                 self.logger.info(
                     f"Skip {len(resources)} resources due to "
                     f"it_service value not found for product {prd}"
