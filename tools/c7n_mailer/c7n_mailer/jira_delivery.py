@@ -2,8 +2,6 @@ from jira import JIRA
 
 from c7n_mailer import utils
 
-basic_auth = None
-
 
 class JiraDelivery:
     def __init__(self, config, session, logger):
@@ -14,9 +12,8 @@ class JiraDelivery:
         self.init_jira()
 
     def init_jira(self):
-        if not basic_auth:
-            txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
-            basic_auth = tuple(txt.split(":"))
+        txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
+        basic_auth = tuple(txt.split(":"))
         self.client = JIRA(server=self.config.get("jira_address"), basic_auth=basic_auth)
 
     def jira_handler(self, sqs_message, jira_messages):
