@@ -209,20 +209,19 @@ class EmailDelivery:
         # eg: { 'Jira': [resource1, resource2, etc] }
         return groupby_to_resources_map
 
-    def get_group_email_messages_map(self, sqs_message, servicenow_address, dedicated_addresses):
+    def get_group_email_messages_map(self, sqs_message, servicenow_address, it_service_key):
         groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
         groupby_to_mimetext_map = {}
-        for groupby, resources in groupby_to_resources_map.items():
-            # print(f"{groupby}: {[r[r['c7n_resource_type_id']] for r in resources]}")
-            if dedicated_addresses:
-                account_id = sqs_message.get("account_id")
-                for da in dedicated_addresses:
-                    if account_id in da.get("accounts", []):
-                        products = da.get("products")
-                        if not products or groupby in products:
-                            servicenow_address = da.get("email", servicenow_address)
-                            continue
-            groupby_to_mimetext_map[groupby] = get_mimetext_message(
+        for prd, resources in groupby_to_resources_map.items():
+            # print(f"{prd}: {[r[r['c7n_resource_type_id']] for r in resources]}")
+            it_service = resources[0].get(it_service_key)
+            if not it_service:
+                self.logger.info(
+                    f"Skip {len(resources)} resources due to "
+                    f"it_service value not found for product {prd}"
+                )
+                continue
+            groupby_to_mimetext_map[prd] = get_mimetext_message(
                 self.config,
                 self.logger,
                 sqs_message,

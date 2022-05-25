@@ -83,6 +83,7 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 ### c7n-mailer
 
 - add ServiceNow notification
+- mailer - jira delivery
 
 ### c7n_org
 

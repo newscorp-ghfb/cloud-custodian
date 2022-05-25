@@ -39,6 +39,8 @@ CORE_DEPS = [
     'requests', 'urllib3', 'idna', 'charset_normalizer', 'certifi',
     # used by splunk mailer transport
     'jsonpointer', 'jsonpatch',
+    # jira dependencies
+    'jira',
     # sendgrid dependencies
     'sendgrid', 'python_http_client', 'ellipticcurve']
 
