@@ -167,6 +167,7 @@ CONFIG_SCHEMA = {
         # ServiceNow email address for creating tickets
         'servicenow_address': {'type': 'string'},
         'servicenow_dedicated_addresses': {'type': 'array'},
+        'servicenow_it_service_key': {'type': 'string'},
 
         # Jira integration for creating tickets
         'jira_address': {'type': 'string'},
