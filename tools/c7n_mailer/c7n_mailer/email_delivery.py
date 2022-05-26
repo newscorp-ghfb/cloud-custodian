@@ -278,6 +278,8 @@ class EmailDelivery:
             # if smtp_server or sendgrid_api_key isn't set in mailer.yml, use aws ses normally.
             else:
                 self.aws_ses.send_raw_email(RawMessage={'Data': mimetext_msg.as_string()})
+            # NOTE borrow 'action' object to carry the delivery result
+            sqs_message["action"]["delivered_email"] = mimetext_msg.get('To')
         except Exception as error:
             self.logger.warning(
                 "Error policy:%s account:%s sending to:%s \n\n error: %s\n\n mailer.yml: %s" % (
