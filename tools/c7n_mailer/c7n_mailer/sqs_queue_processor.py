@@ -167,6 +167,19 @@ class MailerSqsQueueProcessor:
         sns_message_packages = sns_delivery.get_sns_message_packages(sqs_message)
         sns_delivery.deliver_sns_messages(sns_message_packages, sqs_message)
 
+        # this section calls Jira api to create tickets
+        if any(e == 'jira' for e in sqs_message.get('action', ()).get('to')):
+            from .jira_delivery import JiraDelivery
+            if "jira_address" not in self.config:
+                self.logger.error("jira_address not found in mailer config")
+            else:
+                try:
+                    jira_delivery = JiraDelivery(self.config, self.session, self.logger)
+                    groupedResources = email_delivery.get_groupby_to_resources_map(sqs_message)
+                    jira_delivery.jira_handler(sqs_message, jira_messages=groupedResources)
+                except Exception as e:
+                    self.logger.error("Failed to create Jira issue", str(e))
+
         # this section sends a notification to the resource owner via Slack
         if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
                 for e in sqs_message.get('action', ()).get('to', []) +
@@ -184,16 +197,6 @@ class MailerSqsQueueProcessor:
             except Exception:
                 traceback.print_exc()
                 pass
-
-        # this section calls Jira api to create tickets
-        if any(e == 'jira' for e in sqs_message.get('action', ()).get('to')):
-            from .jira_delivery import JiraDelivery
-            if "jira_address" not in self.config:
-                self.logger.error("jira_address not found in mailer config")
-            else:
-                jira_delivery = JiraDelivery(self.config, self.session, self.logger)
-                groupedResources = email_delivery.get_groupby_to_resources_map(sqs_message)
-                jira_delivery.jira_handler(sqs_message, jira_messages=groupedResources)
 
         # this section gets the map of metrics to send to datadog and delivers it
         if any(e.startswith('datadog') for e in sqs_message.get('action', ()).get('to')):
