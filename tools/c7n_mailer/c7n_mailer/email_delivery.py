@@ -209,8 +209,12 @@ class EmailDelivery:
         # eg: { 'Jira': [resource1, resource2, etc] }
         return groupby_to_resources_map
 
-    def get_group_email_messages_map(
-            self, sqs_message, servicenow_address, dedicated_addresses, it_service_key):
+    def get_group_email_messages_map(self, sqs_message):
+        servicenow_address = self.config.get('servicenow_address')
+        dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
+        it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
+        jira_project_key = self.config.get("jira_project_key", "custodian_jira_project")
+
         groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
         groupby_to_mimetext_map = {}
         for prd, resources in groupby_to_resources_map.items():
@@ -236,8 +240,7 @@ class EmailDelivery:
             #     continue
             # NOTE given most of it_service value of products are undefined, 
             # change it to below during the transit period
-            # TODO remove hard code custodian_jira_project
-            if resources[0].get("custodian_jira_project"):
+            if resources[0].get(jira_project_key):
                 self.logger.info(
                     f"Skip {len(resources)} resources due to "
                     f"jira_project value is found for product {prd}"
