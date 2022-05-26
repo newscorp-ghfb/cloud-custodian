@@ -23,6 +23,7 @@ logger = logging.getLogger('custodian.mailer')
 log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_format)
 logging.getLogger('botocore').setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 def dispatch(event, context):
     return handle.start_c7n_mailer(logger)
