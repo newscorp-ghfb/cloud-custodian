@@ -9,8 +9,9 @@ class JiraDelivery:
         self.config = config
         self.session = session
         self.logger = logger
-        self.address = config.get("jira_address")
+        self.url = config.get("jira_url")
         self.key = config.get("jira_project_key", "custodian_jira_project")
+        self.custom_fields = config.get("jira_custom_fields", {})
         self.init_jira()
 
     def init_jira(self):
@@ -20,7 +21,7 @@ class JiraDelivery:
             self.logger.info("Calling KMS to decrypt the jira_basic_auth")
             txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
         basic_auth = tuple(txt.split(":"))
-        self.client = JIRA(server=self.address, basic_auth=basic_auth)
+        self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
     def jira_handler(self, sqs_message, jira_messages):
         issue_list = []
@@ -46,7 +47,6 @@ class JiraDelivery:
                 )
             )
             issue_list.append(
-                # TODO dynamic jira fields, eg priority
                 {
                     "project": jira_project,
                     "summary": utils.get_message_subject(sqs_message),
@@ -61,16 +61,16 @@ class JiraDelivery:
                     ),
                     "issuetype": {"name": "Task"},
                     "priority": {"name": "Medium"},
-                    # Work Type field
-                    "customfield_10106": {"value": "BAU"},
                 }
             )
+            issue_list[-1].update(**self.custom_fields.get(jira_project, {}))
+
         if issue_list:
             issueIds = self.create_issues(issue_list)
             if issueIds:
                 # NOTE borrow 'action' object to carry the delivery result
                 sqs_message["action"]["delivered_jira"] = issueIds
-                sqs_message["action"]["delivered_jira_address"] = self.address
+                sqs_message["action"]["delivered_jira_url"] = self.url
 
     def create_issues(self, issue_list) -> List:
         if not issue_list:

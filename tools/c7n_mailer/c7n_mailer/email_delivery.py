@@ -21,6 +21,7 @@ class EmailDelivery:
         self.session = session
         self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
+        self.servicenow_url = config.get("servicenow_url")
 
     def get_ldap_connection(self):
         if self.config.get('ldap_uri'):
@@ -280,6 +281,8 @@ class EmailDelivery:
                 self.aws_ses.send_raw_email(RawMessage={'Data': mimetext_msg.as_string()})
             # NOTE borrow 'action' object to carry the delivery result
             sqs_message["action"]["delivered_email"] = mimetext_msg.get('To')
+            if self.servicenow_url:
+                sqs_message["action"]["delivered_email_url"] = self.servicenow_url
         except Exception as error:
             self.logger.warning(
                 "Error policy:%s account:%s sending to:%s \n\n error: %s\n\n mailer.yml: %s" % (
