@@ -170,8 +170,8 @@ class MailerSqsQueueProcessor:
         # this section calls Jira api to create tickets
         if any(e == 'jira' for e in sqs_message.get('action', ()).get('to')):
             from .jira_delivery import JiraDelivery
-            if "jira_address" not in self.config:
-                self.logger.error("jira_address not found in mailer config")
+            if "jira_url" not in self.config:
+                self.logger.error("jira_url not found in mailer config")
             else:
                 try:
                     jira_delivery = JiraDelivery(self.config, self.session, self.logger)
@@ -179,6 +179,7 @@ class MailerSqsQueueProcessor:
                     jira_delivery.jira_handler(sqs_message, jira_messages=groupedResources)
                 except Exception as e:
                     self.logger.error("Failed to create Jira issue", str(e))
+                    sqs_message["action"]["delivered_jira_error"] = str(e)
 
         # this section sends a notification to the resource owner via Slack
         if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
