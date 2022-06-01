@@ -99,6 +99,10 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
      - extract values from gcp.project iam policy
      - convert values to gcp lable
 
+2. filters.iam-policy
+
+   - iam-policy - user-role support roles and verb_argument() refactor
+
 ---
 
 Cloud Custodian is a rules engine for managing public cloud accounts and
@@ -181,8 +185,8 @@ The best getting started guides are the cloud provider specific tutorials.
 As a quick walk through, below are some sample policies for AWS resources.
 
   1. will enforce that no S3 buckets have cross-account access enabled.
-  1. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
-  1. will tag any EC2 instance that does not have the follow tags
+  2. will terminate any newly launched EC2 instance that do not have an encrypted EBS volume.
+  3. will tag any EC2 instance that does not have the follow tags
      "Environment", "AppId", and either "OwnerContact" or "DeptID" to
      be stopped in four days.
 

@@ -18,10 +18,11 @@ class IamPolicyFilter(Filter):
     user_role_schema = {
         'type': 'object',
         'additionalProperties': False,
-        'required': ['user', 'role'],
+        'required': ['user'],
         'properties': {
             'user': {'type': 'string'},
             'role': {'type': 'string'},
+            'roles': {'type': 'array'},
             'has': {'type': 'boolean'}
         }
     }
@@ -50,19 +51,15 @@ class IamPolicyFilter(Filter):
 
     def process(self, resources, event=None):
         if 'doc' in self.data:
-            try:
-                valueFilter = IamPolicyValueFilter(self.data['doc'], self.manager)
-                resources = valueFilter.process(resources)
-            except TypeError:
-                valueFilter = IamPolicyValueFilter(self.data['doc'], self.manager, "bucket")
-                resources = valueFilter.process(resources)
+            valueFilter = IamPolicyValueFilter(self, self.data['doc'], self.manager)
+            resources = valueFilter.process(resources)
         if 'user-role' in self.data:
             user_role = self.data['user-role']
             key = user_role['user']
-            val = user_role['role']
+            val = user_role.get('role') or user_role['roles']
             op = 'in' if user_role.get('has', True) else 'not-in'
             value_type = 'swap'
-            userRolePairFilter = IamPolicyUserRolePairFilter({'key': key, 'value': val,
+            userRolePairFilter = IamPolicyUserRolePairFilter(self, {'key': key, 'value': val,
             'op': op, 'value_type': value_type}, self.manager)
             resources = userRolePairFilter.process(resources)
 
@@ -82,6 +79,14 @@ class IamPolicyFilter(Filter):
                 r[extract["key"]] = v
 
         return resources
+
+    def _verb_arguments(self, resource):
+        """
+        Returns a dictionary passed when making the `getIamPolicy` and 'setIamPolicy' API calls.
+
+        :param resource: the same as in `get_resource_params`
+        """
+        return {"resource": resource[self.manager.resource_type.id]}
 
     def extractString(self, value, pattern):
         if isinstance(value, str):
@@ -117,9 +122,9 @@ class IamPolicyValueFilter(ValueFilter):
     schema = type_schema('iam-policy', rinherit=ValueFilter.schema,)
 #     permissions = 'GCP_SERVICE.GCP_RESOURCE.getIamPolicy',)
 
-    def __init__(self, data, manager=None, identifier="resource"):
+    def __init__(self, filter:IamPolicyFilter, data, manager=None):
         super(IamPolicyValueFilter, self).__init__(data, manager)
-        self.identifier = identifier
+        self.filter = filter
 
     def get_client(self, session, model):
         return session.client(
@@ -131,21 +136,13 @@ class IamPolicyValueFilter(ValueFilter):
         client = self.get_client(session, model)
 
         for r in resources:
-            iam_policy = client.execute_command('getIamPolicy', self._verb_arguments(r))
+            iam_policy = client.execute_command('getIamPolicy', self.filter._verb_arguments(r))
             r["c7n:iamPolicy"] = iam_policy
 
         return super(IamPolicyValueFilter, self).process(resources)
 
     def __call__(self, r):
         return self.match(r['c7n:iamPolicy'])
-
-    def _verb_arguments(self, resource):
-        """
-        Returns a dictionary passed when making the `getIamPolicy` and 'setIamPolicy' API calls.
-
-        :param resource: the same as in `get_resource_params`
-        """
-        return {self.identifier: resource[self.manager.resource_type.id]}
 
 
 class IamPolicyUserRolePairFilter(ValueFilter):
@@ -171,6 +168,10 @@ class IamPolicyUserRolePairFilter(ValueFilter):
     schema = type_schema('iam-user-roles', rinherit=ValueFilter.schema)
 #     permissions = ('resourcemanager.projects.getIamPolicy',)
 
+    def __init__(self, filter:IamPolicyFilter, data, manager=None):
+        super(IamPolicyUserRolePairFilter, self).__init__(data, manager)
+        self.filter = filter
+
     def get_client(self, session, model):
         return session.client(
             model.service, model.version, model.component)
@@ -181,7 +182,7 @@ class IamPolicyUserRolePairFilter(ValueFilter):
         client = self.get_client(session, model)
 
         for r in resources:
-            iam_policy = client.execute_command('getIamPolicy', {"resource": r["projectId"]})
+            iam_policy = client.execute_command('getIamPolicy', self.filter._verb_arguments(r))
             r["c7n:iamPolicyUserRolePair"] = {}
             userToRolesMap = {}
 
@@ -195,15 +196,13 @@ class IamPolicyUserRolePairFilter(ValueFilter):
             for user, roles in userToRolesMap.items():
                 r["c7n:iamPolicyUserRolePair"][user] = roles
 
+        if type(self.data['value']) is list:
+            checkHas = self.data['op'] == 'in'
+            self.data['op'] = 'intersect'
+            result = super(IamPolicyUserRolePairFilter, self).process(resources)
+            return result if checkHas else not result
+
         return super(IamPolicyUserRolePairFilter, self).process(resources)
 
     def __call__(self, r):
         return self.match(r["c7n:iamPolicyUserRolePair"])
-
-    def _verb_arguments(self, resource, identifier="resource"):
-        """
-        Returns a dictionary passed when making the `getIamPolicy` and 'setIamPolicy' API calls.
-
-        :param resource: the same as in `get_resource_params`
-        """
-        return {identifier: resource[self.manager.resource_type.id]}
