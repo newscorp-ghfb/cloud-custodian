@@ -33,9 +33,11 @@ class EmailDelivery:
     def get_valid_emails_from_list(self, targets):
         emails = []
         for target in targets:
+            target = target.replace(";", ":").replace(",", ":")
             for email in target.split(':'):
-                if is_email(target):
-                    emails.append(target)
+                email = email.strip()
+                if is_email(email):
+                    emails.append(email)
         return emails
 
     def get_event_owner_email(self, targets, event):
@@ -213,7 +215,7 @@ class EmailDelivery:
     def get_group_email_messages_map(self, sqs_message):
         servicenow_address = self.config.get('servicenow_address')
         dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
-        it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
+        # it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
         jira_project_key = self.config.get("jira_project_key", "custodian_jira_project")
 
         groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
@@ -232,14 +234,14 @@ class EmailDelivery:
 
             # NOTE only skip notify when prd is defined and it_service is undefined,
             # This requires the template can deal with when it_service is undefined.
-            it_service = resources[0].get(it_service_key)
+            # it_service = resources[0].get(it_service_key)
             # if not it_service and prd != "default":
             #     self.logger.info(
             #         f"Skip {len(resources)} resources due to "
             #         f"it_service value not found for product {prd}"
             #     )
             #     continue
-            # NOTE given most of it_service value of products are undefined, 
+            # NOTE given most of it_service value of products are undefined,
             # change it to below during the transit period
             if resources[0].get(jira_project_key):
                 self.logger.info(

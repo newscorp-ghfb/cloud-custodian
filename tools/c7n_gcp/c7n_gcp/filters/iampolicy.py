@@ -122,7 +122,7 @@ class IamPolicyValueFilter(ValueFilter):
     schema = type_schema('iam-policy', rinherit=ValueFilter.schema,)
 #     permissions = 'GCP_SERVICE.GCP_RESOURCE.getIamPolicy',)
 
-    def __init__(self, filter:IamPolicyFilter, data, manager=None):
+    def __init__(self, filter: IamPolicyFilter, data, manager=None):
         super(IamPolicyValueFilter, self).__init__(data, manager)
         self.filter = filter
 
@@ -168,7 +168,7 @@ class IamPolicyUserRolePairFilter(ValueFilter):
     schema = type_schema('iam-user-roles', rinherit=ValueFilter.schema)
 #     permissions = ('resourcemanager.projects.getIamPolicy',)
 
-    def __init__(self, filter:IamPolicyFilter, data, manager=None):
+    def __init__(self, filter: IamPolicyFilter, data, manager=None):
         super(IamPolicyUserRolePairFilter, self).__init__(data, manager)
         self.filter = filter
 
