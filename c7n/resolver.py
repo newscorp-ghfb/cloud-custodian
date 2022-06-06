@@ -158,7 +158,6 @@ class ValuesFrom:
             contents = self.cache.get(("value-from", key))
             # NOTE no matter the contents is None or not, return it
             # if contents is not None:
-            #     return contents
             if self.cache.haskey(("value-from", key)):
                 return contents
 
