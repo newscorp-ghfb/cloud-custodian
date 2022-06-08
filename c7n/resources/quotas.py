@@ -171,9 +171,12 @@ class UsageFilter(MetricsFilter):
                 continue
 
             period_value = {"PeriodValue": 1, "PeriodUnit": "SECOND"}
-            # NOTE Hot fix for "QuotaName": "Concurrently executing Automations"
-            if r.get("QuotaCode") == "L-09101E66" and "Period" not in r:
+            # NOTE Hot fix for below concurrent quota, use average stat to avoid spike
+            # "QuotaCode": "L-09101E66", "QuotaName": "Concurrently executing Automations"
+            # "QuotaCode": "L-B99A9384", "QuotaName": "Concurrent executions",
+            if r.get("QuotaCode") in ("L-09101E66", "L-B99A9384") and "Period" not in r:
                 r["Period"] = period_value
+                stat = "Sum"
 
             metric_scale = 1
             if 'Period' in r:
