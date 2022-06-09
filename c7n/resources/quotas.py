@@ -118,7 +118,8 @@ class UsageFilter(MetricsFilter):
                   limit: 19
     """
 
-    schema = type_schema('usage-metric', limit={'type': 'integer'}, min_period={'type': 'integer'})
+    schema = type_schema('usage-metric', limit={'type': 'integer'},
+        min_period={'type': 'integer'}, use_avg_stat={'type': 'array'})
 
     permisisons = ('cloudwatch:GetMetricStatistics',)
 
@@ -158,6 +159,7 @@ class UsageFilter(MetricsFilter):
 
         limit = self.data.get('limit', 80)
         min_period = max(self.data.get('min_period', 300), 60)
+        avg_stat_quotas = self.data.get('use_avg_stat', [])
 
         result = []
 
@@ -170,13 +172,11 @@ class UsageFilter(MetricsFilter):
             if stat not in self.metric_map and self.percentile_regex.match(stat) is None:
                 continue
 
-            period_value = {"PeriodValue": 1, "PeriodUnit": "SECOND"}
-            # NOTE Hot fix for below concurrent quota, use average stat to avoid spike
-            # "QuotaCode": "L-09101E66", "QuotaName": "Concurrently executing Automations"
-            # "QuotaCode": "L-B99A9384", "QuotaName": "Concurrent executions",
-            if r.get("QuotaCode") in ("L-09101E66", "L-B99A9384") and "Period" not in r:
+            period_value = {"PeriodValue": min_period, "PeriodUnit": "SECOND"}
+            # NOTE Hot fix for concurrent quotas, use average stat to avoid spike
+            if r.get("QuotaCode") in avg_stat_quotas:
                 r["Period"] = period_value
-                stat = "Sum"
+                stat = "Average"
 
             metric_scale = 1
             if 'Period' in r:
@@ -204,7 +204,7 @@ class UsageFilter(MetricsFilter):
                     # for all statistic types, but if the service quota API will return
                     # different preferred statistics, atm we will try to match that
                     op = self.metric_map['Maximum']
-                elif stat == 'Sum':
+                elif stat in ('Sum', 'Average'):
                     op = self.metric_map['Maximum']
                 else:
                     op = self.metric_map[stat]
