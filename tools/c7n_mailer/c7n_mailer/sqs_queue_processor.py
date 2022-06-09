@@ -23,7 +23,7 @@ class MailerSqsQueueIterator:
     # Copied from custodian to avoid runtime library dependency
     msg_attributes = ['sequence_id', 'op', 'ser']
 
-    def __init__(self, aws_sqs, queue_url, logger, limit=0, timeout=10):
+    def __init__(self, aws_sqs, queue_url, logger, limit=0, timeout=1):
         self.aws_sqs = aws_sqs
         self.queue_url = queue_url
         self.limit = limit

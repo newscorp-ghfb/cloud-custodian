@@ -76,7 +76,7 @@ class ResourceFormat(unittest.TestCase):
             utils.resource_format(
                 {'PublicIp': '8.8.8.8', 'Domain': 'vpc', 'AllocationId': 'eipxyz'},
                 'network-addr'),
-            'ip: 8.8.8.8  id: eipxyz  scope: vpc')
+            'ip: 8.8.8.8  id: eipxyz  domain: vpc')
 
     def test_nat(self):
         self.assertEqual(
