@@ -96,6 +96,7 @@ CONFIG_SCHEMA = {
             'required': ['project_id'],
             'properties': {
                 'project_id': {'type': 'string'},
+                'project_number': {'type': 'string'},
                 'tags': {'type': 'array', 'items': {'type': 'string'}},
                 'name': {'type': 'string'},
                 'vars': {'type': 'object'},

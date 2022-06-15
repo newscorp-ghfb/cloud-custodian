@@ -124,14 +124,14 @@ class MailerSqsQueueProcessor():
                 body = json.dumps(json.loads(body)["Message"])
             except ValueError:
                 pass
-            messages = json.loads(zlib.decompress(base64.b64decode(body)))
+            message = json.loads(zlib.decompress(base64.b64decode(body)))
 
             if parallel:
                 process_pool.apply_async(
-                    self.process_message, args=(messages, messageId, sentTimestamp)
+                    self.process_message, args=(message, messageId, sentTimestamp)
                 )
             else:
-                self.process_message(messages, messageId, sentTimestamp)
+                self.process_message(message, messageId, sentTimestamp)
             self.logger.debug('Processed sqs_message')
             sqs_messages.ack(sqs_message)
         if parallel:
