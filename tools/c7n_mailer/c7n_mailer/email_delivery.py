@@ -281,6 +281,10 @@ class EmailDelivery:
             # if smtp_server or sendgrid_api_key isn't set in mailer.yml, use aws ses normally.
             else:
                 self.aws_ses.send_raw_email(RawMessage={'Data': mimetext_msg.as_string()})
+
+            # NOTE mimetext_msg should not be none unless only use sendgrid
+            if not mimetext_msg:
+                mimetext_msg = {"To": email_to_addrs}
             # NOTE borrow 'action' object to carry the delivery result
             sqs_message["action"]["delivered_email"] = mimetext_msg.get('To')
             if self.servicenow_url:
