@@ -237,7 +237,7 @@ class EmailDelivery:
             # it_service = resources[0].get(it_service_key)
             # if not it_service and prd != "default":
             #     self.logger.info(
-            #         f"Skip {len(resources)} resources due to "
+            #         f"ServiceNow: Skip {len(resources)} resources due to "
             #         f"it_service value not found for product {prd}"
             #     )
             #     continue
@@ -245,7 +245,7 @@ class EmailDelivery:
             # change it to below during the transit period
             if resources[0].get(jira_project_key):
                 self.logger.info(
-                    f"Skip {len(resources)} resources due to "
+                    f"ServiceNow: Skip {len(resources)} resources due to "
                     f"jira_project value is found for product {prd}"
                 )
                 continue
