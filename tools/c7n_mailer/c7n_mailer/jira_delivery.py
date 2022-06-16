@@ -30,17 +30,17 @@ class JiraDelivery:
             jira_project = resources[0].get(self.key)
             if not jira_project:
                 self.logger.info(
-                    f"Skip {len(resources)} resources due to "
+                    f"Jira: Skip {len(resources)} resources due to "
                     f"jira_project value not found for product {prd}"
                 )
                 continue
             self.logger.info(
-                "Sending account:%s policy:%s %s:%s jira:%s to %s"
+                "Sending account:%s policy:%s %s:%d jira:%s to %s"
                 % (
                     sqs_message.get("account", ""),
                     sqs_message["policy"]["name"],
                     sqs_message["policy"]["resource"],
-                    str(len(sqs_message["resources"])),
+                    len(resources),
                     sqs_message["action"].get("jira_template", "slack_default"),
                     # TODO have the self.key support jmespath
                     jira_project,
@@ -56,7 +56,7 @@ class JiraDelivery:
                         resources,
                         self.logger,
                         "jira_template",
-                        "slack_template",
+                        "slack_default",
                         self.config["templates_folders"],
                     ),
                     "issuetype": {"name": "Task"},
