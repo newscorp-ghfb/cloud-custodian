@@ -52,6 +52,7 @@ class ServiceQuota(QueryResourceManager):
     def augment(self, resources):
         client = local_session(self.session_factory).client('service-quotas')
         retry = get_retry(('TooManyRequestsException',))
+        ignore_codes = set(self.data.get("metadata", {}).get("ignore_service_codes", []))
 
         def get_quotas(client, s):
             quotas = {}
@@ -77,6 +78,7 @@ class ServiceQuota(QueryResourceManager):
                 elif token and not new:
                     break
 
+            self.log.debug(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
             return quotas.values()
 
         results = []
@@ -86,6 +88,8 @@ class ServiceQuota(QueryResourceManager):
         with self.executor_factory(max_workers=1) as w:
             futures = {}
             for r in resources:
+                if r["ServiceCode"] in ignore_codes:
+                    continue
                 futures[w.submit(get_quotas, client, r)] = r
 
             for f in as_completed(futures):
