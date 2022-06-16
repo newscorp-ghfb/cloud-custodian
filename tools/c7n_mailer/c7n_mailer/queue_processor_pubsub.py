@@ -1,6 +1,7 @@
 import base64
 import json
 import zlib
+from google.oauth2.service_account import Credentials
 
 try:
     from c7n_gcp.client import Session
@@ -15,9 +16,26 @@ class MailerPubSubProcessor:
         self.config = config
         self.logger = logger
         self.subscription = self.config.get("gcp_queue_url")
-        self.session = session or Session()
-        self.client = self.session.client("pubsub", "v1", "projects.subscriptions")
         self.processor = processor
+
+        args = {}
+        service_account_info = self.config.get("service_account_info")
+        if service_account_info:
+            with open(service_account_info, "r") as fp:
+                sa_info = json.load(fp)
+
+            # TODO find a better solution that doesn't directly reply on AWS KMS
+            self.logger.info(f"Decrypting {service_account_info} with AWS KMS {processor.session}")
+            kms = processor.session.client("kms")
+            CiphertextBlob = base64.b64decode(sa_info["private_key"])
+            pk = kms.decrypt(CiphertextBlob=CiphertextBlob)["Plaintext"].decode("utf8")
+            sa_info["private_key"] = base64.b64decode(pk).decode("utf8")[:-1].replace("\\n", "\n")
+
+            creds = Credentials.from_service_account_info(sa_info)
+            args["credentials"] = creds
+
+        self.session = session or Session(**args)
+        self.client = self.session.client("pubsub", "v1", "projects.subscriptions")
 
     def run(self):
         if not self.subscription:

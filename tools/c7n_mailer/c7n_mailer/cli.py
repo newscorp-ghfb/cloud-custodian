@@ -41,6 +41,7 @@ CONFIG_SCHEMA = {
     'properties': {
         'queue_url': {'type': 'string'},
         'gcp_queue_url': {'type': 'string'},
+        'service_account_info': {'type': 'string'},
         'endpoint_url': {'type': 'string'},
         'from_address': {'type': 'string'},
         'additional_email_headers': {
