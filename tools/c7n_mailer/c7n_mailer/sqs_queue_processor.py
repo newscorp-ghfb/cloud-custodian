@@ -203,7 +203,8 @@ class MailerSqsQueueProcessor():
         ):
             from .slack_delivery import SlackDelivery
 
-            if self.config.get("slack_token"):
+            slack_token: str = self.config.get("slack_token")
+            if slack_token and not slack_token.startswith("xoxb-"):
                 self.config["slack_token"] = kms_decrypt(
                     self.config, self.logger, self.session, "slack_token"
                 )
