@@ -33,11 +33,11 @@ CORE_DEPS = [
     # core deps
     'jinja2', 'markupsafe', 'yaml', 'ldap3', 'pyasn1', 'redis', 'jmespath',
     # gcp dependencies
-    'google', 'pyasn1_modules',
+    'google', 'pyasn1_modules', 'rsa', 'cachetools',
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
-    'datadog', 'decorator', 'rsa',
+    'datadog', 'decorator',
     # requests (recursive deps), needed by datadog, slackclient, splunk
     'requests', 'urllib3', 'idna', 'charset_normalizer', 'certifi',
     # used by splunk mailer transport
