@@ -37,7 +37,7 @@ def start_c7n_mailer(logger, config=None, parallel=False):
         if "gcp_queue_url" in config:
             from .queue_processor_pubsub import MailerPubSubProcessor
             processor_gcp = MailerPubSubProcessor(config, logger, processor=processor_aws)
-            processor_gcp.run(parallel)
+            processor_gcp.run()
 
     except Exception as e:
         logger.exception("Error starting mailer MailerSqsQueueProcessor(). \n Error: %s \n" % (e))
