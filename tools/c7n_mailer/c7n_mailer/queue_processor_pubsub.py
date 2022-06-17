@@ -1,13 +1,13 @@
 import base64
 import json
 import zlib
-from google.oauth2.service_account import Credentials
 
-from c7n_gcp.client import Session
-# try:
-#     from c7n_gcp.client import Session
-# except ImportError:
-#     raise Exception("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
+try:
+    from google.oauth2.service_account import Credentials
+    from c7n_gcp.client import Session
+except ImportError:
+    print("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
+    # raise Exception("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
 
 MAX_MESSAGES = 100
 

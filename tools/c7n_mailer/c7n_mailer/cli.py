@@ -11,7 +11,6 @@ import yaml
 from c7n_mailer import deploy, utils
 from c7n_mailer.azure_mailer.azure_queue_processor import MailerAzureQueueProcessor
 from c7n_mailer.azure_mailer import deploy as azure_deploy
-from c7n_mailer.queue_processor_pubsub import MailerPubSubProcessor
 from c7n_mailer.sqs_queue_processor import MailerSqsQueueProcessor
 from c7n_mailer.utils import get_provider, Providers
 
@@ -278,15 +277,21 @@ def main():
         elif provider == Providers.AWS:
             aws_session = session_factory(mailer_config)
             processor = MailerSqsQueueProcessor(mailer_config, aws_session, logger)
-            processor_gcp = MailerPubSubProcessor(mailer_config, logger, processor=processor)
+
+            processor_gcp = None
+            if "gcp_queue_url" in mailer_config:
+                from c7n_mailer.queue_processor_pubsub import MailerPubSubProcessor
+                processor_gcp = MailerPubSubProcessor(mailer_config, logger, processor=processor)
 
         # Execute
         if max_num_processes:
             run_mailer_in_parallel(processor, max_num_processes)
-            run_mailer_in_parallel(processor_gcp, max_num_processes)
+            if processor_gcp:
+                run_mailer_in_parallel(processor_gcp, max_num_processes)
         else:
             processor.run()
-            processor_gcp.run()
+            if processor_gcp:
+                processor_gcp.run()
 
 
 if __name__ == '__main__':

@@ -7,7 +7,6 @@ import boto3
 import json
 import os
 
-from .queue_processor_pubsub import MailerPubSubProcessor
 from .sqs_queue_processor import MailerSqsQueueProcessor
 
 
@@ -35,8 +34,10 @@ def start_c7n_mailer(logger, config=None, parallel=False):
 
         # NOTE use AWS mailer to process GCP PubSub message
         # TODO provide sentTimestamp by converting publishTime of the message
-        processor_gcp = MailerPubSubProcessor(config, logger, processor=processor_aws)
-        processor_gcp.run(parallel)
+        if "gcp_queue_url" in config:
+            from .queue_processor_pubsub import MailerPubSubProcessor
+            processor_gcp = MailerPubSubProcessor(config, logger, processor=processor_aws)
+            processor_gcp.run(parallel)
 
     except Exception as e:
         logger.exception("Error starting mailer MailerSqsQueueProcessor(). \n Error: %s \n" % (e))
