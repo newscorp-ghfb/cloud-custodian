@@ -33,8 +33,8 @@ CORE_DEPS = [
     # core deps
     'jinja2', 'markupsafe', 'yaml', 'ldap3', 'pyasn1', 'redis', 'jmespath',
     # gcp dependencies
-    'google', 'pyasn1_modules', 'rsa', 'cachetools', 'googleapiclient', 'google_crc32c',
-    'httplib2', 'pyparsing', 'uritemplate', 'google_auth_httplib2',
+    'google', 'pyasn1_modules', 'rsa', 'cachetools', 'googleapiclient',
+    'httplib2', 'pyparsing', 'uritemplate', 'google_auth_httplib2', 'retrying', 'ratelimiter',
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
@@ -65,6 +65,12 @@ def get_archive(config):
     function_config['templates_folders'] = ['msg-templates/']
     archive.add_contents('config.json', json.dumps(function_config))
     archive.add_contents('periodic.py', entry_source)
+
+    # NOTE pack GCP Service Account creds
+    sa_info = config.get("service_account_info")
+    if sa_info:
+        with open(sa_info) as fh:
+            archive.add_contents(sa_info, fh.read())
 
     archive.close()
     return archive

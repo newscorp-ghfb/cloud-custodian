@@ -5,8 +5,9 @@ import zlib
 try:
     from google.oauth2.service_account import Credentials
     from c7n_gcp.client import Session
-except ImportError:
+except ImportError as e:
     print("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
+    print(str(e))
     # raise Exception("Using GCP Pub/Sub with c7n_mailer requires package c7n_gcp to be installed.")
 
 MAX_MESSAGES = 100
