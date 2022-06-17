@@ -32,6 +32,8 @@ def dispatch(event, context):
 CORE_DEPS = [
     # core deps
     'jinja2', 'markupsafe', 'yaml', 'ldap3', 'pyasn1', 'redis', 'jmespath',
+    # gcp dependencies
+    'google',
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
@@ -47,7 +49,7 @@ CORE_DEPS = [
 
 
 def get_archive(config):
-    deps = ['c7n_mailer'] + list(CORE_DEPS)
+    deps = ['c7n_mailer', 'c7n_gcp'] + list(CORE_DEPS)
     archive = PythonPackageArchive(modules=deps)
 
     for d in set(config['templates_folders']):
