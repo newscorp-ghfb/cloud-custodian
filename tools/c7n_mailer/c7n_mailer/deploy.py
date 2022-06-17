@@ -37,7 +37,7 @@ CORE_DEPS = [
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
-    'datadog', 'decorator',
+    'datadog', 'decorator', 'rsa',
     # requests (recursive deps), needed by datadog, slackclient, splunk
     'requests', 'urllib3', 'idna', 'charset_normalizer', 'certifi',
     # used by splunk mailer transport
