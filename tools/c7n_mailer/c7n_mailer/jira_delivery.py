@@ -15,12 +15,9 @@ class JiraDelivery:
         self.init_jira()
 
     def init_jira(self):
-        txt = self.config.get("jira_basic_auth")
-        # NOTE check length to skip calls to KMS while testing with plain text
-        if len(txt) > 100:
-            self.logger.info("Calling KMS to decrypt the jira_basic_auth")
-            txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
-        basic_auth = tuple(txt.split(":"))
+        self.logger.info("Calling KMS to decrypt the jira_basic_auth")
+        auth_txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
+        basic_auth = tuple(auth_txt.split(":"))
         self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
     def jira_handler(self, sqs_message, jira_messages):
