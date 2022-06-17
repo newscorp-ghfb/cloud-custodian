@@ -33,7 +33,7 @@ CORE_DEPS = [
     # core deps
     'jinja2', 'markupsafe', 'yaml', 'ldap3', 'pyasn1', 'redis', 'jmespath',
     # gcp dependencies
-    'google',
+    'google', 'pyasn1_modules',
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
