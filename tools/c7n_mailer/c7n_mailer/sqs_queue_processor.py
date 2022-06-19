@@ -193,7 +193,7 @@ class MailerSqsQueueProcessor():
                     jira_delivery.jira_handler(sqs_message, jira_messages=groupedResources)
                 except Exception as e:
                     self.logger.error(f"Failed to create Jira issue: {str(e)}")
-                    sqs_message["action"]["delivered_jira_error"] = str(e)
+                    sqs_message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
 
         # this section sends a notification to the resource owner via Slack
         if any(
