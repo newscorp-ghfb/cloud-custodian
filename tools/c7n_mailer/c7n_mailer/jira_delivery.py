@@ -26,7 +26,7 @@ class JiraDelivery:
         basic_auth = tuple(auth_txt.split(":"))
         self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
-    def jira_handler(self, sqs_message, jira_messages):
+    def jira_handler(self, message, jira_messages):
         issue_list = []
         for prd, resources in jira_messages.items():
             # TODO take tag:jira_project into count
@@ -40,22 +40,23 @@ class JiraDelivery:
             self.logger.info(
                 "Sending account:%s policy:%s %s:%d jira:%s to %s"
                 % (
-                    sqs_message.get("account", ""),
-                    sqs_message["policy"]["name"],
-                    sqs_message["policy"]["resource"],
+                    message.get("account", ""),
+                    message["policy"]["name"],
+                    message["policy"]["resource"],
                     len(resources),
-                    sqs_message["action"].get("jira_template", "slack_default"),
+                    message["action"].get("jira_template", "slack_default"),
                     # TODO have the self.key support jmespath
                     jira_project,
                 )
             )
+            priority = message["action"].get("jira", {}).get("priority", "Medium")
             issue_list.append(
                 {
                     "project": jira_project,
-                    "summary": utils.get_message_subject(sqs_message),
+                    "summary": utils.get_message_subject(message),
                     "description": utils.get_rendered_jinja(
                         jira_project,
-                        sqs_message,
+                        message,
                         resources,
                         self.logger,
                         "jira_template",
@@ -63,7 +64,7 @@ class JiraDelivery:
                         self.config["templates_folders"],
                     ),
                     "issuetype": {"name": "Task"},
-                    "priority": {"name": "Medium"},
+                    "priority": {"name": priority},
                 }
             )
             issue_list[-1].update(**self.custom_fields.get(jira_project, {}))
@@ -72,8 +73,8 @@ class JiraDelivery:
             issueIds = self.create_issues(issue_list)
             if issueIds:
                 # NOTE borrow 'action' object to carry the delivery result
-                sqs_message["action"]["delivered_jira"] = issueIds
-                sqs_message["action"]["delivered_jira_url"] = self.url
+                message["action"]["delivered_jira"] = issueIds
+                message["action"]["delivered_jira_url"] = self.url
 
     def create_issues(self, issue_list) -> List:
         if not issue_list:
