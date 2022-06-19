@@ -28,10 +28,13 @@ class MailerPubSubProcessor:
 
             # TODO find a better solution that doesn't directly reply on AWS KMS
             self.logger.info(f"Decrypting {service_account_info} with AWS KMS {processor.session}")
-            kms = processor.session.client("kms")
-            CiphertextBlob = base64.b64decode(sa_info["private_key"])
-            pk = kms.decrypt(CiphertextBlob=CiphertextBlob)["Plaintext"].decode("utf8")
-            sa_info["private_key"] = base64.b64decode(pk).decode("utf8")[:-1].replace("\\n", "\n")
+            try:
+                CiphertextBlob = base64.b64decode(sa_info["private_key"])
+                kms = processor.session.client("kms")
+                pk = kms.decrypt(CiphertextBlob=CiphertextBlob)["Plaintext"].decode("utf8")
+                sa_info["private_key"] = base64.b64decode(pk).decode("utf8")[:-1].replace("\\n", "\n")
+            except Exception as e:
+                self.logger.warning("Unable to decode/decrypt private key: " + str(e))
 
             creds = Credentials.from_service_account_info(sa_info)
             args["credentials"] = creds
