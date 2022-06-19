@@ -63,7 +63,7 @@ class MailerSqsQueueIterator:
         )
 
 
-class MailerSqsQueueProcessor():
+class MailerSqsQueueProcessor:
     def __init__(self, config, session, logger, max_num_processes=16):
         self.config = config
         self.logger = logger
@@ -132,7 +132,7 @@ class MailerSqsQueueProcessor():
                 )
             else:
                 self.process_message(message, messageId, sentTimestamp)
-            self.logger.debug('Processed sqs_message')
+            self.logger.debug("Processed sqs_message")
             sqs_messages.ack(sqs_message)
         if parallel:
             process_pool.close()
@@ -205,9 +205,8 @@ class MailerSqsQueueProcessor():
 
             slack_token: str = self.config.get("slack_token")
             if slack_token and not slack_token.startswith("xoxb-"):
-                self.config["slack_token"] = kms_decrypt(
-                    self.config, self.logger, self.session, "slack_token"
-                )
+                slack_token = kms_decrypt(self.config, self.logger, self.session, "slack_token")
+                self.config["slack_token"] = slack_token
 
             slack_delivery = SlackDelivery(self.config, self.logger, email_delivery)
             slack_messages = slack_delivery.get_to_addrs_slack_messages_map(sqs_message)

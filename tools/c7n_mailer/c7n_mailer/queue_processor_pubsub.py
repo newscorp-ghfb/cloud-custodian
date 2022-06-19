@@ -32,7 +32,7 @@ class MailerPubSubProcessor:
                 CiphertextBlob = base64.b64decode(sa_info["private_key"])
                 kms = processor.session.client("kms")
                 pk = kms.decrypt(CiphertextBlob=CiphertextBlob)["Plaintext"].decode("utf8")
-                sa_info["private_key"] = base64.b64decode(pk).decode("utf8")[:-1].replace("\\n", "\n")
+                sa_info["private_key"] = pk.replace("\\n", "\n")
             except Exception as e:
                 self.logger.warning("Unable to decode/decrypt private key: " + str(e))
 
