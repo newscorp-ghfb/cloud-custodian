@@ -21,8 +21,8 @@ class JiraDelivery:
         # NOTE check length to skip calls to KMS while testing with plain text
         if len(auth_txt) > 100:
             self.logger.info("Calling KMS to decrypt the jira_basic_auth")
-            b64_txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
-            self.config["jira_basic_auth"] = auth_txt = base64.b64decode(b64_txt).decode("utf8")
+            auth_txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
+            self.config["jira_basic_auth"] = auth_txt
         basic_auth = tuple(auth_txt.split(":"))
         self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
