@@ -29,8 +29,9 @@ class JiraDelivery:
     def jira_handler(self, message, jira_messages):
         issue_list = []
         for prd, resources in jira_messages.items():
+            jira_conf = message["action"].get("jira", {})
             # TODO take tag:jira_project into count
-            jira_project = resources[0].get(self.key)
+            jira_project = resources[0].get(self.key) or jira_conf.get("project")
             if not jira_project:
                 self.logger.info(
                     f"Jira: Skip {len(resources)} resources due to "
@@ -49,7 +50,7 @@ class JiraDelivery:
                     jira_project,
                 )
             )
-            priority = message["action"].get("jira", {}).get("priority", "Medium")
+            priority = jira_conf.get("priority", "Medium")
             issue_list.append(
                 {
                     "project": jira_project,
