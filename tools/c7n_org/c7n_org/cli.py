@@ -36,6 +36,12 @@ from c7n_org.utils import environ, account_tags
 
 log = logging.getLogger('c7n_org')
 
+try:
+    from yamlinclude import YamlIncludeConstructor
+    YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.SafeLoader)
+except:
+    log.warn("pyyaml-include not found, !include tag will not be supported.")
+
 # Workaround OSX issue, note this exists for py2 but there
 # isn't anything we can do in that case.
 # https://bugs.python.org/issue33725
