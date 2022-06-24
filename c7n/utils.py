@@ -42,6 +42,12 @@ class SafeDumper(BaseSafeDumper or object):
 
 log = logging.getLogger('custodian.utils')
 
+try:
+    from yamlinclude import YamlIncludeConstructor
+    YamlIncludeConstructor.add_to_loader_class(loader_class=SafeLoader)
+except:
+    log.warn("pyyaml-include not found, !include tag will not be supported.")
+
 
 class VarsSubstitutionError(Exception):
     pass
@@ -56,21 +62,12 @@ def load_file(path, format=None, vars=None):
 
     with open(path) as fh:
         contents = fh.read()
-
-        if vars:
-            try:
-                contents = contents.format(**vars)
-            except IndexError:
-                msg = 'Failed to substitute variable by positional argument.'
-                raise VarsSubstitutionError(msg)
-            except KeyError as e:
-                msg = 'Failed to substitute variables.  KeyError on {}'.format(str(e))
-                raise VarsSubstitutionError(msg)
-
+        # NOTE change to format_string_values after the file is parsed
         if format == 'yaml':
-            return yaml_load(contents)
+            obj = yaml_load(contents)
         elif format == 'json':
-            return loads(contents)
+            obj = loads(contents)
+        return format_string_values(obj, **vars) if vars else obj
 
 
 def yaml_load(value):
