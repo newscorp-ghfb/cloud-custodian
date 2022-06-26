@@ -29,6 +29,7 @@ class ElastiCacheCluster(QueryResourceManager):
 
     class resource_type(TypeInfo):
         service = 'elasticache'
+        arn = 'ARN'
         arn_type = 'cluster'
         arn_separator = ":"
         enum_spec = ('describe_cache_clusters',
