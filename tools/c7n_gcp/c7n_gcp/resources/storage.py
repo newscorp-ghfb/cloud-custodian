@@ -1,6 +1,10 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
-from c7n.utils import type_schema
+from googleapiclient.errors import HttpError
+from google.cloud import storage
+from c7n_gcp.actions.labels import LabelDelayedAction, SetLabelsAction
+from c7n_gcp.filters.labels import LabelActionFilter
+from c7n.utils import type_schema, local_session
 from c7n_gcp.actions import MethodAction
 from c7n_gcp.provider import resources
 from c7n_gcp.query import QueryResourceManager, TypeInfo
@@ -28,6 +32,12 @@ class Bucket(QueryResourceManager):
             return client.execute_command(
                 'get', {'bucket': resource_info['bucket_name']})
 
+        @staticmethod
+        def get_label_params(resource, all_labels):
+            return {'bucket': resource['name'],
+                    'fields': 'labels',
+                    'body': {'labels': all_labels}}
+
 
 @Bucket.filter_registry.register('iam-policy')
 class BucketIamPolicyFilter(IamPolicyFilter):
@@ -39,6 +49,41 @@ class BucketIamPolicyFilter(IamPolicyFilter):
     def _verb_arguments(self, resource):
         verb_arguments = {"bucket": resource["name"]}
         return verb_arguments
+
+
+@Bucket.filter_registry.register('marked-for-op')
+class BucketLabelActionFilter(LabelActionFilter):
+    pass
+
+
+def invoke_bucket_api(action, params):
+    try:
+        # NOTE override the client with storage.Client
+        session = local_session(action.manager.session_factory)
+        client = storage.Client(
+            project=session.get_default_project(),
+            credentials=session._credentials)
+        bucket = client.get_bucket(params["bucket"])
+        bucket.labels = params["body"]["labels"]
+        bucket.patch()
+    except HttpError as e:
+        if e.resp.status in action.ignore_error_codes:
+            return e
+        raise
+
+
+@Bucket.action_registry.register('set-labels')
+class BucketSetLabelsAction(SetLabelsAction):
+
+    def invoke_api(self, client, op_name, params):
+        return invoke_bucket_api(self, params)
+
+
+@Bucket.action_registry.register('mark-for-op')
+class BucketLabelDelayedAction(LabelDelayedAction):
+
+    def invoke_api(self, client, op_name, params):
+        return invoke_bucket_api(self, params)
 
 
 @Bucket.action_registry.register('set-uniform-access')
