@@ -39,7 +39,7 @@ def main(output, ignore):
             if 'labels' in project:
                 project_info['tags'] = [
                     '%s:%s' % (k, v) for k, v in project.get('labels', {}).items()]
-                project_info['vars'] = {k:v for k, v in project.get('labels', {}).items()}
+                project_info['vars'] = {k: v for k, v in project.get('labels', {}).items()}
             results.append(project_info)
 
     output.write(

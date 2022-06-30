@@ -45,7 +45,7 @@ log = logging.getLogger('custodian.utils')
 try:
     from yamlinclude import YamlIncludeConstructor
     YamlIncludeConstructor.add_to_loader_class(loader_class=SafeLoader)
-except:
+except ImportError:
     log.warn("pyyaml-include not found, !include tag will not be supported.")
 
 
