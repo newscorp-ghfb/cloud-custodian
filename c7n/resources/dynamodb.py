@@ -34,18 +34,9 @@ class ConfigTable(query.ConfigSource):
 class DescribeTable(query.DescribeSource):
 
     def augment(self, resources):
-        resources = universal_augment(
+        return universal_augment(
             self.manager,
             super(DescribeTable, self).augment(resources))
-
-        # NOTE below code is for testing with moto because it does not support uni tag api
-        client = None
-        for r in resources:
-            if not r.get("Tags"):
-                client = client or local_session(self.manager.session_factory).client('dynamodb')
-                r["Tags"] = client.list_tags_of_resource(ResourceArn=r["TableArn"])["Tags"]
-
-        return resources
 
 
 @resources.register('dynamodb-table')

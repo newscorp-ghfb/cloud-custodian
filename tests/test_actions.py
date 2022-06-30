@@ -1,5 +1,6 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+import logging
 from botocore.exceptions import ClientError
 from c7n.exceptions import PolicyValidationError
 from c7n.actions import Action, ActionRegistry
@@ -14,7 +15,7 @@ class ActionTest(BaseTest):
     def test_filter_resources(self):
         a = Action()
         a.type = 'set-x'
-        log_output = self.capture_logging('custodian.actions')
+        log_output = self.capture_logging('custodian.actions', level=logging.DEBUG)
         resources = [
             {'app': 'X', 'state': {'status': 'running'}},
             {'app': 'Y', 'state': {'status': 'stopped'}},
