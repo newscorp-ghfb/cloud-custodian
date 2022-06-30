@@ -66,7 +66,7 @@ class AccountTests(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(sorted(list(resources[0].keys())),
-                         sorted(['account_id', 'account_name', 'c7n_resource_type_id']))
+                         sorted(['account_id', 'account_name']))
 
     def test_missing_multi_region(self):
         # missing filter needs some special handling as it embeds
