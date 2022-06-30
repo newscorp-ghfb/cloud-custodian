@@ -1295,6 +1295,10 @@ class LambdaModeTest(BaseTest):
 
         self.patch(mu.LambdaManager, 'publish', publish)
 
+        def get(self, func_name, qualifier=None):
+            pass
+        self.patch(mu.LambdaManager, 'get', get)
+
         p.provision()
         self.assertEqual(
             policy_lambda[0].tags['custodian-info'],
@@ -1552,6 +1556,12 @@ class GuardModeTest(BaseTest):
                 "mode": {"type": "guard-duty"},
             }
         )
+
+        def get(self, func_name, qualifier=None):
+            pass
+        from c7n import mu
+        self.patch(mu.LambdaManager, 'get', get)
+
         p.run()
 
     @mock.patch("c7n.mu.LambdaManager.publish")
@@ -1576,6 +1586,12 @@ class GuardModeTest(BaseTest):
                 "mode": {"type": "guard-duty"},
             }
         )
+
+        def get(self, func_name, qualifier=None):
+            pass
+        from c7n import mu
+        self.patch(mu.LambdaManager, 'get', get)
+
         p.run()
 
     @mock.patch("c7n.query.QueryResourceManager.get_resources")
