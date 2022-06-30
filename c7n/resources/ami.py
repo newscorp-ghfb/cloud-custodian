@@ -299,6 +299,7 @@ class ImageLastLaunchedTimeFilter(AgeFilter):
         'last-launched-time',
         op={'$ref': '#/definitions/filters_common/comparison_operators'},
         days={'type': 'number', 'minimum': 0})
+    permissions = ('ec2:DescribeImageAttribute',)
 
     def get_resource_date(self, i):
         if not i.get(self.date_attribute):
