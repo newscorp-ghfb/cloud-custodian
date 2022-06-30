@@ -103,6 +103,10 @@ To avoid any unnecessary code conflict while merging upstream changes, we must f
 
    - iam-policy - user-role support roles and verb_argument() refactor
 
+3. gcp.bucket
+
+   - gcp-bucket - add set-labels and mark(ed)-for-op
+
 ---
 
 Cloud Custodian is a rules engine for managing public cloud accounts and
