@@ -39,7 +39,7 @@ log = logging.getLogger('c7n_org')
 try:
     from yamlinclude import YamlIncludeConstructor
     YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.SafeLoader)
-except:
+except ImportError:
     log.warn("pyyaml-include not found, !include tag will not be supported.")
 
 # Workaround OSX issue, note this exists for py2 but there
