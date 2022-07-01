@@ -766,7 +766,8 @@ class NetworkInterfaceTest(BaseTest):
         resources = p.run()
         self.assertEqual(len(resources), 1)
         self.assertEqual(
-            [k for k in resources[0] if k.startswith("c7n")], ["c7n:MatchedFilters"]
+            [k for k in resources[0] if k.startswith("c7n")],
+            ["c7n:MatchedFilters", "c7n_resource_type_id"]
         )
 
     def test_interface_delete(self):
@@ -1596,6 +1597,7 @@ class SecurityGroupTest(BaseTest):
         formatted = post_finding.format_resource(resources[0])
         for k in ('IpPermissions', 'IpPermissionsEgress', 'Tags'):
             formatted['Details']['Other'].pop(k)
+        print("formatted", formatted)
         self.assertEqual(
             formatted,
             {'Details': {
@@ -1605,6 +1607,7 @@ class SecurityGroupTest(BaseTest):
                     'GroupName': 'default',
                     'OwnerId': '644160558196',
                     'VpcId': 'vpc-d2d616b5',
+                    'c7n_resource_type_id': 'GroupId',
                     'c7n:resource-type': 'security-group'}},
              'Id': 'arn:aws:ec2:us-east-1:644160558196:security-group/sg-6c7fa917',
              'Partition': 'aws',

@@ -18,6 +18,7 @@
                 "CacheParameterGroupName": "default.redis3.2", 
                 "VpcId": "vpc-f1516b97", 
                 "CacheClusterId": "myec-001", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:myec-001",
                 "SnapshotRetentionLimit": 0, 
                 "NumCacheNodes": 1, 
                 "SnapshotName": "myec-backup", 

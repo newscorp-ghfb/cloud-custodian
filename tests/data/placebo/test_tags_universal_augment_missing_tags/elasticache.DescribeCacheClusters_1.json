@@ -4,6 +4,7 @@
         "CacheClusters": [
             {
                 "CacheClusterId": "test",
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:test",
                 "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
                 "CacheNodeType": "cache.t2.micro",
                 "Engine": "redis",

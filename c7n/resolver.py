@@ -161,11 +161,12 @@ class ValuesFrom:
             if self.cache.haskey(("value-from", key)):
                 return contents
 
+        contents = self._get_values()
         # NOTE apply default value
-        contents = self._get_values() or self.data.get("default_value")
+        if not contents and "default_value" in self.data:
+            contents = self.data.get("default_value")
 
         # NOTE normalise the value for gcp label
-        log.debug(self.data.get("expr"), contents)
         if self.data.get("value_type") == "gcp_label":
             contents = gcpLabelaise(contents)
 

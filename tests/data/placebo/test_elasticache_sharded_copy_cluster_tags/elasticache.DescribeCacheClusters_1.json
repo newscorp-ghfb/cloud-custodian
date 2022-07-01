@@ -4,6 +4,7 @@
         "CacheClusters": [
             {
                 "CacheClusterId": "megacache-0001-001", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0001-001",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 
@@ -46,6 +47,7 @@
             }, 
             {
                 "CacheClusterId": "megacache-0001-002", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0001-002",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 
@@ -88,6 +90,7 @@
             }, 
             {
                 "CacheClusterId": "megacache-0001-003", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0001-003",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 
@@ -130,6 +133,7 @@
             }, 
             {
                 "CacheClusterId": "megacache-0002-001", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0002-001",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 
@@ -172,6 +176,7 @@
             }, 
             {
                 "CacheClusterId": "megacache-0002-002", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0002-002",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 
@@ -214,6 +219,7 @@
             }, 
             {
                 "CacheClusterId": "megacache-0002-003", 
+                "ARN": "arn:aws:elasticache:us-east-1:123456789012:cluster:megacache-0002-003",
                 "ReplicationGroupId": "megacache", 
                 "CacheClusterStatus": "available", 
                 "SnapshotRetentionLimit": 0, 

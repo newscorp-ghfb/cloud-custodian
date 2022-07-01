@@ -45,6 +45,7 @@ class NotifyTest(BaseTest):
             ]}, session_factory=factory)
 
         resources = p.run()
+        print("resources", resources)
 
         self.assertEqual(len(resources), 1)
         stub_client.execute_command.assert_called_once()
@@ -54,12 +55,13 @@ class NotifyTest(BaseTest):
                 'topic': 'projects/cloud-custodian/topics/gcptestnotifytopic',
                 'body': {
                     'messages': {
-                        'data': ('eJzdUrtqAzEQ7PUVh+qcjd2EuEqVLl8QgpFXe2cFnVZIq8Bh/O/'
-                                 'RA58vkCqkSrHNDDuPZS9C4ic6lofOJWsfhFQAlBwfjc6YhBSZtFGu3'
-                                 '+2fdvLO/0wGHA25wilrC+DJGpgzcBHSqQkLxRi5d8RmmNtOpBSgUiP4jU'
-                                 '+nmE49kzdQ+MFYxhAz/SZWKj7QBwLHLVhKul+'
-                                 'ybOti3GapYtR8mpi4ivfagHPIRZBnXwXviRgnbxVXVOOgkuXaJRgKhuf'
-                                 'jGZXGUNh9wXPakuRWzbixa1pdc6qSVO1kihieNU3KuA3QJGsgDspFT4Hb'
-                                 'nW6B2iHadon/69K5trguxb+b/OPWq9/6i+/JcvDoDq+'
-                                 'K4Yz6ZfWVTbUcucwX+HoY5Q==')
+                        # NOTE updated below due to c7n_resource_type_id added to response
+                        'data': ('eJzdU7tuwyAU3fkKi7mOlSxVM3Xq1i+IKovAtUOFuQgulawo/'
+                                 '14eteNKnapOXc/hngdcrozDB1jix8ZGYx4YF1JitNRrlTAuYyB'
+                                 'UWth2f3ja8zv/M+lh1GgzJ4zJgEOj5ZyAK+NWTJApgkCtRdLDX'
+                                 'GcCRi8LNUq3c/Ec4rkldFpmftCGwIdEn9hGxXl8B0mhkwajatcs'
+                                 'XRkMXZLKRtWnirEbeysNKIVcBWl2RfCeiGByRlBBFQwiGipdvEa'
+                                 'vae4vIBT4zB4yntLmJEs1bcemajXVqUhiseMxgH9WOAltdxInXg'
+                                 'KRFzY49FTvaQlUL6JO5/i/Lp1qs9ta/LvJP2692a2/2J4kJx/t8'
+                                 'VWQvIB62WxlVS2l0ol+Me1zpa9/VE+Uh/gE2Z8jug==')
                     }}})
