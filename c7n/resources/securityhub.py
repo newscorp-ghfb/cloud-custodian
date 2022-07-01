@@ -92,8 +92,8 @@ class SecurityHubFindingFilter(Filter):
             finding_id = '{}/{}/{}/{}'.format(  # nosec
                 self.manager.config.region,
                 self.manager.config.account_id,
-                hashlib.md5(policyName.encode('utf8')).hexdigest(),
-                hashlib.md5(json.dumps([resource[model.id]]).encode('utf8')).hexdigest())
+                hashlib.sha256(policyName.encode('utf8')).hexdigest(),
+                hashlib.sha256(json.dumps([resource[model.id]]).encode('utf8')).hexdigest())
             return finding_id
 
         finding_key = '{}:{}'.format('c7n:FindingId', policyName)
@@ -518,8 +518,8 @@ class PostFinding(Action):
                 self.manager.config.region,
                 self.manager.config.account_id,
                 # NOTE use policy name instead of whole policy, make the finding more easy to find
-                hashlib.md5(policy.name.split("--")[0].encode('utf8')).hexdigest(),
-                hashlib.md5(json.dumps(list(sorted(  # nosemgrep
+                hashlib.sha256(policy.name.split("--")[0].encode('utf8')).hexdigest(),
+                hashlib.sha256(json.dumps(list(sorted(  # nosemgrep
                     [r[model.id] for r in resources]))).encode(
                         'utf8')).hexdigest())
         finding = {

@@ -71,7 +71,7 @@ class InMemoryCache:
         return self.data.get(pickle.dumps(key))  # nosemgrep
 
     def haskey(self, key):
-        return pickle.dumps(key) in self.data
+        return pickle.dumps(key) in self.data  # nosemgrep
 
     def save(self, key, data):
         self.data[pickle.dumps(key)] = data  # nosemgrep
@@ -96,7 +96,7 @@ class FileCacheManager:
         return self.data.get(k)
 
     def haskey(self, key):
-        return pickle.dumps(key) in self.data
+        return pickle.dumps(key) in self.data  # nosemgrep
 
     def load(self):
         if self.data:
