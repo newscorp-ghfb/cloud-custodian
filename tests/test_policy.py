@@ -1612,7 +1612,8 @@ class GuardModeTest(BaseTest):
 
         event = event_data("ec2-duty-event.json")
         results = p.push(event, None)
-        self.assertEqual(results, [{"InstanceId": "i-99999999"}])
+        self.assertEqual(results, [{"InstanceId": "i-99999999",
+            "c7n_resource_type_id": "InstanceId"}])
 
     @mock.patch("c7n.query.QueryResourceManager.get_resources")
     def test_iam_user_access_key_annotate(self, get_resources):
@@ -1638,6 +1639,7 @@ class GuardModeTest(BaseTest):
                 {
                     u"UserName": u"GeneratedFindingUserName",
                     u"c7n:AccessKeys": {u"AccessKeyId": u"GeneratedFindingAccessKeyId"},
+                    u"c7n_resource_type_id": u"UserName",
                 }
             ],
         )

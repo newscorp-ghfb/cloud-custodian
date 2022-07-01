@@ -460,6 +460,7 @@ class RDSClusterSnapshotTest(BaseTest):
             session_factory=session_factory)
         rm = p2.resource_manager
         resources2 = rm.get_resources([resources[-1][rm.resource_type.id]])
+        resources2[0]['c7n_resource_type_id'] = 'DBClusterSnapshotIdentifier'
         self.maxDiff = None
         # placebo mangles the utc tz with its own class, also our account rewriter
         # mangles the timestamp string :-(
