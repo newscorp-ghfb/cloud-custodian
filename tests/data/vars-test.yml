@@ -1,5 +1,5 @@
 policies:
 - name: unit-test-policy
-  resource: {resource}
+  resource: "{resource}"
   comment: |
     Test policy for unit tests
