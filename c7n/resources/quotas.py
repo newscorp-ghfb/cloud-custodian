@@ -11,6 +11,7 @@ import math
 from concurrent.futures import as_completed
 from datetime import timedelta, datetime
 from statistics import mean
+from time import sleep
 
 from c7n.actions import Action
 from c7n.exceptions import PolicyExecutionError
@@ -79,6 +80,8 @@ class ServiceQuota(QueryResourceManager):
                     break
 
             self.log.debug(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
+            # NOTE fix TooManyRequestsException when calling the ListServiceQuotas
+            sleep(0.05)
             return quotas.values()
 
         results = []
