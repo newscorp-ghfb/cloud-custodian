@@ -90,10 +90,11 @@ class SlackDelivery:
                         continue
 
                     resolved_addrs = result['Value']
+
                     # NOTE allow user to decide prefix # or not
                     # if not resolved_addrs.startswith("#"):
                     #     resolved_addrs = "#" + resolved_addrs
-                    
+
                     if resolved_addrs in channel_resources:
                         channel_resources[resolved_addrs].append(resource)
                     else:
