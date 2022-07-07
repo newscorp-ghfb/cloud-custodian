@@ -57,7 +57,8 @@ class TestSlackDelivery(unittest.TestCase):
         assert json.loads(result[self.target_channel])['channel'] == self.target_channel
         self.logger.debug.assert_called_with("Generating message for specified Slack channel.")
 
-    def test_map_sending_to_tag_channel_without_hash(self):
+    # NOTE comment below to allow user to decide prefix # or not
+    def xtest_map_sending_to_tag_channel_without_hash(self):
         self.target_channel = 'tag-channel'
         channel_name = "#" + self.target_channel
 
