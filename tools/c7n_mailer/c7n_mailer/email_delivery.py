@@ -33,8 +33,8 @@ class EmailDelivery:
     def get_valid_emails_from_list(self, targets):
         emails = []
         for target in targets:
-            target = target.replace(";", ":").replace(",", ":")
-            for email in target.split(':'):
+            target = target.replace(";", ",")
+            for email in target.split(','):
                 email = email.strip()
                 if is_email(email):
                     emails.append(email)
