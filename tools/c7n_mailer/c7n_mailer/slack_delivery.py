@@ -78,26 +78,38 @@ class SlackDelivery:
                     resource_list,
                     self.logger, 'slack_template', 'slack_default',
                     self.config['templates_folders'])
-            elif target.startswith('slack://tag/') and 'Tags' in resource:
+            elif target.startswith('slack://tag/'):
                 tag_name = target.split('tag/', 1)[1]
-                result = next((item for item in resource.get('Tags', [])
-                               if item["Key"] == tag_name), None)
-                if not result:
-                    self.logger.debug(
-                        "No %s tag found in resource." % tag_name)
-                    continue
+                channel_resources = {}
+                for resource in resource_list:
+                    result = next((item for item in resource.get('Tags', [])
+                                if item["Key"] == tag_name), None)
+                    if not result:
+                        self.logger.debug(
+                            "No %s tag found in resource." % tag_name)
+                        continue
 
-                resolved_addrs = result['Value']
+                    resolved_addrs = result['Value']
+                    # NOTE allow user to decide prefix # or not
+                    # if not resolved_addrs.startswith("#"):
+                    #     resolved_addrs = "#" + resolved_addrs
+                    
+                    if resolved_addrs in channel_resources:
+                        channel_resources[resolved_addrs].append(resource)
+                    else:
+                        channel_resources[resolved_addrs] = [resource]
 
-                if not resolved_addrs.startswith("#"):
-                    resolved_addrs = "#" + resolved_addrs
+                for ch, res in channel_resources.items():
+                    if ch in slack_messages:
+                        self.logger.warning(f"Tag {ch} on {len(res)} resources are duplicated")
+                        continue
 
-                slack_messages[resolved_addrs] = get_rendered_jinja(
-                    resolved_addrs, sqs_message,
-                    resource_list,
-                    self.logger, 'slack_template', 'slack_default',
-                    self.config['templates_folders'])
-                self.logger.debug("Generating message for specified Slack channel.")
+                    slack_messages[ch] = get_rendered_jinja(
+                        ch, sqs_message,
+                        res,
+                        self.logger, 'slack_template', 'slack_default',
+                        self.config['templates_folders'])
+                    self.logger.debug("Generating message for specified Slack channel.")
         return slack_messages
 
     def slack_handler(self, sqs_message, slack_messages):
