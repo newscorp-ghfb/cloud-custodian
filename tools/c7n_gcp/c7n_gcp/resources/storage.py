@@ -5,7 +5,7 @@ from google.cloud import storage
 from c7n_gcp.actions.labels import LabelDelayedAction, SetLabelsAction
 from c7n_gcp.filters.labels import LabelActionFilter
 from c7n.utils import type_schema, local_session
-from c7n_gcp.actions import MethodAction
+from c7n_gcp.actions import MethodAction, SetIamPolicy
 from c7n_gcp.provider import resources
 from c7n_gcp.query import QueryResourceManager, TypeInfo
 from c7n_gcp.filters import IamPolicyFilter
@@ -84,6 +84,25 @@ class BucketLabelDelayedAction(LabelDelayedAction):
 
     def invoke_api(self, client, op_name, params):
         return invoke_bucket_api(self, params)
+
+
+@Bucket.action_registry.register('set-iam-policy')
+class BucketSetIamPolicy(SetIamPolicy):
+    """
+    Overrides the base implementation to process Bucket resources correctly.
+    """
+
+    permissions = ('storage.buckets.getIamPolicy', 'storage.buckets.setIamPolicy')
+
+    def get_resource_params(self, model, resource):
+        params = super().get_resource_params(model, resource)
+        params["body"]["bindings"] = params["body"]["policy"]["bindings"]
+        del params["body"]["policy"]
+        return params
+
+    def _verb_arguments(self, resource):
+        verb_arguments = {"bucket": resource["name"]}
+        return verb_arguments
 
 
 @Bucket.action_registry.register('set-uniform-access')
