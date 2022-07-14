@@ -42,6 +42,7 @@ def custodian_archive(packages=None, deps=()):
         'ratelimiter',
         'google-auth',
         'google-auth-httplib2',
+        'google-cloud-storage',
         'google-api-python-client'))
     requirements.update(deps)
     archive.add_contents(
