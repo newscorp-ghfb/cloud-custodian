@@ -106,7 +106,7 @@ class BucketSetIamPolicy(SetIamPolicy):
 
 
 @Bucket.action_registry.register('set-public-access-prevention')
-class BucketLevelAccess(MethodAction):
+class PublicAccessPrevention(MethodAction):
     '''Enforce public access prevention for a bucket.
 
     Example Policy:
