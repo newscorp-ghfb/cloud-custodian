@@ -56,7 +56,7 @@ class BucketLabelActionFilter(LabelActionFilter):
     pass
 
 
-def invoke_bucket_api(action, params):
+def invoke_api_set_labels(action, params):
     try:
         # NOTE override the client with storage.Client
         session = local_session(action.manager.session_factory)
@@ -76,14 +76,14 @@ def invoke_bucket_api(action, params):
 class BucketSetLabelsAction(SetLabelsAction):
 
     def invoke_api(self, client, op_name, params):
-        return invoke_bucket_api(self, params)
+        return invoke_api_set_labels(self, params)
 
 
 @Bucket.action_registry.register('mark-for-op')
 class BucketLabelDelayedAction(LabelDelayedAction):
 
     def invoke_api(self, client, op_name, params):
-        return invoke_bucket_api(self, params)
+        return invoke_api_set_labels(self, params)
 
 
 @Bucket.action_registry.register('set-iam-policy')
@@ -103,6 +103,36 @@ class BucketSetIamPolicy(SetIamPolicy):
     def _verb_arguments(self, resource):
         verb_arguments = {"bucket": resource["name"]}
         return verb_arguments
+
+
+@Bucket.action_registry.register('set-public-access-prevention')
+class PublicAccessPrevention(MethodAction):
+    '''Enforce public access prevention for a bucket.
+
+    Example Policy:
+
+    .. code-block:: yaml
+
+      policies:
+       - name: enforce-bucket-public-access-prevention
+         resource: gcp.bucket
+         actions:
+          - type: set-public-access-prevention
+            # The following is also the default
+            state: inherited
+    '''
+
+    schema = type_schema('set-public-access-prevention', state={'enum': ['enforced', 'inherited']})
+    method_spec = {'op': 'patch'}
+    method_perm = 'update'
+
+    # https://cloud.google.com/storage/docs/using-public-access-prevention#rest-apis
+    #
+    def get_resource_params(self, model, resource):
+        state = self.data.get('state', "inherited")
+        return {'bucket': resource['name'],
+                'fields': 'iamConfiguration',
+                'body': {'iamConfiguration': {'publicAccessPrevention': state}}}
 
 
 @Bucket.action_registry.register('set-uniform-access')
