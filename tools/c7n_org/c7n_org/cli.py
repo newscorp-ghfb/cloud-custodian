@@ -495,8 +495,9 @@ def run_account_script(account, region, output_dir, debug, script_args):
 @click.option('-r', '--region', default=None, multiple=True)
 @click.option('--echo', default=False, is_flag=True)
 @click.option('--serial', default=False, is_flag=True)
+@click.option('--worker', default=0, type=int)
 @click.argument('script_args', nargs=-1, type=click.UNPROCESSED)
-def run_script(config, output_dir, accounts, tags, region, echo, serial, script_args):
+def run_script(config, output_dir, accounts, tags, region, echo, serial, worker, script_args):
     """run an aws/azure/gcp script across accounts"""
     # TODO count up on success / error / error list by account
     accounts_config, custodian_config, executor = init(
@@ -511,7 +512,7 @@ def run_script(config, output_dir, accounts, tags, region, echo, serial, script_
 
     success = True
 
-    with executor(max_workers=WORKER_COUNT) as w:
+    with executor(max_workers=worker or WORKER_COUNT) as w:
         futures = {}
         for a in accounts_config.get('accounts', ()):
             for r in resolve_regions(region or a.get('regions', ()), a):
@@ -686,9 +687,10 @@ def run_account(account, region, policies_config, output_path,
 @click.option("--dryrun", default=False, is_flag=True)
 @click.option('--debug', default=False, is_flag=True)
 @click.option('-v', '--verbose', default=False, help="Verbose", is_flag=True)
+@click.option('--worker', default=0, type=int)
 def run(config, use, output_dir, accounts, not_accounts, tags, region,
         policy, policy_tags, cache_period, cache_path, metrics,
-        dryrun, debug, verbose, metrics_uri):
+        dryrun, debug, verbose, worker, metrics_uri):
     """run a custodian policy across accounts"""
     accounts_config, custodian_config, executor = init(config, use, debug, verbose,
         accounts, tags, policy, policy_tags=policy_tags, not_accounts=not_accounts)
@@ -702,7 +704,8 @@ def run(config, use, output_dir, accounts, not_accounts, tags, region,
         cache_path = os.path.expanduser("~/.cache/c7n-org")
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
-
+    if worker:
+        log.warning("--worker does not apply to the run command at the moment")
     with executor(max_workers=WORKER_COUNT) as w:
         futures = {}
         for a in accounts_config['accounts']:
