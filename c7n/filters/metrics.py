@@ -131,11 +131,11 @@ class MetricsFilter(Filter):
         duration = timedelta(days)
 
         self.metric = self.data['name']
-        self.end = datetime.utcnow()
+        self.end = datetime.utcnow().replace(second=0, microsecond=0)
 
         # Adjust the start time to gracefully handle CloudWatch's retention schedule, which rolls up
         # data points progressively (1 minute --> 5 minutes --> 1 hour) over time.
-        self.start = (self.end - duration).replace(minute=0)
+        self.start = (self.end - duration).replace(minute=0, second=0, microsecond=0)
         self.period = int(self.data.get('period', (self.end - self.start).total_seconds()))
         self.statistics = self.data.get('statistics', 'Average')
         self.model = self.manager.get_model()
