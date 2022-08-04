@@ -131,7 +131,7 @@ class MetricsFilter(Filter):
         duration = timedelta(days)
 
         self.metric = self.data['name']
-        self.end = datetime.utcnow().replace(second=0, microsecond=0)
+        self.end = datetime.utcnow().replace(second=0, microsecond=0) + timedelta(minutes=1)
 
         # Adjust the start time to gracefully handle CloudWatch's retention schedule, which rolls up
         # data points progressively (1 minute --> 5 minutes --> 1 hour) over time.
