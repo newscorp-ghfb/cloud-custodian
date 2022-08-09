@@ -83,10 +83,10 @@ class LabelActionFilter(Filter):
 
         if v is None:
             return False
-        if '-' not in v or '_' not in v:
+        if '--' not in v or '_' not in v:
             return False
 
-        msg, action, action_date_str = v.rsplit('-', 2)
+        msg, action, action_date_str = v.rsplit('--', 2)
 
         if action != self.op:
             return False
