@@ -76,7 +76,7 @@
         "cpuPlatform": "Unknown CPU Platform",
         "labels": {
           "test_label": "test_value",
-          "custodian_status": "resource_policy-start-2019_10_12__0_0"
+          "custodian_status": "resource_policy--start--2019_10_12__0_0"
         },
         "labelFingerprint": "8tCkIt89i4I=",
         "startRestricted": false,
