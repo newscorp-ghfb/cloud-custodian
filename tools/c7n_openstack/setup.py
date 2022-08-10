@@ -22,6 +22,7 @@ install_requires = \
  'jsonschema (>=4.9.0,<5.0.0)',
  'openstacksdk>=0.52.0,<0.53.0',
  'pkgutil-resolve-name (>=1.3.10,<2.0.0)',
+ 'pkgutil-resolve-name (>=1.3.10,<2.0.0)',
  'pyrsistent (>=0.18.1,<0.19.0)',
  'python-dateutil (>=2.8.2,<3.0.0)',
  'pyyaml (>=6.0,<7.0)',
