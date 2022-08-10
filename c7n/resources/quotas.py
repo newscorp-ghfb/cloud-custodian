@@ -93,8 +93,8 @@ class ServiceQuota(QueryResourceManager):
                 q['QuotaCode']: q
                 for q in _get_quotas(client, s, 'list_service_quotas')
             }
-            quotas.update(dquotas)
-            return quotas.values()
+            dquotas.update(quotas)
+            return dquotas.values()
 
         results = []
         # NOTE TooManyRequestsException errors are reported in us-east-1 often
@@ -227,7 +227,7 @@ class UsageFilter(MetricsFilter):
                     op = self.metric_map['Maximum']
                 else:
                     op = self.metric_map[stat]
-                m = op([x[stat] for x in res['Datapoints']]) / metric_scale
+                m = round(op([x[stat] for x in res['Datapoints']]) / metric_scale, 1)
                 self.log.info(f'{r.get("ServiceName")} {r.get("QuotaName")} usage: {m}/{quota}')
                 if m > (limit / 100) * quota:
                     r[self.annotation_key] = {
