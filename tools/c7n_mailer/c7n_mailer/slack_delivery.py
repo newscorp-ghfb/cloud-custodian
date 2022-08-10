@@ -89,16 +89,20 @@ class SlackDelivery:
                             "No %s tag found in resource." % tag_name)
                         continue
 
-                    resolved_addrs = result['Value']
+                    resolved_addrs = slack_target = result['Value']
 
+                    if is_email(resolved_addrs):
+                        ims = self.retrieve_user_im([resolved_addrs])
+                        slack_target = ims[resolved_addrs]
                     # NOTE allow user to decide prefix # or not
-                    # if not resolved_addrs.startswith("#"):
-                    #     resolved_addrs = "#" + resolved_addrs
+                    # elif not resolved_addr.startswith("#"):
+                    #     resolved_addr = "#" + resolved_addr
+                    #     slack_target = resolved_addr
 
-                    if resolved_addrs in channel_resources:
-                        channel_resources[resolved_addrs].append(resource)
+                    if slack_target in channel_resources:
+                        channel_resources[slack_target].append(resource)
                     else:
-                        channel_resources[resolved_addrs] = [resource]
+                        channel_resources[slack_target] = [resource]
 
                 for ch, res in channel_resources.items():
                     if ch in slack_messages:
