@@ -129,8 +129,6 @@ class LabelDelayedAction(BaseLabelAction):
     If neither 'days' nor 'hours' is specified, Cloud Custodian will default
     to marking the resource for action 4 days in the future.
 
-    Default message template is 'resource_policy--{op}--{action_date}'.
-
     :example:
 
     .. code-block :: yaml
@@ -158,7 +156,7 @@ class LabelDelayedAction(BaseLabelAction):
         op={'type': 'string'}
     )
 
-    default_template = 'resource_policy--{op}--{action_date}'
+    default_template = 'resource_policy-{op}-{action_date}'
 
     def __init__(self, data=None, manager=None, log_dir=None):
         super(LabelDelayedAction, self).__init__(data, manager, log_dir)

@@ -135,7 +135,7 @@ class InstanceTest(BaseTest):
                      'filter': 'name = test-ingwar',
                      'zone': resources[0]['zone'].rsplit('/', 1)[-1]})
         self.assertTrue(result['items'][0]['labels']['custodian_status']
-                        .startswith("resource_policy--start"))
+                        .startswith("resource_policy-start"))
 
     def test_detach_disks_from_instance(self):
         project_id = 'cloud-custodian'
