@@ -88,7 +88,7 @@
             },
             "cpuPlatform": "Unknown CPU Platform",
             "labels": {
-              "custodian_status": "resource_policy--stop--2019_10_10__0_0"
+              "custodian_status": "resource_policy-stop-2019_10_10__0_0"
             },
             "labelFingerprint": "Mjad3HjNiLE=",
             "startRestricted": false,
