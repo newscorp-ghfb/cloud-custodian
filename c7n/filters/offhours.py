@@ -202,6 +202,21 @@ above. The best current workaround is to define a separate policy with a unique
 resources with that tag name and a value of ``on``. Note that this can only be
 used in opt-in mode, not opt-out.
 
+Another option is to escape the tag value with the following mapping, generated
+with the char's unicode number `"u" + hex(ord(the_char))[2:]`.
+
+- ( and ) as u28 and u29
+- [ and ] as u5b and u5d
+- , as u2c
+- ; as u3b
+
+**Examples**::
+
+    # off=(M-F,18);tz=Australia/Sydney
+    off=u28M-Fu2c18u29u3btz=Australia/Sydney
+    # off=[(M-F,18),(S,13)]
+    off=u5bu28M-Fu2c18u29u2cu28Su2c13u29u5d
+
 Public Holidays
 ===============
 
