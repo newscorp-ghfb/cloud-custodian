@@ -82,7 +82,7 @@ class ServiceQuota(QueryResourceManager):
                         break
                     self.log.debug(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
                     # NOTE fix TooManyRequestsException when calling the ListServiceQuotas
-                    sleep(0.08)
+                    sleep(0.1)
                 return quotas.values()
 
             dquotas = {
