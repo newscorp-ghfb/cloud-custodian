@@ -152,19 +152,20 @@ class MetricsFilter(Filter):
         if duration <= timedelta(days=(1 / 8.0)):
             # Align period with the start of the last second
             # CloudWatch retention: 3 hours
-            end = now.replace(microsecond=0)
+            end = now.replace(microsecond=0) + timedelta(seconds=1)
         elif duration <= timedelta(days=15):
             # Align period with the start of the last minute
             # CloudWatch retention: 15 days
-            end = now.replace(second=0, microsecond=0)
+            end = now.replace(second=0, microsecond=0) + timedelta(minutes=1)
         elif duration <= timedelta(days=63):
             # Align period with the start of the last five-minute block
             # CloudWatch retention: 63 days
+            # TODO round up 5 minutes
             end = now.replace(minute=(now.minute // 5) * 5, second=0, microsecond=0)
         else:
             # Align period with the start of the last hour
             # CloudWatch retention: 455 days
-            end = now.replace(minute=0, second=0, microsecond=0)
+            end = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
 
         return MetricWindow((end - duration), end)
 
