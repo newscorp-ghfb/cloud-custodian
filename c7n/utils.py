@@ -46,7 +46,7 @@ try:
     from yamlinclude import YamlIncludeConstructor
     YamlIncludeConstructor.add_to_loader_class(loader_class=SafeLoader)
 except ImportError:
-    log.warn("pyyaml-include not found, !include tag will not be supported.")
+    log.warning("pyyaml-include not found, !include tag will not be supported.")
 
 
 class VarsSubstitutionError(Exception):
