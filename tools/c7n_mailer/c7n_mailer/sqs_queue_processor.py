@@ -156,28 +156,16 @@ class MailerSqsQueueProcessor:
             )
         )
 
-        # get the map of email_to_addresses to mimetext messages (with resources baked in)
-        # and send any emails (to SES or SMTP) if there are email addresses found
-        email_delivery = EmailDelivery(self.config, self.session, self.logger)
-        groupedAddrMsg = email_delivery.get_to_addrs_email_messages_map(sqs_message)
-        for email_to_addrs, mimetext_msg in groupedAddrMsg.items():
-            email_delivery.send_c7n_email(sqs_message, list(email_to_addrs), mimetext_msg)
-
         # this section sends email to ServiceNow to create tickets
         if any(e == "servicenow" for e in sqs_message.get("action", ()).get("to")):
             servicenow_address = self.config.get("servicenow_address")
             if not servicenow_address:
                 self.logger.error("servicenow_address not found in mailer config")
             else:
+                email_delivery = EmailDelivery(self.config, self.session, self.logger)
                 groupedPrdMsg = email_delivery.get_group_email_messages_map(sqs_message)
                 for mimetext_msg in groupedPrdMsg.values():
                     email_delivery.send_c7n_email(sqs_message, [servicenow_address], mimetext_msg)
-
-        # this sections gets the map of sns_to_addresses to rendered_jinja messages
-        # (with resources baked in) and delivers the message to each sns topic
-        sns_delivery = SnsDelivery(self.config, self.session, self.logger)
-        sns_message_packages = sns_delivery.get_sns_message_packages(sqs_message)
-        sns_delivery.deliver_sns_messages(sns_message_packages, sqs_message)
 
         # this section calls Jira api to create tickets
         if any(e == "jira" for e in sqs_message.get("action", ()).get("to")):
@@ -188,11 +176,25 @@ class MailerSqsQueueProcessor:
             else:
                 try:
                     jira_delivery = JiraDelivery(self.config, self.session, self.logger)
+                    email_delivery = EmailDelivery(self.config, self.session, self.logger)
                     groupedResources = email_delivery.get_groupby_to_resources_map(sqs_message)
                     jira_delivery.jira_handler(sqs_message, jira_messages=groupedResources)
                 except Exception as e:
                     self.logger.error(f"Failed to create Jira issue: {str(e)}")
                     sqs_message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
+
+        # get the map of email_to_addresses to mimetext messages (with resources baked in)
+        # and send any emails (to SES or SMTP) if there are email addresses found
+        email_delivery = EmailDelivery(self.config, self.session, self.logger)
+        groupedAddrMsg = email_delivery.get_to_addrs_email_messages_map(sqs_message)
+        for email_to_addrs, mimetext_msg in groupedAddrMsg.items():
+            email_delivery.send_c7n_email(sqs_message, list(email_to_addrs), mimetext_msg)
+
+        # this sections gets the map of sns_to_addresses to rendered_jinja messages
+        # (with resources baked in) and delivers the message to each sns topic
+        sns_delivery = SnsDelivery(self.config, self.session, self.logger)
+        sns_message_packages = sns_delivery.get_sns_message_packages(sqs_message)
+        sns_delivery.deliver_sns_messages(sns_message_packages, sqs_message)
 
         # this section sends a notification to the resource owner via Slack
         if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
