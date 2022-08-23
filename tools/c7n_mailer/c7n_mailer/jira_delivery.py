@@ -67,7 +67,11 @@ class JiraDelivery:
                     "priority": {"name": priority},
                 }
             )
-            issue_list[-1].update(**self.custom_fields.get(jira_project, {}))
+            custom_fields = self.custom_fields.get(jira_project, {})
+            issue_list[-1].update(**custom_fields)
+            # NOTE remove all `cannot-be-set` attributes
+            for k in [k for k, v in custom_fields.items() if v == "cannot-be-set"]:
+                issue_list[-1].pop(k)
 
         if issue_list:
             issueIds = self.create_issues(issue_list)
