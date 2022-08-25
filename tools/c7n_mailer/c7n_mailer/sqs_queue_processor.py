@@ -7,7 +7,6 @@ SQS Message Processing
 import base64
 import json
 import logging
-import traceback
 import zlib
 
 from c7n_mailer.target import MessageTargetMixin
