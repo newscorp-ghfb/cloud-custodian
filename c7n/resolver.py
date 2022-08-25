@@ -27,9 +27,10 @@ class URIResolver:
         self.cache = cache
 
     def resolve(self, uri):
-        if self.cache:
+        if self.cache and self.cache.load():
             contents = self.cache.get(("uri-resolver", uri))
             if contents is not None:
+                self.cache.close()
                 return contents
 
         if uri.startswith('s3://'):
@@ -41,6 +42,7 @@ class URIResolver:
 
         if self.cache:
             self.cache.save(("uri-resolver", uri), contents)
+            self.cache.close()
         return contents
 
     def handle_response_encoding(self, response):
@@ -150,11 +152,11 @@ class ValuesFrom:
         return contents, format
 
     def get_values(self):
-        if self.cache:
+        key = [self.data.get(i) for i in ('url', 'format', 'expr')]
+        if self.cache and self.cache.load():
             # use these values as a key to cache the result so if we have
             # the same filter happening across many resources, we can reuse
             # the results.
-            key = [self.data.get(i) for i in ('url', 'format', 'expr')]
             contents = self.cache.get(("value-from", key))
             if contents is not None:
                 return contents
@@ -170,6 +172,7 @@ class ValuesFrom:
 
         if self.cache:
             self.cache.save(("value-from", key), contents)
+            self.cache.close()
         return contents
 
     def _get_values(self):
