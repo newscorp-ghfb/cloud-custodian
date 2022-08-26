@@ -30,9 +30,6 @@ class FakeCache:
         self.saves += 1
         self.state[pickle.dumps(key)] = data
 
-    def haskey(self, key):
-        return pickle.dumps(key) in self.state
-
 
 class FakeResolver:
 

@@ -46,9 +46,6 @@ class Cache:
     def get(self, key):
         pass
 
-    def haskey(self, key):
-        pass
-
     def save(self, key, data):
         pass
 
@@ -85,9 +82,6 @@ class InMemoryCache(Cache):
     def get(self, key):
         return self.data.get(encode(key))
 
-    def haskey(self, key):
-        return pickle.dumps(key) in self.data  # nosemgrep
-
     def save(self, key, data):
         self.data[encode(key)] = data
 
@@ -121,10 +115,7 @@ class SqlKvCache(Cache):
         self.cache_path = resolve_path(config.cache)
         self.conn = None
 
-    def haskey(self, key):
-        return pickle.dumps(key) in self.data  # nosemgrep
-
-    def load(self):
+    def init(self):
         # migration from pickle cache file
         if os.path.exists(self.cache_path):
             with open(self.cache_path, 'rb') as fh:
@@ -142,9 +133,14 @@ class SqlKvCache(Cache):
             cursor.execute(
                 'delete from c7n_cache where create_date < ?',
                 [datetime.utcnow() - timedelta(minutes=self.cache_period)])
+
+    def load(self):
+        if not self.conn:
+            self.init()
         return True
 
     def get(self, key):
+        self.load()
         with self.conn as cursor:
             r = cursor.execute(
                 'select value, create_date from c7n_cache where key = ?',
