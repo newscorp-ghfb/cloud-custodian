@@ -156,9 +156,7 @@ class ValuesFrom:
             # the results.
             key = [self.data.get(i) for i in ('url', 'format', 'expr')]
             contents = self.cache.get(("value-from", key))
-            # NOTE no matter the contents is None or not, return it
-            # if contents is not None:
-            if self.cache.haskey(("value-from", key)):
+            if contents is not None:
                 return contents
 
         contents = self._get_values()
