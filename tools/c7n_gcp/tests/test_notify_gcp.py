@@ -9,7 +9,10 @@ from c7n_gcp.client import Session
 
 class NotifyTest(BaseTest):
 
-    def test_pubsub_notify(self):
+    @mock.patch("c7n.ctx.uuid.uuid4", return_value="00000000-0000-0000-0000-000000000000")
+    @mock.patch("c7n.ctx.time.time", return_value=1661883360)
+    @mock.patch("c7n_gcp.actions.notify.version", '0.9.18')
+    def test_pubsub_notify(self, *args, **kwargs):
         factory = self.replay_flight_data("notify-action")
 
         orig_client = Session.client
