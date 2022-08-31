@@ -152,9 +152,4 @@ class MailerSqsQueueProcessor(MessageTargetMixin):
             )
         )
 
-        self.handle_targets(
-            message,
-            sentTimestamp,
-            email_delivery=True,
-            sns_delivery=True
-        )
+        self.handle_targets(message, sentTimestamp)
