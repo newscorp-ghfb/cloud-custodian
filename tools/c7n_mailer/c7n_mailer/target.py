@@ -46,7 +46,8 @@ class MessageTargetMixin(object):
 
         # get the map of email_to_addresses to mimetext messages (with resources baked in)
         # and send any emails (to SES or SMTP) if there are email addresses found
-        if self.on_aws() or self.on_gcp(): # NOTE Azure process has its own implementation atm
+        # NOTE Azure process has its own implementation atm
+        if self.on_aws() or self.on_gcp():
             groupedAddrMsg = email_delivery.get_to_addrs_email_messages_map(message)
             for email_to_addrs, mimetext_msg in groupedAddrMsg.items():
                 email_delivery.send_c7n_email(message, list(email_to_addrs), mimetext_msg)
