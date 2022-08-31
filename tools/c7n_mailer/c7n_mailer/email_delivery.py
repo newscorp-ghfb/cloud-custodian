@@ -4,13 +4,13 @@ import jmespath
 from itertools import chain
 
 from c7n_mailer.smtp_delivery import SmtpDelivery
-from c7n_mailer.utils_email import is_email, get_mimetext_message
 import c7n_mailer.azure_mailer.sendgrid_delivery as sendgrid
 
 from .ldap_lookup import LdapLookup
 from .utils import (
-    get_resource_tag_targets,
-    kms_decrypt, get_aws_username_from_event)
+    decrypt, get_resource_tag_targets, get_provider,
+    get_aws_username_from_event, Providers)
+from .utils_email import get_mimetext_message, is_email
 
 
 class EmailDelivery:
@@ -19,28 +19,40 @@ class EmailDelivery:
         self.config = config
         self.logger = logger
         self.session = session
-        self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
+        self.provider = get_provider(self.config)
+        if self.provider == Providers.AWS:
+            self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
         self.servicenow_url = config.get("servicenow_url")
 
     def get_ldap_connection(self):
         if self.config.get('ldap_uri'):
-            self.config['ldap_bind_password'] = kms_decrypt(self.config, self.logger,
-                                                            self.session, 'ldap_bind_password')
+            credential = decrypt(
+                self.config, self.logger, self.session, 'ldap_bind_password')
+            self.config['ldap_bind_password'] = credential
             return LdapLookup(self.config, self.logger)
         return None
 
     def get_valid_emails_from_list(self, targets):
         emails = []
         for target in targets:
+            if target in ('resource-owner', 'event-owner'):
+                continue
             target = target.replace(";", ",")
             for email in target.split(','):
                 email = email.strip()
                 if is_email(email):
                     emails.append(email)
+                # gcp doesn't support the '@' character in their label values so we
+                # allow users to specify an email_base_url to append to the end of their
+                # owner contact tags
+                if not is_email(target) and self.config.get('email_base_url'):
+                    target = "%s@%s" % (target, self.config['email_base_url'])
+                    if is_email(target):
+                        emails.append(target)
         return emails
 
-    def get_event_owner_email(self, targets, event):
+    def get_event_owner_email(self, targets, event):  # TODO: GCP-friendly
         if 'event-owner' in targets:
             aws_username = get_aws_username_from_event(self.logger, event)
             if aws_username:
@@ -112,7 +124,7 @@ class EmailDelivery:
 
         return list(chain(explicit_emails, ldap_emails, org_emails))
 
-    def get_account_emails(self, sqs_message):
+    def get_account_emails(self, sqs_message):  # TODO: GCP-friendly
         email_list = []
 
         if 'account-emails' not in sqs_message['action'].get('to', []):
@@ -261,6 +273,7 @@ class EmailDelivery:
         return groupby_to_mimetext_map
 
     def send_c7n_email(self, sqs_message, email_to_addrs, mimetext_msg):
+        print("send_c7n_email", self.config.get("sendgrid_api_key"))
         try:
             # if smtp_server is set in mailer.yml, send through smtp
             if 'smtp_server' in self.config:

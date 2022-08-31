@@ -1,5 +1,6 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+import copy
 import time
 
 import requests
@@ -24,9 +25,7 @@ class SlackDelivery:
             return None
 
     def get_to_addrs_slack_messages_map(self, sqs_message):
-        resource_list = []
-        for resource in sqs_message['resources']:
-            resource_list.append(resource)
+        resource_list = copy.deepcopy(sqs_message['resources'])
 
         slack_messages = {}
 
