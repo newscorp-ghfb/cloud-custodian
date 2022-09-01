@@ -50,15 +50,23 @@ class SqlInstanceTest(BaseTest):
         self.assertEqual(instance['state'], 'RUNNABLE')
 
     def test_sqlinstance_offhour(self):
-        project_id = 'cloud-custodian'
-        factory = self.replay_flight_data('sqlinstance-offhour', project_id=project_id)
+        project_id = "cloud-custodian"
+        factory = self.replay_flight_data("sqlinstance-offhour", project_id=project_id)
         p = self.load_policy(
-            {'name': 'sql-offhour',
-             'resource': 'gcp.sql-instance',
-             'filters': [{'type': 'offhour', 'tag': 'custodian_offhours',
-                'default_tz': 'utc', 'offhour': 18}]
+            {
+                "name": "sql-offhour",
+                "resource": "gcp.sql-instance",
+                "filters": [
+                    {
+                        "type": "offhour",
+                        "default_tz": "utc",
+                        "offhour": 18,
+                        "tag": "custodian_offhours",
+                    }
+                ],
             },
-            session_factory=factory)
+            session_factory=factory,
+        )
         with freeze_time(parser.parse("2022/09/01 02:15:00")):
             resources = p.run()
             self.assertEqual(len(resources), 1)
