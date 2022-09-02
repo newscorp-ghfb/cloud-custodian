@@ -13,6 +13,7 @@ from urllib.parse import parse_qsl, urlparse
 import zlib
 from contextlib import closing
 
+from c7n.cache import NullCache
 from c7n.utils import format_string_values, gcpLabelaise
 
 log = logging.getLogger('custodian.resolver')
@@ -27,11 +28,9 @@ class URIResolver:
         self.cache = cache
 
     def resolve(self, uri):
-        if self.cache and self.cache.load():
-            contents = self.cache.get(("uri-resolver", uri))
-            if contents is not None:
-                self.cache.close()
-                return contents
+        contents = self.cache.get(("uri-resolver", uri))
+        if contents is not None:
+            return contents
 
         if uri.startswith('s3://'):
             contents = self.get_s3_uri(uri)
@@ -40,9 +39,7 @@ class URIResolver:
             with closing(urlopen(req)) as response:  # nosec nosemgrep
                 contents = self.handle_response_encoding(response)
 
-        if self.cache:
-            self.cache.save(("uri-resolver", uri), contents)
-            self.cache.close()
+        self.cache.save(("uri-resolver", uri), contents)
         return contents
 
     def handle_response_encoding(self, response):
@@ -128,8 +125,8 @@ class ValuesFrom:
         }
         self.data = format_string_values(data, **config_args)
         self.manager = manager
-        self.cache = manager._cache
-        self.resolver = URIResolver(manager.session_factory, manager._cache)
+        self.cache = manager._cache or NullCache({})
+        self.resolver = URIResolver(manager.session_factory, self.cache)
 
     def get_contents(self):
         _, format = os.path.splitext(self.data['url'])
@@ -153,7 +150,7 @@ class ValuesFrom:
 
     def get_values(self):
         key = [self.data.get(i) for i in ('url', 'format', 'expr')]
-        if self.cache and self.cache.load():
+        with self.cache:
             # use these values as a key to cache the result so if we have
             # the same filter happening across many resources, we can reuse
             # the results.
@@ -172,8 +169,7 @@ class ValuesFrom:
 
         if self.cache:
             self.cache.save(("value-from", key), contents)
-            self.cache.close()
-        return contents
+            return contents
 
     def _get_values(self):
         contents, format = self.get_contents()
