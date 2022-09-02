@@ -156,6 +156,7 @@ class SqlKvCache(Cache):
             return pickle.loads(value)  # nosec nosemgrep
 
     def save(self, key, data, timestamp=None):
+        self.load()
         with self.conn as cursor:
             timestamp = timestamp or datetime.utcnow()
             cursor.execute(
