@@ -273,7 +273,6 @@ class EmailDelivery:
         return groupby_to_mimetext_map
 
     def send_c7n_email(self, sqs_message, email_to_addrs, mimetext_msg):
-        print("send_c7n_email", self.config.get("sendgrid_api_key"))
         try:
             # if smtp_server is set in mailer.yml, send through smtp
             if 'smtp_server' in self.config:
