@@ -140,7 +140,6 @@ class SqlKvCache(Cache):
         return True
 
     def get(self, key):
-        self.load()
         with self.conn as cursor:
             r = cursor.execute(
                 'select value, create_date from c7n_cache where key = ?',
@@ -156,7 +155,6 @@ class SqlKvCache(Cache):
             return pickle.loads(value)  # nosec nosemgrep
 
     def save(self, key, data, timestamp=None):
-        self.load()
         with self.conn as cursor:
             timestamp = timestamp or datetime.utcnow()
             cursor.execute(

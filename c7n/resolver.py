@@ -157,17 +157,16 @@ class ValuesFrom:
             contents = self.cache.get(("value-from", key))
             if contents is not None:
                 return contents
+            contents = self._get_values()
 
-        contents = self._get_values()
-        # NOTE apply default value
-        if not contents and "default_value" in self.data:
-            contents = self.data.get("default_value")
+            # NOTE apply default value
+            if not contents and "default_value" in self.data:
+                contents = self.data.get("default_value")
 
-        # NOTE normalise the value for gcp label
-        if self.data.get("value_type") == "gcp_label":
-            contents = gcpLabelaise(contents)
+            # NOTE normalise the value for gcp label
+            if self.data.get("value_type") == "gcp_label":
+                contents = gcpLabelaise(contents)
 
-        if self.cache:
             self.cache.save(("value-from", key), contents)
             return contents
 
