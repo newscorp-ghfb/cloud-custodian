@@ -190,4 +190,4 @@ class TestQueryResourceManager:
         monkeypatch.setattr(QueryResourceManager, "resource_type", test_case[0])
         resource_manager = QueryResourceManager(ctx, {})
         res = resource_manager.resources()
-        assert res == test_case[4]
+        assert res.items() >= test_case[4].items()
