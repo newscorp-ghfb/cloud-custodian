@@ -1,5 +1,6 @@
 from typing import List
 
+import jmespath
 from jira import JIRA
 
 from c7n_mailer import utils
@@ -11,7 +12,7 @@ class JiraDelivery:
         self.session = session
         self.logger = logger
         self.url = config.get("jira_url")
-        self.key = config.get("jira_project_key", "custodian_jira_project")
+        self.jp_key = jmespath.compile(config.get("jira_project_key", "custodian_jira_project"))
         self.custom_fields = config.get("jira_custom_fields", {})
         self.init_jira()
 
@@ -29,8 +30,7 @@ class JiraDelivery:
         issue_list = []
         for prd, resources in jira_messages.items():
             jira_conf = message["action"].get("jira", {})
-            # TODO take tag:jira_project into count
-            jira_project = resources[0].get(self.key) or jira_conf.get("project")
+            jira_project = self.jp_key.search(resources[0]) or jira_conf.get("project")
             if not jira_project:
                 self.logger.info(
                     f"Jira: Skip {len(resources)} resources due to "
@@ -45,11 +45,9 @@ class JiraDelivery:
                     message["policy"]["resource"],
                     len(resources),
                     message["action"].get("jira_template", "slack_default"),
-                    # TODO have the self.key support jmespath
                     jira_project,
                 )
             )
-            priority = jira_conf.get("priority", "Medium")
             issue_list.append(
                 {
                     "project": jira_project,
@@ -63,8 +61,8 @@ class JiraDelivery:
                         "slack_default",
                         self.config["templates_folders"],
                     ),
-                    "issuetype": {"name": "Task"},
-                    "priority": {"name": priority},
+                    "issuetype": {"name": jira_conf.get("issuetype", "Task")},
+                    "priority": {"name": jira_conf.get("priority", "Medium")},
                 }
             )
             custom_fields = self.custom_fields.get(jira_project, {})
