@@ -211,8 +211,8 @@ class EmailDelivery:
         # eg: { ('milton@initech.com', 'peter@initech.com'): mimetext_message }
         return to_addrs_to_mimetext_map
 
-    def get_grouped_resources(self, message, groupby_attr=None) -> Dict[str, List]:
-        groupby_key = (message['action'].get(groupby_attr, {}).get('resource_groupby')
+    def get_grouped_resources(self, message, attr_group=None) -> Dict[str, List]:
+        groupby_key = (message['action'].get(attr_group, {}).get('resource_groupby')
             or message['action'].get('resource_groupby'))
         if not groupby_key:
             return {'default': message['resources']}
@@ -232,7 +232,7 @@ class EmailDelivery:
         # it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
         jira_project_key = self.config.get("jira_project_key", "custodian_jira_project")
 
-        groupby_to_resources_map = self.get_grouped_resources(sqs_message, 'servicenow')
+        groupby_to_resources_map = self.get_grouped_resources(sqs_message, "servicenow")
         groupby_to_mimetext_map = {}
         for prd, resources in groupby_to_resources_map.items():
             # print(f"{prd}: {[r[r['c7n_resource_type_id']] for r in resources]}")
