@@ -19,16 +19,6 @@ class MessageTargetMixin(object):
     def handle_targets(self, message, sent_timestamp):
         email_delivery = EmailDelivery(self.config, self.session, self.logger)
 
-        # this section sends email to ServiceNow to create tickets
-        if any(e == "servicenow" for e in message.get("action", ()).get("to")):
-            servicenow_address = self.config.get("servicenow_address")
-            if not servicenow_address:
-                self.logger.error("servicenow_address not found in mailer config")
-            else:
-                groupedPrdMsg = email_delivery.get_group_email_messages_map(message)
-                for mimetext_msg in groupedPrdMsg.values():
-                    email_delivery.send_c7n_email(message, [servicenow_address], mimetext_msg)
-
         # this section calls Jira api to create tickets
         if any(e == "jira" for e in message.get("action", ()).get("to")):
             from .jira_delivery import JiraDelivery
@@ -43,6 +33,16 @@ class MessageTargetMixin(object):
                 except Exception as e:
                     self.logger.error(f"Failed to create Jira issue: {str(e)}")
                     message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
+
+        # this section sends email to ServiceNow to create tickets
+        if any(e == "servicenow" for e in message.get("action", ()).get("to")):
+            servicenow_address = self.config.get("servicenow_address")
+            if not servicenow_address:
+                self.logger.error("servicenow_address not found in mailer config")
+            else:
+                groupedPrdMsg = email_delivery.get_group_email_messages_map(message)
+                for mimetext_msg in groupedPrdMsg.values():
+                    email_delivery.send_c7n_email(message, [servicenow_address], mimetext_msg)
 
         # get the map of email_to_addresses to mimetext messages (with resources baked in)
         # and send any emails (to SES or SMTP) if there are email addresses found
