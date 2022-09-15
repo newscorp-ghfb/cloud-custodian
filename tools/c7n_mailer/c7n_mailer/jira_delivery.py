@@ -26,7 +26,7 @@ class JiraDelivery:
         basic_auth = tuple(auth_txt.split(":"))
         self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
-    def jira_handler(self, message, jira_messages):
+    def process(self, message, jira_messages):
         issue_list = []
         for prd, resources in jira_messages.items():
             jira_conf = message["action"].get("jira", {})

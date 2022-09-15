@@ -9,7 +9,6 @@ from .utils import decrypt, get_provider, Providers
 
 
 class MessageTargetMixin(object):
-
     def on_aws(self):
         return get_provider(self.config) == Providers.AWS
 
@@ -28,8 +27,8 @@ class MessageTargetMixin(object):
             else:
                 try:
                     jira_delivery = JiraDelivery(self.config, self.session, self.logger)
-                    groupedResources = email_delivery.get_groupby_to_resources_map(message)
-                    jira_delivery.jira_handler(message, jira_messages=groupedResources)
+                    groupedResources = email_delivery.get_grouped_resources(message, "jira")
+                    jira_delivery.process(message, jira_messages=groupedResources)
                 except Exception as e:
                     self.logger.error(f"Failed to create Jira issue: {str(e)}")
                     message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
@@ -60,9 +59,11 @@ class MessageTargetMixin(object):
             sns_delivery.deliver_sns_messages(sns_message_packages, message)
 
         # this section sends a notification to the resource owner via Slack
-        if any(e.startswith('slack') or e.startswith('https://hooks.slack.com/')
-                for e in message.get('action', {}).get('to', []) +
-                message.get('action', {}).get('owner_absent_contact', [])):
+        if any(
+            e.startswith("slack") or e.startswith("https://hooks.slack.com/")
+            for e in message.get("action", {}).get("to", [])
+            + message.get("action", {}).get("owner_absent_contact", [])
+        ):
             from .slack_delivery import SlackDelivery
 
             slack_token: str = self.config.get("slack_token")
@@ -79,7 +80,7 @@ class MessageTargetMixin(object):
                 pass
 
         # this section gets the map of metrics to send to datadog and delivers it
-        if any(e.startswith('datadog') for e in message.get('action', ()).get('to', [])):
+        if any(e.startswith("datadog") for e in message.get("action", ()).get("to", [])):
             from .datadog_delivery import DataDogDelivery
 
             datadog_delivery = DataDogDelivery(self.config, self.session, self.logger)
@@ -92,10 +93,7 @@ class MessageTargetMixin(object):
                 pass
 
         # this section sends the full event to a Splunk HTTP Event Collector (HEC)
-        if any(
-            e.startswith('splunkhec://')
-            for e in message.get('action', ()).get('to', [])
-        ):
+        if any(e.startswith("splunkhec://") for e in message.get("action", ()).get("to", [])):
             from .splunk_delivery import SplunkHecDelivery
 
             splunk_delivery = SplunkHecDelivery(self.config, self.session, self.logger)

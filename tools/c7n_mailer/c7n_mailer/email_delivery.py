@@ -1,5 +1,6 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+from typing import Dict, List
 import jmespath
 from itertools import chain
 
@@ -210,19 +211,20 @@ class EmailDelivery:
         # eg: { ('milton@initech.com', 'peter@initech.com'): mimetext_message }
         return to_addrs_to_mimetext_map
 
-    def get_groupby_to_resources_map(self, sqs_message):
-        jp_str = sqs_message['action'].get('resource_groupby')
-        if not jp_str:
-            return {'default': sqs_message['resources']}
+    def get_grouped_resources(self, message, groupby_attr=None) -> Dict[str, List]:
+        groupby_key = (message['action'].get(groupby_attr, {}).get('resource_groupby')
+            or message['action'].get('resource_groupby'))
+        if not groupby_key:
+            return {'default': message['resources']}
 
-        groupby_to_resources_map = {}
-        jp = jmespath.compile(jp_str)
+        grouped_resources = {}
+        jp = jmespath.compile(groupby_key)
 
-        for resource in sqs_message['resources']:
-            groupby = jp.search(resource) or 'default'
-            groupby_to_resources_map.setdefault(groupby, []).append(resource)
-        # eg: { 'Jira': [resource1, resource2, etc] }
-        return groupby_to_resources_map
+        for resource in message['resources']:
+            groupby_value = jp.search(resource) or 'default'
+            grouped_resources.setdefault(groupby_value, []).append(resource)
+        # eg: { 'CLOUDOPS': [resource1, resource2, etc] }
+        return grouped_resources
 
     def get_group_email_messages_map(self, sqs_message):
         servicenow_address = self.config.get('servicenow_address')
@@ -230,7 +232,7 @@ class EmailDelivery:
         # it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
         jira_project_key = self.config.get("jira_project_key", "custodian_jira_project")
 
-        groupby_to_resources_map = self.get_groupby_to_resources_map(sqs_message)
+        groupby_to_resources_map = self.get_grouped_resources(sqs_message, 'servicenow')
         groupby_to_mimetext_map = {}
         for prd, resources in groupby_to_resources_map.items():
             # print(f"{prd}: {[r[r['c7n_resource_type_id']] for r in resources]}")
