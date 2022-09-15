@@ -26,15 +26,17 @@ class JiraDelivery:
         basic_auth = tuple(auth_txt.split(":"))
         self.client = JIRA(server=self.url, basic_auth=basic_auth)
 
-    def jira_handler(self, message, jira_messages):
+    def process(self, message, jira_messages):
         issue_list = []
-        for prd, resources in jira_messages.items():
+        for group_name, resources in jira_messages.items():
             jira_conf = message["action"].get("jira", {})
             jira_project = self.jp_key.search(resources[0]) or jira_conf.get("project")
+            if group_name == "default":
+                jira_project = jira_conf.get("project")
             if not jira_project:
                 self.logger.info(
                     f"Jira: Skip {len(resources)} resources due to "
-                    f"jira_project value not found for product {prd}"
+                    f"jira_project value not found for this group {group_name}"
                 )
                 continue
             self.logger.info(
