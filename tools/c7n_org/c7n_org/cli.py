@@ -346,8 +346,11 @@ def report_account(account, region, policies_config, output_path, cache_path, de
 
         for r in policy_records:
             r['policy'] = p.name
+            r['policy_data'] = p.data
             r['region'] = p.options.region
             r['account'] = account['name']
+            r['account_id'] = account['account_id']
+            r['now'] = datetime.utcnow()
             for t in account.get('tags', ()):
                 if ':' in t:
                     k, v = t.split(':', 1)
