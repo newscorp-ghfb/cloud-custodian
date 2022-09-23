@@ -154,9 +154,8 @@ def test_ec2_cost(test):
         ]
         resources = policy.run()
     test.assertEqual(len(resources), 1)
-    assert resources[0]["c7n:Cost"].items() >= {
-            'USD': 38.544, 'description': '$0.0528 per On Demand Linux t3.medium Instance Hour'
-        }.items()
+    assert (resources[0]["c7n:Cost"].items() >= {'USD': 38.544,
+        'description': '$0.0528 per On Demand Linux t3.medium Instance Hour'}.items())
 
 
 @pytest.mark.parametrize(

@@ -9,10 +9,11 @@ from .core import OPERATORS, Filter
 
 class Cost(Filter):
     """Annotate resource monthly cost with Infracost pricing API.
-    It aims to provide an approximate cost for a generic case.
-    For example, it only grabs price of on-demand, no pre-installed softwares for EC2 instances.
+    It aims to provide an approximate cost for a generic case. For example,
+    it only grabs the on-demand price with no pre-installed software for EC2 instances.
 
-    Please use INFRACOST_API_ENDPOINT and INFRACOST_API_KEY to specify API config.
+    Please use INFRACOST_API_ENDPOINT and INFRACOST_API_KEY environment vars
+    to specify the API config.
 
     .. code-block:: yaml
 
