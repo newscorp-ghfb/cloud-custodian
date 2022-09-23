@@ -23,6 +23,7 @@ from c7n.exceptions import PolicyValidationError
 from c7n.filters import (
     FilterRegistry, AgeFilter, ValueFilter, Filter, DefaultVpcBase
 )
+from c7n.filters.cost import Cost
 from c7n.filters.offhours import OffHour, OnHour
 import c7n.filters.vpc as net_filters
 
@@ -175,6 +176,43 @@ class SubnetFilter(net_filters.SubnetFilter):
 class VpcFilter(net_filters.VpcFilter):
 
     RelatedIdsExpression = "VpcId"
+
+
+@filters.register('cost')
+class Ec2Cost(Cost):
+
+    def get_query(self):
+        # reference: https://gql.readthedocs.io/en/stable/usage/variables.html
+        return """
+            query ($region: String, $instanceType: String) {
+                products(
+                    filter: {
+                        vendorName: "aws",
+                        service: "AmazonEC2",
+                        productFamily: "Compute Instance",
+                        region: $region,
+                        attributeFilters: [
+                            { key: "instanceType", value: $instanceType }
+                            { key: "operatingSystem", value: "Linux" }
+                            { key: "tenancy", value: "Shared" }
+                            { key: "capacitystatus", value: "Used" }
+                            { key: "preInstalledSw", value: "NA" }
+                        ]
+                    },
+                ) {
+                    prices(
+                        filter: {purchaseOption: "on_demand"}
+                    ) { USD, unit, description, purchaseOption }
+                }
+            }
+        """
+
+    def get_params(self, resource):
+        params = {
+            "region": resource["Placement"]["AvailabilityZone"][:-1],
+            "instanceType": resource["InstanceType"],
+        }
+        return params
 
 
 @filters.register('check-permissions')
