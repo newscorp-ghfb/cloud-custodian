@@ -4,6 +4,7 @@ import sys
 
 import c7n.resources.rdscluster
 import pytest
+from unittest.mock import patch
 from c7n.executor import MainThreadExecutor
 from c7n.resources.rdscluster import RDSCluster, _run_cluster_method
 from c7n.testing import mock_datetime_now
@@ -61,6 +62,30 @@ class RDSClusterTest(BaseTest):
             describe_resource.pop(kk, None)
 
         assert describe_resource == config_resource
+
+    def test_rdscluster_cost(self):
+        aws_region = 'ap-southeast-2'
+        session_factory = self.replay_flight_data('rdscluster_cost', region=aws_region)
+        policy = self.load_policy(
+            {
+                "name": "rdscluster-cost",
+                "resource": "rds-cluster",
+                "filters": [{
+                    "type": "cost",
+                    "quantity": 730,
+                }]
+            },
+            session_factory=session_factory,
+            config={'region': aws_region},
+        )
+        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+            infracost.return_value = {'USD': 0.125,
+                'description': 'USD 0.126 per db.t3.medium Single-AZ instance hour'
+                '(or partial hour) running Aurora MySQL',
+                'purchaseOption': 'on_demand'}
+            resources = policy.run()
+        self.assertEqual(len(resources), 1)
+        assert resources[0]["c7n:Cost"].items() >= {'USD': 91.25}.items()
 
     def test_rdscluster_security_group(self):
         self.remove_augments()
