@@ -202,7 +202,7 @@ class Ec2Cost(Cost):
                 ) {
                     prices(
                         filter: {purchaseOption: "on_demand"}
-                    ) { USD, unit, description, purchaseOption }
+                    ) { USD, description, purchaseOption }
                 }
             }
         """

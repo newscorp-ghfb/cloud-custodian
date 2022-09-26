@@ -23,7 +23,9 @@ class Cost(Filter):
         filters:
           - type: cost
             op: greater-than
+            # USD
             value: 4
+            # monthly price = unit price * 730 hours
             quantity: 730
 
 
@@ -88,6 +90,9 @@ class Cost(Filter):
     def get_infracost(self, client, query, params):
         result = client.execute(query, variable_values=params)
         self.log.info(f"Infracost {params}: {result}")
+        total = len(result["products"][0]["prices"])
+        if total > 1:
+            self.log.warning(f"Found {total} price options, expecting 1")
         return result["products"][0]["prices"][0]
 
     def process(self, resources, event=None):
@@ -95,7 +100,7 @@ class Cost(Filter):
             url=self.api_endpoint + "/graphql",
             headers={'X-Api-Key': self.api_key},
             verify=True,
-            retries=3,
+            retries=5,
         )
         client = Client(transport=transport, fetch_schema_from_transport=True)
         query = gql(self.get_query())
