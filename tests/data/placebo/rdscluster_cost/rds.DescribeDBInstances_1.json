@@ -1,0 +1,109 @@
+{
+    "status_code": 200,
+    "data": {
+        "DBInstances": [
+            {
+                "DBInstanceIdentifier": "nca-leads-dev",
+                "DBInstanceClass": "db.t3.medium",
+                "Engine": "aurora-mysql",
+                "DBInstanceStatus": "available",
+                "MasterUsername": "admin",
+                "DBName": "iselect",
+                "Endpoint": {
+                    "Address": "nca-leads-dev.cjjtspz8bgqt.ap-southeast-2.rds.amazonaws.com",
+                    "Port": 3306,
+                    "HostedZoneId": "Z32T0VRHXEXS0V"
+                },
+                "AllocatedStorage": 1,
+                "InstanceCreateTime": {
+                    "__class__": "datetime",
+                    "year": 2021,
+                    "month": 11,
+                    "day": 16,
+                    "hour": 2,
+                    "minute": 6,
+                    "second": 13,
+                    "microsecond": 82000
+                },
+                "PreferredBackupWindow": "18:09-18:39",
+                "BackupRetentionPeriod": 7,
+                "DBSecurityGroups": [],
+                "VpcSecurityGroups": [
+                    {
+                        "VpcSecurityGroupId": "sg-0d9ebcff914518b9b",
+                        "Status": "active"
+                    }
+                ],
+                "DBParameterGroups": [
+                    {
+                        "DBParameterGroupName": "default.aurora-mysql5.7",
+                        "ParameterApplyStatus": "in-sync"
+                    }
+                ],
+                "AvailabilityZone": "ap-southeast-2a",
+                "DBSubnetGroup": {
+                    "DBSubnetGroupName": "dplatawsuat02-vpc-dplatawsuat02dbsubnetgrp-1dngpetw8ktnh",
+                    "DBSubnetGroupDescription": "RDS database subnet group",
+                    "VpcId": "vpc-f0c9e995",
+                    "SubnetGroupStatus": "Complete",
+                    "Subnets": [
+                        {
+                            "SubnetIdentifier": "subnet-4d82843a",
+                            "SubnetAvailabilityZone": {
+                                "Name": "ap-southeast-2a"
+                            },
+                            "SubnetOutpost": {},
+                            "SubnetStatus": "Active"
+                        },
+                        {
+                            "SubnetIdentifier": "subnet-dc2dc8b8",
+                            "SubnetAvailabilityZone": {
+                                "Name": "ap-southeast-2b"
+                            },
+                            "SubnetOutpost": {},
+                            "SubnetStatus": "Active"
+                        }
+                    ]
+                },
+                "PreferredMaintenanceWindow": "tue:15:01-tue:15:31",
+                "PendingModifiedValues": {},
+                "MultiAZ": false,
+                "EngineVersion": "5.7.mysql_aurora.2.07.2",
+                "AutoMinorVersionUpgrade": false,
+                "ReadReplicaDBInstanceIdentifiers": [],
+                "LicenseModel": "general-public-license",
+                "OptionGroupMemberships": [
+                    {
+                        "OptionGroupName": "default:aurora-mysql-5-7",
+                        "Status": "in-sync"
+                    }
+                ],
+                "PubliclyAccessible": false,
+                "StorageType": "aurora",
+                "DbInstancePort": 0,
+                "DBClusterIdentifier": "nca-leads-dev",
+                "StorageEncrypted": false,
+                "DbiResourceId": "db-JPLM6E4QXUB7Y7JR5II7X5CA6Q",
+                "CACertificateIdentifier": "rds-ca-2019",
+                "DomainMemberships": [],
+                "CopyTagsToSnapshot": false,
+                "MonitoringInterval": 0,
+                "PromotionTier": 1,
+                "DBInstanceArn": "arn:aws:rds:ap-southeast-2:123456:db:nca-leads-dev",
+                "IAMDatabaseAuthenticationEnabled": false,
+                "PerformanceInsightsEnabled": false,
+                "EnabledCloudwatchLogsExports": [
+                    "audit",
+                    "error"
+                ],
+                "DeletionProtection": false,
+                "AssociatedRoles": [],
+                "TagList": [],
+                "CustomerOwnedIpEnabled": false,
+                "BackupTarget": "region",
+                "NetworkType": "IPV4"
+            }
+        ],
+        "ResponseMetadata": {}
+    }
+}

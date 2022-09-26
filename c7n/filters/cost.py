@@ -83,7 +83,7 @@ class Cost(Filter):
         with self.cache:
             price = self.cache.get(cache_key)
             if not price:
-                price = self.get_infracost(client, query, params)
+                price = self.invoke_infracost(client, query, params)
                 # TODO support configurable currency
                 price["USD"] = float(price["USD"]) * self.data.get("quantity", 1)
                 self.cache.save(cache_key, price)
@@ -91,7 +91,7 @@ class Cost(Filter):
         resource[self.ANNOTATION_KEY] = price
         return price
 
-    def get_infracost(self, client, query, params):
+    def invoke_infracost(self, client, query, params):
         result = client.execute(query, variable_values=params)
         self.log.info(f"Infracost {params}: {result}")
         total = len(result["products"][0]["prices"])

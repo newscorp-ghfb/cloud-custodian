@@ -147,7 +147,7 @@ def test_ec2_cost(test):
         session_factory=session_factory,
         config={'region': aws_region},
     )
-    with patch("c7n.filters.cost.Cost.get_infracost") as infracost:
+    with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
         infracost.side_effect = [
             {'USD': 0.0066, 'description': '$0.0066 per On Demand Linux t3.nano Instance Hour'},
             {'USD': 0.0528, 'description': '$0.0528 per On Demand Linux t3.medium Instance Hour'},
