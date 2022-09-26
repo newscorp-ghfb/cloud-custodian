@@ -71,6 +71,12 @@ class Cost(Filter):
         return super(Cost, self).validate()
 
     def process_resource(self, resource, client, query):
+        price = self.get_price(resource, client, query)
+        op = self.data.get('operator', 'ge')
+        value = self.data.get('value', -1)
+        return OPERATORS[op](price["USD"], value)
+
+    def get_price(self, resource, client, query):
         params = self.get_params(resource)
         cache_key = str(params)
 
@@ -83,9 +89,7 @@ class Cost(Filter):
                 self.cache.save(cache_key, price)
 
         resource[self.ANNOTATION_KEY] = price
-        op = self.data.get('operator', 'ge')
-        value = self.data.get('value', -1)
-        return OPERATORS[op](price["USD"], value)
+        return price
 
     def get_infracost(self, client, query, params):
         result = client.execute(query, variable_values=params)

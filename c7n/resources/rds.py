@@ -239,8 +239,7 @@ filters.register('onhour', OnHour)
 
 
 @filters.register('cost')
-class Ec2Cost(Cost):
-
+class RdsCost(Cost):
     def get_query(self):
         # reference: https://gql.readthedocs.io/en/stable/usage/variables.html
         return """
@@ -288,9 +287,10 @@ class Ec2Cost(Cost):
         engine = engines.get(resource["Engine"])
         if not engine:
             for k, v in engines.items():
-                if resource("Engine").startswith(k):
+                if resource["Engine"].startswith(k):
                     engine = v
-        
+                    break
+
         params = {
             "region": resource["AvailabilityZone"][:-1],
             "instanceType": resource["DBInstanceClass"],
