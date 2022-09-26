@@ -15,6 +15,7 @@ from c7n.query import (
 from c7n.resources import rds
 from c7n.filters.kms import KmsRelatedFilter
 from .aws import shape_validate
+from .rds import RdsCost
 from c7n.exceptions import PolicyValidationError
 from c7n.utils import (
     type_schema, local_session, snapshot_identifier, chunks)
@@ -78,6 +79,23 @@ class RDSCluster(QueryResourceManager):
 
 RDSCluster.filter_registry.register('offhour', OffHour)
 RDSCluster.filter_registry.register('onhour', OnHour)
+
+
+@RDSCluster.filter_registry.register('cost')
+class RdsClusterCost(RdsCost):
+    def get_cluster_members(self, r):
+        all = self.manager.get_resource_manager('rds').resources()
+        memberIds = set([m["DBInstanceIdentifier"] for m in r["DBClusterMembers"]])
+        return [i for i in all if i["DBInstanceIdentifier"] in memberIds]
+
+    def get_price(self, resource, client, query):
+        members = self.get_cluster_members(resource)
+        price = {"USD": 0.0, "members": len(members)}
+        for m in members:
+            super().get_price(m, client, query)
+            price["USD"] += m.get(self.ANNOTATION_KEY, {}).get("USD", 0)
+        resource[self.ANNOTATION_KEY] = price
+        return price
 
 
 @RDSCluster.filter_registry.register('security-group')
