@@ -87,7 +87,6 @@ class RDSClusterTest(BaseTest):
         self.assertEqual(len(resources), 1)
         assert resources[0]["c7n:Cost"].items() >= {'USD': 91.25}.items()
 
-
     def test_rdscluster_security_group(self):
         self.remove_augments()
         session_factory = self.replay_flight_data("test_rdscluster_sg_filter")
