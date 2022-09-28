@@ -92,9 +92,8 @@ class RdsClusterCost(RdsCost):
         members = self.get_cluster_members(resource)
         price = {"USD": 0.0, "members": len(members)}
         for m in members:
-            super().get_price(m, client, query)
-            price["USD"] += m.get(self.ANNOTATION_KEY, {}).get("USD", 0)
-        resource[self.ANNOTATION_KEY] = price
+            mprice = super().get_price(m, client, query)
+            price["USD"] += mprice.get("USD", 0)
         return price
 
 
