@@ -1,6 +1,7 @@
 import os
 
 from c7n.cache import InMemoryCache
+from c7n.filters import COST_ANNOTATION_KEY
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 
@@ -47,7 +48,6 @@ class Cost(Filter):
         },
     }
     schema_alias = True
-    ANNOTATION_KEY = "c7n:Cost"
 
     def __init__(self, data, manager=None):
         super().__init__(data, manager)
@@ -72,7 +72,7 @@ class Cost(Filter):
 
     def process_resource(self, resource, client, query):
         price = self.get_price(resource, client, query)
-        resource[self.ANNOTATION_KEY] = price
+        resource[COST_ANNOTATION_KEY] = price
         op = self.data.get('operator', 'ge')
         value = self.data.get('value', -1)
         return OPERATORS[op](price["USD"], value)
