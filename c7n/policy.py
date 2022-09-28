@@ -321,7 +321,7 @@ class PullMode(PolicyExecutionMode):
             )
             if len(resources) and COST_ANNOTATION_KEY in resources[0]:
                 cost = sum([r.get(COST_ANNOTATION_KEY, {}).get("USD", 0) for r in resources])
-                ctx.metrics.put_metric("ResourceCost", cost, "USD", Scope="Policy")
+                ctx.metrics.put_metric("ResourceCost", cost, "Count", Scope="Policy")
             ctx.metrics.put_metric("ResourceTime", rt, "Seconds", Scope="Policy")
             ctx.output.write_file('resources.json', utils.dumps(resources, indent=2))
 
