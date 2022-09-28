@@ -1,6 +1,6 @@
 import os
 
-from c7n.cache import NullCache
+from c7n.cache import InMemoryCache
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 
@@ -51,7 +51,7 @@ class Cost(Filter):
 
     def __init__(self, data, manager=None):
         super().__init__(data, manager)
-        self.cache = manager._cache or NullCache({})
+        self.cache = InMemoryCache({})
         self.api_endpoint = data.get(
             "api_endpoint",
             os.environ.get("INFRACOST_API_ENDPOINT", "https://pricing.api.infracost.io"),
@@ -72,6 +72,7 @@ class Cost(Filter):
 
     def process_resource(self, resource, client, query):
         price = self.get_price(resource, client, query)
+        resource[self.ANNOTATION_KEY] = price
         op = self.data.get('operator', 'ge')
         value = self.data.get('value', -1)
         return OPERATORS[op](price["USD"], value)
@@ -80,15 +81,12 @@ class Cost(Filter):
         params = self.get_params(resource)
         cache_key = str(params)
 
-        with self.cache:
-            price = self.cache.get(cache_key)
-            if not price:
-                price = self.invoke_infracost(client, query, params)
-                # TODO support configurable currency
-                price["USD"] = float(price["USD"]) * self.data.get("quantity", 1)
-                self.cache.save(cache_key, price)
-
-        resource[self.ANNOTATION_KEY] = price
+        price = self.cache.get(cache_key)
+        if not price:
+            price = self.invoke_infracost(client, query, params)
+            # TODO support configurable currency
+            price["USD"] = float(price["USD"]) * self.data.get("quantity", 1)
+            self.cache.save(cache_key, price)
         return price
 
     def invoke_infracost(self, client, query, params):
