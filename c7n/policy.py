@@ -15,7 +15,7 @@ import jmespath
 from c7n.cwe import CloudWatchEvents
 from c7n.ctx import ExecutionContext
 from c7n.exceptions import PolicyValidationError, ClientError, ResourceLimitExceeded
-from c7n.filters import FilterRegistry, And, Or, Not
+from c7n.filters import COST_ANNOTATION_KEY, FilterRegistry, And, Or, Not
 from c7n.manager import iter_filters
 from c7n.output import DEFAULT_NAMESPACE
 from c7n.resources import load_resources
@@ -319,6 +319,9 @@ class PullMode(PolicyExecutionMode):
             ctx.metrics.put_metric(
                 "ResourceCount", len(resources), "Count", Scope="Policy"
             )
+            if len(resources) and COST_ANNOTATION_KEY in resources[0]:
+                cost = sum([r.get(COST_ANNOTATION_KEY, {}).get("USD", 0) for r in resources])
+                ctx.metrics.put_metric("ResourceCost", cost, "USD", Scope="Policy")
             ctx.metrics.put_metric("ResourceTime", rt, "Seconds", Scope="Policy")
             ctx.output.write_file('resources.json', utils.dumps(resources, indent=2))
 
