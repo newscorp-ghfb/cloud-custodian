@@ -3,7 +3,7 @@
 from .common import BaseTest
 import datetime
 from dateutil import tz as tzutil
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from c7n.testing import mock_datetime_now
 from dateutil import parser
 
@@ -24,6 +24,32 @@ class DynamodbTest(BaseTest):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["TableName"], "test-table-kms-filter")
         self.assertEqual(resources[0]["TableStatus"], "ACTIVE")
+
+    def test_table_cost(self):
+        aws_region = 'ap-southeast-2'
+        session_factory = self.replay_flight_data('table_cost', region=aws_region)
+        policy = self.load_policy(
+            {
+                "name": "table-cost",
+                "resource": "dynamodb-table",
+                "filters": [{
+                    "type": "cost",
+                    "quantity": 730,
+                }]
+            },
+            session_factory=session_factory,
+            config={'region': aws_region},
+        )
+        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+            infracost.side_effect = [
+                {'USD': 0.000148, 'description': '$0.000148 per hour for units of '
+                'read capacity beyond the free tier', 'purchaseOption': 'on_demand'},
+                {'USD': 0.00074, 'description': '$0.00074 per hour for units of '
+                'write capacity beyond the free tier', 'purchaseOption': 'on_demand'}
+            ]
+            resources = policy.run()
+        self.assertEqual(len(resources), 1)
+        assert resources[0]["c7n:Cost"].items() >= {'USD': 6.4824}.items()
 
     def test_invoke_action(self):
         session_factory = self.replay_flight_data("test_dynamodb_invoke_action")
