@@ -1,0 +1,17 @@
+{
+    "status_code": 200,
+    "data": {
+        "PaginationToken": "",
+        "ResourceTagMappingList": [
+            {
+                "ResourceARN": "arn:aws:elasticache:ap-southeast-2:123456789012:cluster:kurator-dev-1-001",
+                "Tags": []
+            },
+            {
+                "ResourceARN": "arn:aws:elasticache:ap-southeast-2:123456789012:cluster:kurator-dev-1-002",
+                "Tags": []
+            }
+        ],
+        "ResponseMetadata": {}
+    }
+}

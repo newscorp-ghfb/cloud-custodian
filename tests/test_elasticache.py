@@ -1,5 +1,6 @@
 # Copyright The Cloud Custodian Authors.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
 from c7n.resources.elasticache import _cluster_eligible_for_snapshot
 
 from .common import BaseTest
@@ -38,6 +39,30 @@ class TestElastiCacheCluster(BaseTest):
             sorted([r["CacheClusterId"] for r in resources]),
             ["myec-001", "myec-002", "myec-003"],
         )
+
+    def test_elasticache_cost(self):
+        aws_region = 'ap-southeast-2'
+        session_factory = self.replay_flight_data('elasticache_cost', region=aws_region)
+        policy = self.load_policy(
+            {
+                "name": "elasticache-cost",
+                "resource": "cache-cluster",
+                "filters": [{
+                    "type": "cost",
+                    "quantity": 730,
+                }]
+            },
+            session_factory=session_factory,
+            config={'region': aws_region},
+        )
+        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+            infracost.return_value = {'USD': 0.12,
+                'description': '$0.12 per  Enhanced Medium Cache node-hour'
+                ' (or partial hour) running Redis',
+                'purchaseOption': 'on_demand'}
+            resources = policy.run()
+        self.assertEqual(len(resources), 2)
+        assert resources[0]["c7n:Cost"].items() >= {'USD': 87.6}.items()
 
     def test_elasticache_subnet_filter(self):
         session_factory = self.replay_flight_data(

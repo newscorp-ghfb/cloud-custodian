@@ -10,6 +10,7 @@ from dateutil.parser import parse
 from c7n.actions import (
     ActionRegistry, BaseAction, ModifyVpcSecurityGroupsAction)
 from c7n.filters import FilterRegistry, AgeFilter
+from c7n.filters.cost import Cost
 import c7n.filters.vpc as net_filters
 from c7n.filters.kms import KmsRelatedFilter
 from c7n.manager import resources
@@ -46,6 +47,46 @@ class ElastiCacheCluster(QueryResourceManager):
     action_registry = actions
     permissions = ('elasticache:ListTagsForResource',)
     augment = universal_augment
+
+
+@filters.register('cost')
+class Ec2Cost(Cost):
+
+    def get_query(self):
+        # reference: https://gql.readthedocs.io/en/stable/usage/variables.html
+        return """
+            query ($region: String, $instanceType: String, $cacheEngine: String) {
+                products(
+                    filter: {
+                        vendorName: "aws",
+                        service: "AmazonElastiCache",
+                        productFamily: "Cache Instance"
+                        region: $region,
+                        attributeFilters: [
+                            { key: "instanceType", value: $instanceType }
+                            { key: "locationType", value: "AWS Region" }
+                            { key: "cacheEngine", value: $cacheEngine }
+                        ]
+                    },
+                ) {
+                    prices(
+                        filter: {purchaseOption: "on_demand"}
+                    ) {
+                        USD,
+                        description,
+                        purchaseOption
+                    }
+                }
+            }
+        """
+
+    def get_params(self, resource):
+        params = {
+            "region": resource["PreferredAvailabilityZone"][:-1],
+            "instanceType": resource["CacheNodeType"],
+            "cacheEngine": resource["Engine"].capitalize()
+        }
+        return params
 
 
 @filters.register('security-group')
