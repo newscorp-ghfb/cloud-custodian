@@ -23,11 +23,11 @@ class Cost(Filter):
         resource: ec2
         filters:
           - type: cost
-            op: greater-than
-            # USD
-            value: 4
             # monthly price = unit price * 730 hours
             quantity: 730
+            op: greater-than
+            # USD
+            value: 20
 
 
     reference: https://www.infracost.io/docs/cloud_pricing_api/overview/
@@ -58,9 +58,6 @@ class Cost(Filter):
         )
         self.api_key = data.get("api_key", os.environ.get("INFRACOST_API_KEY"))
 
-    def get_permissions(self):
-        return ("ec2:DescribeInstances",)
-
     def validate(self):
         name = self.__class__.__name__
         if self.api_endpoint is None:
@@ -69,6 +66,17 @@ class Cost(Filter):
         if self.api_key is None:
             raise ValueError("%s Filter requires Infracost api_key" % name)
         return super(Cost, self).validate()
+
+    def process(self, resources, event=None):
+        transport = RequestsHTTPTransport(
+            url=self.api_endpoint + "/graphql",
+            headers={'X-Api-Key': self.api_key},
+            verify=True,
+            retries=5,
+        )
+        client = Client(transport=transport, fetch_schema_from_transport=True)
+        query = gql(self.get_query())
+        return [r for r in resources if self.process_resource(r, client, query)]
 
     def process_resource(self, resource, client, query):
         price = self.get_price(resource, client, query)
@@ -99,17 +107,6 @@ class Cost(Filter):
         if total > 1:
             self.log.warning(f"Found {total} price options, expecting 1")
         return result["products"][0]["prices"][0]
-
-    def process(self, resources, event=None):
-        transport = RequestsHTTPTransport(
-            url=self.api_endpoint + "/graphql",
-            headers={'X-Api-Key': self.api_key},
-            verify=True,
-            retries=5,
-        )
-        client = Client(transport=transport, fetch_schema_from_transport=True)
-        query = gql(self.get_query())
-        return [r for r in resources if self.process_resource(r, client, query)]
 
     def get_query(self):
         raise NotImplementedError("use subclass")
