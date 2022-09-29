@@ -1,0 +1,98 @@
+{
+    "status_code": 200,
+    "data": {
+        "CacheClusters": [
+            {
+                "CacheClusterId": "kurator-dev-1-001",
+                "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
+                "CacheNodeType": "cache.m3.medium",
+                "Engine": "redis",
+                "EngineVersion": "2.8.24",
+                "CacheClusterStatus": "available",
+                "NumCacheNodes": 1,
+                "PreferredAvailabilityZone": "ap-southeast-2a",
+                "CacheClusterCreateTime": {
+                    "__class__": "datetime",
+                    "year": 2016,
+                    "month": 9,
+                    "day": 15,
+                    "hour": 1,
+                    "minute": 29,
+                    "second": 33,
+                    "microsecond": 88000
+                },
+                "PreferredMaintenanceWindow": "fri:15:00-fri:16:00",
+                "PendingModifiedValues": {},
+                "CacheSecurityGroups": [],
+                "CacheParameterGroup": {
+                    "CacheParameterGroupName": "default.redis2.8",
+                    "ParameterApplyStatus": "in-sync",
+                    "CacheNodeIdsToReboot": []
+                },
+                "CacheSubnetGroupName": "dev-front",
+                "AutoMinorVersionUpgrade": true,
+                "SecurityGroups": [
+                    {
+                        "SecurityGroupId": "sg-a8005bcc",
+                        "Status": "active"
+                    }
+                ],
+                "ReplicationGroupId": "kurator-dev-1",
+                "SnapshotRetentionLimit": 0,
+                "SnapshotWindow": "18:00-19:00",
+                "AuthTokenEnabled": false,
+                "TransitEncryptionEnabled": false,
+                "AtRestEncryptionEnabled": false,
+                "ARN": "arn:aws:elasticache:ap-southeast-2:123456789012:cluster:kurator-dev-1-001",
+                "ReplicationGroupLogDeliveryEnabled": false,
+                "LogDeliveryConfigurations": []
+            },
+            {
+                "CacheClusterId": "kurator-dev-1-002",
+                "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
+                "CacheNodeType": "cache.m3.medium",
+                "Engine": "redis",
+                "EngineVersion": "2.8.24",
+                "CacheClusterStatus": "available",
+                "NumCacheNodes": 1,
+                "PreferredAvailabilityZone": "ap-southeast-2b",
+                "CacheClusterCreateTime": {
+                    "__class__": "datetime",
+                    "year": 2016,
+                    "month": 9,
+                    "day": 15,
+                    "hour": 1,
+                    "minute": 34,
+                    "second": 37,
+                    "microsecond": 403000
+                },
+                "PreferredMaintenanceWindow": "fri:15:00-fri:16:00",
+                "PendingModifiedValues": {},
+                "CacheSecurityGroups": [],
+                "CacheParameterGroup": {
+                    "CacheParameterGroupName": "default.redis2.8",
+                    "ParameterApplyStatus": "in-sync",
+                    "CacheNodeIdsToReboot": []
+                },
+                "CacheSubnetGroupName": "dev-front",
+                "AutoMinorVersionUpgrade": true,
+                "SecurityGroups": [
+                    {
+                        "SecurityGroupId": "sg-a8005bcc",
+                        "Status": "active"
+                    }
+                ],
+                "ReplicationGroupId": "kurator-dev-1",
+                "SnapshotRetentionLimit": 1,
+                "SnapshotWindow": "18:00-19:00",
+                "AuthTokenEnabled": false,
+                "TransitEncryptionEnabled": false,
+                "AtRestEncryptionEnabled": false,
+                "ARN": "arn:aws:elasticache:ap-southeast-2:123456789012:cluster:kurator-dev-1-002",
+                "ReplicationGroupLogDeliveryEnabled": false,
+                "LogDeliveryConfigurations": []
+            }
+        ],
+        "ResponseMetadata": {}
+    }
+}
