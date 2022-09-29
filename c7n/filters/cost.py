@@ -79,8 +79,11 @@ class Cost(Filter):
 
     def get_price(self, resource, client, query):
         params = self.get_params(resource)
-        cache_key = str(params)
+        price = self._get_price(client, query, params)
+        return price
 
+    def _get_price(self, client, query, params):
+        cache_key = str(params)
         price = self.cache.get(cache_key)
         if not price:
             price = self.invoke_infracost(client, query, params)

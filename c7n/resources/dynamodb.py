@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from concurrent.futures import as_completed
 
 from c7n.actions import BaseAction, ModifyVpcSecurityGroupsAction
+from c7n.filters.cost import Cost
 from c7n.filters.kms import KmsRelatedFilter
 from c7n import query
 from c7n.manager import resources
@@ -61,6 +62,60 @@ class Table(query.QueryResourceManager):
         'describe': DescribeTable,
         'config': ConfigTable
     }
+
+
+@Table.filter_registry.register('cost')
+class TableCost(Cost):
+
+    def get_query(self):
+        # reference: https://gql.readthedocs.io/en/stable/usage/variables.html
+        return """
+            query ($region: String, $group: String) {
+            products(
+                filter: {
+                    vendorName: "aws",
+                    service: "AmazonDynamoDB",
+                    productFamily: "Provisioned IOPS",
+                    region: $region,
+                    attributeFilters: [
+                        { key: "group", value: $group }
+                    ]
+                },
+            ) {
+                prices(
+                    filter: {
+                        purchaseOption: "on_demand",
+                        description_regex: "/beyond the free tier/"
+                    }
+                ) {
+                    USD,
+                    description,
+                    purchaseOption
+                }
+            }
+            }
+        """
+
+    def get_params(self, resource):
+        params = {
+            "region": resource["TableArn"].split(":")[3],
+        }
+        return params
+
+    def get_price(self, resource, client, query):
+        price = {"USD": 0.0}
+        billingMode = resource.get("BillingModeSummary", {}).get("BillingMode")
+        rcu = resource["ProvisionedThroughput"]["ReadCapacityUnits"]
+        wcu = resource["ProvisionedThroughput"]["WriteCapacityUnits"]
+        if billingMode == "PAY_PER_REQUEST" or rcu + wcu == 0:
+            return price
+
+        params = self.get_params(resource)
+        params.update({"group": "DDB-ReadUnits"})
+        price["USD"] += self._get_price(client, query, params)["USD"] * rcu
+        params.update({"group": "DDB-WriteUnits"})
+        price["USD"] += self._get_price(client, query, params)["USD"] * wcu
+        return price
 
 
 @Table.filter_registry.register('kms-key')

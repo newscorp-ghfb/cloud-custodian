@@ -1,0 +1,41 @@
+{
+    "status_code": 200,
+    "data": {
+        "Table": {
+            "AttributeDefinitions": [
+                {
+                    "AttributeName": "channelId",
+                    "AttributeType": "S"
+                }
+            ],
+            "TableName": "test-notification",
+            "KeySchema": [
+                {
+                    "AttributeName": "channelId",
+                    "KeyType": "HASH"
+                }
+            ],
+            "TableStatus": "ACTIVE",
+            "CreationDateTime": {
+                "__class__": "datetime",
+                "year": 2022,
+                "month": 8,
+                "day": 15,
+                "hour": 12,
+                "minute": 39,
+                "second": 16,
+                "microsecond": 532000
+            },
+            "ProvisionedThroughput": {
+                "NumberOfDecreasesToday": 0,
+                "ReadCapacityUnits": 10,
+                "WriteCapacityUnits": 10
+            },
+            "TableSizeBytes": 662,
+            "ItemCount": 4,
+            "TableArn": "arn:aws:dynamodb:ap-southeast-2:123456789012:table/test-notification",
+            "TableId": "a3271302-edf3-41df-966f-856f9aecafe7"
+        },
+        "ResponseMetadata": {}
+    }
+}
