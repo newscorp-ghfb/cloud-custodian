@@ -49,7 +49,7 @@ class DynamodbTest(BaseTest):
             ]
             resources = policy.run()
         self.assertEqual(len(resources), 1)
-        assert resources[0]["c7n:Cost"].items() >= {'USD': 6.48}.items()
+        assert resources[0]["c7n:Cost"].items() >= {'USD': 6.4824}.items()
 
     def test_invoke_action(self):
         session_factory = self.replay_flight_data("test_dynamodb_invoke_action")

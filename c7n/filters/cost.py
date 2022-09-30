@@ -90,7 +90,7 @@ class Cost(Filter):
         params = self.get_params(resource)
         quantity = self.get_quantity(resource)
         price = self._get_price(client, query, params, quantity)
-        price['USD'] = round(price['USD'], 2)
+        price['USD'] = round(price['USD'], 4)
         return price
 
     def _get_price(self, client, query, params, quantity=1):

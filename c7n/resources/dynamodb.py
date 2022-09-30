@@ -112,7 +112,7 @@ class TableCost(Cost):
         price["USD"] += self._get_price(client, query, params, quantity)["USD"] * rcu
         params.update({"group": "DDB-WriteUnits"})
         price["USD"] += self._get_price(client, query, params, quantity)["USD"] * wcu
-        price['USD'] = round(price['USD'], 2)
+        price['USD'] = round(price['USD'], 4)
         return price
 
 
