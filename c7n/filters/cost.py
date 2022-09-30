@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 
 from c7n.cache import InMemoryCache
 from c7n.filters import COST_ANNOTATION_KEY
@@ -87,18 +88,22 @@ class Cost(Filter):
 
     def get_price(self, resource, client, query):
         params = self.get_params(resource)
-        price = self._get_price(client, query, params)
+        quantity = self.get_quantity(resource)
+        price = self._get_price(client, query, params, quantity)
         return price
 
-    def _get_price(self, client, query, params):
+    def _get_price(self, client, query, params, quantity=1):
         cache_key = str(params)
-        price = self.cache.get(cache_key)
+        price: Dict = self.cache.get(cache_key)
         if not price:
             price = self.invoke_infracost(client, query, params)
-            # TODO support configurable currency
-            price["USD"] = float(price["USD"]) * self.data.get("quantity", 1)
             self.cache.save(cache_key, price)
-        return price
+
+        total = price.copy()
+        # TODO support configurable currency
+        total["USD"] = float(total["USD"]) * quantity
+        total["quantity"] = quantity
+        return total
 
     def invoke_infracost(self, client, query, params):
         result = client.execute(query, variable_values=params)
@@ -113,3 +118,6 @@ class Cost(Filter):
 
     def get_params(self, resource):
         raise NotImplementedError("use subclass")
+
+    def get_quantity(self, resource):
+        return self.data.get("quantity", 1)

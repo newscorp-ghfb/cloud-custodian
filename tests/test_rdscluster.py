@@ -79,7 +79,7 @@ class RDSClusterTest(BaseTest):
             config={'region': aws_region},
         )
         with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
-            infracost.return_value = {'USD': 0.125,
+            infracost.return_value = {'USD': '0.1250000',
                 'description': 'USD 0.126 per db.t3.medium Single-AZ instance hour'
                 '(or partial hour) running Aurora MySQL',
                 'purchaseOption': 'on_demand'}

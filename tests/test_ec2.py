@@ -149,8 +149,10 @@ def test_ec2_cost(test):
     )
     with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
         infracost.side_effect = [
-            {'USD': 0.0066, 'description': '$0.0066 per On Demand Linux t3.nano Instance Hour'},
-            {'USD': 0.0528, 'description': '$0.0528 per On Demand Linux t3.medium Instance Hour'},
+            {'USD': '0.00660000',
+            'description': '$0.0066 per On Demand Linux t3.nano Instance Hour'},
+            {'USD': '0.05280000',
+            'description': '$0.0528 per On Demand Linux t3.medium Instance Hour'},
         ]
         resources = policy.run()
     test.assertEqual(len(resources), 1)

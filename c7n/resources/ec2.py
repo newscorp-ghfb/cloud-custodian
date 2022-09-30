@@ -7,6 +7,8 @@ import random
 import re
 import zlib
 from typing import List
+from datetime import datetime
+from dateutil.tz import tzutc
 from distutils.version import LooseVersion
 
 import botocore
@@ -202,7 +204,7 @@ class Ec2Cost(Cost):
                 ) {
                     prices(
                         filter: {purchaseOption: "on_demand"}
-                    ) { USD, description, purchaseOption }
+                    ) { USD, unit, description, purchaseOption }
                 }
             }
         """
@@ -213,6 +215,14 @@ class Ec2Cost(Cost):
             "instanceType": resource["InstanceType"],
         }
         return params
+
+    def get_quantity(self, resource):
+        hours = self.data.get("quantity")
+        # NOTE use instance age if quantity is not set
+        if not hours:
+            launchTime = InstanceAgeFilter({}, self.manager).get_resource_date(resource)
+            hours = round((datetime.now(tz=tzutc()) - launchTime).total_seconds() / 3600, 2)
+        return hours
 
 
 @filters.register('check-permissions')

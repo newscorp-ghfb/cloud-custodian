@@ -56,7 +56,7 @@ class TestElastiCacheCluster(BaseTest):
             config={'region': aws_region},
         )
         with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
-            infracost.return_value = {'USD': 0.12,
+            infracost.return_value = {'USD': '0.120000',
                 'description': '$0.12 per  Enhanced Medium Cache node-hour'
                 ' (or partial hour) running Redis',
                 'purchaseOption': 'on_demand'}
