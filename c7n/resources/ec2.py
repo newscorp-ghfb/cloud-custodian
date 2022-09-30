@@ -7,8 +7,6 @@ import random
 import re
 import zlib
 from typing import List
-from datetime import datetime
-from dateutil.tz import tzutc
 from distutils.version import LooseVersion
 
 import botocore
@@ -221,7 +219,8 @@ class Ec2Cost(Cost):
         # NOTE use instance age if quantity is not set
         if not hours:
             launchTime = InstanceAgeFilter({}, self.manager).get_resource_date(resource)
-            hours = round((datetime.now(tz=tzutc()) - launchTime).total_seconds() / 3600, 2)
+            terminateTime = StateTransitionAge({}, self.manager).get_resource_date(resource)
+            hours = round((terminateTime - launchTime).total_seconds() / 3600, 3)
         return hours
 
 

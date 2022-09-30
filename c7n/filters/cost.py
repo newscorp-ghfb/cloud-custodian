@@ -102,7 +102,7 @@ class Cost(Filter):
 
         total = price.copy()
         # TODO support configurable currency
-        total["USD"] = float(total["USD"]) * quantity, 2
+        total["USD"] = float(total["USD"]) * quantity
         total["quantity"] = quantity
         return total
 
