@@ -87,11 +87,7 @@ class TableCost(Cost):
                         purchaseOption: "on_demand",
                         description_regex: "/beyond the free tier/"
                     }
-                ) {
-                    USD,
-                    description,
-                    purchaseOption
-                }
+                ) { USD, unit, description, purchaseOption }
             }
             }
         """

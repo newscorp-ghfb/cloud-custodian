@@ -102,6 +102,7 @@ class Cost(Filter):
         total = price.copy()
         # TODO support configurable currency
         total["USD"] = float(total["USD"]) * quantity
+        total["quantity"] = quantity
         return total
 
     def invoke_infracost(self, client, query, params):
