@@ -42,9 +42,9 @@ class DynamodbTest(BaseTest):
         )
         with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
             infracost.side_effect = [
-                {'USD': 0.000148, 'description': '$0.000148 per hour for units of '
+                {'USD': '0.0001480000', 'description': '$0.000148 per hour for units of '
                 'read capacity beyond the free tier', 'purchaseOption': 'on_demand'},
-                {'USD': 0.00074, 'description': '$0.00074 per hour for units of '
+                {'USD': '0.000740000', 'description': '$0.00074 per hour for units of '
                 'write capacity beyond the free tier', 'purchaseOption': 'on_demand'}
             ]
             resources = policy.run()

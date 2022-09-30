@@ -111,10 +111,11 @@ class TableCost(Cost):
             return price
 
         params = self.get_params(resource)
+        quantity = self.get_quantity(resource)
         params.update({"group": "DDB-ReadUnits"})
-        price["USD"] += self._get_price(client, query, params)["USD"] * rcu
+        price["USD"] += self._get_price(client, query, params, quantity)["USD"] * rcu
         params.update({"group": "DDB-WriteUnits"})
-        price["USD"] += self._get_price(client, query, params)["USD"] * wcu
+        price["USD"] += self._get_price(client, query, params, quantity)["USD"] * wcu
         return price
 
 
