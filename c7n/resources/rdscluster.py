@@ -94,7 +94,7 @@ class RdsClusterCost(RdsCost):
         for m in members:
             mprice = super().get_price(m, client, query)
             price["USD"] += mprice.get("USD", 0)
-        price['USD'] = round(price['USD'], 2)
+        price['USD'] = round(price['USD'], 4)
         return price
 
 

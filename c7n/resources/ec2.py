@@ -220,7 +220,7 @@ class Ec2Cost(Cost):
         if not hours:
             launchTime = InstanceAgeFilter({}, self.manager).get_resource_date(resource)
             terminateTime = StateTransitionAge({}, self.manager).get_resource_date(resource)
-            hours = round((terminateTime - launchTime).total_seconds() / 3600, 3)
+            hours = round((terminateTime - launchTime).total_seconds() / 3600, 4)
         return hours
 
 
