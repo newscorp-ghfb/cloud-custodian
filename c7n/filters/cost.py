@@ -90,6 +90,7 @@ class Cost(Filter):
         params = self.get_params(resource)
         quantity = self.get_quantity(resource)
         price = self._get_price(client, query, params, quantity)
+        price['USD'] = round(price['USD'], 2)
         return price
 
     def _get_price(self, client, query, params, quantity=1):
@@ -101,7 +102,7 @@ class Cost(Filter):
 
         total = price.copy()
         # TODO support configurable currency
-        total["USD"] = float(total["USD"]) * quantity
+        total["USD"] = float(total["USD"]) * quantity, 2
         total["quantity"] = quantity
         return total
 
