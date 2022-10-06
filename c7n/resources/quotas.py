@@ -77,8 +77,8 @@ class ServiceQuota(QueryResourceManager):
                     quotas.update(rquotas)
                     self.log.debug(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
                     # NOTE fix TooManyRequestsException when calling the ListServiceQuotas
-                    # NOTE sleep before any break
-                    sleep(0.2)
+                    # NOTE sleep before any break; default quota 10rps
+                    sleep(0.3)
                     if token is None:
                         break
                     # ssm, ec2, kms have bad behaviors.
