@@ -281,33 +281,31 @@ class TestSetMetadata(BaseTest):
         policy = self.load_policy({
             'name': 'ec2-imds-access',
             'resource': 'aws.ec2',
+            'filters': [{
+                    'type': 'value',
+                    'key': 'InstanceId',
+                    'value': 'i-0d4526dcaa95692db',
+                    'op': 'eq'}],
             'actions': [
                 {'type': 'set-metadata-access',
-                 'tokens': 'required'},
+                 'tokens': 'required',
+                 'metadata-tags': 'enabled'},
             ]},
             session_factory=session_factory)
         resources = policy.run()
         if self.recording:
-            time.sleep(2)
+            time.sleep(10)
         results = session_factory().client('ec2').describe_instances(
             InstanceIds=[r['InstanceId'] for r in resources])
-        self.assertJmes('[0].MetadataOptions.HttpTokens', resources, 'optional')
-        self.assertJmes(
-            'Reservations[].Instances[].MetadataOptions',
-            results,
-            [{'HttpEndpoint': 'enabled',
-              'HttpPutResponseHopLimit': 1,
+        self.assertJmes('[0].MetadataOptions.InstanceMetadataTags', resources, 'disabled')
+        self.assertJmes('Reservations[].Instances[].MetadataOptions', results,
+            [{'State': 'applied',
               'HttpTokens': 'required',
-              'State': 'pending'},
-             {'HttpEndpoint': 'enabled',
+              'HttpEndpoint': 'enabled',
               'HttpPutResponseHopLimit': 1,
-              'HttpTokens': 'required',
-              'State': 'applied'}])
-        self.assertEqual(len(resources), 2)
-        self.assertEqual(
-            output.getvalue(),
-            ('set-metadata-access implicitly filtered 1 of 2 resources '
-             'key:MetadataOptions.HttpTokens on optional\n'))
+              'HttpProtocolIpv6': 'disabled',
+              'InstanceMetadataTags': 'enabled'}])
+        self.assertEqual(len(resources), 1)
 
 
 class TestMetricFilter(BaseTest):
