@@ -20,6 +20,7 @@ lib64
 pip-selfcheck.json
 coverage/
 .coverage
+test-validator*
 tmp/
 docs/source/generated/
 docs/build/
