@@ -282,6 +282,8 @@ def main():
         # Select correct processor
         processor = get_processor(mailer_config, logger)
 
+        # NOTE below is to process GCP pubsub with the mailer on AWS
+        if provider == Providers.AWS:
             processor_gcp = None
             if "gcp_queue_url" in mailer_config:
                 from c7n_mailer.queue_processor_pubsub import MailerPubSubProcessor
