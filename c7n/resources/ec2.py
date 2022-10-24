@@ -1186,12 +1186,22 @@ class SetMetadataServerAccess(BaseAction):
              - type: set-metadata-access
                endpoint: disabled
 
+       policies:
+         - name: ec2-enable-metadata-tags
+           resource: ec2
+           filters:
+             - MetadataOptions.InstanceMetadataTags: disabled
+           actions:
+             - type: set-metadata-access
+               metadata-tags: enabled
+
     Reference: https://amzn.to/2XOuxpQ
     """
 
     AllowedValues = {
         'HttpEndpoint': ['enabled', 'disabled'],
         'HttpTokens': ['required', 'optional'],
+        'InstanceMetadataTags': ['enabled', 'disabled'],
         'HttpPutResponseHopLimit': list(range(1, 65))
     }
 
@@ -1199,9 +1209,11 @@ class SetMetadataServerAccess(BaseAction):
         'set-metadata-access',
         anyOf=[{'required': ['endpoint']},
                {'required': ['tokens']},
+               {'required': ['metadatatags']},
                {'required': ['hop-limit']}],
         **{'endpoint': {'enum': AllowedValues['HttpEndpoint']},
            'tokens': {'enum': AllowedValues['HttpTokens']},
+           'metadata-tags': {'enum': AllowedValues['InstanceMetadataTags']},
            'hop-limit': {'type': 'integer', 'minimum': 1, 'maximum': 64}}
     )
     permissions = ('ec2:ModifyInstanceMetadataOptions',)
@@ -1210,6 +1222,7 @@ class SetMetadataServerAccess(BaseAction):
         return filter_empty({
             'HttpEndpoint': self.data.get('endpoint'),
             'HttpTokens': self.data.get('tokens'),
+            'InstanceMetadataTags': self.data.get('metadata-tags'),
             'HttpPutResponseHopLimit': self.data.get('hop-limit')})
 
     def process(self, resources):
