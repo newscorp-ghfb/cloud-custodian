@@ -75,7 +75,7 @@ class ServiceQuota(QueryResourceManager):
                     token = response.get('NextToken')
                     new = set(rquotas) - set(quotas)
                     quotas.update(rquotas)
-                    self.log.debug(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
+                    self.log.info(f"- {s['ServiceCode']} has {len(response['Quotas'])} quotas")
                     # NOTE fix TooManyRequestsException when calling the ListServiceQuotas
                     # NOTE sleep before any break; default quota 10rps
                     sleep(0.3)
@@ -95,7 +95,9 @@ class ServiceQuota(QueryResourceManager):
                 for q in _get_quotas(client, s, 'list_service_quotas')
             }
             dquotas.update(quotas)
-            return dquotas.values()
+            # NOTE filter out applied value is 0 as that means it is not in use
+            # e.g. https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-quotas.html
+            return [q for q in dquotas.values() if q['Value']]
 
         results = []
         # NOTE TooManyRequestsException errors are reported in us-east-1 often
