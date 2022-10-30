@@ -97,7 +97,7 @@ class ServiceQuota(QueryResourceManager):
             dquotas.update(quotas)
             # NOTE filter out applied value is 0 as that means it is not in use
             # e.g. https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-quotas.html
-            return [q for q in dquotas.values() if q['Value']]
+            return [q for q in dquotas.values() if q.get('Value')]
 
         results = []
         # NOTE TooManyRequestsException errors are reported in us-east-1 often
