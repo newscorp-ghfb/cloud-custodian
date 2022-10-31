@@ -234,25 +234,25 @@ class EmailDelivery:
 
         groupby_to_resources_map = self.get_grouped_resources(sqs_message, "servicenow")
         groupby_to_mimetext_map = {}
-        for prd, resources in groupby_to_resources_map.items():
-            # print(f"{prd}: {[r[r['c7n_resource_type_id']] for r in resources]}")
+        for group_name, resources in groupby_to_resources_map.items():
+            # print(f"{group_name}: {[r[r['c7n_resource_type_id']] for r in resources]}")
             # NOTE if having a dedicated address, use it regardless it_service
             if dedicated_addresses:
                 account_id = sqs_message.get("account_id")
                 for da in dedicated_addresses:
                     if account_id in da.get("accounts", []):
                         products = da.get("products")
-                        if not products or prd in products:
+                        if not products or group_name in products:
                             servicenow_address = da.get("email", servicenow_address)
                             break
 
-            # NOTE only skip notify when prd is defined and it_service is undefined,
+            # NOTE only skip notify when group_name is defined and it_service is undefined,
             # This requires the template can deal with when it_service is undefined.
             # it_service = resources[0].get(it_service_key)
-            # if not it_service and prd != "default":
+            # if not it_service and group_name != "default":
             #     self.logger.info(
             #         f"ServiceNow: Skip {len(resources)} resources due to "
-            #         f"it_service value not found for product {prd}"
+            #         f"it_service value not found for product {group_name}"
             #     )
             #     continue
             # NOTE given most of it_service value of products are undefined,
@@ -260,10 +260,10 @@ class EmailDelivery:
             if resources[0].get(jira_project_key):
                 self.logger.info(
                     f"ServiceNow: Skip {len(resources)} resources due to "
-                    f"jira_project value is found for product {prd}"
+                    f"jira_project value is found for product {group_name}"
                 )
                 continue
-            groupby_to_mimetext_map[prd] = get_mimetext_message(
+            groupby_to_mimetext_map[group_name] = get_mimetext_message(
                 self.config,
                 self.logger,
                 sqs_message,
