@@ -252,7 +252,7 @@ class EmailDelivery:
             # if not it_service and group_name != "default":
             #     self.logger.info(
             #         f"ServiceNow: Skip {len(resources)} resources due to "
-            #         f"it_service value not found for product {pgroup_namerd}"
+            #         f"it_service value not found for product {group_name}"
             #     )
             #     continue
             # NOTE given most of it_service value of products are undefined,
