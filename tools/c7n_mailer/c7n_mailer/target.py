@@ -23,7 +23,7 @@ class MessageTargetMixin(object):
             from .jira_delivery import JiraDelivery
 
             if "jira_url" not in self.config:
-                self.logger.error("jira_url not found in mailer config")
+                self.logger.warning("jira_url not found in mailer config")
             else:
                 try:
                     jira_delivery = JiraDelivery(self.config, self.session, self.logger)
@@ -37,7 +37,7 @@ class MessageTargetMixin(object):
         if any(e == "servicenow" for e in message.get("action", ()).get("to")):
             servicenow_address = self.config.get("servicenow_address")
             if not servicenow_address:
-                self.logger.error("servicenow_address not found in mailer config")
+                self.logger.warning("servicenow_address not found in mailer config")
             else:
                 groupedPrdMsg = email_delivery.get_group_email_messages_map(message)
                 for mimetext_msg in groupedPrdMsg.values():
