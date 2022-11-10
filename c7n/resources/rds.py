@@ -290,7 +290,7 @@ class RdsCost(Cost):
         params = {
             "region": resource["AvailabilityZone"][:-1],
             "instanceType": resource["DBInstanceClass"],
-            "databaseEngine": engine,
+            "databaseEngine": engine or resource["Engine"],
             "deploymentOption": "Multi-AZ" if resource["MultiAZ"] else "Single-AZ",
         }
         return params

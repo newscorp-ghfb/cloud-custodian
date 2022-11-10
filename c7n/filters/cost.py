@@ -109,6 +109,9 @@ class Cost(Filter):
     def invoke_infracost(self, client, query, params):
         result = client.execute(query, variable_values=params)
         self.log.info(f"Infracost {params}: {result}")
+        if not result.get("products") or not result["products"][0].get("prices"):
+            self.log.warning(f"Price not found for {params}")
+            return {'USD': '0.0', 'unit': 'N/A', 'description': 'Price not found'}
         total = len(result["products"][0]["prices"])
         if total > 1:
             self.log.warning(f"Found {total} price options, expecting 1")
