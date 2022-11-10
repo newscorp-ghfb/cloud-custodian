@@ -286,7 +286,7 @@ class RdsCost(Cost):
                 if resource["Engine"].startswith(k):
                     engine = v
                     break
-        
+
         params = {
             "region": resource["AvailabilityZone"][:-1],
             "instanceType": resource["DBInstanceClass"],
