@@ -1188,7 +1188,7 @@ class RDSSnapshotTest(BaseTest):
     def test_rds_snapshot_trim_skip_automated(self, process_snapshot_set):
         factory = self.replay_flight_data("test_rds_snapshot_delete_skip_automated",
             region="us-east-2")
-        log_output = self.capture_logging('custodian.actions')
+        log_output = self.capture_logging('custodian.actions', level=logging.DEBUG)
         p = self.load_policy(
             {
                 "name": "rds-snapshot-trim-skip-automated",
@@ -1221,7 +1221,7 @@ class RDSSnapshotTest(BaseTest):
     def test_rds_snapshot_trim_skip_automated_noop(self, process_snapshot_set):
         factory = self.replay_flight_data("test_rds_snapshot_delete_skip_automated",
             region="us-east-2")
-        log_output = self.capture_logging('custodian.actions')
+        log_output = self.capture_logging('custodian.actions', level=logging.DEBUG)
         p = self.load_policy(
             {
                 "name": "rds-snapshot-trim-skip-automated-noop",

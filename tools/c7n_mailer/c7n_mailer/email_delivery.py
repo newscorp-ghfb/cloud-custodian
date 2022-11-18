@@ -39,7 +39,7 @@ class EmailDelivery:
         for target in targets:
             if target in ('resource-owner', 'event-owner'):
                 continue
-            target = target.replace(";", ",")
+            target = target.replace(";", ",").replace(":", ",")
             for email in target.split(','):
                 email = email.strip()
                 if is_email(email):
