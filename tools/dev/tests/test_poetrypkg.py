@@ -54,7 +54,8 @@ def _assert_pkg_ok(
     assert diff
 
     # the diff should not have any dev dependencies like pytest in it
-    assert 'pytest' not in diff.decode('utf-8')
+    # NOTE but c7n_mailer added jira which depends on pytest unfortunately
+    assert diff.decode('utf-8').count('pytest') <= 1
 
     if cached == ' --cached':
         # clean up the git diff
