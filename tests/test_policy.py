@@ -596,7 +596,7 @@ class PolicyMetaLint(BaseTest):
                     "egress",
                     "ingress",
                     "capacity-delta",
-                    "cost",
+                    "infracost",
                     "is-ssl",
                     "global-grants",
                     "missing-policy-statement",

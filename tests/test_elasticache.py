@@ -48,14 +48,14 @@ class TestElastiCacheCluster(BaseTest):
                 "name": "elasticache-cost",
                 "resource": "cache-cluster",
                 "filters": [{
-                    "type": "cost",
+                    "type": "infracost",
                     "quantity": 730,
                 }]
             },
             session_factory=session_factory,
             config={'region': aws_region},
         )
-        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+        with patch("c7n.filters.cost.Infracost.invoke_infracost") as infracost:
             infracost.return_value = {'USD': '0.120000',
                 'description': '$0.12 per  Enhanced Medium Cache node-hour'
                 ' (or partial hour) running Redis',

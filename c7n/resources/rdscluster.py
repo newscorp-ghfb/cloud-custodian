@@ -81,7 +81,7 @@ RDSCluster.filter_registry.register('offhour', OffHour)
 RDSCluster.filter_registry.register('onhour', OnHour)
 
 
-@RDSCluster.filter_registry.register('cost')
+@RDSCluster.filter_registry.register('infracost')
 class RdsClusterCost(RdsCost):
     def get_cluster_members(self, r):
         all = self.manager.get_resource_manager('rds').resources()

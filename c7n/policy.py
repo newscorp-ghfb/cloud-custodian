@@ -347,6 +347,10 @@ class PullMode(PolicyExecutionMode):
             ctx.metrics.put_metric(
                 "ResourceCount", len(resources), "Count", Scope="Policy"
             )
+            # TODO refactor the implementation of ResourceCost metrics below
+            # NOTE It feels quite odd having the policy trying to have awareness of
+            # individual filters and poking at things, we could potentially have the
+            # filter write it, but that leaves other oddities wrt to multiple filters.
             if len(resources) and COST_ANNOTATION_KEY in resources[0]:
                 cost = sum([r.get(COST_ANNOTATION_KEY, {}).get("USD", 0) for r in resources])
                 ctx.metrics.put_metric("ResourceCost", cost, "Count", Scope="Policy")

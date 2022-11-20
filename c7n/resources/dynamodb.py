@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 from concurrent.futures import as_completed
 
 from c7n.actions import BaseAction, ModifyVpcSecurityGroupsAction
-from c7n.filters.cost import Cost
+from c7n.filters.cost import Infracost
 from c7n.filters.kms import KmsRelatedFilter
 from c7n import query
 from c7n.manager import resources
@@ -64,8 +64,8 @@ class Table(query.QueryResourceManager):
     }
 
 
-@Table.filter_registry.register('cost')
-class TableCost(Cost):
+@Table.filter_registry.register('infracost')
+class TableCost(Infracost):
 
     def get_query(self):
         # reference: https://gql.readthedocs.io/en/stable/usage/variables.html

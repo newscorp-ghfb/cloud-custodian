@@ -71,14 +71,14 @@ class RDSClusterTest(BaseTest):
                 "name": "rdscluster-cost",
                 "resource": "rds-cluster",
                 "filters": [{
-                    "type": "cost",
+                    "type": "infracost",
                     "quantity": 730,
                 }]
             },
             session_factory=session_factory,
             config={'region': aws_region},
         )
-        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+        with patch("c7n.filters.cost.Infracost.invoke_infracost") as infracost:
             infracost.return_value = {'USD': '0.1250000',
                 'description': 'USD 0.126 per db.t3.medium Single-AZ instance hour'
                 '(or partial hour) running Aurora MySQL',

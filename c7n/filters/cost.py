@@ -9,7 +9,7 @@ from gql.transport.requests import RequestsHTTPTransport
 from .core import OPERATORS, Filter
 
 
-class Cost(Filter):
+class Infracost(Filter):
     """Annotate resource monthly cost with Infracost pricing API.
     It aims to provide an approximate cost for a generic case. For example,
     it only grabs the on-demand price with no pre-installed software for EC2 instances.
@@ -23,7 +23,7 @@ class Cost(Filter):
       - name: ec2-cost
         resource: ec2
         filters:
-          - type: cost
+          - type: infracost
             # monthly price = unit price * 730 hours
             quantity: 730
             op: greater-than
@@ -44,7 +44,7 @@ class Cost(Filter):
             # 'currency': {'type': 'number'},
             'quantity': {'type': 'number'},
             'op': {'$ref': '#/definitions/filters_common/comparison_operators'},
-            'type': {'enum': ['cost']},
+            'type': {'enum': ['infracost']},
             'value': {'type': 'number'},
         },
     }
@@ -62,11 +62,11 @@ class Cost(Filter):
     def validate(self):
         name = self.__class__.__name__
         if self.api_endpoint is None:
-            raise ValueError("%s Filter requires Infracost pricing_api_endpoint" % name)
+            raise ValueError("%s Filter requires INFRACOST_API_ENDPOINT" % name)
 
         if self.api_key is None:
-            raise ValueError("%s Filter requires Infracost api_key" % name)
-        return super(Cost, self).validate()
+            raise ValueError("%s Filter requires INFRACOST_API_KEY" % name)
+        return super(Infracost, self).validate()
 
     def process(self, resources, event=None):
         transport = RequestsHTTPTransport(
