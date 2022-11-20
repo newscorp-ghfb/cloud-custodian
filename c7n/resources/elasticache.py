@@ -10,7 +10,7 @@ from dateutil.parser import parse
 from c7n.actions import (
     ActionRegistry, BaseAction, ModifyVpcSecurityGroupsAction)
 from c7n.filters import FilterRegistry, AgeFilter
-from c7n.filters.cost import Cost
+from c7n.filters.cost import Infracost
 import c7n.filters.vpc as net_filters
 from c7n.filters.kms import KmsRelatedFilter
 from c7n.manager import resources
@@ -49,8 +49,8 @@ class ElastiCacheCluster(QueryResourceManager):
     augment = universal_augment
 
 
-@filters.register('cost')
-class Ec2Cost(Cost):
+@filters.register('infracost')
+class Ec2Cost(Infracost):
 
     def get_query(self):
         # reference: https://gql.readthedocs.io/en/stable/usage/variables.html

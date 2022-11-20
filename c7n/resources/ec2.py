@@ -23,7 +23,7 @@ from c7n.exceptions import PolicyValidationError
 from c7n.filters import (
     FilterRegistry, AgeFilter, ValueFilter, Filter, DefaultVpcBase
 )
-from c7n.filters.cost import Cost
+from c7n.filters.cost import Infracost
 from c7n.filters.offhours import OffHour, OnHour
 import c7n.filters.vpc as net_filters
 
@@ -178,8 +178,8 @@ class VpcFilter(net_filters.VpcFilter):
     RelatedIdsExpression = "VpcId"
 
 
-@filters.register('cost')
-class Ec2Cost(Cost):
+@filters.register('infracost')
+class Ec2Cost(Infracost):
 
     def get_query(self):
         # reference: https://gql.readthedocs.io/en/stable/usage/variables.html

@@ -50,7 +50,7 @@ from c7n.actions import (
 from c7n.exceptions import PolicyValidationError
 from c7n.filters import (
     CrossAccountAccessFilter, FilterRegistry, Filter, ValueFilter, AgeFilter)
-from c7n.filters.cost import Cost
+from c7n.filters.cost import Infracost
 from c7n.filters.offhours import OffHour, OnHour
 import c7n.filters.vpc as net_filters
 from c7n.manager import resources
@@ -238,8 +238,8 @@ filters.register('offhour', OffHour)
 filters.register('onhour', OnHour)
 
 
-@filters.register('cost')
-class RdsCost(Cost):
+@filters.register('infracost')
+class RdsCost(Infracost):
     def get_query(self):
         # reference: https://gql.readthedocs.io/en/stable/usage/variables.html
         return """

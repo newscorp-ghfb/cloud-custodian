@@ -33,14 +33,14 @@ class DynamodbTest(BaseTest):
                 "name": "table-cost",
                 "resource": "dynamodb-table",
                 "filters": [{
-                    "type": "cost",
+                    "type": "infracost",
                     "quantity": 730,
                 }]
             },
             session_factory=session_factory,
             config={'region': aws_region},
         )
-        with patch("c7n.filters.cost.Cost.invoke_infracost") as infracost:
+        with patch("c7n.filters.cost.Infracost.invoke_infracost") as infracost:
             infracost.side_effect = [
                 {'USD': '0.0001480000', 'description': '$0.000148 per hour for units of '
                 'read capacity beyond the free tier', 'purchaseOption': 'on_demand'},
