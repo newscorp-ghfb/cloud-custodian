@@ -348,7 +348,7 @@ class PullMode(PolicyExecutionMode):
                 "ResourceCount", len(resources), "Count", Scope="Policy"
             )
             # TODO refactor the implementation of ResourceCost metrics below
-            # NOTE It feels quite odd having the policy trying to have awareness of 
+            # NOTE It feels quite odd having the policy trying to have awareness of
             # individual filters and poking at things, we could potentially have the
             # filter write it, but that leaves other oddities wrt to multiple filters.
             if len(resources) and COST_ANNOTATION_KEY in resources[0]:
