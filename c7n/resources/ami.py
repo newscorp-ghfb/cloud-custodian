@@ -278,6 +278,7 @@ class ImageAgeFilter(AgeFilter):
         days={'type': 'number', 'minimum': 0})
 
 
+# NOTE should refactor a common filter to support all attributes
 @AMI.filter_registry.register('last-launched-time')
 class ImageLastLaunchedTimeFilter(AgeFilter):
     """Filters images based on the lastLaunchedTime attribute (in days)
@@ -308,7 +309,10 @@ class ImageLastLaunchedTimeFilter(AgeFilter):
                 client.describe_image_attribute,
                 ImageId=i['ImageId'],
                 Attribute='lastLaunchedTime')
-            i[self.date_attribute] = attr.get('LastLaunchedTime', {}).get("Value") or '2000/01/01'
+            i[self.date_attribute] = attr.get('LastLaunchedTime', {}).get("Value")
+        # NOTE have the filter return false when the attr is none
+        if not i.get(self.date_attribute):
+            return None
         return super(ImageLastLaunchedTimeFilter, self).get_resource_date(i)
 
 
