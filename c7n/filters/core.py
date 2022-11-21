@@ -237,7 +237,7 @@ class BaseValueFilter(Filter):
                     if t.get('Key') == tk:
                         r = t.get('Value')
                         break
-                    # NOTE news corp customization: normalize key
+                    # NOTE normalize key, aka key case-insensitive
                     if ktype == 'normalize' and t.get('Key').lower() == tk.lower():
                         r = t.get('Value')
                         break
@@ -591,8 +591,8 @@ class ValueFilter(BaseValueFilter):
         value_regex = self.data.get('value_regex')
         return super(ValueFilter, self).get_resource_value(k, i, value_regex, ktype)
 
-    def match(self, resource):
-        if resource is None:
+    def match(self, i):
+        if i is None:
             return False
 
         if self.v is None and len(self.data) == 1:
@@ -604,7 +604,7 @@ class ValueFilter(BaseValueFilter):
             if 'value_from' in self.data:
                 values = ValuesFrom(self.data['value_from'], self.manager)
                 # NOTE support vars in expr
-                self.resolveExprVariables(values, resource)
+                self.resolveExprVariables(values, i)
                 self.v = values.get_values()
                 if self.recoverOriginExpr(values):
                     self.content_need_reinit = True
@@ -614,25 +614,25 @@ class ValueFilter(BaseValueFilter):
             self.vtype = self.data.get('value_type')
 
         # TODO move the annotation logic to action
-        # NOTE news corp customization: annotation resouce to support further actions
+        # NOTE annotation resouce to support further actions
         # annotation resource by borrowing the capability of value_filter
         if self.op and self.op == 'annotation':
             if self.v:
-                resource[self.k] = self.v
+                i[self.k] = self.v
             return True
 
         # value extract, note that overrided get_resource_value() only takes 2 args
         if "key_type" in self.data:
-            r = self.get_resource_value(self.k, resource, self.data.get('key_type'))
+            r = self.get_resource_value(self.k, i, self.data.get('key_type'))
         else:
-            r = self.get_resource_value(self.k, resource)
+            r = self.get_resource_value(self.k, i)
 
         if self.op in ('in', 'not-in') and r is None:
             r = ()
 
         # value type conversion
         if self.vtype is not None:
-            v, r = self.process_value_type(self.v, r, resource)
+            v, r = self.process_value_type(self.v, r, i)
         else:
             v = self.v
 
