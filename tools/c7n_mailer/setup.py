@@ -14,6 +14,7 @@ install_requires = \
  'boto3>=1.11.12',
  'datadog>=0.34.0,<0.35.0',
  'importlib-metadata>=4.11.1,<5.0',
+ 'jira>=3.2.0,<4.0.0',
  'jsonpatch>=1.25,<2.0',
  'jsonpointer>=2.0,<3.0',
  'jsonschema>=3.2.0',
