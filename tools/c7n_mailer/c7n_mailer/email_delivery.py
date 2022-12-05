@@ -44,6 +44,8 @@ class EmailDelivery:
             target = target.replace(";", ",").replace(":", ",")
             for email in target.split(','):
                 email = email.strip()
+                if not email:
+                    continue
                 if is_email(email):
                     emails.append(email)
                 # gcp doesn't support the '@' character in their label values so we
