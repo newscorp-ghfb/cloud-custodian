@@ -123,8 +123,8 @@ def get_mimetext_message(config, logger, message, resources, to_addrs, template=
         subject=get_message_subject(message),
         from_addr=message['action'].get('from', config['from_address']),
         to_addrs=to_addrs,
-        # NOTE cc has been processed and enhanced in get_email_to_addrs_to_resources_map
-        # cc_addrs=message['action'].get('cc', []),
+        # FIXME cc has been processed and enhanced in get_email_to_addrs_to_resources_map
+        cc_addrs=message['action'].get('cc', []),
         additional_headers=additional_headers,
         priority=message['action'].get('priority_header', None),
         logger=logger
