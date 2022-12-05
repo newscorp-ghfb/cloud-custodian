@@ -30,7 +30,9 @@ class JiraDelivery:
         issue_list = []
         for group_name, resources in jira_messages.items():
             jira_conf = message["action"].get("jira", {})
+            # FIXME should search all resources in the group until found
             jira_project = self.jp_key.search(resources[0]) or jira_conf.get("project")
+            # NOTE override jira_project for 'default' group, which should be more desirable
             if group_name == "default":
                 jira_project = jira_conf.get("project")
             if not jira_project:
