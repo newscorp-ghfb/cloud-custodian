@@ -24,6 +24,8 @@ class EmailDelivery:
         if self.provider == Providers.AWS:
             self.aws_ses = session.client('ses', region_name=config.get('ses_region'))
         self.ldap_lookup = self.get_ldap_connection()
+        self.jp_key = jmespath.compile(
+            config.get("servicenow_it_service_key", "custodian_it_service"))
         self.servicenow_url = config.get("servicenow_url")
 
     def get_ldap_connection(self):
@@ -229,8 +231,6 @@ class EmailDelivery:
     def get_group_email_messages_map(self, sqs_message):
         servicenow_address = self.config.get('servicenow_address')
         dedicated_addresses = self.config.get("servicenow_dedicated_addresses")
-        # it_service_key = self.config.get("servicenow_it_service_key", "custodian_it_service")
-        jira_project_key = self.config.get("jira_project_key", "custodian_jira_project")
 
         groupby_to_resources_map = self.get_grouped_resources(sqs_message, "servicenow")
         groupby_to_mimetext_map = {}
@@ -246,21 +246,16 @@ class EmailDelivery:
                             servicenow_address = da.get("email", servicenow_address)
                             break
 
-            # NOTE only skip notify when group_name is defined and it_service is undefined,
-            # This requires the template can deal with when it_service is undefined.
-            # it_service = resources[0].get(it_service_key)
-            # if not it_service and group_name != "default":
-            #     self.logger.info(
-            #         f"ServiceNow: Skip {len(resources)} resources due to "
-            #         f"it_service value not found for product {group_name}"
-            #     )
-            #     continue
-            # NOTE given most of it_service value of products are undefined,
-            # change it to below during the transit period
-            if resources[0].get(jira_project_key):
+            snow_conf = sqs_message["action"].get("servicenow", {})
+            # FIXME should search all resources in the group until found
+            it_service = self.jp_key.search(resources[0]) or snow_conf.get("it_service")
+            # NOTE override it_service for 'default' group, which should be more desirable
+            if group_name == "default":
+                it_service = snow_conf.get("it_service")
+            if not it_service:
                 self.logger.info(
                     f"ServiceNow: Skip {len(resources)} resources due to "
-                    f"jira_project value is found for product {group_name}"
+                    f"it_service value not found for product {group_name}"
                 )
                 continue
             groupby_to_mimetext_map[group_name] = get_mimetext_message(
