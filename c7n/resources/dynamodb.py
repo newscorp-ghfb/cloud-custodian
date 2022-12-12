@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from c7n.filters import Filter
 from c7n.filters import ValueFilter
 from c7n.query import RetryPageIterator
+from c7n.filters.backup import ConsecutiveAwsBackupsFilter
 
 
 class ConfigTable(query.ConfigSource):
@@ -57,6 +58,7 @@ class Table(query.QueryResourceManager):
         dimension = 'TableName'
         cfn_type = config_type = 'AWS::DynamoDB::Table'
         universal_taggable = object()
+        arn = 'TableArn'
 
     source_mapping = {
         'describe': DescribeTable,
@@ -840,3 +842,6 @@ class TableConsecutiveBackups(Filter):
             if expected_dates.issubset(backup_dates):
                 results.append(r)
         return results
+
+
+Table.filter_registry.register('consecutive-aws-backups', ConsecutiveAwsBackupsFilter)
