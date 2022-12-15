@@ -59,12 +59,12 @@ class NotifyTest(BaseTest):
                 'body': {
                     'messages': {
                         # NOTE updated below due to c7n_resource_type_id added to response
-                        'data': ('eJzdUztvwjAQ3v0rkOcmEJAoMHXq1l9QVZGxDzBybMs+o0aI/14/Eh4SU9Wp'
-                                 'HjLc5/sed86ZUDiBRrqZ6KDUC6GMcxM0tlLEGuXBoxGS6aqZrxt6w5+DDvbS'
-                                 '6IQxpVLBGiV5HwtnQjXrIEEIHittUO760uNNcDxDe25rG7Y+bCs0VvKE76RC'
-                                 'cD7Cn+SOxTpzBI5+ypUJorp6meZGP41USajoFDJyIV85AUaTV0LsbSa8OULo'
-                                 'rGKYqwJ2LCjMWZw0TmLfHoAJcAmdp3p0m5yM0aTeTwrXpChlSpPlaPDg3oTp'
-                                 'mNQ1Nx3NhtAx7a1xWOY0GiqDKN3J/q9Dx9jkEmngG3hIjoblzoZTPfmMhz70'
-                                 'eWTZZbNcNqvVYrGcRfgUtzNsfVav62ZFr0N+DPSPJ3z3jv/ipUY6/qo3Hwz5'
-                                 'AcT73R9QWHOoeKMdRdsUaVhruZGX/gNvpj8R')
+                        'data': ('eJzdU7tOAzEQ7O8rItfcJSFSCKmo6PgChE6OvUmMfF7LXkecovw7ftzlgaBB'
+                                 'VLhwsbM7O7NrHysGBzDE1hMTtL6rGBcCg6FWyRhjQmOQtQieUCpu2CXhB9TB'
+                                 'TqFJINc6BSxqJfoYOFbM8A4SROCpNkhq25caj8GJDO2EbWzY+LCpCa0SCd8q'
+                                 'TeB8hF+rKxbr8B0E+ekXGdNc6KeRKjUqfQpZdaresgWKIs+E1NtMeFFE0FnN'
+                                 'KUclbHnQlL04hU5R3+6BS3AJvU/xqDYpGa0ps5sUrknplCkxt2PBg3uS2HFl'
+                                 'GoEdy4LIceMtOipzGgWVQZTqJP/XpqPt6hRp4ANESIqG9c6GU39zjYfd1Hni'
+                                 'WeV8uZyvVovFchbhQ9zOsPVZ89jMV+w85FtD/3jCV+/4L15qpBMPZv3CSexB'
+                                 'Pl/9gMKaTcWMdmzaJkvDWktGXvon+3ZBpQ==')
                     }}})
