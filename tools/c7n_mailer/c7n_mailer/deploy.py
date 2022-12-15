@@ -34,7 +34,7 @@ CORE_DEPS = [
     'jinja2', 'markupsafe', 'yaml', 'ldap3', 'pyasn1', 'redis', 'jmespath',
     # gcp dependencies
     'google', 'pyasn1_modules', 'rsa', 'cachetools', 'googleapiclient',
-    'httplib2', 'pyparsing', 'uritemplate', 'google_auth_httplib2', 'retrying', 'ratelimiter',
+    'httplib2', 'pyparsing', 'uritemplate', 'google_auth_httplib2', 'retrying', 'pyrate_limiter',
     # for other dependencies
     'pkg_resources',
     # transport datadog - recursive deps
