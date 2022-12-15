@@ -700,8 +700,9 @@ def run(config, use, output_dir, accounts, not_accounts, tags, region,
         policy, policy_tags, cache_period, cache_path, metrics,
         dryrun, debug, verbose, worker, metrics_uri):
     """run a custodian policy across accounts"""
-    accounts_config, custodian_config, executor = init(config, use, debug, verbose,
-        accounts, tags, policy, policy_tags=policy_tags, not_accounts=not_accounts)
+    accounts_config, custodian_config, executor = init(
+        config, use, debug, verbose, accounts, tags, policy, policy_tags=policy_tags,
+        not_accounts=not_accounts)
     policy_counts = Counter()
     success = True
 
