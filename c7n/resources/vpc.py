@@ -2926,23 +2926,22 @@ class SubnetIpAllocationFilter(Filter):
         op = self.data.get('op')
         for subnet in resources:
             percentage_used = self.calculate_ip_allocation(subnet)
-            match op:
-                case 'eq':
-                    if threshold_percentage == percentage_used:
-                        results.append(subnet)
-                case 'ne':
-                    if threshold_percentage != percentage_used:
-                        results.append(subnet)
-                case 'lt':
-                    if percentage_used < threshold_percentage:
-                        results.append(subnet)
-                case 'gt':
-                    if percentage_used > threshold_percentage:
-                        results.append(subnet)
-                case 'lte':
-                    if (percentage_used < threshold_percentage) or (percentage_used == threshold_percentage):
-                        results.append(subnet)
-                case 'gte':
-                    if (percentage_used > threshold_percentage) or (percentage_used == threshold_percentage):
-                        results.append(subnet)
+            if op == 'eq':
+                if threshold_percentage == percentage_used:
+                    results.append(subnet)
+            elif op == 'ne':
+                if threshold_percentage != percentage_used:
+                    results.append(subnet)
+            elif op == 'lt':
+                if percentage_used < threshold_percentage:
+                    results.append(subnet)
+            elif op == 'gt':
+                if percentage_used > threshold_percentage:
+                    results.append(subnet)
+            elif op == 'lte':
+                if (percentage_used < threshold_percentage) or (percentage_used == threshold_percentage):
+                    results.append(subnet)
+            elif op == 'gte':
+                if (percentage_used > threshold_percentage) or (percentage_used == threshold_percentage):
+                    results.append(subnet)
         return results
