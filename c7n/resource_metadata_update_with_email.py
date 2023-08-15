@@ -20,7 +20,7 @@ def extract_appids(resource_list):
 def call_api_and_update_resources(self, resources, event=None):
     try:
         # endpoint = os.environ.get('api_endpoint')
-        endpoint = 'https://ownerlookupapi.services.dowjones.io/service'
+        endpoint = 'https://ownerlookupapi.services.dowjones.io'
         if not endpoint:
             raise ValueError("API endpoint not defined in environment variables.")
             
