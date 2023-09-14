@@ -83,9 +83,9 @@ jobs:
     - name: checkout target
       uses: actions/checkout@v3
       with:
-        repository: newscorp-ghfb/nct-jeeves
+        repository: newscorp-ghfb/cloud-custodian
         ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
-        path: nct-jeeves
+        path: cloud-custodian
     - name: create temp branch
       id: temp-branch
       uses: morganschoen/temporary-branch-action@main
@@ -99,10 +99,10 @@ jobs:
     - name: sync temp branch to target release branch
       uses: wei/git-sync@v3
       with:
-        source_repo: git@github.com:newscorp-ghfb/nct-jeeves-sandbox.git
+        source_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
         source_branch: ${{ steps.temp-branch.outputs.branch }}
         source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
-        destination_repo: git@github.com:newscorp-ghfb/nct-jeeves.git
+        destination_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
         destination_branch: release
         destination_ssh_private_key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
     - name: delete temp branch

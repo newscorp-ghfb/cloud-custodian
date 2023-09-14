@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 jobs:
   manual-sync:
-    if: github.repository == 'newscorp-ghfb/nct-jeeves'
+    if: github.repository == 'newscorp-ghfb/cloud-custodian'
     runs-on: ubuntu-latest
     steps:
     - name: checkout main
@@ -14,9 +14,9 @@ jobs:
     - name: checkout target
       uses: actions/checkout@v3
       with:
-        repository: newscorp-ghfb/nct-jeeves-sandbox
+        repository: newscorp-ghfb/cloud-custodian-sandbox
         ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
-        path: nct-jeeves-sandbox
+        path: cloud-custodian-sandbox
     - name: create temp branch
       id: temp-branch
       uses: morganschoen/temporary-branch-action@3f774b2579f6044ca852f6c3f64b5d3d6d8c455d
@@ -29,10 +29,10 @@ jobs:
     - name: sync temp branch to target release branch
       uses: wei/git-sync@v3
       with:
-        source_repo: git@github.com:newscorp-ghfb/nct-jeeves.git
+        source_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
         source_branch: ${{ steps.temp-branch.outputs.branch }}
         source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
-        destination_repo: git@github.com:newscorp-ghfb/nct-jeeves-sandbox.git
+        destination_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
         destination_branch: release
         destination_ssh_private_key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
     - name: delete temp branch
