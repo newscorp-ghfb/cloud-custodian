@@ -1859,7 +1859,7 @@ class ModifyDb(BaseAction):
                     u['property'],
                     jmespath.search(
                         self.conversion_map.get(u['property'], 'None'), r))
-                    != u['value']}
+                            != u['value']}
             if not param:
                 continue
             param['ApplyImmediately'] = self.data.get('immediate', False)
