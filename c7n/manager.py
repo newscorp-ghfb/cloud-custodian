@@ -119,7 +119,7 @@ class ResourceManager:
 
         # NOTE annotate resource ID property. moving this to query.py doesn't work.
         for r in resources:
-            if type(r) == dict and "c7n_resource_type_id" not in r:
+            if isinstance(r, dict) and "c7n_resource_type_id" not in r:
                 try:
                     r["c7n_resource_type_id"] = self.get_model().id
                 except Exception as e:
