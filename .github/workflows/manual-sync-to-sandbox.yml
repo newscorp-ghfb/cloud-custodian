@@ -1,0 +1,43 @@
+name: manual-sync-to-sandbox
+on:
+  workflow_dispatch:
+jobs:
+  manual-sync:
+    if: github.repository == 'newscorp-ghfb/nct-jeeves'
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout main
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+    - name: checkout target
+      uses: actions/checkout@v3
+      with:
+        repository: newscorp-ghfb/nct-jeeves-sandbox
+        ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+        path: nct-jeeves-sandbox
+    - name: create temp branch
+      id: temp-branch
+      uses: morganschoen/temporary-branch-action@3f774b2579f6044ca852f6c3f64b5d3d6d8c455d
+      with:
+        base: master
+    - name: commit changes to temp branch
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        branch: ${{ steps.temp-branch.outputs.branch }}
+    - name: sync temp branch to target release branch
+      uses: wei/git-sync@v3
+      with:
+        source_repo: git@github.com:newscorp-ghfb/nct-jeeves.git
+        source_branch: ${{ steps.temp-branch.outputs.branch }}
+        source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
+        destination_repo: git@github.com:newscorp-ghfb/nct-jeeves-sandbox.git
+        destination_branch: release
+        destination_ssh_private_key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+    - name: delete temp branch
+      uses: dawidd6/action-delete-branch@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branches: ${{ steps.temp-branch.outputs.branch }}
+
