@@ -995,7 +995,6 @@ class Resize(Action):
                             # ensure it is at least as low as current_size
                             update['MinSize'] = min(current_size, a['MinSize'])
                     elif isinstance(self.data['desired-size'], int):
-#                    elif type(self.data['desired-size']) == int:
 
                         update['DesiredCapacity'] = self.data['desired-size']
 
