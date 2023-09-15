@@ -1,0 +1,141 @@
+name: nightly-sync-to-prod
+on:
+  schedule:
+  - cron:  '0 7 * * *'
+  workflow_dispatch:
+jobs:
+  nightly-sync-validate:
+    if: endsWith( github.repository, '-sandbox' )
+    runs-on: self-hosted
+    outputs:
+      status: ${{ steps.jenkins-job-apply.outputs.job_status }}
+    steps:
+    #- name: trigger jenkins validation job (destroy)
+    #  id: jenkins-job-destroy
+    #  uses: morganschoen/build-jenkins-job@master
+    #  with:
+    #    jenkins-url: "https://jenkins.ncttools.io"
+    #    jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
+    #    jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
+    #    jenkins-job: ${{ github.event.repository.name }}
+    #    jenkins-job-params: '{"action": "destroy", "bu": "nna", "account": "newstechnonprodinfeng"}'
+    #    jenkins-wait-job: "wait"
+    #    jenkins-ssl-verify: "true"
+    #- name: notify slack on failure (destroy)
+    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'FAIL')
+    #  uses: tokorom/action-slack-incoming-webhook@main
+    #  env:
+    #    INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
+    #  with:
+    #    text: 
+    #    attachments: |
+    #      [
+    #        {
+    #          "color": "danger",
+    #          "fields": [
+    #            {
+    #              "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
+    #              "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-destroy.outputs.job_build_number}}/console|${{steps.jenkins-job-destroy.outputs.job_build_number}}>"
+    #            }
+    #          ]
+    #        }
+    #      ]
+    - name: trigger jenkins validation job (plan)
+    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'SUCCESS')
+      id: jenkins-job-apply
+      uses: morganschoen/build-jenkins-job@master
+      with:
+        jenkins-url: "https://jenkins.ncttools.io"
+        jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
+        jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
+        jenkins-job: ${{ github.event.repository.name }}
+        jenkins-wait-job: "wait"
+        jenkins-ssl-verify: "true"
+    - name: notify slack on failure (plan)
+      if: startsWith(steps.jenkins-job-apply.outputs.job_status, 'FAIL')
+      uses: tokorom/action-slack-incoming-webhook@main
+      env:
+        INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
+      with:
+        text: 
+        attachments: |
+          [
+            {
+              "color": "danger",
+              "fields": [
+                {
+                  "title": "${{github.event.repository.name}}: Nightly Jeeves sandbox validation failed. ",
+                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
+                }
+              ]
+            }
+          ]
+  nightly-sync:
+    if: startsWith(needs.nightly-sync-validate.outputs.status, 'SUCCESS')
+    needs: nightly-sync-validate
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout main
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        fetch-depth: 0
+    - name: checkout target
+      uses: actions/checkout@v3
+      with:
+        repository: newscorp-ghfb/cloud-custodian
+        ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+        path: nct-lz-aws-toolIAM
+    - name: create temp branch
+      id: temp-branch
+      uses: morganschoen/temporary-branch-action@main
+      with:
+        base: master
+    # - name: target specific customization
+    #   run: |
+    #     git switch ${{ steps.temp-branch.outputs.branch }}
+    #     sed -i "s/@Library('nct-jenkins-shared-library-sandbox')_/@Library('nct-jenkins-shared-library')_/g" Jenkinsfile
+    #     for dir in accounts/*; do
+    #       [[ "$dir" == *"bu_roles"* || "$dir" == *"tests"* ]] && continue
+    #       for dir2 in $dir/*; do
+    #         [[ "$dir2" = *"bu_roles"* || "$dir2" == *"tests"* ]] && continue
+    #         if [ -d $dir2 ]; then
+    #           echo "del $dir2"
+    #           rm -rf "$dir2"
+    #         fi
+    #       done
+    #     done
+    #     for dir in nct-lz-aws-toolIAM/accounts/*; do
+    #       [[ "$dir" == *"bu_roles"* || "$dir" == *"tests"* ]] && continue
+    #       for dir2 in $dir/*; do
+    #         [[ "$dir2" = *"bu_roles"* || "$dir2" == *"tests"* ]] && continue
+    #         if [ -d $dir2 ]; then
+    #           target_dir2=$(sed 's/nct-lz-aws-toolIAM\///' <<< $dir2)
+    #           target_dir=$(sed 's/nct-lz-aws-toolIAM\///' <<< $dir)
+    #           echo "copy $dir2 $target_dir2"
+    #           mkdir -p $target_dir && cp -r $dir2 $target_dir2
+    #         fi
+    #       done
+    #     done
+    #     rm -rf nct-lz-aws-toolIAM
+    #     sudo chown -R "${USER:-$(id -un)}" .
+    #   shell: bash
+    - name: commit changes to temp branch
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        branch: ${{ steps.temp-branch.outputs.branch }}
+        commit_author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+    - name: sync temp branch to target release branch
+      uses: wei/git-sync@v3
+      with:
+        source_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
+        source_branch: ${{ steps.temp-branch.outputs.branch }}
+        source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
+        destination_repo: git@github.com:newscorp-ghfb/nct-cloud-custodian.git
+        destination_branch: release
+        destination_ssh_private_key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+    - name: delete temp branch
+      uses: dawidd6/action-delete-branch@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branches: ${{ steps.temp-branch.outputs.branch }}
