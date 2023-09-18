@@ -1,0 +1,37 @@
+name: nightly-sync-pr
+on:
+  push:
+    branches:
+      - 'release'
+  workflow_dispatch:
+jobs:
+  nightly-sync-pr:
+    if: github.repository == 'newscorp-ghfb/cloud-custodian'
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout release
+      uses: actions/checkout@v3
+    - name: merge main into release
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git fetch --unshallow
+        git checkout release
+        git pull
+        git merge origin/master -s ours --no-edit
+        git push
+      shell: bash
+    - name: create PR
+      id: create-pr
+      uses: repo-sync/pull-request@v2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        pr_title: '[AUTOMATED] Changes from Sandbox'
+    - name: notify slack
+      if: startsWith(steps.create-pr.outputs.pr_created, 'true')
+      uses: tokorom/action-slack-incoming-webhook@main
+      env:
+        INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
+      with:
+        text: "${{github.event.repository.name}}: Nightly sync from sandbox\n:git-pull-request: New PR ready for review: \
+          <${{steps.create-pr.outputs.pr_url}}|${{steps.create-pr.outputs.pr_number}}> <!here>"
