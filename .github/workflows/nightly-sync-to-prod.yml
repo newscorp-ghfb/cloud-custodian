@@ -65,7 +65,7 @@ jobs:
               "fields": [
                 {
                   "title": "${{github.event.repository.name}}: Nightly Jeeves sandbox validation failed. ",
-                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
+                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/job/nct-cloud-custodian-sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
                 }
               ]
             }
