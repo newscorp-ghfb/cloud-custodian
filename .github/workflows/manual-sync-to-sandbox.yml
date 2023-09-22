@@ -26,7 +26,7 @@ jobs:
       run: |
         git switch ${{ steps.temp-branch.outputs.branch }}
         sudo chown -R "${USER:-$(id -un)}" .
-      shell: bash+
+      shell: bash
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
