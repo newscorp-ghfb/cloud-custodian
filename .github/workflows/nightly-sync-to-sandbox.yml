@@ -16,58 +16,22 @@ jobs:
       with:
         repository: newscorp-ghfb/cloud-custodian-sandbox
         ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
-        path: nct-lz-aws-toolIAM-sandbox
+        path: cloud-custodian-sandbox
     - name: create temp branch
       id: temp-branch
       uses: morganschoen/temporary-branch-action@3f774b2579f6044ca852f6c3f64b5d3d6d8c455d
       with:
         base: master
-    # - name: target specific customization
-    #   run: |
-    #     git switch ${{ steps.temp-branch.outputs.branch }}
-    #     echo "Modifying AWS/GCP account and deployment files"
-    #     for dir in aws/accounts/*; do
-    #         if [[ ! "$dir" =~ *"sandbox"* && ! "$dir" =~ *"adhoc"* && ! "$dir" =~ "README"* ]]; then
-    #             cp "$dir" "$dir.bk"
-    #             rm -rf "$dir"
-    #         fi
-    #     done
-    #     for dir in aws/deployments/*; do
-    #         if [[ ! "$dir" =~ "dev-"* && ! "$dir" =~ *"adhoc"* && ! "$dir" =~ "README"* ]]; then
-    #             cp $dir $dir.bk
-    #             rm -rf $dir
-    #         fi
-    #     done
-    #     for dir in gcp/projects/*; do
-    #         if [[ ! "$dir" =~ "dev-"* && ! "$dir" =~ *"adhoc"* && ! "$dir" =~ "README"* ]]; then
-    #             cp $dir $dir.bk
-    #             rm -rf $dir
-    #         fi
-    #     done
-    #     for dir in gcp/deployments/*; do
-    #         if [[ ! "$dir" =~ "dev-"* && ! "$dir" =~ *"adhoc"* && ! "$dir" =~ "README"* ]]; then
-    #             cp $dir $dir.bk
-    #             rm -rf $dir
-    #         fi
-    #     done
-
-    #     echo "Modifying AWS/GCP org files"
-    #     for dir in tools/*; do
-    #         if [[ "$dir" == *"org_"* ]]; then
-    #             sed -i "" -e "s/-accounts.yml/-accounts.yml.bk/g" "$dir"
-    #             sed -i "" -e "s/-projects.yml/-projects.yml.bk/g" "$dir"
-    #         fi
-    #     done
-
-    #     echo "Modifying Jenkins and setup files"
-    #     sed -i "" -e "s/nct-cloud-custodian/nct-cloud-custodian-sandbox/g" Jenkinsfile
-    #     sed -i "" -e "s/cloud-custodian/cloud-custodian-sandbox/g" setup_env.sh
-    #     shell: bash+
+    - name: target specific customization
+      run: |
+        git switch ${{ steps.temp-branch.outputs.branch }}
+        sudo chown -R "${USER:-$(id -un)}" .
+      shell: bash+
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         branch: ${{ steps.temp-branch.outputs.branch }}
-    - name: sync temp branch to target release branch
+    - name: sync temp branch to target master branch
       uses: wei/git-sync@v3
       with:
         source_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
