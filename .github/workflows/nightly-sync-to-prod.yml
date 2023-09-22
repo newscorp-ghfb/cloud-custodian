@@ -93,15 +93,15 @@ jobs:
         base: main
     - name: target specific customization
       run: |
-        git switch ${{ steps.temp-branch.outputs.branch }}
-        echo "Preparing repo"
-        cp -rf ./cloud-custodian/aws/accounts aws
-        cp -rf ./cloud-custodian/gcp/projects gcp
+        # git switch ${{ steps.temp-branch.outputs.branch }}
+        # echo "Preparing repo"
+        # cp -rf ./cloud-custodian/aws/accounts aws
+        # cp -rf ./cloud-custodian/gcp/projects gcp
         
-        echo "Modifying Jenkins and setup files"
-        sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" Jenkinsfile
-        sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" setup_env.sh
-        rm -rf cloud-custodian
+        # echo "Modifying Jenkins and setup files"
+        # sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" Jenkinsfile
+        # sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" setup_env.sh
+        # rm -rf cloud-custodian
         sudo chown -R "${USER:-$(id -un)}" .
       shell: bash
     - name: commit changes to temp branch
