@@ -1,0 +1,60 @@
+name: manual-sync-to-sandbox
+on:
+  workflow_dispatch:
+jobs:
+  manual-sync:
+    if: github.repository == 'newscorp-ghfb/cloud-custodian'
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout main
+      uses: actions/checkout@v3
+      with:
+        ref: main
+        fetch-depth: 0
+    # - name: checkout target
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: newscorp-ghfb/cloud-custodian-sandbox
+    #     ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+    #     path: cloud-custodian-sandbox
+    - name: create temp branch
+      id: temp-branch
+      uses: morganschoen/temporary-branch-action@3f774b2579f6044ca852f6c3f64b5d3d6d8c455d
+      with:
+        base: main
+    - name: target specific customization
+      run: |
+        git switch ${{ steps.temp-branch.outputs.branch }}
+        echo "Clening out non-sandbox files"
+        for dir in aws/accounts/*; do
+            if [[ ! "$dir" =~ *"sandbox"* ]]; then
+                rm -rf "$dir"
+            fi
+        done
+        for dir in gcp/projects/*; do
+            if [[ ! "$dir" =~ "dev-"* && ! "$dir" =~ "README"* ]]; then
+                rm -rf $dir
+            fi
+        done
+        echo "Modifying Jenkins and setup files"
+        sed -i "s/cloud-custodian/cloud-custodian-sandbox/g" Jenkinsfile
+        sed -i "s/cloud-custodian/cloud-custodian-sandbox/g" setup_env.sh
+      shell: bash
+    - name: commit changes to temp branch
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        branch: ${{ steps.temp-branch.outputs.branch }}
+    - name: sync temp branch to target release branch
+      uses: wei/git-sync@v3
+      with:
+        source_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
+        source_branch: ${{ steps.temp-branch.outputs.branch }}
+        source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
+        destination_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
+        destination_branch: release
+        destination_ssh_private_key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
+    - name: delete temp branch
+      uses: dawidd6/action-delete-branch@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branches: ${{ steps.temp-branch.outputs.branch }}
