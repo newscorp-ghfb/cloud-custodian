@@ -4,78 +4,78 @@ on:
   - cron:  '0 7 * * *'
   workflow_dispatch:
 jobs:
-  # nightly-sync-validate:
-  #   if: endsWith( github.repository, '-sandbox' )
-  #   runs-on: self-hosted
-  #   outputs:
-  #     status: ${{ steps.jenkins-job-apply.outputs.job_status }}
-  #   steps:
-  #   #- name: trigger jenkins validation job (destroy)
-  #   #  id: jenkins-job-destroy
-  #   #  uses: morganschoen/build-jenkins-job@master
-  #   #  with:
-  #   #    jenkins-url: "https://jenkins.ncttools.io"
-  #   #    jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
-  #   #    jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
-  #   #    jenkins-job: ${{ github.event.repository.name }}
-  #   #    jenkins-job-params: '{"action": "destroy", "bu": "nna", "account": "newstechnonprodinfeng"}'
-  #   #    jenkins-wait-job: "wait"
-  #   #    jenkins-ssl-verify: "true"
-  #   #- name: notify slack on failure (destroy)
-  #   #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'FAIL')
-  #   #  uses: tokorom/action-slack-incoming-webhook@main
-  #   #  env:
-  #   #    INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
-  #   #  with:
-  #   #    text: 
-  #   #    attachments: |
-  #   #      [
-  #   #        {
-  #   #          "color": "danger",
-  #   #          "fields": [
-  #   #            {
-  #   #              "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
-  #   #              "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-destroy.outputs.job_build_number}}/console|${{steps.jenkins-job-destroy.outputs.job_build_number}}>"
-  #   #            }
-  #   #          ]
-  #   #        }
-  #   #      ]
-  #   - name: trigger jenkins validation job (plan)
-  #   #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'SUCCESS')
-  #     id: jenkins-job-apply
-  #     uses: morganschoen/build-jenkins-job@master
-  #     with:
-  #       jenkins-url: "https://jenkins.ncttools.io"
-  #       jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
-  #       jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
-  #       jenkins-job: ${{ github.event.repository.name }}
-  #       jenkins-wait-job: "wait"
-  #       jenkins-ssl-verify: "true"
-  #   - name: notify slack on failure (plan)
-  #     if: startsWith(steps.jenkins-job-apply.outputs.job_status, 'FAIL')
-  #     uses: tokorom/action-slack-incoming-webhook@main
-  #     env:
-  #       INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
-  #     with:
-  #       text: 
-  #       attachments: |
-  #         [
-  #           {
-  #             "color": "danger",
-  #             "fields": [
-  #               {
-  #                 "title": "${{github.event.repository.name}}: Nightly Cloud Cusotidan sandbox validation failed. ",
-  #                 "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
-  #               }
-  #             ]
-  #           }
-  #         ]
+  nightly-sync-validate:
+    if: endsWith( github.repository, '-sandbox' )
+    runs-on: self-hosted
+    outputs:
+      status: ${{ steps.jenkins-job-apply.outputs.job_status }}
+    steps:
+    #- name: trigger jenkins validation job (destroy)
+    #  id: jenkins-job-destroy
+    #  uses: morganschoen/build-jenkins-job@master
+    #  with:
+    #    jenkins-url: "https://jenkins.ncttools.io"
+    #    jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
+    #    jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
+    #    jenkins-job: ${{ github.event.repository.name }}
+    #    jenkins-job-params: '{"action": "destroy", "bu": "nna", "account": "newstechnonprodinfeng"}'
+    #    jenkins-wait-job: "wait"
+    #    jenkins-ssl-verify: "true"
+    #- name: notify slack on failure (destroy)
+    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'FAIL')
+    #  uses: tokorom/action-slack-incoming-webhook@main
+    #  env:
+    #    INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
+    #  with:
+    #    text: 
+    #    attachments: |
+    #      [
+    #        {
+    #          "color": "danger",
+    #          "fields": [
+    #            {
+    #              "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
+    #              "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-destroy.outputs.job_build_number}}/console|${{steps.jenkins-job-destroy.outputs.job_build_number}}>"
+    #            }
+    #          ]
+    #        }
+    #      ]
+    - name: trigger jenkins validation job (plan)
+    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'SUCCESS')
+      id: jenkins-job-apply
+      uses: morganschoen/build-jenkins-job@master
+      with:
+        jenkins-url: "https://jenkins.ncttools.io"
+        jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
+        jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
+        jenkins-job: ${{ github.event.repository.name }}
+        jenkins-wait-job: "wait"
+        jenkins-ssl-verify: "true"
+    - name: notify slack on failure (plan)
+      if: startsWith(steps.jenkins-job-apply.outputs.job_status, 'FAIL')
+      uses: tokorom/action-slack-incoming-webhook@main
+      env:
+        INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
+      with:
+        text: 
+        attachments: |
+          [
+            {
+              "color": "danger",
+              "fields": [
+                {
+                  "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
+                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
+                }
+              ]
+            }
+          ]
   nightly-sync:
-    # if: startsWith(needs.nightly-sync-validate.outputs.status, 'SUCCESS')
-    # needs: nightly-sync-validate
+    if: startsWith(needs.nightly-sync-validate.outputs.status, 'SUCCESS')
+    needs: nightly-sync-validate
     runs-on: ubuntu-latest
     steps:
-    - name: checkout master
+    - name: checkout main
       uses: actions/checkout@v3
       with:
         ref: master
@@ -90,22 +90,9 @@ jobs:
       id: temp-branch
       uses: morganschoen/temporary-branch-action@main
       with:
-        base: main
-    - name: target specific customization
-      run: |
-        # git switch ${{ steps.temp-branch.outputs.branch }}
-        # echo "Preparing repo"
-        # cp -rf ./cloud-custodian/aws/accounts aws
-        # cp -rf ./cloud-custodian/gcp/projects gcp
-        
-        # echo "Modifying Jenkins and setup files"
-        # sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" Jenkinsfile
-        # sed -i "s/cloud-custodian-sandbox/cloud-custodian/g" setup_env.sh
-        # rm -rf cloud-custodian
-        sudo chown -R "${USER:-$(id -un)}" .
-      shell: bash
+        base: master
     - name: commit changes to temp branch
-      uses: morganschoen/git-auto-commit-action@master
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
         branch: ${{ steps.temp-branch.outputs.branch }}
         commit_author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>

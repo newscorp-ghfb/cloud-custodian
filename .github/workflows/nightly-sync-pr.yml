@@ -33,5 +33,5 @@ jobs:
       env:
         INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
       with:
-        text: "${{github.event.repository.name}}: Nightly sync from sandbox\n:git-pull-request: New PR ready for review: \
+        text: "${{github.event.repository.name}}: Nightly cloud-custodian sync from sandbox\n:git-pull-request: New PR ready for review: \
           <${{steps.create-pr.outputs.pr_url}}|${{steps.create-pr.outputs.pr_number}}> <!here>"

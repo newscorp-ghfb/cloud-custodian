@@ -7,7 +7,6 @@ from c7n.loader import DirectoryLoader
 
 
 def load_policies(policy_dir, options):
-
     loader = DirectoryLoader(config=options)
     policies = loader.load_directory(policy_dir)
     if not policies:
