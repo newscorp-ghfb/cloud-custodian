@@ -3,3 +3,4 @@ c7n
 ipaddress
 raven
 contextlib2
+urllib3>=1.26.18 # not directly required, pinned by Snyk to avoid a vulnerability
