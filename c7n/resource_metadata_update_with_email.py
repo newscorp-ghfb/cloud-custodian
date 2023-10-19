@@ -21,8 +21,9 @@ def extract_appids(resource_list):
 def call_api_and_update_resources(self, resources, event=None):
     try: 
         appids_data = extract_appids(resources)
+        # ic| appids_data: {'appid': []}
         ic(appids_data)
-        if appids_data != None: 
+        if appids_data != []: 
             try:
                 # endpoint = os.environ.get('api_endpoint')
                 endpoint = 'https://ownerlookupapi.services.dowjones.io'
