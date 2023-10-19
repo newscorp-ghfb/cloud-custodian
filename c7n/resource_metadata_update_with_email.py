@@ -98,4 +98,6 @@ def call_api_and_update_resources(self, resources, event=None):
             except Exception as error:
                 raise ValueError(f"Unexpected error occurred: {error}")
     except:
+        resources = resources
+        return resources
         pass
