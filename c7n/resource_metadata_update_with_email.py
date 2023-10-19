@@ -20,7 +20,8 @@ def extract_appids(resource_list):
 def call_api_and_update_resources(self, resources, event=None):
     try: 
         appids_data = extract_appids(resources)
-        # ic| appids_data: {'appid': []}
+        # If the "appid" tag is missing , then skip the API call
+        # Used to avoid api calls for non-DJ accounts 
         if appids_data != []: 
             try:
                 # endpoint = os.environ.get('api_endpoint')
