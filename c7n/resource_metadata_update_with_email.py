@@ -6,7 +6,6 @@ import requests
 import boto3
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
-from icecream import ic
 
 PROVIDERS = {
     "AWS": 0,
@@ -22,7 +21,6 @@ def call_api_and_update_resources(self, resources, event=None):
     try: 
         appids_data = extract_appids(resources)
         # ic| appids_data: {'appid': []}
-        ic(appids_data)
         if appids_data != []: 
             try:
                 # endpoint = os.environ.get('api_endpoint')
