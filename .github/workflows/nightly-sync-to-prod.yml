@@ -48,9 +48,11 @@ jobs:
         jenkins-url: "https://jenkins.ncttools.io"
         jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
         jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
-        jenkins-job: ${{ github.event.repository.name }}
+        jenkins-job: ${{ github.event.repository.name }}/release
         jenkins-wait-job: "wait"
         jenkins-ssl-verify: "true"
+        jenkins-job-params: '{"anyParam": "anyValue"}'
+
     - name: notify slack on failure (plan)
       if: startsWith(steps.jenkins-job-apply.outputs.job_status, 'FAIL')
       uses: tokorom/action-slack-incoming-webhook@main
