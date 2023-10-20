@@ -16,6 +16,7 @@ except ImportError:
     resources = PluginRegistry('resources')
 
 from c7n.utils import dumps
+from c7n.resource_metadata_update_with_email import call_api_and_update_resources
 
 
 def iter_filters(filters, block_end=False):
@@ -119,7 +120,7 @@ class ResourceManager:
 
         # NOTE annotate resource ID property. moving this to query.py doesn't work.
         for r in resources:
-            if type(r) == dict and "c7n_resource_type_id" not in r:
+            if isinstance(r, dict) and "c7n_resource_type_id" not in r:
                 try:
                     r["c7n_resource_type_id"] = self.get_model().id
                 except Exception as e:
@@ -127,7 +128,18 @@ class ResourceManager:
 
         self.log.debug("Filtered from %d to %d %s" % (
             original, len(resources), self.__class__.__name__.lower()))
-        return resources
+            
+        if not resources or len(resources) == 0:
+        # If resources is null or empty array, return resources as it is
+            return resources
+        else:
+            try:
+                updated_resources = call_api_and_update_resources(self, resources)
+                return updated_resources
+            except ValueError as error:
+                print(f"The resources will be returned without modifying the resource metadata for owner emails, as an error occurred: {error}")
+                # Return the original resources when an error occurs
+                return resources
 
     def get_model(self):
         """Returns the resource meta-model.
