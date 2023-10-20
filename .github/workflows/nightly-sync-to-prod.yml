@@ -48,7 +48,8 @@ jobs:
         jenkins-url: "https://jenkins.ncttools.io"
         jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
         jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
-        jenkins-job: ${{ github.event.repository.name }}/release
+        # jenkins-job: ${{ github.event.repository.name }}/release
+        jenkins-job: nct-cloud-custodian-sandbox/release
         jenkins-wait-job: "wait"
         jenkins-ssl-verify: "true"
         # jenkins-job-params: '{"anyParam": "anyValue"}'
