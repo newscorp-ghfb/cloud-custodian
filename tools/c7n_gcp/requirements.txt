@@ -18,7 +18,7 @@ googleapis-common-protos==1.57.0 ; python_version >= "3.7" and python_version < 
 googleapis-common-protos[grpc]==1.57.0 ; python_version >= "3.7" and python_version < "4.0"
 grpc-google-iam-v1==0.12.4 ; python_version >= "3.7" and python_version < "4.0"
 grpcio-status==1.49.1 ; python_version >= "3.7" and python_version < "4.0"
-grpcio==1.49.1 ; python_version >= "3.7" and python_version < "4.0"
+grpcio==1.53.2 ; python_version >= "3.7" and python_version < "4.0"
 httplib2==0.21.0 ; python_version >= "3.7" and python_version < "4.0"
 idna==3.4 ; python_version >= "3.7" and python_version < "4.0"
 proto-plus==1.22.1 ; python_version >= "3.7" and python_version < "4.0"
