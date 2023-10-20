@@ -52,7 +52,7 @@ jobs:
         jenkins-job: nct-cloud-custodian-sandbox/release
         jenkins-wait-job: "wait"
         jenkins-ssl-verify: "true"
-        # jenkins-job-params: '{"anyParam": "anyValue"}'
+        jenkins-job-params: '{"anyParam": "anyValue"}'
 
     - name: notify slack on failure (plan)
       if: startsWith(steps.jenkins-job-apply.outputs.job_status, 'FAIL')
