@@ -22,7 +22,7 @@ rq>=0.6.0
 s3transfer>=0.1.9
 six==1.13.0
 supervisor>=3.3.2
-Werkzeug>=0.14.1
+Werkzeug>=3.0.1
 wsgiref==0.1.2
 procname==0.3
 msgpack-python>=0.4.8
