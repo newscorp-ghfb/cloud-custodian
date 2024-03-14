@@ -27,6 +27,10 @@ def main(output, ignore, appscript, buid):
     for page in client.execute_paged_query('list', {}):
 
         # print("Page:", page)
+        print("BUID:", buid)
+        print("Ignore:", ignore)
+
+
 
         for project in page.get('projects', []):
 
