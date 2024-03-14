@@ -33,20 +33,17 @@ def main(output, ignore, appscript, buid):
             if buid and project["parent"]["id"] != buid:
                 continue
 
-            print("Projects:", project)
-            print("Project Name:", project['name'])
-            print("*************************************")
-
             # Exclude App Script GCP Projects
             if appscript == False:
                 if 'sys-' in project['projectId']:
                     continue
                 
-            if project['lifecycleState'] != 'ACTIVE':
+            if project['lifecycleState'] != 'ACTIVE' or project['projectNumber'] in ignore:
                 continue
 
-            if project['projectNumber'] in ignore:
-                continue
+            print("Projects:", project)
+            print("Project Name:", project['name'])
+            print("*************************************")
 
             project_info = {
                 'project_id': project['projectId'],
