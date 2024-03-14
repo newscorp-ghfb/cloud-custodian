@@ -23,9 +23,16 @@ def main(output, ignore, appscript, folders):
     """
     client = Session().client('cloudresourcemanager', 'v1', 'projects')
 
+    print("Client:", client)
+
     results = []
     for page in client.execute_paged_query('list', {}):
+
+        print("Page:", page)
+
         for project in page.get('projects', []):
+
+            print("Project:", project)
 
             # Exclude App Script GCP Projects
             if appscript == False:
