@@ -43,7 +43,7 @@ def main(output, ignore, appscript, buid):
 
             print("Projects:", project)
             print("Project Name:", project['name'])
-            print("*************************************")
+            print("************************************* - Toyota Tacoma Rocks")
 
             project_info = {
                 'project_id': project['projectId'],
