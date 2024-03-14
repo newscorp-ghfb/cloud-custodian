@@ -12,7 +12,7 @@ from c7n_gcp.client import Session
     '-f', '--output', type=click.File('w'), default='-',
     help="File to store the generated config (default stdout)")
 @click.option('-i', '--ignore', multiple=True,
-  help="list of folders that won't be added to the config file")
+  help="List of Project Numbers to be excluded from the Projects File")
 @click.option('-b', '--buid', required=False,  
     help="Business Unit Folder ID")
 @click.option('-ap','--appscript', default=False, is_flag=True,
@@ -22,9 +22,6 @@ def main(output, ignore, appscript, buid):
     Generate a c7n-org gcp projects config file
     """
     client = Session().client('cloudresourcemanager', 'v1', 'projects')
-
-    # print("***** Client:", client)
-
 
     results = []
     for page in client.execute_paged_query('list', {}):
@@ -40,7 +37,6 @@ def main(output, ignore, appscript, buid):
             print("Project Name:", project['name'])
             print("*************************************")
 
-
             # Exclude App Script GCP Projects
             if appscript == False:
                 if 'sys-' in project['projectId']:
@@ -49,10 +45,8 @@ def main(output, ignore, appscript, buid):
             if project['lifecycleState'] != 'ACTIVE':
                 continue
 
-            if project["parent"]["id"] in ignore:
+            if project['projectNumber'] in ignore:
                 continue
-            
-
 
             project_info = {
                 'project_id': project['projectId'],
