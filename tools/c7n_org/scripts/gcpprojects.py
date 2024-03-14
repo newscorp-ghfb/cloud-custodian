@@ -13,17 +13,18 @@ from c7n_gcp.client import Session
     help="File to store the generated config (default stdout)")
 @click.option('-i', '--ignore', multiple=True,
   help="list of folders that won't be added to the config file")
-@click.option('-fold', '--folders', required=False, multiple=True, 
-    help="List folders the will be added to the config file")
+@click.option('-b', '--buid', required=False,  
+    help="Business Unit Folder ID")
 @click.option('-ap','--appscript', default=False, is_flag=True,
   help="list of app script projects to account files")
-def main(output, ignore, appscript, folders):
+def main(output, ignore, appscript, buid):
     """
     Generate a c7n-org gcp projects config file
     """
     client = Session().client('cloudresourcemanager', 'v1', 'projects')
 
-    print("Client:", client)
+    print("***** Client:", client)
+
 
     results = []
     for page in client.execute_paged_query('list', {}):
@@ -32,7 +33,7 @@ def main(output, ignore, appscript, folders):
 
         for project in page.get('projects', []):
 
-            print("Project:", project)
+            print("Projects:", project)
 
             # Exclude App Script GCP Projects
             if appscript == False:
@@ -45,12 +46,8 @@ def main(output, ignore, appscript, folders):
             if project["parent"]["id"] in ignore:
                 continue
             
-            if folders != ():
-                if project["parent"]["type"] != "folder":
-                    continue
-                for fold in folders: 
-                    if project["parent"]["id"] != fold:
-                        continue
+            if buid and project["parent"]["id"] != buid:
+                continue
 
 
             project_info = {
