@@ -3,6 +3,7 @@
 
 import click
 import yaml
+from google.cloud import resource_manager
 
 from c7n_gcp.client import Session
 
