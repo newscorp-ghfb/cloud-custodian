@@ -3,7 +3,6 @@
 
 import click
 import yaml
-from google.cloud import resource_manager
 
 from c7n_gcp.client import Session
 
@@ -19,38 +18,53 @@ from c7n_gcp.client import Session
 @click.option('-ap','--appscript', default=False, is_flag=True,
   help="list of app script projects to account files")
 def main(output, ignore, appscript, buid):
-    client = resource_manager.Client()
+    """
+    Generate a c7n-org gcp projects config file
+    """
+    client = Session().client('cloudresourcemanager', 'v1', 'projects')
 
-    query_filter = ''
-    if buid:
-        # Adjust this filter according to the API's requirements and capabilities.
-        query_filter = f'parent.id:{buid} parent.type:folder'
-    
-    projects = client.list_projects(filter=query_filter)
-    
+    # print("***** Client:", client)
+
+
     results = []
-    for project in projects:
+    for page in client.execute_paged_query('list', {}):
 
-        print("Projects:", project)
-        print("******************")
+        # print("Page:", page)
 
-        if project.status != 'ACTIVE':
-            continue
+        for project in page.get('projects', []):
 
-        if project.project_id.startswith('sys-') and not appscript:
-            continue
+            if buid and project["parent"]["id"] != buid:
+                continue
 
-        project_info = {
-            'project_id': project['projectId'],
-            'project_number': project['projectNumber'],
-            'name': project['name'],
-        }
+            print("Projects:", project)
+            print("Project Name:", project['name'])
+            print("*************************************")
 
-        if 'labels' in project:
-            project_info['tags'] = [
-                '%s:%s' % (k, v) for k, v in project.get('labels', {}).items()]
-            project_info['vars'] = {k: v for k, v in project.get('labels', {}).items()}
-        results.append(project_info)
+
+            # Exclude App Script GCP Projects
+            if appscript == False:
+                if 'sys-' in project['projectId']:
+                    continue
+                
+            if project['lifecycleState'] != 'ACTIVE':
+                continue
+
+            if project["parent"]["id"] in ignore:
+                continue
+            
+
+
+            project_info = {
+                'project_id': project['projectId'],
+                'project_number': project['projectNumber'],
+                'name': project['name'],
+            }
+
+            if 'labels' in project:
+                project_info['tags'] = [
+                    '%s:%s' % (k, v) for k, v in project.get('labels', {}).items()]
+                project_info['vars'] = {k: v for k, v in project.get('labels', {}).items()}
+            results.append(project_info)
 
     output.write(
         yaml.safe_dump({'projects': results}, default_flow_style=False))
