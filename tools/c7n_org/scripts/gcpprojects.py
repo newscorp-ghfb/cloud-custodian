@@ -27,7 +27,7 @@ def main(output, exclude, buid):
     results = []
     for page in client.execute_paged_query('list', {}):
 
-        # print("Page:", page)
+        print("This is my code")
         print("BUID:", buid)
         print("Exclude:", exclude)
 
