@@ -26,12 +26,6 @@ def main(output, exclude, buid, appscript):
     results = []
     for page in client.execute_paged_query('list', {}):
 
-        print("This is my code")
-        print("BUID:", buid)
-        print("Exclude:", exclude)
-
-
-
         for project in page.get('projects', []):
 
             if buid and project["parent"]["id"] != buid:
@@ -44,10 +38,6 @@ def main(output, exclude, buid, appscript):
                 
             if project['lifecycleState'] != 'ACTIVE' or project['projectNumber'] in exclude:
                 continue
-
-            print("Projects:", project)
-            print("Project Name:", project['name'])
-            print("************************************* - Toyota Tacoma Rocks")
 
             project_info = {
                 'project_id': project['projectId'],
@@ -63,7 +53,6 @@ def main(output, exclude, buid, appscript):
 
     output.write(
         yaml.safe_dump({'projects': results}, default_flow_style=False))
-
 
 if __name__ == '__main__':
     main()
