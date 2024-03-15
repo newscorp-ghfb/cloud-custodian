@@ -14,9 +14,11 @@ from c7n_gcp.client import Session
   help="List of Project Numbers to be excluded from the Projects File")
 @click.option('-b', '--buid', required=False,  
     help="Business Unit Folder ID")
-@click.option('-ap','--appscript', default=False, is_flag=True,
-  help="list of app script projects to account files")
-def main(output, exclude, buid, appscript):
+# @click.option('-ap','--appscript', default=False, is_flag=True,
+#   help="list of app script projects to account files")
+# def main(output, exclude, buid, appscript):
+def main(output, exclude, buid):
+
     """
     Generate a c7n-org gcp projects config file
     """
@@ -36,10 +38,10 @@ def main(output, exclude, buid, appscript):
             if buid and project["parent"]["id"] != buid:
                 continue
 
-            # Exclude App Script GCP Projects
-            if appscript == False:
-                if 'sys-' in project['projectId']:
-                    continue
+            # # Exclude App Script GCP Projects
+            # if appscript == False:
+            #     if 'sys-' in project['projectId']:
+            #         continue
                 
             if project['lifecycleState'] != 'ACTIVE' or project['projectNumber'] in exclude:
                 continue
