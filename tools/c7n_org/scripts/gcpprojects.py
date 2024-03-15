@@ -8,10 +8,9 @@ from c7n_gcp.client import Session
 
 
 @click.command()
-@click.option(
-    '-f', '--output', type=click.File('w'), default='-',
+@click.option('-f', '--output', type=click.File('w'), default='-',
     help="File to store the generated config (default stdout)")
-@click.option('-i', '--ignore', multiple=True,
+@click.option('--ignore', multiple=True,
   help="List of Project Numbers to be excluded from the Projects File")
 @click.option('-b', '--buid', required=False,  
     help="Business Unit Folder ID")
