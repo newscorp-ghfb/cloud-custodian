@@ -10,13 +10,13 @@ from c7n_gcp.client import Session
 @click.command()
 @click.option('-f', '--output', type=click.File('w'), default='-',
     help="File to store the generated config (default stdout)")
-@click.option('--ignore', multiple=True, required=False, 
+@click.option('-e', '--exclude', required=False, 
   help="List of Project Numbers to be excluded from the Projects File")
 @click.option('-b', '--buid', required=False,  
     help="Business Unit Folder ID")
 @click.option('-ap','--appscript', default=False, is_flag=True,
   help="list of app script projects to account files")
-def main(output, ignore, appscript, buid):
+def main(output, exclude, buid, appscript):
     """
     Generate a c7n-org gcp projects config file
     """
@@ -27,7 +27,7 @@ def main(output, ignore, appscript, buid):
 
         # print("Page:", page)
         print("BUID:", buid)
-        print("Ignore:", ignore)
+        print("Exclude:", exclude)
 
 
 
@@ -41,7 +41,7 @@ def main(output, ignore, appscript, buid):
                 if 'sys-' in project['projectId']:
                     continue
                 
-            if project['lifecycleState'] != 'ACTIVE' or project['projectNumber'] in ignore:
+            if project['lifecycleState'] != 'ACTIVE' or project['projectNumber'] in exclude:
                 continue
 
             print("Projects:", project)
