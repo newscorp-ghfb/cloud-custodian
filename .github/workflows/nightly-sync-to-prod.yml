@@ -102,7 +102,6 @@ jobs:
     - name: Fetch branch in Sandbox
       run: |
         git fetch
-        git switch ${{ steps.temp-branch.outputs.branch }}
         sudo chown -R "${USER:-$(id -un)}" .
     - name: sync temp branch to target release branch
       uses: wei/git-sync@v3
