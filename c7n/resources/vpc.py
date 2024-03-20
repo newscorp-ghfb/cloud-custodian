@@ -2912,7 +2912,7 @@ class SubnetIpAllocationFilter(Filter):
     def calculate_ip_allocation(self, subnet):
         subnetMask = subnet.get('CidrBlock').split('/')[1]
         hostBits = 32 - int(subnetMask)
-        totalHost = (2 ** hostBits) - 2
+        totalHost = ((2 ** hostBits) - 2)
         availableHost = subnet.get('AvailableIpAddressCount')
         ipsUsed = totalHost - availableHost
         percentageOfIpsUsed = (ipsUsed / totalHost) * 100
