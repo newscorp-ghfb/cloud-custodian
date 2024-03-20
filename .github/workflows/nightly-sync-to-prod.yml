@@ -90,7 +90,6 @@ jobs:
         base: master
     - name: Fetch branch in Sandbox
       run: |
-        git switch ${{ steps.temp-branch.outputs.branch }}
         git fetch
         git push origin
     - name: commit changes to temp branch
