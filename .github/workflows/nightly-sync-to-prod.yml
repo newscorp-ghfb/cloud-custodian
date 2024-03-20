@@ -91,7 +91,7 @@ jobs:
     - name: Fetch branch in Sandbox
       run: |
         git fetch
-        git push origin
+        git push --set-upstream origin ${{ steps.temp-branch.outputs.branch }}
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
