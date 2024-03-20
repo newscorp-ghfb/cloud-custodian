@@ -91,11 +91,12 @@ jobs:
     #     path: cloud-custodian
     - name: create temp branch
       id: temp-branch
-      uses: carlsberg/temporary-branch-action@1.1.3
+      uses: morganschoen/temporary-branch-action@main
       with:
         base: master
     - name: Fetch branch in Sandbox
       run: |
+        ls -l
         git switch ${{ steps.temp-branch.outputs.branch }}
         git fetch
         sudo chown -R "${USER:-$(id -un)}" .
