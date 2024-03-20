@@ -83,12 +83,6 @@ jobs:
       with:
         ref: master
         fetch-depth: 0
-    # - name: checkout target
-    #   uses: actions/checkout@v3
-    #   with:
-    #     repository: newscorp-ghfb/cloud-custodian
-    #     ssh-key: ${{ secrets.GIT_SYNC_DESTINATION_PRIVATE_KEY }}
-    #     path: cloud-custodian
     - name: create temp branch
       id: temp-branch
       uses: morganschoen/temporary-branch-action@main
