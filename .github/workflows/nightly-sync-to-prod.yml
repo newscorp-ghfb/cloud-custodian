@@ -98,7 +98,7 @@ jobs:
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        branch: ${{ steps.temp-branch.outputs.branch }}
+        branch: temp
         commit_author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
     - name: Fetch branch in Sandbox
       run: |
@@ -108,7 +108,7 @@ jobs:
       uses: wei/git-sync@v3
       with:
         source_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
-        source_branch: ${{ steps.temp-branch.outputs.branch }}
+        source_branch: temp
         source_ssh_private_key: ${{ secrets.GIT_SYNC_SOURCE_PRIVATE_KEY }}
         destination_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
         destination_branch: release
@@ -117,4 +117,4 @@ jobs:
       uses: dawidd6/action-delete-branch@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branches: ${{ steps.temp-branch.outputs.branch }}
+        branches: temp
