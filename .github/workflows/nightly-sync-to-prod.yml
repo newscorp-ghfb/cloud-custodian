@@ -101,6 +101,7 @@ jobs:
         commit_author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
     - name: Fetch branch in Sandbox
       run: |
+        git fetch
         git switch ${{ steps.temp-branch.outputs.branch }}
         sudo chown -R "${USER:-$(id -un)}" .
     - name: sync temp branch to target release branch
