@@ -2904,7 +2904,7 @@ class SubnetIpAllocationFilter(Filter):
     schema = type_schema(
         'ip-allocation-threshold',
         percentage={'type': 'number'},
-        op={'enum': ['eq', 'ne', 'lt', 'gt', 'lte', 'gte']},
+        op={'enum': ['eq', 'ne', 'lt', 'gt', 'lte', 'gte']}
     )
 
     permissions = ("ec2:DescribeSubnets",)
@@ -2912,7 +2912,7 @@ class SubnetIpAllocationFilter(Filter):
     def calculate_ip_allocation(self, subnet):
         subnetMask = subnet.get('CidrBlock').split('/')[1]
         hostBits = 32 - int(subnetMask)
-        totalHost = (2**hostBits) - 2
+        totalHost = (2 ** hostBits) - 2
         availableHost = subnet.get('AvailableIpAddressCount')
         ipsUsed = totalHost - availableHost
         percentageOfIpsUsed = (ipsUsed / totalHost) * 100
@@ -2946,4 +2946,4 @@ class SubnetIpAllocationFilter(Filter):
                     percentage_used == threshold_percentage
                 ):
                     results.append(subnet)
-        return result
+        return results
