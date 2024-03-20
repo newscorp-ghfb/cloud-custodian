@@ -103,7 +103,7 @@ jobs:
       run: |
         git fetch
     - name: sync temp branch to target release branch
-      uses: wei/git-sync@v3
+      uses: wei/git-sync
       with:
         source_repo: git@github.com:newscorp-ghfb/cloud-custodian-sandbox.git
         source_branch: ${{ steps.temp-branch.outputs.branch }}
