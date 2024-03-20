@@ -99,6 +99,7 @@ jobs:
         ls -l
         git switch ${{ steps.temp-branch.outputs.branch }}
         git fetch
+        rm -rf cloud-custodian-sandbox
         sudo chown -R "${USER:-$(id -un)}" .
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
