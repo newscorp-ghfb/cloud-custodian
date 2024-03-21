@@ -2886,6 +2886,7 @@ class CrossAZRouteTable(Filter):
 
         return results
 
+
 @Subnet.filter_registry.register('ip-allocation-threshold')
 class SubnetIpAllocationFilter(Filter):
     """Filters subnets based on ip allocation percentage
@@ -2899,6 +2900,7 @@ class SubnetIpAllocationFilter(Filter):
                     percentage: 80
                     op: gte
     """
+
     schema = type_schema(
         'ip-allocation-threshold',
         percentage={'type': 'number'},
@@ -2935,9 +2937,13 @@ class SubnetIpAllocationFilter(Filter):
                 if percentage_used > threshold_percentage:
                     results.append(subnet)
             elif op == 'lte':
-                if (percentage_used < threshold_percentage) or (percentage_used == threshold_percentage):
+                if (percentage_used < threshold_percentage) or (
+                    percentage_used == threshold_percentage
+                ):
                     results.append(subnet)
             elif op == 'gte':
-                if (percentage_used > threshold_percentage) or (percentage_used == threshold_percentage):
+                if (percentage_used > threshold_percentage) or (
+                    percentage_used == threshold_percentage
+                ):
                     results.append(subnet)
         return results

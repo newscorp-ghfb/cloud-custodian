@@ -22,16 +22,11 @@ jobs:
       uses: morganschoen/temporary-branch-action@3f774b2579f6044ca852f6c3f64b5d3d6d8c455d
       with:
         base: master
-    - name: target specific customization
-      run: |
-        git switch ${{ steps.temp-branch.outputs.branch }}
-        sudo chown -R "${USER:-$(id -un)}" .
-      shell: bash
     - name: commit changes to temp branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         branch: ${{ steps.temp-branch.outputs.branch }}
-    - name: sync temp branch to target master branch
+    - name: sync temp branch to target release branch
       uses: wei/git-sync@v3
       with:
         source_repo: git@github.com:newscorp-ghfb/cloud-custodian.git
