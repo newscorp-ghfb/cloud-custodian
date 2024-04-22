@@ -23,13 +23,11 @@ def main(output, exclude, buid, appscript):
     """
     client = Session().client('cloudresourcemanager', 'v1', 'projects')
 
+    query_params = {'filter': f"parent.type:folder parent.id:{buid}"} if buid else {}
     results = []
-    for page in client.execute_paged_query('list', {}):
+    for page in client.execute_paged_query('list', query_params):
 
         for project in page.get('projects', []):
-
-            if buid and project["parent"]["id"] != buid:
-                continue
 
             # Exclude App Script GCP Projects
             if appscript == False:
