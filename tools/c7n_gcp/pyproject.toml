@@ -21,7 +21,7 @@ google-api-python-client = "^2.0"
 
 # pin these for now
 google-api-core = "2.10.2"
-grpcio = "1.49.1"
+grpcio = "*"
 
 # pin for cos-python-sdk-v5
 requests = "2.27.1"
