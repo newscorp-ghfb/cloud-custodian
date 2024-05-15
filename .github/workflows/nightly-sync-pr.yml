@@ -5,8 +5,6 @@ on:
       - 'release'
   workflow_dispatch:
 jobs:
-  setup-variables:
-    runs-on: ubuntu-latest
   nightly-sync-pr:
     if: github.repository == 'newscorp-ghfb/cloud-custodian'
     runs-on: ubuntu-latest
