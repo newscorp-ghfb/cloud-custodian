@@ -10,38 +10,7 @@ jobs:
     outputs:
       status: ${{ steps.jenkins-job-apply.outputs.job_status }}
     steps:
-    #- name: trigger jenkins validation job (destroy)
-    #  id: jenkins-job-destroy
-    #  uses: morganschoen/build-jenkins-job@master
-    #  with:
-    #    jenkins-url: "https://jenkins.ncttools.io"
-    #    jenkins-token: ${{ secrets.JENKINS_API_TOKEN }}
-    #    jenkins-user: ${{ secrets.JENKINS_API_USERNAME }}
-    #    jenkins-job: ${{ github.event.repository.name }}
-    #    jenkins-job-params: '{"action": "destroy", "bu": "nna", "account": "newstechnonprodinfeng"}'
-    #    jenkins-wait-job: "wait"
-    #    jenkins-ssl-verify: "true"
-    #- name: notify slack on failure (destroy)
-    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'FAIL')
-    #  uses: tokorom/action-slack-incoming-webhook@main
-    #  env:
-    #    INCOMING_WEBHOOK_URL: ${{ secrets.NIGHTLY_SYNC_SLACK_WEBHOOK_URL }}
-    #  with:
-    #    text: 
-    #    attachments: |
-    #      [
-    #        {
-    #          "color": "danger",
-    #          "fields": [
-    #            {
-    #              "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
-    #              "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-destroy.outputs.job_build_number}}/console|${{steps.jenkins-job-destroy.outputs.job_build_number}}>"
-    #            }
-    #          ]
-    #        }
-    #      ]
     - name: trigger jenkins validation job (plan)
-    #  if: startsWith(steps.jenkins-job-destroy.outputs.job_status, 'SUCCESS')
       id: jenkins-job-apply
       uses: morganschoen/build-jenkins-job@master
       with:
@@ -68,7 +37,7 @@ jobs:
               "fields": [
                 {
                   "title": "${{github.event.repository.name}}: Nightly sandbox validation failed. ",
-                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/view/AWS%20Landing%20Zone%20Sandbox/job/${{github.event.repository.name}}/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
+                  "value": "Skipping sync to prod release branch. Please review errors in build # <https://jenkins.ncttools.io/job/nct-cloud-custodian-sandbox/job/release/${{steps.jenkins-job-apply.outputs.job_build_number}}/console|${{steps.jenkins-job-apply.outputs.job_build_number}}>"
                 }
               ]
             }
