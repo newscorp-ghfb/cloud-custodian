@@ -32,7 +32,7 @@ def main(output, exclude, buid, appscript):
     
     results = []
     for page in client.execute_paged_query('list', query_params):
-        print("Page:", response)
+        print("Page:", page)
         print("**********************************************")
 
         for project in page.get('projects', []):
