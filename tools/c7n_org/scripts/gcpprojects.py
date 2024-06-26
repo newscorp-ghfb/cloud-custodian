@@ -22,22 +22,22 @@ def main(output, exclude, buid, appscript):
     Generate a c7n-org gcp projects config file
     """
     client = Session().client('cloudresourcemanager', 'v1', 'projects')
-    print("Client:", client)
-    print("**********************************************")
+    # print("Client:", client)
+    # print("**********************************************")
 
     
     query_params = {'filter': f"parent.type:folder parent.id:{buid}"} if buid else {}
-    print("Query Params:", query_params)
-    print("**********************************************")
+    # print("Query Params:", query_params)
+    # print("**********************************************")
     
     results = []
     for page in client.execute_paged_query('list', query_params):
-        print("Page:", page)
-        print("**********************************************")
+        # print("Page:", page)
+        # print("**********************************************")
 
         for project in page.get('projects', []):
-            print("Project:", project)
-            print("**********************************************")
+            # print("Project:", project)
+            # print("**********************************************")
 
             # Exclude App Script GCP Projects
             if appscript == False:
