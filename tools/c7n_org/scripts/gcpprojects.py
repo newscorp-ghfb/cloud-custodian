@@ -47,7 +47,7 @@ def main(output, exclude, appscript, buid):
         request = folder_client.execute_query("list", {"parent": f"folders/{folder_id}"})
         for folder in request.get("folders", []):
             subfolders.add(folder["name"].split("/")[-1])
-            subfolders.update(get_all_subfolders(folder["name"].split("/")[-1)))  # Recursive call
+            subfolders.update(get_all_subfolders(folder["name"].split("/")[-1]))  # Recursive call
         return subfolders
 
     # Check if buid is empty; if so, assume flat structure and set organization ID
