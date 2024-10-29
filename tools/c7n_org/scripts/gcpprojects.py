@@ -50,23 +50,34 @@ def main(output, exclude, appscript, buid):
             subfolders.update(get_all_subfolders(folder["name"].split("/")[-1]))  # Recursive call
         return subfolders
 
+    # Check if buid is empty; if so, assume flat structure and set organization ID
     results = []
+    organization_id = "161588151302"  # Replace with your actual organization ID
+    all_folders = set(buid) if buid else set()
+
     if not buid:
-        # No buid provided; assuming a flat organization structure
         print("No BUID specified; assuming flat organization. Listing all projects under organization.")
-        organization_id = "organizations/161588151302"  # Replace with your actual organization ID
 
-        # Fetch projects directly under the organization
-        for page in client.execute_paged_query("list", {"parent": organization_id}):
-            for project in page.get("projects", []):
-                # Exclude App Script projects if the flag is set
-                if not appscript and "sys-" in project["projectId"]:
-                    continue
+    else:
+        # Hierarchical structure: gather all folders and subfolders for each buid
+        for folder_id in buid:
+            all_folders.update(get_all_subfolders(folder_id))
 
-                # Exclude projects in inactive states or those in excluded folders
-                if project["lifecycleState"] != "ACTIVE" or project["projectNumber"] in exclude:
-                    continue
+    # Retrieve all projects and apply filtering in Python
+    for page in client.execute_paged_query("list", {}):
+        for project in page.get("projects", []):
+            # Exclude App Script projects if the flag is set
+            if not appscript and "sys-" in project["projectId"]:
+                continue
 
+            # Exclude projects in inactive states or those in excluded folders
+            if project["lifecycleState"] != "ACTIVE" or project["projectNumber"] in exclude:
+                continue
+
+            # Filtering logic for flat and hierarchical organization structures
+            if (not buid and project["parent"].get("type") == "organization" and project["parent"].get("id") == organization_id) or \
+               (buid and project["parent"].get("type") == "folder" and project["parent"].get("id") in all_folders):
+                
                 # Collect project details
                 project_info = {
                     "project_id": project["projectId"],
@@ -84,42 +95,6 @@ def main(output, exclude, appscript, buid):
                     }
                 
                 results.append(project_info)
-
-    else:
-        # Hierarchical structure: gather all folders and subfolders for each buid
-        all_folders = set(buid)
-        for folder_id in buid:
-            all_folders.update(get_all_subfolders(folder_id))
-
-        for page in client.execute_paged_query("list", {}):
-            for project in page.get("projects", []):
-                # Exclude App Script projects if the flag is set
-                if not appscript and "sys-" in project["projectId"]:
-                    continue
-
-                # Exclude projects in inactive states or those in excluded folders
-                if project["lifecycleState"] != "ACTIVE" or project["projectNumber"] in exclude:
-                    continue
-
-                # Only include projects within specified folders or subfolders
-                if project["parent"].get("type") == "folder" and project["parent"].get("id") in all_folders:
-                    # Collect project details
-                    project_info = {
-                        "project_id": project["projectId"],
-                        "project_number": project["projectNumber"],
-                        "name": project["name"],
-                    }
-
-                    # Include labels if they exist
-                    if "labels" in project:
-                        project_info["tags"] = [
-                            f"{k}:{v}" for k, v in project.get("labels", {}).items()
-                        ]
-                        project_info["vars"] = {
-                            k: v for k, v in project.get("labels", {}).items()
-                        }
-                    
-                    results.append(project_info)
 
     # Output project information to YAML
     output.write(yaml.safe_dump({"projects": results}, default_flow_style=False))
