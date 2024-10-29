@@ -50,14 +50,13 @@ def main(output, exclude, appscript, buid):
             subfolders.update(get_all_subfolders(folder["name"].split("/")[-1]))  # Recursive call
         return subfolders
 
-    # Check if buid is empty; if so, assume flat structure and set organization ID
-    all_folders = set()
+    results = []
     if not buid:
+        # No buid provided; assuming a flat organization structure
         print("No BUID specified; assuming flat organization. Listing all projects under organization.")
         organization_id = "organizations/161588151302"  # Replace with your actual organization ID
 
         # Fetch projects directly under the organization
-        results = []
         for page in client.execute_paged_query("list", {"parent": organization_id}):
             for project in page.get("projects", []):
                 # Exclude App Script projects if the flag is set
@@ -88,10 +87,10 @@ def main(output, exclude, appscript, buid):
 
     else:
         # Hierarchical structure: gather all folders and subfolders for each buid
+        all_folders = set(buid)
         for folder_id in buid:
             all_folders.update(get_all_subfolders(folder_id))
 
-        results = []
         for page in client.execute_paged_query("list", {}):
             for project in page.get("projects", []):
                 # Exclude App Script projects if the flag is set
