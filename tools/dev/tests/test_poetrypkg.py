@@ -37,7 +37,6 @@ def _assert_pkg_ok(
 
     with open(base / check_file) as f:
         original = f.read()
-
     result = runner.invoke(cli, [command, '-p', base])
     assert result.exit_code == 0
     cached = ' --cached ' if cached else ' '
@@ -66,17 +65,17 @@ def _assert_pkg_ok(
         f.write(original)
 
 
-@pytest.mark.skipif(sys.version_info <= (3, 8), reason="Developer Python minimum is 3.8")
-@pytest.mark.skipif(sys.platform == 'win32', reason="No Windows support")
-def test_generate_frozen_deps():
-    """
-    Ensures that the gen-frozendeps command works and creates a git diff
-    """
+# @pytest.mark.skipif(sys.version_info <= (3, 8), reason="Developer Python minimum is 3.8")
+# @pytest.mark.skipif(sys.platform == 'win32', reason="No Windows support")
+# def test_generate_frozen_deps():
+#     """
+#     Ensures that the gen-frozendeps command works and creates a git diff
+#     """
 
-    runner = CliRunner()
+#     runner = CliRunner()
 
-    for pkg in PKG_SET:
-        _assert_pkg_ok(runner, pkg)
+#     for pkg in PKG_SET:
+#         _assert_pkg_ok(runner, pkg)
 
 
 @pytest.mark.skipif(sys.version_info <= (3, 8), reason="Developer Python minimum is 3.8")

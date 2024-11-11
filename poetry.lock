@@ -1426,7 +1426,6 @@ files = [
 [package.dependencies]
 PyYAML = "*"
 six = ">=1.5"
-urllib3 = {version = "<2", markers = "python_version < \"3.10\""}
 wrapt = "*"
 yarl = "*"
 
@@ -1633,5 +1632,5 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.9"
-content-hash = "fc89c5a189e13be042732ec8bfb4b43a8cae1910470fbbd3cf469b2c3d97e135"
+python-versions = "^3.10"
+content-hash = "6cacad3a93ba5e3e3ee284876e6026ec1621f8269d213fc00b8c3e117727a37c"
