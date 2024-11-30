@@ -19,7 +19,7 @@ packages = [{"include" = "policystream.py"}]
 c7n-policystream = 'policystream:cli'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 click = "^8.0"
 # pin for cos-python-sdk-v5
 requests = "2.27.1"
