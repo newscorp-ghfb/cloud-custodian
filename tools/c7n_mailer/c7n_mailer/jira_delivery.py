@@ -65,7 +65,7 @@ class JiraDelivery:
                         "slack_default",
                         self.config["templates_folders"],
                     ),
-                    "issuetype": {"name": jira_conf.get("issuetype", "Task")},
+                    "issuetype": {"name": jira_conf.get("issuetype", "Story")},
                     "priority": {"name": jira_conf.get("priority", "Medium")},
                 }
             )
