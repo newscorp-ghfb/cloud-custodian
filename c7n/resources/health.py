@@ -32,7 +32,7 @@ class HealthEvents(QueryResourceManager):
         super(HealthEvents, self).__init__(ctx, data)
         self.queries = QueryFilter.parse(
             self.data.get('query', [
-                {'eventStatusCodes': 'open'},
+                {'eventStatusCodes': ['open', 'closed', 'upcoming']},
                 {'eventTypeCategories': ['issue', 'accountNotification']}]))
 
     def resource_query(self):
