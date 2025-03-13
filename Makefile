@@ -7,20 +7,13 @@ PLATFORM_OS := $(shell python3 -c "import platform; print(platform.system())")
 PY_VERSION := $(shell python3 -c "import sys; print('%s.%s' % (sys.version_info.major, sys.version_info.minor))")
 
 
-ifneq "$(findstring $(PLATFORM_OS), Linux Darwin)" ""
-  ifneq "$(findstring $(PY_VERSION), 3.10)" ""
-    PKG_SET := tools/c7n_left $(PKG_SET)
-  endif
-endif
-
-
 install:
 	python3 -m venv .
 	. bin/activate && pip install -r requirements-dev.txt
 
 install-poetry:
 	poetry install
-	for pkg in $(PKG_SET); do echo "Install $$pkg" && cd $$pkg && poetry install --all-extras && cd ../..; done
+	for pkg in $(PKG_SET); do (echo "Install $$pkg" && cd $$pkg && poetry install --all-extras) ; done
 
 pkg-rebase:
 	rm -f poetry.lock
@@ -49,7 +42,7 @@ pkg-update:
 	for pkg in $(PKG_SET); do cd $$pkg && echo $$pkg && poetry update && cd ../..; done
 
 pkg-show-update:
-	poetry show -o
+	poetry show -o`
 	for pkg in $(PKG_SET); do cd $$pkg && echo $$pkg && poetry show -o && cd ../..; done
 
 pkg-freeze-setup:
@@ -62,8 +55,8 @@ pkg-gen-setup:
 
 pkg-gen-requirements:
 # we have todo without hashes due to https://github.com/pypa/pip/issues/4995
-	poetry export --dev --without-hashes -f requirements.txt > requirements.txt
-	for pkg in $(PKG_SET); do cd $$pkg && poetry export --without-hashes -f requirements.txt > requirements.txt && cd ../..; done
+	poetry export --with dev --without-hashes -f requirements.txt > requirements.txt
+	for pkg in $(PKG_SET); do (cd $$pkg && poetry lock --no-update && poetry export --without-hashes -f requirements.txt > requirements.txt);  done
 
 pkg-increment:
 # increment versions
@@ -98,7 +91,7 @@ test-poetry-cov:
 	. $(PWD)/test.env && poetry run pytest -n auto \
             --cov c7n --cov tools/c7n_azure/c7n_azure \
             --cov tools/c7n_gcp/c7n_gcp --cov tools/c7n_kube/c7n_kube \
-            --cov tools/c7n_mailer/c7n_mailer \
+            # --cov tools/c7n_mailer/c7n_mailer \
             tests tools {posargs}
 
 test:

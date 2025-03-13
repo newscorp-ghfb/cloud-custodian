@@ -14,7 +14,7 @@ classifiers = [
    "Topic :: System :: Distributed Computing"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.10"
 click = "^8.0"
 python-hcl2 = "^2.0"
 

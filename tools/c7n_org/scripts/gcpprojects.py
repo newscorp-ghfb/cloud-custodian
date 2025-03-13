@@ -101,7 +101,3 @@ def main(output, exclude, appscript, buid):
 
 if __name__ == "__main__":
     main()
-
-
-if __name__ == "__main__":
-    main()
