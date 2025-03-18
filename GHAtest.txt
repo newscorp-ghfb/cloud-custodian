@@ -1,0 +1,1251 @@
+[CI/Tests                       ] 🚀  Start image=catthehacker/ubuntu:act-latest
+[CI/Tests                       ]   🐳  docker pull image=catthehacker/ubuntu:act-latest platform=linux/amd64 username= forcePull=true
+[CI/Tests                       ] using DockerAuthConfig authentication for docker pull
+[CI/Tests                       ]   🐳  docker create image=catthehacker/ubuntu:act-latest platform=linux/amd64 entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[CI/Tests                       ]   🐳  docker run image=catthehacker/ubuntu:act-latest platform=linux/amd64 entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[CI/Tests                       ]   🐳  docker exec cmd=[node --no-warnings -e console.log(process.execPath)] user= workdir=
+[CI/Tests                       ]   ☁  git clone 'https://github.com/hashicorp/setup-terraform' # ref=v1
+[CI/Tests                       ] Non-terminating error while running 'git clone': some refs were not updated
+[CI/Tests                       ]   ☁  git clone 'https://github.com/actions/setup-python' # ref=v2
+[CI/Tests                       ] Non-terminating error while running 'git clone': some refs were not updated
+[CI/Tests                       ]   ☁  git clone 'https://github.com/actions/cache' # ref=v2
+[CI/Tests                       ] Non-terminating error while running 'git clone': some refs were not updated
+[CI/Tests                       ]   ☁  git clone 'https://github.com/codecov/codecov-action' # ref=v3
+[CI/Tests                       ] Non-terminating error while running 'git clone': some refs were not updated
+[CI/Tests                       ] 🧪  Matrix: map[os:ubuntu-latest python-version:3.10]
+[CI/Tests                       ] ⭐ Run Main actions/checkout@v2
+[CI/Tests                       ]   🐳  docker cp src=/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/. dst=/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox
+[CI/Tests                       ]   ✅  Success - Main actions/checkout@v2
+[CI/Tests                       ] ⭐ Run Main Set up Terraform
+[CI/Tests                       ]   🐳  docker cp src=/Users/giannattasiog/.cache/act/hashicorp-setup-terraform@v1/ dst=/var/run/act/actions/hashicorp-setup-terraform@v1/
+[CI/Tests                       ]   🐳  docker exec cmd=[/opt/acttoolcache/node/18.20.4/x64/bin/node /var/run/act/actions/hashicorp-setup-terraform@v1/dist/index.js] user= workdir=
+[CI/Tests                       ]   💬  ::debug::Finding releases for Terraform version latest
+[CI/Tests                       ]   | (node:31) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+[CI/Tests                       ]   | (Use `node --trace-deprecation ...` to show where the warning was created)
+[CI/Tests                       ]   💬  ::debug::Getting build for Terraform version 1.9.8: linux amd64
+[CI/Tests                       ]   💬  ::debug::Downloading Terraform CLI from https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+[CI/Tests                       ]   💬  ::debug::Downloading https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+[CI/Tests                       ]   💬  ::debug::Destination /tmp/dcc8ea66-9604-43a2-9198-96f1f5835e31
+[CI/Tests                       ]   💬  ::debug::download complete
+[CI/Tests                       ]   💬  ::debug::Extracting Terraform CLI zip file
+[CI/Tests                       ]   | [command]/usr/bin/unzip -o -q /tmp/dcc8ea66-9604-43a2-9198-96f1f5835e31
+[CI/Tests                       ]   💬  ::debug::Terraform CLI path is /tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d.
+[CI/Tests                       ]   💬  ::debug::Moving /tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d/terraform to /tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d/terraform-bin.
+[CI/Tests                       ]   💬  ::debug::Copying /run/act/actions/hashicorp-setup-terraform@v1/dist/index1.js to /tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d/terraform.
+[CI/Tests                       ]   ✅  Success - Main Set up Terraform
+[CI/Tests                       ]   ⚙  ::set-env:: TERRAFORM_CLI_PATH=/tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d
+[CI/Tests                       ]   ⚙  ::add-path:: /tmp/4d34d2b2-590c-47bc-852c-0c11abc0cd8d
+[CI/Tests                       ] ⭐ Run Main Set up Python 3.10
+[CI/Tests                       ]   🐳  docker cp src=/Users/giannattasiog/.cache/act/actions-setup-python@v2/ dst=/var/run/act/actions/actions-setup-python@v2/
+[CI/Tests                       ]   🐳  docker exec cmd=[/opt/acttoolcache/node/18.20.4/x64/bin/node /var/run/act/actions/actions-setup-python@v2/dist/setup/index.js] user= workdir=
+[CI/Tests                       ]   💬  ::debug::Semantic version spec of 3.10 is 3.10
+[CI/Tests                       ]   💬  ::debug::isExplicit: 
+[CI/Tests                       ]   💬  ::debug::explicit? false
+[CI/Tests                       ]   💬  ::debug::isExplicit: 3.10.15
+[CI/Tests                       ]   💬  ::debug::explicit? true
+[CI/Tests                       ]   💬  ::debug::isExplicit: 3.9.20
+[CI/Tests                       ]   💬  ::debug::explicit? true
+[CI/Tests                       ]   💬  ::debug::evaluating 2 versions
+[CI/Tests                       ]   💬  ::debug::matched: 3.10.15
+[CI/Tests                       ]   💬  ::debug::checking cache: /opt/hostedtoolcache/Python/3.10.15/x64
+[CI/Tests                       ]   💬  ::debug::Found tool in cache Python 3.10.15 x64
+[CI/Tests                       ]   | Successfully setup CPython (3.10.15)
+[CI/Tests                       ]   ❓ add-matcher /run/act/actions/actions-setup-python@v2/.github/python.json
+[CI/Tests                       ]   ✅  Success - Main Set up Python 3.10
+[CI/Tests                       ]   ⚙  ::set-env:: pythonLocation=/opt/hostedtoolcache/Python/3.10.15/x64
+[CI/Tests                       ]   ⚙  ::set-env:: LD_LIBRARY_PATH=/opt/hostedtoolcache/Python/3.10.15/x64/lib
+[CI/Tests                       ]   ⚙  ::set-output:: python-version=3.10.15
+[CI/Tests                       ]   ⚙  ::add-path:: /opt/hostedtoolcache/Python/3.10.15/x64
+[CI/Tests                       ]   ⚙  ::add-path:: /opt/hostedtoolcache/Python/3.10.15/x64/bin
+[CI/Tests                       ] ⭐ Run Main Bootstrap poetry
+[CI/Tests                       ]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/3.sh] user= workdir=
+[CI/Tests                       ]   | Retrieving Poetry metadata
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | # Welcome to Poetry!
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | This will download and install the latest version of Poetry,
+[CI/Tests                       ]   | a dependency and package manager for Python.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | It will add the `poetry` command to Poetry's bin directory, located at:
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | /root/.local/bin
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | You can uninstall at any time by executing this script with the --uninstall option,
+[CI/Tests                       ]   | and these changes will be reverted.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing Poetry (1.3.1)
+[CI/Tests                       ]   | Installing Poetry (1.3.1): Creating environment
+[CI/Tests                       ]   | Installing Poetry (1.3.1): Installing Poetry
+[CI/Tests                       ]   | Installing Poetry (1.3.1): Creating script
+[CI/Tests                       ]   | Installing Poetry (1.3.1): Done
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Poetry (1.3.1) is installed now. Great!
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | To get started you need Poetry's bin directory (/root/.local/bin) in your `PATH`
+[CI/Tests                       ]   | environment variable.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Add `export PATH="/root/.local/bin:$PATH"` to your shell configuration file.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Alternatively, you can call Poetry explicitly with `/root/.local/bin/poetry`.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | You can test that everything is set up by executing:
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | `poetry --version`
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   ✅  Success - Main Bootstrap poetry
+[CI/Tests                       ]   🐳  docker exec cmd=[/opt/acttoolcache/node/18.20.4/x64/bin/node /var/run/act/workflow/hashfiles/index.js] user= workdir=
+[CI/Tests                       ] ⭐ Run Main Set up cache
+[CI/Tests                       ]   🐳  docker cp src=/Users/giannattasiog/.cache/act/actions-cache@v2/ dst=/var/run/act/actions/actions-cache@v2/
+[CI/Tests                       ]   🐳  docker exec cmd=[/opt/acttoolcache/node/18.20.4/x64/bin/node /var/run/act/actions/actions-cache@v2/dist/restore/index.js] user= workdir=
+[CI/Tests                       ]   💬  ::debug::Resolved Keys:
+[CI/Tests                       ]   💬  ::debug::["venv-Linux-3.10-46cb43e0d090fe2ef6c989db1020e4d8a6f53c79a8231346987b2ea5bde1e759"]
+[CI/Tests                       ]   💬  ::debug::Checking zstd --version
+[CI/Tests                       ]   💬  ::debug::*** zstd command line interface 64-bits v1.4.8, by Yann Collet ***
+[CI/Tests                       ]   💬  ::debug::Resource Url: http://192.168.86.22:52512/_apis/artifactcache/cache?keys=venv-Linux-3.10-46cb43e0d090fe2ef6c989db1020e4d8a6f53c79a8231346987b2ea5bde1e759&version=25e65b70d167147605b4332eb57b6d34df8e0303b88c4de252efb18cf3ed148a
+[CI/Tests                       ]   | Cache not found for input keys: venv-Linux-3.10-46cb43e0d090fe2ef6c989db1020e4d8a6f53c79a8231346987b2ea5bde1e759
+[CI/Tests                       ]   ✅  Success - Main Set up cache
+[CI/Tests                       ] ⭐ Run Main Update PATH
+[CI/Tests                       ]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/5.sh] user= workdir=
+[CI/Tests                       ]   ✅  Success - Main Update PATH
+[CI/Tests                       ]   ⚙  ::set-env:: VIRTUAL_ENV=/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv
+[CI/Tests                       ]   ⚙  ::add-path:: /root/.local/bin
+[CI/Tests                       ]   ⚙  ::add-path:: /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/bin
+[CI/Tests                       ] ⭐ Run Main Virtualenv
+[CI/Tests                       ]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/7.sh] user= workdir=
+[CI/Tests                       ]   | check venv 
+[CI/Tests                       ]   | cache hit 
+[CI/Tests                       ]   ✅  Success - Main Virtualenv
+[CI/Tests                       ] ⭐ Run Main Install Deps
+[CI/Tests                       ]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/8.sh] user= workdir=
+[CI/Tests                       ]   | Requirement already satisfied: pip in ./.venv/lib/python3.10/site-packages (23.0.1)
+[CI/Tests                       ]   | Collecting pip
+[CI/Tests                       ]   |   Using cached pip-24.3.1-py3-none-any.whl (1.8 MB)
+[CI/Tests                       ]   | Installing collected packages: pip
+[CI/Tests                       ]   |   Attempting uninstall: pip
+[CI/Tests                       ]   |     Found existing installation: pip 23.0.1
+[CI/Tests                       ]   |     Uninstalling pip-23.0.1:
+[CI/Tests                       ]   |       Successfully uninstalled pip-23.0.1
+[CI/Tests                       ]   | Successfully installed pip-24.3.1
+[CI/Tests                       ]   | Collecting wheel
+[CI/Tests                       ]   |   Downloading wheel-0.44.0-py3-none-any.whl.metadata (2.3 kB)
+[CI/Tests                       ]   | Downloading wheel-0.44.0-py3-none-any.whl (67 kB)
+[CI/Tests                       ]   | Installing collected packages: wheel
+[CI/Tests                       ]   | Successfully installed wheel-0.44.0
+[CI/Tests                       ]   | poetry install
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 72 installs, 0 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Installing pycparser (2.21)
+[CI/Tests                       ]   |   • Installing cffi (1.15.1)
+[CI/Tests                       ]   |   • Installing six (1.16.0)
+[CI/Tests                       ]   |   • Installing certifi (2024.2.2)
+[CI/Tests                       ]   |   • Installing charset-normalizer (2.0.12)
+[CI/Tests                       ]   |   • Installing cryptography (41.0.4)
+[CI/Tests                       ]   |   • Installing exceptiongroup (1.1.3)
+[CI/Tests                       ]   |   • Installing idna (3.4)
+[CI/Tests                       ]   |   • Installing iniconfig (2.0.0)
+[CI/Tests                       ]   |   • Installing jeepney (0.8.0)
+[CI/Tests                       ]   |   • Installing jmespath (1.0.1)
+[CI/Tests                       ]   |   • Installing more-itertools (9.1.0)
+[CI/Tests                       ]   |   • Installing multidict (6.0.4)
+[CI/Tests                       ]   |   • Installing packaging (23.2)
+[CI/Tests                       ]   |   • Installing pluggy (1.2.0)
+[CI/Tests                       ]   |   • Installing python-dateutil (2.8.2)
+[CI/Tests                       ]   |   • Installing tomli (2.0.1)
+[CI/Tests                       ]   |   • Installing urllib3 (1.26.17)
+[CI/Tests                       ]   |   • Installing webencodings (0.5.1)
+[CI/Tests                       ]   |   • Installing zipp (3.15.0)
+[CI/Tests                       ]   |   • Installing bleach (6.0.0)
+[CI/Tests                       ]   |   • Installing botocore (1.31.58)
+[CI/Tests                       ]   |   • Installing docutils (0.17.1)
+[CI/Tests                       ]   |   • Installing execnet (2.0.2)
+[CI/Tests                       ]   |   • Installing importlib-metadata (6.7.0)
+[CI/Tests                       ]   |   • Installing jaraco-classes (3.2.3)
+[CI/Tests                       ]   |   • Installing pygments (2.16.1)
+[CI/Tests                       ]   |   • Installing pytest (7.4.2)
+[CI/Tests                       ]   |   • Installing pyyaml (6.0.1)
+[CI/Tests                       ]   |   • Installing requests (2.27.1)
+[CI/Tests                       ]   |   • Installing secretstorage (3.3.3)
+[CI/Tests                       ]   |   • Installing wrapt (1.15.0)
+[CI/Tests                       ]   |   • Installing yarl (1.9.2)
+[CI/Tests                       ]   |   • Installing attrs (23.1.0)
+[CI/Tests                       ]   |   • Installing backoff (2.2.1)
+[CI/Tests                       ]   |   • Installing colorama (0.4.6)
+[CI/Tests                       ]   |   • Installing coverage (6.5.0)
+[CI/Tests                       ]   |   • Installing graphql-core (3.2.3)
+[CI/Tests                       ]   |   • Installing jsonpointer (2.4)
+[CI/Tests                       ]   |   • Installing keyring (24.1.1)
+[CI/Tests                       ]   |   • Installing mccabe (0.6.1)
+[CI/Tests                       ]   |   • Installing pkginfo (1.9.6)
+[CI/Tests                       ]   |   • Installing portalocker (2.7.0)
+[CI/Tests                       ]   |   • Installing pycodestyle (2.7.0)
+[CI/Tests                       ]   |   • Installing pyflakes (2.3.1)
+[CI/Tests                       ]   |   • Installing pyrsistent (0.19.3)
+[CI/Tests                       ]   |   • Installing pytest-xdist (3.3.1)
+[CI/Tests                       ]   |   • Installing readme-renderer (37.3)
+[CI/Tests                       ]   |   • Installing requests-toolbelt (0.10.1)
+[CI/Tests                       ]   |   • Installing rfc3986 (2.0.0)
+[CI/Tests                       ]   |   • Installing s3transfer (0.7.0)
+[CI/Tests                       ]   |   • Installing termcolor (2.3.0)
+[CI/Tests                       ]   |   • Installing tqdm (4.66.1)
+[CI/Tests                       ]   |   • Installing vcrpy (4.4.0)
+[CI/Tests                       ]   |   • Installing argcomplete (3.1.2)
+[CI/Tests                       ]   |   • Installing aws-xray-sdk (2.12.0)
+[CI/Tests                       ]   |   • Installing boto3 (1.28.58)
+[CI/Tests                       ]   |   • Installing click (8.1.7)
+[CI/Tests                       ]   |   • Installing flake8 (3.9.2)
+[CI/Tests                       ]   |   • Installing freezegun (1.2.2)
+[CI/Tests                       ]   |   • Installing gql (3.4.1)
+[CI/Tests                       ]   |   • Installing jsonpatch (1.33)
+[CI/Tests                       ]   |   • Installing jsonschema (4.17.3)
+[CI/Tests                       ]   |   • Installing mock (4.0.3)
+[CI/Tests                       ]   |   • Installing placebo (0.9.0)
+[CI/Tests                       ]   |   • Installing psutil (5.9.5)
+[CI/Tests                       ]   |   • Installing pytest-cov (3.0.0)
+[CI/Tests                       ]   |   • Installing pytest-recording (0.13.0)
+[CI/Tests                       ]   |   • Installing pytest-sugar (0.9.7)
+[CI/Tests                       ]   |   • Installing pytest-terraform (0.6.6)
+[CI/Tests                       ]   |   • Installing tabulate (0.8.10)
+[CI/Tests                       ]   |   • Installing twine (3.8.0)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n (0.9.21)
+[CI/Tests                       ]   | for pkg in tools/c7n_kube tools/c7n_openstack tools/c7n_mailer tools/c7n_logexporter tools/c7n_policystream tools/c7n_trailcreator tools/c7n_org tools/c7n_sphinxext tools/c7n_terraform tools/c7n_awscc tools/c7n_tencentcloud tools/c7n_azure tools/c7n_gcp; do (echo "Install $pkg" && cd $pkg && poetry install --all-extras) ; done
+[CI/Tests                       ]   | Install tools/c7n_kube
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 9 installs, 21 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating urllib3 (1.26.17 -> 1.26.13)
+[CI/Tests                       ]   |   • Updating botocore (1.31.58 -> 1.29.30)
+[CI/Tests                       ]   |   • Updating certifi (2024.2.2 -> 2022.12.7)
+[CI/Tests                       ]   |   • Installing pyasn1 (0.4.8)
+[CI/Tests                       ]   |   • Updating attrs (23.1.0 -> 22.1.0)
+[CI/Tests                       ]   |   • Installing cachetools (5.2.0)
+[CI/Tests                       ]   |   • Updating multidict (6.0.4 -> 6.0.3)
+[CI/Tests                       ]   |   • Installing oauthlib (3.2.2)
+[CI/Tests                       ]   |   • Installing pyasn1-modules (0.2.8)
+[CI/Tests                       ]   |   • Updating pyrsistent (0.19.3 -> 0.19.2)
+[CI/Tests                       ]   |   • Installing rsa (4.9)
+[CI/Tests                       ]   |   • Updating s3transfer (0.7.0 -> 0.6.0)
+[CI/Tests                       ]   |   • Updating zipp (3.15.0 -> 3.11.0)
+[CI/Tests                       ]   |   • Updating argcomplete (3.1.2 -> 2.0.0)
+[CI/Tests                       ]   |   • Updating boto3 (1.28.58 -> 1.26.30)
+[CI/Tests                       ]   |   • Updating exceptiongroup (1.1.3 -> 1.0.4)
+[CI/Tests                       ]   |   • Installing google-auth (2.15.0)
+[CI/Tests                       ]   |   • Updating importlib-metadata (6.7.0 -> 4.13.0)
+[CI/Tests                       ]   |   • Updating iniconfig (2.0.0 -> 1.1.1)
+[CI/Tests                       ]   |   • Updating packaging (23.2 -> 22.0)
+[CI/Tests                       ]   |   • Updating pluggy (1.2.0 -> 1.0.0)
+[CI/Tests                       ]   |   • Updating pyyaml (6.0.1 -> 6.0)
+[CI/Tests                       ]   |   • Installing requests-oauthlib (1.3.1)
+[CI/Tests                       ]   |   • Updating setuptools (65.5.0 -> 65.6.3)
+[CI/Tests                       ]   |   • Installing websocket-client (1.4.2)
+[CI/Tests                       ]   |   • Updating wrapt (1.15.0 -> 1.14.1)
+[CI/Tests                       ]   |   • Updating yarl (1.9.2 -> 1.8.2)
+[CI/Tests                       ]   |   • Installing kubernetes (10.0.1)
+[CI/Tests                       ]   |   • Updating pytest (7.4.2 -> 7.2.0)
+[CI/Tests                       ]   |   • Updating vcrpy (4.4.0 -> 4.2.1)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_kube (0.2.20)
+[CI/Tests                       ]   | Install tools/c7n_openstack
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 12 installs, 3 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Installing pbr (5.11.0)
+[CI/Tests                       ]   |   • Installing decorator (5.1.1)
+[CI/Tests                       ]   |   • Installing iso8601 (1.1.0)
+[CI/Tests                       ]   |   • Updating jsonpointer (2.4 -> 2.3)
+[CI/Tests                       ]   |   • Installing os-service-types (1.7.0)
+[CI/Tests                       ]   |   • Installing stevedore (3.5.2)
+[CI/Tests                       ]   |   • Installing appdirs (1.4.4)
+[CI/Tests                       ]   |   • Updating cryptography (41.0.4 -> 38.0.4)
+[CI/Tests                       ]   |   • Installing dogpile-cache (1.1.8)
+[CI/Tests                       ]   |   • Updating jsonpatch (1.33 -> 1.32)
+[CI/Tests                       ]   |   • Installing keystoneauth1 (5.1.0)
+[CI/Tests                       ]   |   • Installing munch (2.5.0)
+[CI/Tests                       ]   |   • Installing netifaces (0.11.0)
+[CI/Tests                       ]   |   • Installing requestsexceptions (1.4.0)
+[CI/Tests                       ]   |   • Installing openstacksdk (0.52.0)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_openstack (0.1.11)
+[CI/Tests                       ]   | Install tools/c7n_mailer
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Unable to read the lock file (Invalid statement (at line 3144, column 1)).
+[CI/Tests                       ]   | Install tools/c7n_logexporter
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 0 installs, 1 update, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating click (8.1.7 -> 8.1.3)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_logexporter (0.4.20)
+[CI/Tests                       ]   | Install tools/c7n_policystream
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 1 install, 3 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating pycparser (2.21 -> 2.22)
+[CI/Tests                       ]   |   • Updating cffi (1.15.1 -> 1.16.0)
+[CI/Tests                       ]   |   • Updating pyyaml (6.0 -> 6.0.1)
+[CI/Tests                       ]   |   • Installing pygit2 (1.14.1)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_policystream (0.4.20)
+[CI/Tests                       ]   | Install tools/c7n_trailcreator
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 1 install, 1 update, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating pyyaml (6.0.1 -> 6.0)
+[CI/Tests                       ]   |   • Installing c7n-org (0.6.20 /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_org)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_trailcreator (0.2.20)
+[CI/Tests                       ]   | Install tools/c7n_org
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 4 installs, 12 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Installing typing-extensions (4.4.0)
+[CI/Tests                       ]   |   • Updating certifi (2022.12.7 -> 2024.8.30)
+[CI/Tests                       ]   |   • Updating charset-normalizer (2.0.12 -> 3.4.0)
+[CI/Tests                       ]   |   • Updating idna (3.4 -> 3.10)
+[CI/Tests                       ]   |   • Updating multidict (6.0.3 -> 6.1.0)
+[CI/Tests                       ]   |   • Installing propcache (0.2.0)
+[CI/Tests                       ]   |   • Updating requests (2.27.1 -> 2.32.3)
+[CI/Tests                       ]   |   • Installing sniffio (1.3.1)
+[CI/Tests                       ]   |   • Updating wrapt (1.14.1 -> 1.16.0)
+[CI/Tests                       ]   |   • Updating yarl (1.8.2 -> 1.17.1)
+[CI/Tests                       ]   |   • Installing anyio (4.6.2.post1)
+[CI/Tests                       ]   |   • Updating graphql-core (3.2.3 -> 3.2.5)
+[CI/Tests                       ]   |   • Updating requests-toolbelt (0.10.1 -> 1.0.0)
+[CI/Tests                       ]   |   • Updating vcrpy (4.2.1 -> 6.0.2)
+[CI/Tests                       ]   |   • Updating gql (3.4.1 -> 3.5.0)
+[CI/Tests                       ]   |   • Updating pytest-recording (0.13.0 -> 0.13.2)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_org (0.6.20)
+[CI/Tests                       ]   | Install tools/c7n_sphinxext
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 23 installs, 5 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating certifi (2024.8.30 -> 2022.12.7)
+[CI/Tests                       ]   |   • Updating charset-normalizer (3.4.0 -> 2.0.12)
+[CI/Tests                       ]   |   • Updating idna (3.10 -> 3.4)
+[CI/Tests                       ]   |   • Installing markupsafe (2.1.1)
+[CI/Tests                       ]   |   • Installing mdurl (0.1.2)
+[CI/Tests                       ]   |   • Installing pytz (2022.6)
+[CI/Tests                       ]   |   • Installing alabaster (0.7.12)
+[CI/Tests                       ]   |   • Installing babel (2.11.0)
+[CI/Tests                       ]   |   • Installing imagesize (1.4.1)
+[CI/Tests                       ]   |   • Installing jinja2 (3.1.2)
+[CI/Tests                       ]   |   • Installing markdown-it-py (2.1.0)
+[CI/Tests                       ]   |   • Updating pygments (2.16.1 -> 2.13.0)
+[CI/Tests                       ]   |   • Updating requests (2.32.3 -> 2.27.1)
+[CI/Tests                       ]   |   • Installing snowballstemmer (2.2.0)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-applehelp (1.0.2)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-devhelp (1.0.2)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-htmlhelp (2.0.0)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-jsmath (1.0.1)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-qthelp (1.0.3)
+[CI/Tests                       ]   |   • Installing sphinxcontrib-serializinghtml (1.1.5)
+[CI/Tests                       ]   |   • Installing commonmark (0.9.1)
+[CI/Tests                       ]   |   • Installing markdown (3.0.1)
+[CI/Tests                       ]   |   • Installing mdit-py-plugins (0.3.3)
+[CI/Tests                       ]   |   • Installing sphinx (4.5.0)
+[CI/Tests                       ]   |   • Installing myst-parser (0.18.1)
+[CI/Tests                       ]   |   • Installing recommonmark (0.6.0)
+[CI/Tests                       ]   |   • Installing sphinx-markdown-tables (0.0.12)
+[CI/Tests                       ]   |   • Installing sphinx-rtd-theme (1.1.1)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_sphinxext (1.1.20)
+[CI/Tests                       ]   | Install tools/c7n_terraform
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 2 installs, 0 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Installing lark-parser (0.10.1)
+[CI/Tests                       ]   |   • Installing python-hcl2 (2.0.3)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_terraform (0.1.11)
+[CI/Tests                       ]   | Install tools/c7n_awscc
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 0 installs, 10 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating certifi (2022.12.7 -> 2024.8.30)
+[CI/Tests                       ]   |   • Updating charset-normalizer (2.0.12 -> 3.4.0)
+[CI/Tests                       ]   |   • Updating idna (3.4 -> 3.10)
+[CI/Tests                       ]   |   • Updating exceptiongroup (1.0.4 -> 1.2.2)
+[CI/Tests                       ]   |   • Updating iniconfig (1.1.1 -> 2.0.0)
+[CI/Tests                       ]   |   • Updating packaging (22.0 -> 24.1)
+[CI/Tests                       ]   |   • Updating pluggy (1.0.0 -> 1.5.0)
+[CI/Tests                       ]   |   • Updating requests (2.27.1 -> 2.32.3)
+[CI/Tests                       ]   |   • Updating tomli (2.0.1 -> 2.0.2)
+[CI/Tests                       ]   |   • Updating pytest (7.2.0 -> 8.3.3)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_awscc (0.1.6)
+[CI/Tests                       ]   | Install tools/c7n_tencentcloud
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | Warning: poetry.lock is not consistent with pyproject.toml. You may be getting improper dependencies. Run `poetry lock [--no-update]` to fix it.
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 6 installs, 15 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating idna (3.10 -> 3.4)
+[CI/Tests                       ]   |   • Updating multidict (6.1.0 -> 6.0.3)
+[CI/Tests                       ]   |   • Updating certifi (2024.8.30 -> 2022.12.7)
+[CI/Tests                       ]   |   • Updating charset-normalizer (3.4.0 -> 2.0.12)
+[CI/Tests                       ]   |   • Updating exceptiongroup (1.2.2 -> 1.0.4)
+[CI/Tests                       ]   |   • Updating iniconfig (2.0.0 -> 1.1.1)
+[CI/Tests                       ]   |   • Updating packaging (24.1 -> 22.0)
+[CI/Tests                       ]   |   • Updating pluggy (1.5.0 -> 1.0.0)
+[CI/Tests                       ]   |   • Updating tomli (2.0.2 -> 2.0.1)
+[CI/Tests                       ]   |   • Updating wrapt (1.16.0 -> 1.14.1)
+[CI/Tests                       ]   |   • Updating yarl (1.17.1 -> 1.8.2)
+[CI/Tests                       ]   |   • Installing crcmod (1.7)
+[CI/Tests                       ]   |   • Installing pycryptodome (3.16.0)
+[CI/Tests                       ]   |   • Updating pytest (8.3.3 -> 7.2.0)
+[CI/Tests                       ]   |   • Updating requests (2.32.3 -> 2.27.1)
+[CI/Tests                       ]   |   • Updating vcrpy (6.0.2 -> 4.2.1)
+[CI/Tests                       ]   |   • Installing xmltodict (0.13.0)
+[CI/Tests                       ]   |   • Installing cos-python-sdk-v5 (1.9.21)
+[CI/Tests                       ]   |   • Updating pytest-recording (0.13.2 -> 0.12.1)
+[CI/Tests                       ]   |   • Installing retrying (1.3.4)
+[CI/Tests                       ]   |   • Installing tencentcloud-sdk-python (3.0.794)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_tencentcloud (0.1.3)
+[CI/Tests                       ]   | Install tools/c7n_azure
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 78 installs, 10 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Updating pycparser (2.22 -> 2.21)
+[CI/Tests                       ]   |   • Updating cffi (1.16.0 -> 1.15.1)
+[CI/Tests                       ]   |   • Installing azure-core (1.26.1)
+[CI/Tests                       ]   |   • Installing azure-nspkg (3.0.2)
+[CI/Tests                       ]   |   • Updating exceptiongroup (1.0.4 -> 1.2.2)
+[CI/Tests                       ]   |   • Updating iniconfig (1.1.1 -> 2.0.0)
+[CI/Tests                       ]   |   • Installing isodate (0.6.1)
+[CI/Tests                       ]   |   • Updating packaging (22.0 -> 24.1)
+[CI/Tests                       ]   |   • Updating pluggy (1.0.0 -> 1.5.0)
+[CI/Tests                       ]   |   • Installing pyjwt (2.6.0)
+[CI/Tests                       ]   |   • Updating tomli (2.0.1 -> 2.0.2)
+[CI/Tests                       ]   |   • Installing tzdata (2022.7)
+[CI/Tests                       ]   |   • Installing adal (1.2.7)
+[CI/Tests                       ]   |   • Installing azure-common (1.1.28)
+[CI/Tests                       ]   |   • Installing azure-mgmt-nspkg (3.0.2)
+[CI/Tests                       ]   |   • Installing msal (1.20.0)
+[CI/Tests                       ]   |   • Installing msrest (0.7.1)
+[CI/Tests                       ]   |   • Updating portalocker (2.7.0 -> 2.6.0)
+[CI/Tests                       ]   |   • Updating pytest (7.2.0 -> 8.3.3)
+[CI/Tests                       ]   |   • Installing pytz-deprecation-shim (0.1.0.post0)
+[CI/Tests                       ]   |   • Installing azure-cosmosdb-nspkg (2.0.2)
+[CI/Tests                       ]   |   • Installing azure-keyvault-certificates (4.6.0)
+[CI/Tests                       ]   |   • Installing azure-keyvault-keys (4.7.0)
+[CI/Tests                       ]   |   • Installing azure-keyvault-secrets (4.6.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-core (1.3.2)
+[CI/Tests                       ]   |   • Installing azure-mgmt-datalake-nspkg (3.0.1)
+[CI/Tests                       ]   |   • Installing azure-storage-common (2.1.0)
+[CI/Tests                       ]   |   • Installing msal-extensions (1.0.0)
+[CI/Tests                       ]   |   • Installing msrestazure (0.6.4)
+[CI/Tests                       ]   |   • Updating pytest-recording (0.12.1 -> 0.13.2)
+[CI/Tests                       ]   |   • Installing tzlocal (4.2)
+[CI/Tests                       ]   |   • Installing applicationinsights (0.11.10)
+[CI/Tests                       ]   |   • Installing apscheduler (3.9.1.post1)
+[CI/Tests                       ]   |   • Installing azure-cosmos (3.2.0)
+[CI/Tests                       ]   |   • Installing azure-cosmosdb-table (1.0.6)
+[CI/Tests                       ]   |   • Installing azure-functions (1.12.0)
+[CI/Tests                       ]   |   • Installing azure-graphrbac (0.61.1)
+[CI/Tests                       ]   |   • Installing azure-identity (1.12.0)
+[CI/Tests                       ]   |   • Installing azure-keyvault (4.2.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-advisor (9.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-apimanagement (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-applicationinsights (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-authorization (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-batch (15.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-cdn (10.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-cognitiveservices (11.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-compute (19.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-containerinstance (7.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-containerregistry (8.0.0b1)
+[CI/Tests                       ]   |   • Installing azure-mgmt-containerservice (15.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-cosmosdb (6.4.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-costmanagement (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-databricks (1.0.0b1)
+[CI/Tests                       ]   |   • Installing azure-mgmt-datafactory (1.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-datalake-store (0.5.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-dns (8.0.0b1)
+[CI/Tests                       ]   |   • Installing azure-mgmt-eventgrid (8.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-eventhub (8.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-frontdoor (1.0.1)
+[CI/Tests                       ]   |   • Installing azure-mgmt-hdinsight (7.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-iothub (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-keyvault (8.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-logic (9.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-managementgroups (1.0.0b1)
+[CI/Tests                       ]   |   • Installing azure-mgmt-monitor (2.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-msi (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-network (17.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-policyinsights (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-rdbms (8.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-redis (12.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-resource (16.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-resourcegraph (7.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-search (8.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-security (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-servicefabric (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-sql (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-storage (17.1.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-subscription (1.0.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-trafficmanager (0.51.0)
+[CI/Tests                       ]   |   • Installing azure-mgmt-web (2.0.0)
+[CI/Tests                       ]   |   • Installing azure-storage-blob (12.14.1)
+[CI/Tests                       ]   |   • Installing azure-storage-file (2.1.0)
+[CI/Tests                       ]   |   • Installing azure-storage-file-share (12.10.1)
+[CI/Tests                       ]   |   • Installing azure-storage-queue (12.5.0)
+[CI/Tests                       ]   |   • Installing distlib (0.3.6)
+[CI/Tests                       ]   |   • Installing netaddr (0.7.20)
+[CI/Tests                       ]   |   • Installing parameterized (0.7.5)
+[CI/Tests                       ]   |   • Installing vcrpy-unittest (0.1.7)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_azure (0.7.20)
+[CI/Tests                       ]   | Install tools/c7n_gcp
+[CI/Tests                       ]   | Installing dependencies from lock file
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Package operations: 21 installs, 13 updates, 0 removals
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   |   • Installing protobuf (4.21.12)
+[CI/Tests                       ]   |   • Installing googleapis-common-protos (1.57.0)
+[CI/Tests                       ]   |   • Installing grpcio (1.49.1)
+[CI/Tests                       ]   |   • Updating multidict (6.0.3 -> 6.1.0)
+[CI/Tests                       ]   |   • Updating exceptiongroup (1.2.2 -> 1.0.4)
+[CI/Tests                       ]   |   • Installing grpcio-status (1.49.1)
+[CI/Tests                       ]   |   • Updating iniconfig (2.0.0 -> 1.1.1)
+[CI/Tests                       ]   |   • Updating packaging (24.1 -> 22.0)
+[CI/Tests                       ]   |   • Updating pluggy (1.5.0 -> 1.0.0)
+[CI/Tests                       ]   |   • Installing pyparsing (3.0.9)
+[CI/Tests                       ]   |   • Updating tomli (2.0.2 -> 2.0.1)
+[CI/Tests                       ]   |   • Updating wrapt (1.14.1 -> 1.16.0)
+[CI/Tests                       ]   |   • Updating yarl (1.8.2 -> 1.17.1)
+[CI/Tests                       ]   |   • Updating execnet (2.0.2 -> 1.9.0)
+[CI/Tests                       ]   |   • Installing google-api-core (2.10.2)
+[CI/Tests                       ]   |   • Installing google-crc32c (1.5.0)
+[CI/Tests                       ]   |   • Installing httplib2 (0.21.0)
+[CI/Tests                       ]   |   • Installing proto-plus (1.22.1)
+[CI/Tests                       ]   |   • Updating pytest (8.3.3 -> 7.2.0)
+[CI/Tests                       ]   |   • Updating vcrpy (4.2.1 -> 6.0.2)
+[CI/Tests                       ]   |   • Installing google-auth-httplib2 (0.1.0)
+[CI/Tests                       ]   |   • Installing google-cloud-appengine-logging (1.1.6)
+[CI/Tests                       ]   |   • Installing google-cloud-audit-log (0.2.4)
+[CI/Tests                       ]   |   • Installing google-cloud-core (2.3.2)
+[CI/Tests                       ]   |   • Installing google-resumable-media (2.4.0)
+[CI/Tests                       ]   |   • Installing grpc-google-iam-v1 (0.12.4)
+[CI/Tests                       ]   |   • Updating pytest-xdist (3.3.1 -> 3.1.0)
+[CI/Tests                       ]   |   • Installing uritemplate (4.1.1)
+[CI/Tests                       ]   |   • Installing google-api-python-client (2.70.0)
+[CI/Tests                       ]   |   • Installing google-cloud-logging (3.3.1)
+[CI/Tests                       ]   |   • Installing google-cloud-monitoring (2.11.3)
+[CI/Tests                       ]   |   • Installing google-cloud-storage (1.44.0)
+[CI/Tests                       ]   |   • Installing pyrate-limiter (2.8.4)
+[CI/Tests                       ]   |   • Updating pytest-terraform (0.6.6 -> 0.6.4)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | Installing the current project: c7n_gcp (0.4.20)
+[CI/Tests                       ]   ✅  Success - Main Install Deps
+[CI/Tests                       ] ⭐ Run Main Test
+[CI/Tests                       ]   🐳  docker exec cmd=[bash --noprofile --norc -e -o pipefail /var/run/act/workflow/9.sh] user= workdir=
+[CI/Tests                       ]   | Running Coverage Test
+[CI/Tests                       ]   | ============================= test session starts ==============================
+[CI/Tests                       ]   | platform linux -- Python 3.10.15, pytest-7.2.0, pluggy-1.0.0
+[CI/Tests                       ]   | rootdir: /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox, configfile: pyproject.toml
+[CI/Tests                       ]   | plugins: terraform-0.6.4, cov-3.0.0, anyio-4.6.2.post1, recording-0.13.2, sugar-0.9.7, xdist-3.1.0
+[CI/Tests                       ]   | gw0 I / gw1 I / gw2 I / gw3 I / gw4 I / gw5 I / gw6 I / gw7 I / gw8 I / gw9 I
+[CI/Tests                       ]   | gw0 [3124] / gw1 [3124] / gw2 [3124] / gw3 [3124] / gw4 [3124] / gw5 [3124] / gw6 [3124] / gw7 [3124] / gw8 [3124] / gw9 [3124]
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | ........................................................................ [  2%]
+[CI/Tests                       ]   | ........................................................................ [  4%]
+[CI/Tests                       ]   | ........................................................................ [  6%]
+[CI/Tests                       ]   | ........................................................................ [  9%]
+[CI/Tests                       ]   | ........................................................................ [ 11%]
+[CI/Tests                       ]   | ........................................................................ [ 13%]
+[CI/Tests                       ]   | ........................................................................ [ 16%]
+[CI/Tests                       ]   | .................................................................ssssss. [ 18%]
+[CI/Tests                       ]   | ........................................................................ [ 20%]
+[CI/Tests                       ]   | ........................................................................ [ 23%]
+[CI/Tests                       ]   | ........................................................................ [ 25%]
+[CI/Tests                       ]   | ........................................................................ [ 27%]
+[CI/Tests                       ]   | ........................................................................ [ 29%]
+[CI/Tests                       ]   | ........................................................................ [ 32%]
+[CI/Tests                       ]   | ........................................................................ [ 34%]
+[CI/Tests                       ]   | ........................................................................ [ 36%]
+[CI/Tests                       ]   | ........................................................................ [ 39%]
+[CI/Tests                       ]   | ........................................................................ [ 41%]
+[CI/Tests                       ]   | ........................................................................ [ 43%]
+[CI/Tests                       ]   | ........................................................................ [ 46%]
+[CI/Tests                       ]   | ........................................................................ [ 48%]
+[CI/Tests                       ]   | ........................................................................ [ 50%]
+[CI/Tests                       ]   | ........................................................................ [ 52%]
+[CI/Tests                       ]   | ........................................................................ [ 55%]
+[CI/Tests                       ]   | ........................................................................ [ 57%]
+[CI/Tests                       ]   | ........................................................................ [ 59%]
+[CI/Tests                       ]   | ........................................................................ [ 62%]
+[CI/Tests                       ]   | ......................................................................... [ 64%]
+[CI/Tests                       ]   | ........................................................................ [ 66%]
+[CI/Tests                       ]   | ......................................................................... [ 69%]
+[CI/Tests                       ]   | ........................................................................ [ 71%]
+[CI/Tests                       ]   | ........................................................................ [ 73%]
+[CI/Tests                       ]   | ........................................................................ [ 76%]
+[CI/Tests                       ]   | ........................................................................ [ 78%]
+[CI/Tests                       ]   | ........................................................................ [ 80%]
+[CI/Tests                       ]   | ........................................................................ [ 83%]
+[CI/Tests                       ]   | ........................................................................ [ 85%]
+[CI/Tests                       ]   | ........................................................................ [ 87%]
+[CI/Tests                       ]   | ........................................................................ [ 89%]
+[CI/Tests                       ]   | ........................................................................ [ 92%]
+[CI/Tests                       ]   | ......................................................................... [ 94%]
+[CI/Tests                       ]   | ........................................................................ [ 96%]
+[CI/Tests                       ]   | ......................................................................... [ 99%]
+[CI/Tests                       ]   | ..........gw6 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw6 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw1 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw1 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw0 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw0 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | .gw4 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw4 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw2 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw2 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | .........gw8 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw8 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw7 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | gw7 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | ..gw3 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw3 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | ..                                                 [100%]gw5 worker session down cleanup s3_ownership
+[CI/Tests                       ]   | gw5 worker session down cleanup elasticsearch_cross_cluster_search_connections
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | ==================================== ERRORS ====================================
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_azure.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_azure.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_azure.py:12: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.azure_mailer import deploy
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ______ ERROR collecting tools/c7n_mailer/tests/test_azure_mailer_utils.py ______
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_azure_mailer_utils.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_azure_mailer_utils.py:6: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.azure_mailer.utils import azure_decrypt
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ___________ ERROR collecting tools/c7n_mailer/tests/test_datadog.py ____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_datadog.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_datadog.py:8: in <module>
+[CI/Tests                       ]   |     from common import SQS_MESSAGE_2
+[CI/Tests                       ]   | tools/c7n_mailer/tests/common.py:6: in <module>
+[CI/Tests                       ]   |     import fakeredis
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'fakeredis'
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_email.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_email.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_email.py:9: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.email_delivery import EmailDelivery
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | _____________ ERROR collecting tools/c7n_mailer/tests/test_gcp.py ______________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_gcp.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_gcp.py:8: in <module>
+[CI/Tests                       ]   |     from common import (
+[CI/Tests                       ]   | tools/c7n_mailer/tests/common.py:6: in <module>
+[CI/Tests                       ]   |     import fakeredis
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'fakeredis'
+[CI/Tests                       ]   | _______ ERROR collecting tools/c7n_mailer/tests/test_gcp_mailer_utils.py _______
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_gcp_mailer_utils.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_gcp_mailer_utils.py:6: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.gcp_mailer.utils import gcp_decrypt, CACHE
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | _____________ ERROR collecting tools/c7n_mailer/tests/test_ldap.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_ldap.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_ldap.py:6: in <module>
+[CI/Tests                       ]   |     from common import get_ldap_lookup, PETER, BILL
+[CI/Tests                       ]   | tools/c7n_mailer/tests/common.py:6: in <module>
+[CI/Tests                       ]   |     import fakeredis
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'fakeredis'
+[CI/Tests                       ]   | _____________ ERROR collecting tools/c7n_mailer/tests/test_misc.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_misc.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_misc.py:9: in <module>
+[CI/Tests                       ]   |     from c7n_mailer import replay
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_schema.py ____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_schema.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_schema.py:6: in <module>
+[CI/Tests                       ]   |     import c7n_mailer.cli as cli
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_slack.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_slack.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_slack.py:9: in <module>
+[CI/Tests                       ]   |     from common import RESOURCE_3, SQS_MESSAGE_5
+[CI/Tests                       ]   | tools/c7n_mailer/tests/common.py:6: in <module>
+[CI/Tests                       ]   |     import fakeredis
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'fakeredis'
+[CI/Tests                       ]   | ________ ERROR collecting tools/c7n_mailer/tests/test_smtp_delivery.py _________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_smtp_delivery.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_smtp_delivery.py:9: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.smtp_delivery import SmtpDelivery
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | _____________ ERROR collecting tools/c7n_mailer/tests/test_sns.py ______________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_sns.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_sns.py:8: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.sns_delivery import SnsDelivery
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_splunk.py ____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_splunk.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_splunk.py:11: in <module>
+[CI/Tests                       ]   |     from c7n_mailer.splunk_delivery import SplunkHecDelivery
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | ____________ ERROR collecting tools/c7n_mailer/tests/test_utils.py _____________
+[CI/Tests                       ]   | ImportError while importing test module '/Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/tools/c7n_mailer/tests/test_utils.py'.
+[CI/Tests                       ]   | Hint: make sure your test modules/packages have valid Python names.
+[CI/Tests                       ]   | Traceback:
+[CI/Tests                       ]   | /opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/importlib/__init__.py:126: in import_module
+[CI/Tests                       ]   |     return _bootstrap._gcd_import(name[level:], package, level)
+[CI/Tests                       ]   | tools/c7n_mailer/tests/test_utils.py:15: in <module>
+[CI/Tests                       ]   |     import c7n_mailer
+[CI/Tests                       ]   | E   ModuleNotFoundError: No module named 'c7n_mailer'
+[CI/Tests                       ]   | =============================== warnings summary ===============================
+[CI/Tests                       ]   | .venv/lib/python3.10/site-packages/pytest_cov/plugin.py:256: 11 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/pytest_cov/plugin.py:256: PytestDeprecationWarning: The hookimpl CovPlugin.pytest_configure_node uses old-style configuration options (marks or attributes).
+[CI/Tests                       ]   |   Please use the pytest.hookimpl(optionalhook=True) decorator instead
+[CI/Tests                       ]   |    to configure the hooks.
+[CI/Tests                       ]   |    See https://docs.pytest.org/en/latest/deprecations.html#configuring-hook-specs-impls-using-markers
+[CI/Tests                       ]   |     def pytest_configure_node(self, node):
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | .venv/lib/python3.10/site-packages/pytest_cov/plugin.py:265: 11 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/pytest_cov/plugin.py:265: PytestDeprecationWarning: The hookimpl CovPlugin.pytest_testnodedown uses old-style configuration options (marks or attributes).
+[CI/Tests                       ]   |   Please use the pytest.hookimpl(optionalhook=True) decorator instead
+[CI/Tests                       ]   |    to configure the hooks.
+[CI/Tests                       ]   |    See https://docs.pytest.org/en/latest/deprecations.html#configuring-hook-specs-impls-using-markers
+[CI/Tests                       ]   |     def pytest_testnodedown(self, node, error):
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | .venv/lib/python3.10/site-packages/xdist/plugin.py:227: 11 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/xdist/plugin.py:227: DeprecationWarning: The --rsyncdir command line argument and rsyncdirs config variable are deprecated.
+[CI/Tests                       ]   |   The rsync feature will be removed in pytest-xdist 4.0.
+[CI/Tests                       ]   |     config.issue_config_time_warning(warning, 2)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_ec2.py: 28 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/c7n/resources/ec2.py:396: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+[CI/Tests                       ]   |     if LooseVersion(botocore.__version__) < LooseVersion(botocore_min_version):
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/c7n/filters/core.py:769: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+[CI/Tests                       ]   |     s = ComparableVersion(sentinel)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   | tests/test_filters.py::TestValueTypes::test_version
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/c7n/filters/core.py:770: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+[CI/Tests                       ]   |     v = ComparableVersion(value)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_filters.py: 12 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/setuptools/_distutils/version.py:346: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+[CI/Tests                       ]   |     other = LooseVersion(other)
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_iam.py::UserCredentialReportTest::test_access_key_last_service
+[CI/Tests                       ]   | tests/test_iam.py::UserCredentialReportTest::test_credential_access_key_multifilter_delete
+[CI/Tests                       ]   | tests/test_iam.py::UserCredentialReportTest::test_old_console_users
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/urllib3/connection.py:382: SystemTimeWarning: System time is way off (before 2022-01-01). This will probably lead to SSL verification errors
+[CI/Tests                       ]   |     warnings.warn(
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tests/test_rds.py: 2114 warnings
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/c7n/resources/rds.py:231: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+[CI/Tests                       ]   |     if LooseVersion(t['EngineVersion']) > LooseVersion(
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tools/c7n_azure/tests_azure/tests_resources/test_keyvault.py::KeyVaultTest::test_whitelist
+[CI/Tests                       ]   | tools/c7n_azure/tests_azure/tests_resources/test_datalake.py::DataLakeTest::test_find_by_name
+[CI/Tests                       ]   | tools/c7n_azure/tests_azure/tests_resources/test_traffic_manager.py::TrafficManagerTest::test_find_by_name
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/urllib3/util/retry.py:455: DeprecationWarning: Using 'method_whitelist' with Retry is deprecated and will be removed in v2.0. Use 'allowed_methods' instead
+[CI/Tests                       ]   |     warnings.warn(
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | tools/c7n_gcp/tests/test_resourcemanager.py::ProjectTest::test_compute_meta_filter
+[CI/Tests                       ]   | tools/c7n_tencentcloud/tests/test_tc_cos.py::TestCos::test_bucket_lifecycle
+[CI/Tests                       ]   |   /Users/giannattasiog/Documents/Area/Github/Work/CloudCustodian/Sandbox/cloud-custodian-sandbox/cloud-custodian-sandbox/.venv/lib/python3.10/site-packages/jmespath/lexer.py:169: PendingDeprecationWarning: deprecated string literal syntax
+[CI/Tests                       ]   |     warnings.warn("deprecated string literal syntax",
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | ---------- coverage: platform linux, python 3.10.15-final-0 ----------
+[CI/Tests                       ]   | Name                                                                  Stmts   Miss  Cover
+[CI/Tests                       ]   | -----------------------------------------------------------------------------------------
+[CI/Tests                       ]   | c7n/__init__.py                                                           0      0   100%
+[CI/Tests                       ]   | c7n/actions/__init__.py                                                   8      0   100%
+[CI/Tests                       ]   | c7n/actions/autoscaling.py                                              109      9    92%
+[CI/Tests                       ]   | c7n/actions/autotag.py                                                   91      6    93%
+[CI/Tests                       ]   | c7n/actions/core.py                                                      46      0   100%
+[CI/Tests                       ]   | c7n/actions/invoke.py                                                    43      3    93%
+[CI/Tests                       ]   | c7n/actions/metric.py                                                    44      4    91%
+[CI/Tests                       ]   | c7n/actions/network.py                                                  101     10    90%
+[CI/Tests                       ]   | c7n/actions/notify.py                                                   135     10    93%
+[CI/Tests                       ]   | c7n/actions/policy.py                                                    46      1    98%
+[CI/Tests                       ]   | c7n/actions/webhook.py                                                   67      4    94%
+[CI/Tests                       ]   | c7n/cache.py                                                            105      2    98%
+[CI/Tests                       ]   | c7n/cli.py                                                              173      7    96%
+[CI/Tests                       ]   | c7n/commands.py                                                         373     39    90%
+[CI/Tests                       ]   | c7n/config.py                                                            23      0   100%
+[CI/Tests                       ]   | c7n/credentials.py                                                       60      5    92%
+[CI/Tests                       ]   | c7n/ctx.py                                                               78      2    97%
+[CI/Tests                       ]   | c7n/cwe.py                                                               58      5    91%
+[CI/Tests                       ]   | c7n/data.py                                                              95      0   100%
+[CI/Tests                       ]   | c7n/deprecated.py                                                       200      5    98%
+[CI/Tests                       ]   | c7n/element.py                                                           23      0   100%
+[CI/Tests                       ]   | c7n/exceptions.py                                                        19      2    89%
+[CI/Tests                       ]   | c7n/executor.py                                                          42      6    86%
+[CI/Tests                       ]   | c7n/filters/__init__.py                                                   8      0   100%
+[CI/Tests                       ]   | c7n/filters/backup.py                                                    41      0   100%
+[CI/Tests                       ]   | c7n/filters/config.py                                                    60      2    97%
+[CI/Tests                       ]   | c7n/filters/core.py                                                     635     52    92%
+[CI/Tests                       ]   | c7n/filters/cost.py                                                      65     13    80%
+[CI/Tests                       ]   | c7n/filters/health.py                                                    55      1    98%
+[CI/Tests                       ]   | c7n/filters/iamaccess.py                                                195     20    90%
+[CI/Tests                       ]   | c7n/filters/iamanalyzer.py                                               56      3    95%
+[CI/Tests                       ]   | c7n/filters/kms.py                                                       32      1    97%
+[CI/Tests                       ]   | c7n/filters/metrics.py                                                  125      4    97%
+[CI/Tests                       ]   | c7n/filters/missing.py                                                   28      6    79%
+[CI/Tests                       ]   | c7n/filters/multiattr.py                                                 33      3    91%
+[CI/Tests                       ]   | c7n/filters/offhours.py                                                 242      3    99%
+[CI/Tests                       ]   | c7n/filters/policystatement.py                                           44      3    93%
+[CI/Tests                       ]   | c7n/filters/related.py                                                  132     12    91%
+[CI/Tests                       ]   | c7n/filters/revisions.py                                                107     30    72%
+[CI/Tests                       ]   | c7n/filters/vpc.py                                                      163     10    94%
+[CI/Tests                       ]   | c7n/handler.py                                                           69      3    96%
+[CI/Tests                       ]   | c7n/loader.py                                                           151      9    94%
+[CI/Tests                       ]   | c7n/log.py                                                              144     20    86%
+[CI/Tests                       ]   | c7n/lookup.py                                                            31      0   100%
+[CI/Tests                       ]   | c7n/manager.py                                                          101     10    90%
+[CI/Tests                       ]   | c7n/mu.py                                                              1063    115    89%
+[CI/Tests                       ]   | c7n/output.py                                                           315     23    93%
+[CI/Tests                       ]   | c7n/policy.py                                                           700     58    92%
+[CI/Tests                       ]   | c7n/provider.py                                                          80     11    86%
+[CI/Tests                       ]   | c7n/query.py                                                            513     28    95%
+[CI/Tests                       ]   | c7n/registry.py                                                          52      0   100%
+[CI/Tests                       ]   | c7n/reports/__init__.py                                                   1      0   100%
+[CI/Tests                       ]   | c7n/reports/csvout.py                                                   168     37    78%
+[CI/Tests                       ]   | c7n/resolver.py                                                         114      8    93%
+[CI/Tests                       ]   | c7n/resource_metadata_update_with_email.py                               71     33    54%
+[CI/Tests                       ]   | c7n/resources/__init__.py                                                61      1    98%
+[CI/Tests                       ]   | c7n/resources/account.py                                                938     87    91%
+[CI/Tests                       ]   | c7n/resources/acm.py                                                     37      1    97%
+[CI/Tests                       ]   | c7n/resources/airflow.py                                                 44      4    91%
+[CI/Tests                       ]   | c7n/resources/ami.py                                                    296     25    92%
+[CI/Tests                       ]   | c7n/resources/apigw.py                                                  550     28    95%
+[CI/Tests                       ]   | c7n/resources/appelb.py                                                 510     20    96%
+[CI/Tests                       ]   | c7n/resources/appflow.py                                                 44      0   100%
+[CI/Tests                       ]   | c7n/resources/appsync.py                                                 85      0   100%
+[CI/Tests                       ]   | c7n/resources/artifact.py                                                85      9    89%
+[CI/Tests                       ]   | c7n/resources/asg.py                                                    837     70    92%
+[CI/Tests                       ]   | c7n/resources/aws.py                                                    418     37    91%
+[CI/Tests                       ]   | c7n/resources/awslambda.py                                              419     48    89%
+[CI/Tests                       ]   | c7n/resources/backup.py                                                  70      6    91%
+[CI/Tests                       ]   | c7n/resources/batch.py                                                   82      0   100%
+[CI/Tests                       ]   | c7n/resources/cfn.py                                                     84      4    95%
+[CI/Tests                       ]   | c7n/resources/cloudfront.py                                             358     48    87%
+[CI/Tests                       ]   | c7n/resources/cloudsearch.py                                             45      1    98%
+[CI/Tests                       ]   | c7n/resources/cloudtrail.py                                             139      8    94%
+[CI/Tests                       ]   | c7n/resources/code.py                                                   222     16    93%
+[CI/Tests                       ]   | c7n/resources/cognito.py                                                 61      4    93%
+[CI/Tests                       ]   | c7n/resources/config.py                                                 103      0   100%
+[CI/Tests                       ]   | c7n/resources/connect.py                                                 27      0   100%
+[CI/Tests                       ]   | c7n/resources/cw.py                                                     438     18    96%
+[CI/Tests                       ]   | c7n/resources/datapipeline.py                                            86     16    81%
+[CI/Tests                       ]   | c7n/resources/directconnect.py                                           15      0   100%
+[CI/Tests                       ]   | c7n/resources/directory.py                                               61      4    93%
+[CI/Tests                       ]   | c7n/resources/dlm.py                                                     34      0   100%
+[CI/Tests                       ]   | c7n/resources/dms.py                                                    138     11    92%
+[CI/Tests                       ]   | c7n/resources/dynamodb.py                                               373     47    87%
+[CI/Tests                       ]   | c7n/resources/ebs.py                                                    735     90    88%
+[CI/Tests                       ]   | c7n/resources/ec2.py                                                   1039     93    91%
+[CI/Tests                       ]   | c7n/resources/ecr.py                                                    252     31    88%
+[CI/Tests                       ]   | c7n/resources/ecs.py                                                    451     35    92%
+[CI/Tests                       ]   | c7n/resources/efs.py                                                    190     13    93%
+[CI/Tests                       ]   | c7n/resources/eks.py                                                    158     11    93%
+[CI/Tests                       ]   | c7n/resources/elasticache.py                                            245     31    87%
+[CI/Tests                       ]   | c7n/resources/elasticbeanstalk.py                                        75      2    97%
+[CI/Tests                       ]   | c7n/resources/elasticsearch.py                                          283     15    95%
+[CI/Tests                       ]   | c7n/resources/elb.py                                                    337     19    94%
+[CI/Tests                       ]   | c7n/resources/emr.py                                                    181      5    97%
+[CI/Tests                       ]   | c7n/resources/firewall.py                                                36      0   100%
+[CI/Tests                       ]   | c7n/resources/fis.py                                                     49      1    98%
+[CI/Tests                       ]   | c7n/resources/fsx.py                                                    187      5    97%
+[CI/Tests                       ]   | c7n/resources/gamelift.py                                                23      0   100%
+[CI/Tests                       ]   | c7n/resources/glacier.py                                                 83     11    87%
+[CI/Tests                       ]   | c7n/resources/glue.py                                                   419     31    93%
+[CI/Tests                       ]   | c7n/resources/health.py                                                  83      9    89%
+[CI/Tests                       ]   | c7n/resources/hsm.py                                                     76      1    99%
+[CI/Tests                       ]   | c7n/resources/iam.py                                                   1265     81    94%
+[CI/Tests                       ]   | c7n/resources/iot.py                                                     12      0   100%
+[CI/Tests                       ]   | c7n/resources/kafka.py                                                   68      2    97%
+[CI/Tests                       ]   | c7n/resources/kinesis.py                                                208      9    96%
+[CI/Tests                       ]   | c7n/resources/kms.py                                                    219     21    90%
+[CI/Tests                       ]   | c7n/resources/lakeformation.py                                           41      2    95%
+[CI/Tests                       ]   | c7n/resources/lightsail.py                                               26      0   100%
+[CI/Tests                       ]   | c7n/resources/ml.py                                                      35      3    91%
+[CI/Tests                       ]   | c7n/resources/mq.py                                                      85      6    93%
+[CI/Tests                       ]   | c7n/resources/opsworks.py                                                93     12    87%
+[CI/Tests                       ]   | c7n/resources/qldb.py                                                    38      0   100%
+[CI/Tests                       ]   | c7n/resources/quotas.py                                                 175     22    87%
+[CI/Tests                       ]   | c7n/resources/rds.py                                                    876     72    92%
+[CI/Tests                       ]   | c7n/resources/rdscluster.py                                             315     11    97%
+[CI/Tests                       ]   | c7n/resources/rdsparamgroup.py                                          127      5    96%
+[CI/Tests                       ]   | c7n/resources/redshift.py                                               466     27    94%
+[CI/Tests                       ]   | c7n/resources/resource_map.py                                             1      0   100%
+[CI/Tests                       ]   | c7n/resources/route53.py                                                299     24    92%
+[CI/Tests                       ]   | c7n/resources/s3.py                                                    1500    220    85%
+[CI/Tests                       ]   | c7n/resources/s3control.py                                               73      6    92%
+[CI/Tests                       ]   | c7n/resources/sagemaker.py                                              333     29    91%
+[CI/Tests                       ]   | c7n/resources/sar.py                                                     48      3    94%
+[CI/Tests                       ]   | c7n/resources/secretsmanager.py                                          65      1    98%
+[CI/Tests                       ]   | c7n/resources/securityhub.py                                            315     53    83%
+[CI/Tests                       ]   | c7n/resources/servicecatalog.py                                          91      0   100%
+[CI/Tests                       ]   | c7n/resources/sfn.py                                                     70      0   100%
+[CI/Tests                       ]   | c7n/resources/shield.py                                                  90     10    89%
+[CI/Tests                       ]   | c7n/resources/simpledb.py                                                33      0   100%
+[CI/Tests                       ]   | c7n/resources/snowball.py                                                22      0   100%
+[CI/Tests                       ]   | c7n/resources/sns.py                                                    191     19    90%
+[CI/Tests                       ]   | c7n/resources/sqs.py                                                    214     12    94%
+[CI/Tests                       ]   | c7n/resources/ssm.py                                                    337     18    95%
+[CI/Tests                       ]   | c7n/resources/storagegw.py                                               13      0   100%
+[CI/Tests                       ]   | c7n/resources/support.py                                                 18      2    89%
+[CI/Tests                       ]   | c7n/resources/swf.py                                                     17      0   100%
+[CI/Tests                       ]   | c7n/resources/transfer.py                                               122     15    88%
+[CI/Tests                       ]   | c7n/resources/vpc.py                                                   1397     94    93%
+[CI/Tests                       ]   | c7n/resources/waf.py                                                     76      1    99%
+[CI/Tests                       ]   | c7n/resources/workspaces.py                                             203     11    95%
+[CI/Tests                       ]   | c7n/schema.py                                                           289     10    97%
+[CI/Tests                       ]   | c7n/sqsexec.py                                                           91     21    77%
+[CI/Tests                       ]   | c7n/structure.py                                                         53      4    92%
+[CI/Tests                       ]   | c7n/tags.py                                                             540     25    95%
+[CI/Tests                       ]   | c7n/testing.py                                                          171     17    90%
+[CI/Tests                       ]   | c7n/ufuncs/__init__.py                                                    0      0   100%
+[CI/Tests                       ]   | c7n/ufuncs/s3crypt.py                                                    50      6    88%
+[CI/Tests                       ]   | c7n/utils.py                                                            522     26    95%
+[CI/Tests                       ]   | c7n/varfmt.py                                                            32      1    97%
+[CI/Tests                       ]   | c7n/version.py                                                            1      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/__init__.py                                     9      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/__init__.py                             0      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/base.py                                66      8    88%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/delete.py                              13      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/firewall.py                            42      1    98%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/lock.py                                23      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/logic_app.py                           14      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/notify.py                              33      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/actions/tagging.py                            236     11    95%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/azure_events.py                                27      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/constants.py                                   66      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/container_host/__init__.py                      0      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/container_host/host.py                        221     13    94%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/container_host/modes.py                        34      6    82%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/entry.py                                        5      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/filters.py                                    354     24    93%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/function.py                                    21      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/function_package.py                           112     16    86%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/functionapp_utils.py                           70      1    99%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/handler.py                                     46      4    91%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/output.py                                      98     18    82%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/policy.py                                     205     46    78%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provider.py                                    47      3    94%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/__init__.py                        0      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/app_insights.py                   17      2    88%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/app_service_plan.py               26      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/autoscale.py                      11      1    91%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/deployment_unit.py                38      7    82%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/function_app.py                   42      6    86%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/resource_group.py                 15      4    73%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/provisioning/storage_account.py                17      2    88%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/query.py                                      247     24    90%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/__init__.py                           0      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/access_control.py                   114     21    82%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/aci.py                               10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/advisor.py                           11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/apimanagement.py                     31      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/app_gateway.py                       11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/appserviceplan.py                    57     13    77%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/arm.py                               61      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/batch.py                             10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/cdn.py                               11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/cognitive_service.py                 11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/container_registry.py                11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/container_service.py                 11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/cosmos_db.py                        280     24    91%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/cost_management_export.py            55      1    98%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/data_factory.py                      10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/databricks.py                        11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/datalake_store.py                    10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/defender.py                          41      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/disk.py                              11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/dns_zone.py                          11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/event_hub.py                         25      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/event_subscription.py                19      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/front_door.py                        11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/generic_arm_resource.py              54      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/hdinsight.py                         20      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/image.py                             10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/iot_hub.py                           11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/k8s_service.py                       11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/key_vault.py                        118      9    92%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/key_vault_certificate.py             17      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/key_vault_keys.py                    51      4    92%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/load_balancer.py                     17      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/logic_app.py                         11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/mysql.py                             11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/network_interface.py                 38      2    95%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/network_security_group.py           119     11    91%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/policy_assignments.py                11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/postgresql_database.py               15      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/postgresql_server.py                 36      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/public_ip.py                         12      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/record_set.py                        15      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/redis.py                             11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/resource_map.py                       1      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/resourcegroup.py                     31      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/route_table.py                       11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/search.py                            11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/service_fabric.py                    20      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/sqldatabase.py                      252     17    93%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/sqlserver.py                        149      5    97%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/storage.py                          181      3    98%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/storage_container.py                 38      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/subscription.py                      52      3    94%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/traffic_manager.py                   11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/vm.py                                79      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/vmss.py                              11      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/vnet.py                              10      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/resources/web_app.py                           30      0   100%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/session.py                                    186     10    95%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/storage_utils.py                              120     16    87%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/tags.py                                        50      1    98%
+[CI/Tests                       ]   | tools/c7n_azure/c7n_azure/utils.py                                      393     33    92%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/__init__.py                                         0      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/__init__.py                                 5      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/core.py                                    66      5    92%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/cscc.py                                    92      6    93%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/iampolicy.py                               52      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/labels.py                                  81      5    94%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/actions/notify.py                                  25      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/client.py                                         162     26    84%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/entry.py                                            7      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/filters/__init__.py                                 3      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/filters/iampolicy.py                               94     22    77%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/filters/labels.py                                  52      9    83%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/filters/metrics.py                                 96      3    97%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/filters/sccfindings.py                             50      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/handler.py                                         36      9    75%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/mu.py                                             415     61    85%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/output.py                                          74     17    77%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/policy.py                                         116     18    84%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/provider.py                                        18      2    89%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/query.py                                          285     16    94%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/__init__.py                               0      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/appengine.py                             87      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/bigquery.py                              90      1    99%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/build.py                                 15      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/cloudbilling.py                          21      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/compute.py                              252      3    99%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/dataflow.py                              36      3    92%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/deploymentmanager.py                     26      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/dns.py                                   46      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/function.py                              34      1    97%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/gke.py                                   67      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/iam.py                                  121      2    98%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/kms.py                                  102      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/loadbalancer.py                         297      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/logging.py                               60      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/mlengine.py                              38      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/network.py                              156      3    98%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/pubsub.py                                60      3    95%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/resource_map.py                           1      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/resourcemanager.py                      196      3    98%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/service.py                               30      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/source.py                                17      0   100%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/spanner.py                               74      1    99%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/sql.py                                  130      1    99%
+[CI/Tests                       ]   | tools/c7n_gcp/c7n_gcp/resources/storage.py                               84     21    75%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/__init__.py                                       0      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/actions/__init__.py                               0      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/actions/core.py                                  81     13    84%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/actions/labels.py                                15      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/actions/shared.py                                 6      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/cli.py                                           55      5    91%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/client.py                                        16      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/entry.py                                          9      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/exceptions.py                                     3      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/filters.py                                        2      2     0%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/policy.py                                        99     11    89%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/provider.py                                      19      2    89%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/query.py                                        106      8    92%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/__init__.py                             0      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/apps/__init__.py                        0      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/apps/daemonset.py                      11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/apps/deployment.py                     11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/apps/replicaset.py                     11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/apps/statefulset.py                    11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/__init__.py                        0      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/configmap.py                      11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/namespace.py                      12      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/node.py                           12      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/pod.py                            11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/replicationcontroller.py          11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/secret.py                         11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/service.py                        11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/serviceaccount.py                 11      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/core/volume.py                         21      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/crd.py                                 13      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/rbac/role.py                           22      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/resources/resource_map.py                         1      0   100%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/server.py                                       100      3    97%
+[CI/Tests                       ]   | tools/c7n_kube/c7n_kube/utils.py                                         14      2    86%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/cli.py                                           30     30     0%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/core.py                                         126    126     0%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/entry.py                                          2      2     0%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/filters.py                                       63     63     0%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/output.py                                       140    140     0%
+[CI/Tests                       ]   | tools/c7n_left/c7n_left/utils.py                                         13     13     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/__init__.py                                   0      0   100%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/__init__.py                      2      2     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/azure_queue_processor.py        55     55     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/deploy.py                       64     64     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/function.py                     12     12     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/handle.py                       12     12     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/sendgrid_delivery.py            61     61     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/azure_mailer/utils.py                         8      8     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/cli.py                                       91     91     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/datadog_delivery.py                          53     53     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/deploy.py                                    34     34     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/email_delivery.py                           177    177     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/gcp_mailer/__init__.py                        0      0   100%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/gcp_mailer/gcp_queue_processor.py            38     38     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/gcp_mailer/utils.py                          19     19     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/handle.py                                    30     30     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/jira_delivery.py                             53     53     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/ldap_lookup.py                              142    142     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/queue_processor_pubsub.py                    54     54     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/replay.py                                    81     81     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/slack_delivery.py                           119    119     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/smtp_delivery.py                             23     23     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/sns_delivery.py                              66     66     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/splunk_delivery.py                          122    122     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/sqs_queue_processor.py                       81     81     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/target.py                                    68     68     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/utils.py                                    272    272     0%
+[CI/Tests                       ]   | tools/c7n_mailer/c7n_mailer/utils_email.py                               48     48     0%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/__init__.py                       0      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/actions/__init__.py               1      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/actions/core.py                  17      3    82%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/actions/tags.py                 171     20    88%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/client.py                       100      4    96%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/entry.py                          5      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/filters/__init__.py               1      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/filters/metrics.py               94      5    95%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/output.py                         0      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/provider.py                      28      3    89%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/query.py                        178     11    94%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/__init__.py             0      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/ami.py                 36      3    92%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cam.py                272      8    97%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cbs.py                 58      3    95%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cbs_snapshot.py        21      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/clb.py                 90      5    94%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cls.py                 24      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cos.py                171     13    92%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/cvm.py                 72      1    99%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/elasticsearch.py       18      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/mysql.py               37      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/mysql_backup.py        27      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/nat_gateway.py         25      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/resource_map.py         1      0   100%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/security_group.py     107      4    96%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/tag.py                 17      1    94%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/tcr.py                 45      2    96%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/resources/vpc.py                 55      5    91%
+[CI/Tests                       ]   | tools/c7n_tencentcloud/c7n_tencentcloud/utils.py                         14      0   100%
+[CI/Tests                       ]   | -----------------------------------------------------------------------------------------
+[CI/Tests                       ]   | TOTAL                                                                 43962   5362    88%
+[CI/Tests                       ]   | 
+[CI/Tests                       ]   | pyyaml-include not found, !include tag will not be supported.
+[CI/Tests                       ]   | =========================== short test summary info ============================
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_azure.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_azure_mailer_utils.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_datadog.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_email.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_gcp.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_gcp_mailer_utils.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_ldap.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_misc.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_schema.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_slack.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_smtp_delivery.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_sns.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_splunk.py
+[CI/Tests                       ]   | ERROR tools/c7n_mailer/tests/test_utils.py
+[CI/Tests                       ]   | ==== 3118 passed, 7 skipped, 2203 warnings, 14 errors in 114.55s (0:01:54) =====
+[CI/Tests                       ]   | sys:1: ResourceWarning: unclosed <socket.socket fd=17, family=AddressFamily.AF_INET, type=SocketKind.SOCK_DGRAM, proto=0, laddr=('0.0.0.0', 0)>
+[CI/Tests                       ]   ❌  Failure - Main Test
+[CI/Tests                       ] exitcode '1': failure
+[CI/Tests                       ]   🐳  docker exec cmd=[/opt/acttoolcache/node/18.20.4/x64/bin/node /var/run/act/workflow/hashfiles/index.js] user= workdir=
+[CI/Tests                       ] 🏁  Job failed

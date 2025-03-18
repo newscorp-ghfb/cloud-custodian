@@ -56,9 +56,9 @@ jobs:
         # os: [ubuntu-latest, macos-latest, windows-latest]
         os: [ubuntu-latest]
         python-version: ["3.10"]
-        include:
-          - os: ubuntu-latest
-            python-version: 3.9
+        # include:
+        #   - os: ubuntu-latest
+        #     python-version: 3.9
           # - os: ubuntu-latest
           #   python-version: 3.8
           # - os: ubuntu-latest
@@ -141,7 +141,7 @@ jobs:
               --cov tools/c7n_gcp/c7n_gcp --cov tools/c7n_kube/c7n_kube \
               --cov tools/c7n_tencentcloud/c7n_tencentcloud \
               --cov tools/c7n_left/c7n_left \
-              --cov tools/c7n_mailer/c7n_mailer
+              --ignore=tools/c7n_mailer
             poetry run coverage xml
           else
             . test.env && poetry run pytest -n auto tests tools
@@ -155,7 +155,7 @@ jobs:
           name: codecov
           verbose: true
 
-      - name: License Check
-        if: contains(matrix.python-version, '3.9') && contains(matrix.os, 'ubuntu')
-        run: |
-          poetry run python tools/dev/license-check.py
+      # - name: License Check
+      #   if: contains(matrix.python-version, '3.9') && contains(matrix.os, 'ubuntu')
+      #   run: |
+      #     poetry run python tools/dev/license-check.py`

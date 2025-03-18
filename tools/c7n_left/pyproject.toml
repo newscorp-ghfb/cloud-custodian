@@ -17,7 +17,7 @@ classifiers = [
 c7n-left = 'c7n_left.cli:cli'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.10"
 click = ">=8.0"
 rich = "^12.5"
 tfparse = "^0.3"
