@@ -12,6 +12,7 @@ from .utils import (
     decrypt, get_resource_tag_targets, get_provider,
     get_aws_username_from_event, Providers)
 from .utils_email import get_mimetext_message, is_email
+from .dedup_dynamodb import dedup_check_and_write
 
 
 class EmailDelivery:
@@ -272,6 +273,18 @@ class EmailDelivery:
         return groupby_to_mimetext_map
 
     def send_c7n_email(self, sqs_message, email_to_addrs, mimetext_msg):
+        # Build deduplication key
+        policy = sqs_message.get('policy', {}).get('name', 'unknown')
+        account_id = sqs_message.get('account_id', sqs_message.get('account', 'unknown'))
+        account = sqs_message.get('account', 'unknown')
+        region = sqs_message.get('region', 'unknown')
+        recipient = ",".join(email_to_addrs)
+        partition_key = str(sqs_message.get('execution_start', 'default'))
+        dedup_id = f"email|{policy}|{account_id}|{account}|{region}|{recipient}"
+
+        if dedup_check_and_write(partition_key, dedup_id):
+            self.logger.info(f"Duplicate email suppressed for {dedup_id}")
+            return
         try:
             # if smtp_server is set in mailer.yml, send through smtp
             if 'smtp_server' in self.config:
