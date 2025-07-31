@@ -12,8 +12,6 @@ try:
     if DEDUP_TABLE_NAME:
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.Table(DEDUP_TABLE_NAME)
-        # Test the connection
-        table.table_status
         DEDUP_ENABLED = True
         logger.info(f"Deduplication enabled with table: {DEDUP_TABLE_NAME}")
     else:
