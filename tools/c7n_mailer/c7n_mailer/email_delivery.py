@@ -13,6 +13,7 @@ from .utils import (
     get_aws_username_from_event, Providers)
 from .utils_email import get_mimetext_message, is_email
 from .dedup_dynamodb import dedup_check_and_write
+from .okta_lookup import OktaLookup
 
 
 class EmailDelivery:
@@ -107,9 +108,10 @@ class EmailDelivery:
             ldap_uid_emails = ldap_uid_emails + ldap_emails_set
         return ldap_uid_emails
 
-    def get_resource_owner_emails_from_resource(self, sqs_message, resource):
-        if 'resource-owner' not in sqs_message['action'].get('to', []):
-            return []
+    def get_resource_owner_emails_from_resource(self, sqs_message, resource, enforce_resource_owner_check=True):
+        if enforce_resource_owner_check:
+            if 'resource-owner' not in sqs_message['action'].get('to', []):
+                return []
         resource_owner_tag_keys = self.config.get('contact_tags', [])
         resource_owner_tag_values = get_resource_tag_targets(resource, resource_owner_tag_keys)
         explicit_emails = self.get_valid_emails_from_list(resource_owner_tag_values)
@@ -184,8 +186,17 @@ class EmailDelivery:
                 sqs_message,
                 resource
             )
+            if 'resource-owner' in sqs_message['action'].get('to', []):
+                manager_emails = self.get_resource_owner_manager_emails_from_resource(sqs_message, ro_emails)
+            else:
+                ro_emails_for_manager = self.get_resource_owner_emails_from_resource(
+                    sqs_message,
+                    resource
+                    enforce_resource_owner_check = False
+                )
+                manager_emails = self.get_resource_owner_manager_emails_from_resource(sqs_message, ro_emails_for_manager)
 
-            resource_emails = resource_emails + ro_emails
+            resource_emails = resource_emails + ro_emails + manager_email
             # if 'owner_absent_contact' was specified in the policy and no resource
             # owner emails were found, add those addresses
             if len(ro_emails) < 1 and len(no_owner_targets) > 0:
@@ -330,3 +341,17 @@ class EmailDelivery:
             mimetext_msg.get('resource_count', str(len(sqs_message['resources']))),
             mimetext_msg.get('email_template', sqs_message['action'].get('template', 'default')),
             mimetext_msg.get('To')))
+
+    def get_resource_owner_manager_emails_from_resource(self, sqs_message, resource_owner_emails):
+        print(f"sqs_message: {sqs_message}")
+        if 'resource-owner-manager' not in sqs_message['action'].get('to', []):
+            return []
+
+        manager_emails = []
+        secret_config = SecretConfig(name="prod/okta/api_token_readonly", region="us-east-2")
+        okta = OktaLookup(domain="https://newscorp.okta.com", secret_config=secret_config)
+        for email in resource_owner_emails:
+            manager_email = okta.get_user_manager_email(email)
+            if manager_email:
+                manager_emails.append(manager_email)
+        return manager_emails
