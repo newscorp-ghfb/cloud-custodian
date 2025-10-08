@@ -191,12 +191,12 @@ class EmailDelivery:
             else:
                 ro_emails_for_manager = self.get_resource_owner_emails_from_resource(
                     sqs_message,
-                    resource
+                    resource,
                     enforce_resource_owner_check = False
                 )
                 manager_emails = self.get_resource_owner_manager_emails_from_resource(sqs_message, ro_emails_for_manager)
 
-            resource_emails = resource_emails + ro_emails + manager_email
+            resource_emails = resource_emails + ro_emails + manager_emails
             # if 'owner_absent_contact' was specified in the policy and no resource
             # owner emails were found, add those addresses
             if len(ro_emails) < 1 and len(no_owner_targets) > 0:
@@ -351,7 +351,7 @@ class EmailDelivery:
         secret_config = SecretConfig(name="prod/okta/api_token_readonly", region="us-east-2")
         okta = OktaLookup(domain="https://newscorp.okta.com", secret_config=secret_config)
         for email in resource_owner_emails:
-            manager_email = okta.get_user_manager_email(email)
-            if manager_email:
-                manager_emails.append(manager_email)
+            manager_emails = okta.get_user_manager_email(email)
+            if manager_emails:
+                manager_emails.append(manager_emails)
         return manager_emails
