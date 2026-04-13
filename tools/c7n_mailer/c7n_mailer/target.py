@@ -22,16 +22,19 @@ class MessageTargetMixin(object):
         if any(e == "jira" for e in message.get("action", ()).get("to")):
             from .jira_delivery import JiraDelivery
 
-            if "jira_url" not in self.config:
-                self.logger.warning("jira_url not found in mailer config")
-            else:
-                try:
-                    jira_delivery = JiraDelivery(self.config, self.session, self.logger)
-                    groupedResources = email_delivery.get_grouped_resources(message, "jira")
-                    jira_delivery.process(message, jira_messages=groupedResources)
-                except Exception as e:
-                    self.logger.error(f"Failed to create Jira issue: {str(e)}")
-                    message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
+            try:
+                # TODO config should not be mutuated, and > 100 is random
+                # NOTE check length to skip calls to KMS while testing with plain text
+                if self.config["jira_basic_auth"] and len(self.config["jira_basic_auth"]) > 100:
+                    self.config["jira_basic_auth"] = decrypt(self.config, self.logger, self.session, "jira_basic_auth")
+                jira_delivery = JiraDelivery(self.config, self.logger)
+                groupedResources = email_delivery.get_grouped_resources(message, "jira")
+                jira_delivery.process(message, jira_messages=groupedResources)
+            except Exception as e:
+                self.logger.error(f"Failed to create Jira issue: {str(e)}")
+                message["action"]["delivered_jira_error"] = "Failed to create Jira issue"
+                traceback.print_exc()
+                pass
 
         # this section sends email to ServiceNow to create tickets
         if any(e == "servicenow" for e in message.get("action", ()).get("to")):

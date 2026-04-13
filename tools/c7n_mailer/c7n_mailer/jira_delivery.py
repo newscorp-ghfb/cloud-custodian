@@ -1,15 +1,20 @@
 from typing import List
 
 import jmespath
-from jira import JIRA
+import requests
+import json
 
 from c7n_mailer import utils
 
 
+headers = {
+  "Accept": "application/json",
+  "Content-Type": "application/json"
+}
+
 class JiraDelivery:
-    def __init__(self, config, session, logger):
+    def __init__(self, config, logger):
         self.config = config
-        self.session = session
         self.logger = logger
         self.url = config.get("jira_url")
         self.jp_key = jmespath.compile(config.get("jira_project_key", "custodian_jira_project"))
@@ -17,15 +22,11 @@ class JiraDelivery:
         self.init_jira()
 
     def init_jira(self):
-        auth_txt = self.config.get("jira_basic_auth")
-        # NOTE check length to skip calls to KMS while testing with plain text
-        if len(auth_txt) > 100:
-            self.logger.info("Calling KMS to decrypt the jira_basic_auth")
-            auth_txt = utils.kms_decrypt(self.config, self.logger, self.session, "jira_basic_auth")
-            self.config["jira_basic_auth"] = auth_txt
-        basic_auth = tuple(auth_txt.split(":"))
-        self.client = JIRA(server=self.url, basic_auth=basic_auth)
-
+        auth_txt = self.config.get("jira_basic_auth").split(":")
+        if len(auth_txt) != 2:
+            raise ValueError("basic auth is wrong, does not have two elements")
+        self.basic_auth = HTTPBasicAuth(basic_auth[0], basic_auth[1])
+ 
     def process(self, message, jira_messages):
         issue_list = []
         for group_name, resources in jira_messages.items():
@@ -85,7 +86,7 @@ class JiraDelivery:
     def create_issues(self, issue_list) -> List:
         if not issue_list:
             return
-        res = self.client.create_issues(field_list=issue_list)
+        res = self._create_issues(issue_list)
         success = [i["issue"].key for i in res if i["status"] == "Success"]
         error = [i["error"] for i in res if i["error"]]
         if success:
@@ -93,3 +94,79 @@ class JiraDelivery:
         if error:
             self.logger.error(f"Failed to create issues {error}")
         return success
+
+    def _create_issues(
+        self, field_list: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Bulk create new issues and return an issue Resource for each successfully created issue.
+
+        See `create_issue` documentation for field information.
+
+        Args:
+            field_list (List[Dict[str, Any]]): a list of dicts each containing field names and the values to use. Each dict is an individual issue to create and is subject to its minimum requirements.
+            prefetch (bool): True reloads the created issue Resource so all of its data is present in the value returned (Default: ``True``)
+
+        Returns:
+            List[Dict[str, Any]]
+        """
+        data: dict[str, list] = {"issueUpdates": []}
+        for field_dict in field_list:
+            issue_data: dict[str, Any] = _field_worker(field_dict)
+            p = issue_data["fields"]["project"]
+
+            project_id = None
+            if isinstance(p, str | int):
+                project_id = self.project(str(p)).id
+                issue_data["fields"]["project"] = {"id": project_id}
+
+            p = issue_data["fields"]["issuetype"]
+            if isinstance(p, int):
+                issue_data["fields"]["issuetype"] = {"id": p}
+            elif isinstance(p, str):
+                issue_data["fields"]["issuetype"] = {
+                    "id": self.issue_type_by_name(
+                        str(p), project=str(project_id) if project_id else None
+                    ).id
+                }
+
+            data["issueUpdates"].append(issue_data)
+
+        url = self.url + "issue/bulk"
+        response = requests.request(
+           "POST",
+           url,
+           data=payload,
+           headers=headers,
+           auth=self.basic_auth
+        )
+
+        raw_issue_json = json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
+
+        raw_issue_json = r.json()
+        # Catching case where none of the issues has been created.
+        # See https://github.com/pycontribs/jira/issues/350
+        issue_list = []
+        errors = {}
+        for error in raw_issue_json["errors"]:
+            errors[error["failedElementNumber"]] = error["elementErrors"]["errors"]
+        for index, fields in enumerate(field_list):
+            if index in errors:
+                issue_list.append(
+                    {
+                        "status": "Error",
+                        "error": errors[index],
+                        "issue": None,
+                        "input_fields": fields,
+                    }
+                )
+            else:
+                issue = raw_issue_json["issues"].pop(0)
+                issue_list.append(
+                    {
+                        "status": "Success",
+                        "issue": issue,
+                        "error": None,
+                        "input_fields": fields,
+                    }
+                )
+        return issue_list
