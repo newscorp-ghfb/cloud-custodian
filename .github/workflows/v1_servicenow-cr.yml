@@ -1,0 +1,107 @@
+name: ServiceNow Change Request
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  create-change-request:
+    if: github.event.pull_request.merged == true
+    runs-on: pe-small-arm64
+
+    steps:
+      - name: Generate GitHub App Token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CC_GH_APP_ID }}
+          private-key: ${{ secrets.CC_GH_APP_PRIVATE_KEY }}
+          owner: newscorp-ghfb
+
+      - name: Create Change Request
+        id: create-cr
+        run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          ACTOR="${{ github.event.pull_request.user.login }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          REPO="${{ github.repository }}"
+          PR_BODY=$(cat << 'EOF'
+          ${{ github.event.pull_request.body }}
+          EOF
+          )
+          PR_BODY=$(echo "$PR_BODY" | sed 's/[^\x00-\x7F]//g')
+
+          # Set start/end to now and now+1hr
+          START=$(date -u +"%Y-%m-%d %H:%M:%S")
+          END=$(date -u -d "+1 hour" +"%Y-%m-%d %H:%M:%S")
+
+          BODY=$(jq -n \
+            --arg start "$START" \
+            --arg end "$END" \
+            --arg pr_url "$PR_URL" \
+            --arg actor "$ACTOR" \
+            --arg repo "$REPO" \
+            --arg title "$PR_TITLE" \
+            --arg pr_body "$PR_BODY" \
+            '{
+              start_date: $start,
+              end_date: $end,
+              work_start: $start,
+              work_end: $end,
+              type: "standard",
+              company: "43ff3888873f241092d696883cbb3563",
+              cmdb_ci: "b96943d21b008690ea4931d3cc4bcb9c",
+              business_service: "ebfdb6241bfd381034b9c880604bcb43",
+              short_description: $title,
+              description: ("Merged by: " + $actor + "\nRepo: " + $repo + "\nPR URL: " + $pr_url + "\n\n" + $pr_body),
+              implementation_plan: ("Release version: " + $pr_url),
+              backout_plan: "Revert merge commit via GitHub",
+              test_plan: "Post-deployment validation",
+              assignment_group: "4d91b06f1bc630107acf76e1dd4bcb9c",
+              category: "Update/Upgrade/Code Release",
+              state: 3,
+              close_code: "successful",
+              close_notes: "Code deployment successful"
+            }')
+
+          RESPONSE=$(curl -s -X POST "https://newscorp.service-now.com/api/newr2/task/change" \
+            -H "x-sn-apikey: ${{ secrets.SN_CR_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "$BODY")
+
+          echo "Response: $RESPONSE"
+
+          CR_NUMBER=$(echo "$RESPONSE" | jq -r '.result.data.number')
+          CR_SYS_ID=$(echo "$RESPONSE" | jq -r '.result.data.sys_id')
+          SN_ERROR=$(echo "$RESPONSE" | jq -r '.result.error // ""')
+
+          if [ -z "$CR_NUMBER" ] || [ "$CR_NUMBER" = "null" ]; then
+            echo "Failed to create CR. Error: $SN_ERROR"
+            exit 1
+          fi
+
+          echo "cr_number=$CR_NUMBER" >> $GITHUB_OUTPUT
+          echo "cr_sys_id=$CR_SYS_ID" >> $GITHUB_OUTPUT
+
+      - name: Comment CR on PR
+        run: |
+          CR_NUMBER="${{ steps.create-cr.outputs.cr_number }}"
+          INSTANCE_URL="https://newscorp.service-now.com/nav_to.do?uri=change_request.do?sysparm_query=number=${CR_NUMBER}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          COMMENT="✅ **ServiceNow Change Request Created**
+
+          | Field | Value |
+          |-------|-------|
+          | CR Number | \`${CR_NUMBER}\` |
+          | Link | [View in ServiceNow](${INSTANCE_URL}) |
+          | Merged by | @${{ github.event.pull_request.user.login }} |"
+
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ steps.app_token.outputs.token }}" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            -d "$(jq -n --arg body "$COMMENT" '{body: $body}')"
