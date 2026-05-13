@@ -8,6 +8,7 @@ from c7n_mailer.ldap_lookup import Redis
 from c7n_mailer.utils import get_rendered_jinja
 from c7n_mailer.utils_email import is_email
 
+from .dedup_dynamodb import dedup_check_and_write
 
 class SlackDelivery:
 
@@ -118,6 +119,19 @@ class SlackDelivery:
 
     def slack_handler(self, sqs_message, slack_messages):
         for key, payload in slack_messages.items():
+            # Deduplication logic
+            policy = sqs_message.get('policy', {}).get('name', 'unknown')
+            account_id = sqs_message.get('account_id', sqs_message.get('account', 'unknown'))
+            account = sqs_message.get('account', 'unknown')
+            region = sqs_message.get('region', 'unknown')
+            recipient = key  # Slack channel or webhook
+            partition_key = str(sqs_message.get('execution_start', 'default'))
+            dedup_id = f"slack|{policy}|{account_id}|{account}|{region}|{recipient}"
+
+            if dedup_check_and_write(partition_key, dedup_id):
+                self.logger.info(f"Duplicate Slack message suppressed for {dedup_id}")
+                continue
+
             self.logger.info("Sending account:%s policy:%s %s:%s slack:%s to %s" % (
                 sqs_message.get('account', ''),
                 sqs_message['policy']['name'],

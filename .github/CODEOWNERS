@@ -1,0 +1,4 @@
+*     @newscorp-ghfb/ncgt-ie-approvers
+
+# Preserve below if above is expanded to additional teams/users
+/.github/CODEOWNERS     @newscorp-ghfb/ncgt-ie-approvers
