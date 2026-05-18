@@ -75,7 +75,7 @@ class Infracost(Filter):
             verify=True,
             retries=5,
         )
-        client = Client(transport=transport, fetch_schema_from_transport=True)
+        client = Client(transport=transport, fetch_schema_from_transport=False)
         query = gql(self.get_query())
         return [r for r in resources if self.process_resource(r, client, query)]
 
