@@ -76,3 +76,8 @@ class DeployTests(unittest.TestCase):
         filenames = archive.get_filenames()
         assert len(filenames) > 50  # should be > 500
         assert any(n.startswith("packaging/") for n in filenames)
+        assert any(n.startswith("jaraco/") for n in filenames)
+        assert any(n.startswith("more_itertools/") for n in filenames)
+        assert any(n.startswith("backports/") for n in filenames)
+        assert any(n.startswith("zipp") for n in filenames)
+        assert any(n.startswith("platformdirs/") for n in filenames)
