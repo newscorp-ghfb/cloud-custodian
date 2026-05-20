@@ -36,7 +36,7 @@ CORE_DEPS = [
     'google', 'pyasn1_modules', 'rsa', 'cachetools', 'googleapiclient',
     'httplib2', 'pyparsing', 'uritemplate', 'google_auth_httplib2', 'retrying', 'pyrate_limiter',
     # for other dependencies
-    'pkg_resources',
+    'pkg_resources', 'packaging',
     # transport datadog - recursive deps
     'datadog', 'decorator',
     # requests (recursive deps), needed by datadog, slackclient, splunk

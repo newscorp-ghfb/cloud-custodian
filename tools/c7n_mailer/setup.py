@@ -19,6 +19,7 @@ install_requires = \
  'jsonpointer>=2.0,<3.0',
  'jsonschema>=3.2.0',
  'ldap3>=2.6.1,<3.0.0',
+ 'packaging>=21.0',
  'python-dateutil>=2.8.1,<3.0.0',
  'pyyaml>=5.4.0',
  'redis>=3.4.1,<4.0.0',

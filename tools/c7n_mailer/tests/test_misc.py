@@ -73,4 +73,6 @@ class DeployTests(unittest.TestCase):
         assert isinstance(archive, PythonPackageArchive)
         # basic sanity checks using random, low values
         assert archive.size > 10000  # this should really be about 1.5 MB
-        assert len(archive.get_filenames()) > 50  # should be > 500
+        filenames = archive.get_filenames()
+        assert len(filenames) > 50  # should be > 500
+        assert any(n.startswith("packaging/") for n in filenames)
