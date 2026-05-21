@@ -3141,7 +3141,6 @@ files = [
 
 [package.dependencies]
 python-http-client = ">=3.2.1"
-~
 
 [[package]]
 name = "setuptools"
