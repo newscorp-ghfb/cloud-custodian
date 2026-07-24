@@ -67,7 +67,7 @@ class MessageTargetMixin(object):
             from .slack_delivery import SlackDelivery
 
             slack_token: str = self.config.get("slack_token")
-            if slack_token and not slack_token.startswith("xoxb-"):
+            if slack_token:
                 slack_token = decrypt(self.config, self.logger, self.session, "slack_token")
                 self.config["slack_token"] = slack_token
 
