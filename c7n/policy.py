@@ -399,9 +399,7 @@ class LambdaMode(ServerlessExecutionMode):
             # Lambda passthrough config
             'layers': {'type': 'array', 'items': {'type': 'string'}},
             'concurrency': {'type': 'integer'},
-            # Do we really still support 2.7 and 3.6?
-            'runtime': {'enum': ['python2.7', 'python3.6',
-                                 'python3.7', 'python3.8', 'python3.9']},
+            'runtime': {'enum': ['python3.12', 'python3.13', 'python3.14']},
             'role': {'type': 'string'},
             'handler': {'type': 'string'},
             'pattern': {'type': 'object', 'minProperties': 1},
