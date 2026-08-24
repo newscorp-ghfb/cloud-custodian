@@ -4,6 +4,7 @@
 import click
 import logging
 import os
+import sys
 from c7n.config import Bag, Config
 from c7n.resources.aws import ApiStats
 from c7n.credentials import assumed_session, SessionFactory
@@ -182,9 +183,11 @@ def get_accounts_for_ou(client, ou, active, recursive=True, ignoredAccounts=()):
                     "Tags", ()
                 )
             }
-            log.info(
-                "account:%s name:%s Status:%s State:%s",
-                a["Id"], a["Name"], a.get("Status"), a.get("State"),
+            print(
+                "DEBUG-STATE account:%s name:%s Status:%s State:%s" % (
+                    a["Id"], a["Name"], a.get("Status"), a.get("State"),
+                ),
+                file=sys.stderr, flush=True,
             )
 
             if a["Id"] in ignoredAccounts:
