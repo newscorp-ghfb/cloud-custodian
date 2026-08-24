@@ -56,13 +56,19 @@ log = logging.getLogger("orgaccounts")
     multiple=True,
     help="list of accounts that won't be added to the config file",
 )
-def main(role, name, ou, assume, profile, output, regions, active, ignore):
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Log the raw Status/State values returned by AWS for each account",
+)
+def main(role, name, ou, assume, profile, output, regions, active, ignore, debug):
     """Generate a c7n-org accounts config file using AWS Organizations
 
     With c7n-org you can then run policies or arbitrary scripts across
     accounts.
     """
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
 
     stats, session = get_session(assume, "c7n-org", profile)
     client = session.client("organizations")
@@ -176,6 +182,11 @@ def get_accounts_for_ou(client, ou, active, recursive=True, ignoredAccounts=()):
                     "Tags", ()
                 )
             }
+            log.debug(
+                "account:%s name:%s Status:%s State:%s",
+                a["Id"], a["Name"], a.get("Status"), a.get("State"),
+            )
+
             if a["Id"] in ignoredAccounts:
                 continue
 
