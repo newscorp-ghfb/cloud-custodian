@@ -182,7 +182,7 @@ def get_accounts_for_ou(client, ou, active, recursive=True, ignoredAccounts=()):
                     "Tags", ()
                 )
             }
-            log.debug(
+            log.info(
                 "account:%s name:%s Status:%s State:%s",
                 a["Id"], a["Name"], a.get("Status"), a.get("State"),
             )
