@@ -183,12 +183,12 @@ def get_accounts_for_ou(client, ou, active, recursive=True, ignoredAccounts=()):
                     "Tags", ()
                 )
             }
-            print(
-                "DEBUG-STATE account:%s name:%s Status:%s State:%s" % (
-                    a["Id"], a["Name"], a.get("Status"), a.get("State"),
-                ),
-                file=sys.stderr, flush=True,
-            )
+            # print(
+            #     "DEBUG-STATE account:%s name:%s Status:%s State:%s" % (
+            #         a["Id"], a["Name"], a.get("Status"), a.get("State"),
+            #     ),
+            #     file=sys.stderr, flush=True,
+            # )
 
             if a["Id"] in ignoredAccounts:
                 continue
