@@ -55,10 +55,10 @@ jobs:
       matrix:
         # os: [ubuntu-latest, macos-latest, windows-latest]
         os: [ubuntu-latest]
-        python-version: ["3.10"]
+        python-version: ["3.12"]
         include:
           - os: ubuntu-latest
-            python-version: 3.9
+            python-version: 3.12
           # - os: ubuntu-latest
           #   python-version: 3.8
           # - os: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
           curl -sSL https://raw.githubusercontent.com/python-poetry/install.python-poetry.org/6161821b1d39fa30f92a677bba51abfc471f8aee/install-poetry.py | python3 - --version $POETRY_VERSION -y
 
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v6
         id: cache
         with:
           path: .venv
@@ -156,6 +156,6 @@ jobs:
           verbose: true
 
       - name: License Check
-        if: contains(matrix.python-version, '3.9') && contains(matrix.os, 'ubuntu')
+        if: contains(matrix.python-version, '3.12') && contains(matrix.os, 'ubuntu')
         run: |
           poetry run python tools/dev/license-check.py
